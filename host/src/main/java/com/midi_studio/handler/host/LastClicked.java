@@ -14,7 +14,6 @@ import com.midi_studio.config.BitwigConfig;
  * SINGLE RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
  */
 public class LastClicked {
-    private final ControllerHost host;
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;
 
@@ -22,7 +21,6 @@ public class LastClicked {
         ControllerHost host,
         Protocol protocol
     ) {
-        this.host = host;
         this.protocol = protocol;
         this.lastClicked = host.createLastClickedParameter("last_clicked", "Last Clicked");
     }

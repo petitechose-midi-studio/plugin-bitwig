@@ -27,9 +27,6 @@ public class TrackHost {
     // Navigation state
     private boolean isInGroup = false;
 
-    // Reference to TrackController for bidirectional communication
-    private com.midi_studio.handler.controller.TrackController trackController;
-
     // Cache for change detection
     private String lastTrackName = "";
 
@@ -47,13 +44,6 @@ public class TrackHost {
         // Create a TrackBank for group navigation (follows cursorTrack's children)
         // This must be created during init, not dynamically
         this.cursorGroupBank = cursorTrack.createTrackBank(32, 0, 0, false);
-    }
-
-    /**
-     * Set TrackController reference (for bidirectional communication)
-     */
-    public void setTrackController(com.midi_studio.handler.controller.TrackController trackController) {
-        this.trackController = trackController;
     }
 
     /**
@@ -128,7 +118,7 @@ public class TrackHost {
 
         int totalTrackCount = currentBank.itemCount().get();
         int currentTrackPosition = cursorTrack.position().get();
-        String parentGroupName = "";  // TODO: track parent name if needed
+        String parentGroupName = "";
 
         host.println("[TrackHost] sendTrackList: totalCount=" + totalTrackCount + ", cursorPos=" + currentTrackPosition + ", isInGroup=" + isInGroup);
 

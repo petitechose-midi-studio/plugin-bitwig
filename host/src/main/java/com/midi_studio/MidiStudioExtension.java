@@ -67,7 +67,6 @@ public class MidiStudioExtension extends ControllerExtension {
 
       trackController.setTrackHost(trackHost);
       trackController.setDeviceHost(deviceHost);
-      trackHost.setTrackController(trackController);
 
       LastClicked lastClickedHost = new LastClicked(host, protocol);
       lastClickedHost.setup();

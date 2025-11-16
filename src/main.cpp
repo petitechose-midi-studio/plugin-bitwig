@@ -13,10 +13,15 @@ void setupPlugins(PluginManager& manager) {
 MidiStudioApp app(setupPlugins);
 
 void setup() {
-    LOGLN("=== MIDI Studio - Bitwig Plugin ===");
-    Serial.print("Version: ");
-    Serial.println(Core::VERSION);
-    LOGLN("=== System Ready ===");
+    delay(200);
+    LOGLN("=======================================");
+    LOGLN("=== MIDI Studio - Bitwig Plugin Dev ===");
+    LOGLN("=======================================");
+    LOG("Core Version : ");
+    LOGLN(Core::VERSION);
+    LOGLN("=======================================");
+    LOGLN("============= System Boot =============");
+    LOGLN("=======================================");
 }
 
 void loop() {
