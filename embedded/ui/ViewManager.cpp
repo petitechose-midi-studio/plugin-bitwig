@@ -8,76 +8,88 @@
 #include "log/Macros.hpp"
 #include "splash/SplashView.hpp"
 
-namespace Plugin::Bitwig {
+namespace Bitwig
+{
 
-ViewManager::ViewManager(ControllerAPI& api, ViewRegistry& registry, ViewContainer& viewContainer)
-    : api_(api),
-      registry_(registry),
-      viewContainer_(viewContainer),
-      currentViewID_(ViewID::SPLASH) {}
+    ViewManager::ViewManager(ControllerAPI &api, ViewRegistry &registry, ViewContainer &viewContainer)
+        : api_(api),
+          registry_(registry),
+          viewContainer_(viewContainer),
+          currentViewID_(ViewID::SPLASH) {}
 
-ViewManager::~ViewManager() {
-    if (splashTimer_) {
-        lv_timer_delete(splashTimer_);
-    }
-}
-
-void ViewManager::showDefault() {
-    show(ViewID::DEVICE);
-}
-
-void ViewManager::show(ViewID id) {
-    if (currentViewID_ == id) return;
-
-    // Désactiver la vue précédente
-    if (currentView_) {
-        currentView_->onDeactivate();
+    ViewManager::~ViewManager()
+    {
+        if (splashTimer_)
+        {
+            lv_timer_delete(splashTimer_);
+        }
     }
 
-    lv_obj_clear_flag(viewContainer_.getContainer(), LV_OBJ_FLAG_HIDDEN);
-    auto& view = registry_.getView(id);
-    api_.showPluginView(view);
-    currentViewID_ = id;
-    currentView_ = &view;
-}
-
-void ViewManager::showCore() {
-    currentViewID_ = ViewID::SPLASH;
-    currentView_ = nullptr;
-    api_.hidePluginView();
-}
-
-void ViewManager::showSplash(uint32_t durationMs, const char* message) {
-    // Désactiver la vue précédente
-    if (currentView_ && currentViewID_ != ViewID::SPLASH) {
-        currentView_->onDeactivate();
+    void ViewManager::showDefault()
+    {
+        show(ViewID::DEVICE);
     }
 
-    auto& splashView = registry_.getView<SplashView>(ViewID::SPLASH);
-    splashView.setText(message);
-    api_.showPluginView(splashView);
-    currentViewID_ = ViewID::SPLASH;
-    currentView_ = &splashView;
+    void ViewManager::show(ViewID id)
+    {
+        if (currentViewID_ == id)
+            return;
 
-    if (splashTimer_) {
-        lv_timer_delete(splashTimer_);
+        // Désactiver la vue précédente
+        if (currentView_)
+        {
+            currentView_->onDeactivate();
+        }
+
+        lv_obj_clear_flag(viewContainer_.getContainer(), LV_OBJ_FLAG_HIDDEN);
+        auto &view = registry_.getView(id);
+        api_.showPluginView(view);
+        currentViewID_ = id;
+        currentView_ = &view;
     }
 
-    uint32_t fadeStartTime = durationMs > 300 ? durationMs - 300 : durationMs;
-    splashTimer_ = lv_timer_create(splashTimerCallback, fadeStartTime, this);
-    lv_timer_set_repeat_count(splashTimer_, 1);
-}
+    void ViewManager::showCore()
+    {
+        currentViewID_ = ViewID::SPLASH;
+        currentView_ = nullptr;
+        api_.hidePluginView();
+    }
 
-void ViewManager::splashTimerCallback(lv_timer_t* timer) {
-    auto self = static_cast<ViewManager*>(lv_timer_get_user_data(timer));
-    auto& splashView = self->registry_.getView<SplashView>(ViewID::SPLASH);
+    void ViewManager::showSplash(uint32_t durationMs, const char *message)
+    {
+        // Désactiver la vue précédente
+        if (currentView_ && currentViewID_ != ViewID::SPLASH)
+        {
+            currentView_->onDeactivate();
+        }
 
-    splashView.fadeOut(300, [self, &splashView]() {
+        auto &splashView = registry_.getView<SplashView>(ViewID::SPLASH);
+        splashView.setText(message);
+        api_.showPluginView(splashView);
+        currentViewID_ = ViewID::SPLASH;
+        currentView_ = &splashView;
+
+        if (splashTimer_)
+        {
+            lv_timer_delete(splashTimer_);
+        }
+
+        uint32_t fadeStartTime = durationMs > 300 ? durationMs - 300 : durationMs;
+        splashTimer_ = lv_timer_create(splashTimerCallback, fadeStartTime, this);
+        lv_timer_set_repeat_count(splashTimer_, 1);
+    }
+
+    void ViewManager::splashTimerCallback(lv_timer_t *timer)
+    {
+        auto self = static_cast<ViewManager *>(lv_timer_get_user_data(timer));
+        auto &splashView = self->registry_.getView<SplashView>(ViewID::SPLASH);
+
+        splashView.fadeOut(300, [self, &splashView]()
+                           {
         self->splashActive_ = false;
-        self->showDefault();
-    });
+        self->showDefault(); });
 
-    self->splashTimer_ = nullptr;
-}
+        self->splashTimer_ = nullptr;
+    }
 
-}  // namespace Plugin::Bitwig
+} // namespace Bitwig

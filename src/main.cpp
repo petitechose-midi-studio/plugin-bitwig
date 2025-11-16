@@ -6,7 +6,7 @@
 
 // Plugin registration callback
 void setupPlugins(PluginManager& manager) {
-    manager.registerPlugin<Plugin::Bitwig::Plugin>("bitwig");
+    manager.registerPlugin<Bitwig::Plugin>("bitwig");
 }
 
 // Instantiate app with Bitwig plugin

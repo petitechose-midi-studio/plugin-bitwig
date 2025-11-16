@@ -2,18 +2,19 @@
 
 #include <cstdint>
 
-namespace Plugin::Bitwig::Track {
+namespace Bitwig::Track
+{
 
-// ============================================================================
-// TRACK NAVIGATION CONSTANTS
-// ============================================================================
+    // ============================================================================
+    // TRACK NAVIGATION CONSTANTS
+    // ============================================================================
 
-constexpr uint8_t MAX_TRACKS = 32;
+    constexpr uint8_t MAX_TRACKS = 32;
 
-// ============================================================================
-// UI TEXT CONSTANTS
-// ============================================================================
+    // ============================================================================
+    // UI TEXT CONSTANTS
+    // ============================================================================
 
-constexpr const char* BACK_TO_PARENT_TEXT = "Back to parent";
+    constexpr const char *BACK_TO_PARENT_TEXT = "Back to parent";
 
-}  // namespace Plugin::Bitwig::Track
+} // namespace Bitwig::Track

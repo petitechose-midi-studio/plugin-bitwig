@@ -1,25 +1,29 @@
 #include "TransportBarController.hpp"
 #include "log/Macros.hpp"
 
-namespace Plugin::Bitwig {
+namespace Bitwig
+{
 
-TransportBarController::TransportBarController(TransportBar& transportBar)
-    : transportBar_(transportBar) {}
+    TransportBarController::TransportBarController(TransportBar &transportBar)
+        : transportBar_(transportBar) {}
 
-void TransportBarController::setPlaying(bool playing) {
-    transportBar_.setPlay(playing);
-}
+    void TransportBarController::setPlaying(bool playing)
+    {
+        transportBar_.setPlay(playing);
+    }
 
-void TransportBarController::setRecording(bool recording) {
-    transportBar_.setRecord(recording);
-}
+    void TransportBarController::setRecording(bool recording)
+    {
+        transportBar_.setRecord(recording);
+    }
 
-void TransportBarController::setTempo(float bpm) {
-    transportBar_.setTempo(bpm);
-}
+    void TransportBarController::setTempo(float bpm)
+    {
+        transportBar_.setTempo(bpm);
+    }
 
-void TransportBarController::flashMidiIn() {}
+    void TransportBarController::flashMidiIn() {}
 
-void TransportBarController::flashMidiOut() {}
+    void TransportBarController::flashMidiOut() {}
 
-} // namespace Plugin::Bitwig
+} // namespace Bitwig

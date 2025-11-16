@@ -5,132 +5,134 @@
 #include <string>
 #include <vector>
 
-namespace Plugin::Bitwig {
-
-/**
- * @brief Track list selector component
- *
- * Displays a list of tracks for quick navigation.
- * Simpler than DeviceSelector (no hierarchical navigation).
- *
- * PURE UI COMPONENT - No logic, no callbacks, no protocol dependencies.
- * All data is pre-formatted by Controller.
- *
- * Usage (from DeviceController):
- *   trackSelector.setItems({"Track 1", "Track 2", "Track 3"});
- *   trackSelector.setCurrentItemIndex(0);
- *   trackSelector.show();
- */
-class TrackListSelector : public UI::IComponent {
-public:
-    /**
-     * @brief Construct track list selector
-     * @param parent Parent LVGL object (typically screen)
-     */
-    explicit TrackListSelector(lv_obj_t* parent);
+namespace Bitwig
+{
 
     /**
-     * @brief Destructor
+     * @brief Track list selector component
+     *
+     * Displays a list of tracks for quick navigation.
+     * Simpler than DeviceSelector (no hierarchical navigation).
+     *
+     * PURE UI COMPONENT - No logic, no callbacks, no protocol dependencies.
+     * All data is pre-formatted by Controller.
+     *
+     * Usage (from DeviceController):
+     *   trackSelector.setItems({"Track 1", "Track 2", "Track 3"});
+     *   trackSelector.setCurrentItemIndex(0);
+     *   trackSelector.show();
      */
-    ~TrackListSelector();
+    class TrackListSelector : public UI::IComponent
+    {
+    public:
+        /**
+         * @brief Construct track list selector
+         * @param parent Parent LVGL object (typically screen)
+         */
+        explicit TrackListSelector(lv_obj_t *parent);
 
-    /**
-     * @brief Set selector title
-     * @param title Title text (default: "Select Track")
-     */
-    void setTitle(const std::string& title);
+        /**
+         * @brief Destructor
+         */
+        ~TrackListSelector();
 
-    /**
-     * @brief Set list items
-     * @param items Vector of track names
-     */
-    void setItems(const std::vector<std::string>& items);
+        /**
+         * @brief Set selector title
+         * @param title Title text (default: "Select Track")
+         */
+        void setTitle(const std::string &title);
 
-    /**
-     * @brief Set track items with mute/solo indicators
-     * @param items Vector of track names
-     * @param currentIndex Current track index (0-based)
-     * @param muteStates Mute state per track
-     * @param soloStates Solo state per track
-     */
-    void setTrackItems(const std::vector<std::string>& items,
-                       int currentIndex,
-                       const std::vector<bool>& muteStates,
-                       const std::vector<bool>& soloStates);
+        /**
+         * @brief Set list items
+         * @param items Vector of track names
+         */
+        void setItems(const std::vector<std::string> &items);
 
-    /**
-     * @brief Set current item index (initial selection when showing)
-     * @param index Current item index (0-based)
-     */
-    void setCurrentItemIndex(int index);
+        /**
+         * @brief Set track items with mute/solo indicators
+         * @param items Vector of track names
+         * @param currentIndex Current track index (0-based)
+         * @param muteStates Mute state per track
+         * @param soloStates Solo state per track
+         */
+        void setTrackItems(const std::vector<std::string> &items,
+                           int currentIndex,
+                           const std::vector<bool> &muteStates,
+                           const std::vector<bool> &soloStates);
 
-    /**
-     * @brief Set selected item index (navigation)
-     * @param index Selected index (0-based), clamped to valid range
-     */
-    void setSelectedIndex(int index);
+        /**
+         * @brief Set current item index (initial selection when showing)
+         * @param index Current item index (0-based)
+         */
+        void setCurrentItemIndex(int index);
 
-    /**
-     * @brief Show track selector overlay (from IComponent)
-     */
-    void show() override;
+        /**
+         * @brief Set selected item index (navigation)
+         * @param index Selected index (0-based), clamped to valid range
+         */
+        void setSelectedIndex(int index);
 
-    /**
-     * @brief Hide track selector overlay (from IComponent)
-     */
-    void hide() override;
+        /**
+         * @brief Show track selector overlay (from IComponent)
+         */
+        void show() override;
 
-    /**
-     * @brief Check if selector is visible (from IComponent)
-     * @return true if visible
-     */
-    bool isVisible() const override;
+        /**
+         * @brief Hide track selector overlay (from IComponent)
+         */
+        void hide() override;
 
-    /**
-     * @brief Get currently selected item index
-     * @return Selected index (0-based), -1 if no items
-     */
-    int getSelectedIndex() const;
+        /**
+         * @brief Check if selector is visible (from IComponent)
+         * @return true if visible
+         */
+        bool isVisible() const override;
 
-    /**
-     * @brief Get number of items in list
-     * @return Item count
-     */
-    int getItemCount() const;
+        /**
+         * @brief Get currently selected item index
+         * @return Selected index (0-based), -1 if no items
+         */
+        int getSelectedIndex() const;
 
-    /**
-     * @brief Get underlying LVGL element (from IElement)
-     * @return Overlay object (nullptr if not created)
-     */
-    lv_obj_t* getElement() const override { return overlay_.getElement(); }
+        /**
+         * @brief Get number of items in list
+         * @return Item count
+         */
+        int getItemCount() const;
 
-    /**
-     * @brief Set track mute state at specific index
-     * @param trackIndex Track index
-     * @param isMuted Mute state
-     */
-    void setTrackMuteStateAtIndex(uint8_t trackIndex, bool isMuted);
+        /**
+         * @brief Get underlying LVGL element (from IElement)
+         * @return Overlay object (nullptr if not created)
+         */
+        lv_obj_t *getElement() const override { return overlay_.getElement(); }
 
-    /**
-     * @brief Set track solo state at specific index
-     * @param trackIndex Track index
-     * @param isSoloed Solo state
-     */
-    void setTrackSoloStateAtIndex(uint8_t trackIndex, bool isSoloed);
+        /**
+         * @brief Set track mute state at specific index
+         * @param trackIndex Track index
+         * @param isMuted Mute state
+         */
+        void setTrackMuteStateAtIndex(uint8_t trackIndex, bool isMuted);
 
-private:
-    void createFooter();
-    void destroyFooter();
+        /**
+         * @brief Set track solo state at specific index
+         * @param trackIndex Track index
+         * @param isSoloed Solo state
+         */
+        void setTrackSoloStateAtIndex(uint8_t trackIndex, bool isSoloed);
 
-    lv_obj_t* parent_;  // Parent screen for footer
-    TrackListOverlay overlay_;
-    std::vector<std::string> items_;
-    int current_item_index_ = 0;
+    private:
+        void createFooter();
+        void destroyFooter();
 
-    // Footer labels (shown at parent screen level)
-    lv_obj_t* footer_container_ = nullptr;
-    lv_obj_t* footer_left_label_ = nullptr;   // "Track"
-    lv_obj_t* footer_center_label_ = nullptr; // "State"
-};
+        lv_obj_t *parent_; // Parent screen for footer
+        TrackListOverlay overlay_;
+        std::vector<std::string> items_;
+        int current_item_index_ = 0;
 
-}  // namespace Plugin::Bitwig
+        // Footer labels (shown at parent screen level)
+        lv_obj_t *footer_container_ = nullptr;
+        lv_obj_t *footer_left_label_ = nullptr;   // "Track"
+        lv_obj_t *footer_center_label_ = nullptr; // "State"
+    };
+
+} // namespace Bitwig
