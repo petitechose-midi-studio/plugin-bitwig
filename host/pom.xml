@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.petitechose.audio</groupId>
+	<artifactId>midi_studio</artifactId>
+	<packaging>jar</packaging>
+	<name>midi_studio</name>
+	<version>0.1</version>
+	
+	<repositories>
+       <repository>
+         <id>bitwig</id>
+         <name>Bitwig Maven Repository</name>
+         <url>https://maven.bitwig.com</url>
+       </repository>
+   </repositories>
+
+	<properties>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.bitwig</groupId>
+			<artifactId>extension-api</artifactId>
+			<version>25</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+		   <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-compiler-plugin</artifactId>
+               <version>3.11.0</version>
+               <configuration>
+                  <fork>true</fork>
+                  <maxmem>1024m</maxmem>
+                  <compilerArgs>
+                     <arg>-Xlint:-options</arg>
+                  </compilerArgs>
+               </configuration>
+         </plugin>
+
+			<plugin>
+				<groupId>com.coderplus.maven.plugins</groupId>
+				<artifactId>copy-rename-maven-plugin</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<id>rename-file</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
+							<destinationFile>${project.build.directory}/midi_studio.bwextension</destinationFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>deploy-to-bitwig</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<sourceFile>${project.build.directory}/midi_studio.bwextension</sourceFile>
+							<destinationFile>${bitwig.extensions.dir}/midi_studio.bwextension</destinationFile>
+							<overWrite>true</overWrite>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- Profils multiplateforme pour le déploiement Bitwig -->
+	<profiles>
+		<!-- Profil Windows -->
+		<profile>
+			<id>windows</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<bitwig.extensions.dir>${user.home}/Documents/Bitwig Studio/Extensions</bitwig.extensions.dir>
+			</properties>
+		</profile>
+
+		<!-- Profil macOS -->
+		<profile>
+			<id>mac</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<bitwig.extensions.dir>${user.home}/Documents/Bitwig Studio/Extensions</bitwig.extensions.dir>
+			</properties>
+		</profile>
+
+		<!-- Profil Linux -->
+		<profile>
+			<id>linux</id>
+			<activation>
+				<os>
+					<family>unix</family>
+					<name>!mac os x</name>
+				</os>
+			</activation>
+			<properties>
+				<bitwig.extensions.dir>${user.home}/Bitwig Studio/Extensions</bitwig.extensions.dir>
+			</properties>
+		</profile>
+
+		<!-- Profil manuel pour développement -->
+		<profile>
+			<id>manual</id>
+			<properties>
+				<bitwig.extensions.dir>target</bitwig.extensions.dir>
+			</properties>
+		</profile>
+	</profiles>
+
+</project>
+

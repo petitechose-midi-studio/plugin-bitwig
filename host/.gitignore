@@ -1,0 +1,16 @@
+target/
+api/
+
+# Eclipse/IDE specific (keep .settings/ for project config)
+.classpath
+.project
+.metadata/
+bin/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
