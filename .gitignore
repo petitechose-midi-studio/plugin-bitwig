@@ -25,12 +25,6 @@ env/
 dist/
 build/
 
-# Protocol generated files (C++)
-embedded/protocol/
-
-# Protocol generated files (Java)
-host/src/main/java/com/midi_studio/protocol/
-
 # Java build artifacts
 host/target/
 *.class
