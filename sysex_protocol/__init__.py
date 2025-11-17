@@ -11,7 +11,7 @@ a type-safe, auto-generated protocol system.
 """
 
 from typing import List
-from protocol.message import Message
+from protocol_codegen.core.message import Message
 from .sysex_messages import ALL_MESSAGES
 
 # Re-annotate for type safety

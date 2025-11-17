@@ -1,6 +1,6 @@
-from protocol import PrimitiveField, CompositeField, Type
-from .parameter import *  # Import generic parameter fields
-from .color import color_rgb
+from protocol_codegen.core.field import PrimitiveField, CompositeField, Type
+from field.parameter import *  # Import generic parameter fields
+from field.color import color_rgb
 
 # ============================================================================
 # DEVICE-SPECIFIC FIELDS

@@ -24,7 +24,7 @@ USAGE:
 import importlib
 from pathlib import Path
 from typing import List
-from protocol.message import Message
+from protocol_codegen.core.message import Message
 
 # Global message registry (populated by introspection)
 ALL_MESSAGES: List[Message] = []

@@ -1,5 +1,5 @@
-from protocol import Message
-from ..field.track import *
+from field.track import *
+from protocol_codegen.core.message import Message
 
 # ============================================================================
 # TRACK CHANGE NOTIFICATION

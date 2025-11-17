@@ -1,5 +1,5 @@
-from protocol import Message
-from ..field.parameter import *
+from field.parameter import *
+from protocol_codegen.core.message import Message
 
 # ============================================================================
 # LAST CLICKED PARAMETER MESSAGES

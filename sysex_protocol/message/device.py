@@ -1,5 +1,5 @@
-from protocol import Message
-from ..field.device import *
+from field.device import *
+from protocol_codegen.core.message import Message
 
 # ============================================================================
 # COMPOSITE MESSAGES (Rare - Full State)

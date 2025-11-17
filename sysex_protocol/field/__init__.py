@@ -43,7 +43,7 @@ if current_package:
                 module = importlib.import_module(f'.{file.stem}', package=current_package)
 
                 # Collect all FieldBase instances from the module
-                from protocol import FieldBase
+                from protocol_codegen.core.field import FieldBase
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
                     if isinstance(attr, FieldBase):

@@ -52,22 +52,22 @@ PLUGIN_PATHS: PluginPathsConfig = {
     'plugin_display_name': 'Bitwig Studio',
 
     'output_cpp': {
-        'base_path': 'plugin/bitwig/embedded/protocol',
-        'encoder': 'plugin/bitwig/embedded/protocol/',
-        'messageid': 'plugin/bitwig/embedded/protocol/',
-        'registry': 'plugin/bitwig/embedded/protocol/',
-        'structs': 'plugin/bitwig/embedded/protocol/struct/',
-        'constants': 'plugin/bitwig/embedded/protocol/',
+        'base_path': 'embedded/protocol',
+        'encoder': 'embedded/protocol/',
+        'messageid': 'embedded/protocol/',
+        'registry': 'embedded/protocol/',
+        'structs': 'embedded/protocol/struct/',
+        'constants': 'embedded/protocol/',
     },
 
     'output_java': {
-        'base_path': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol',
+        'base_path': 'host/src/main/java/com/midi_studio/protocol',
         'package': 'com.midi_studio.protocol',
-        'encoder': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol/',
-        'messageid': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol/',
-        'registry': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol/',
-        'structs': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol/struct/',
-        'constants': 'plugin/bitwig/host/src/main/java/com/midi_studio/protocol/',
+        'encoder': 'host/src/main/java/com/midi_studio/protocol/',
+        'messageid': 'host/src/main/java/com/midi_studio/protocol/',
+        'registry': 'host/src/main/java/com/midi_studio/protocol/',
+        'structs': 'host/src/main/java/com/midi_studio/protocol/struct/',
+        'constants': 'host/src/main/java/com/midi_studio/protocol/',
     },
 
     'options': {

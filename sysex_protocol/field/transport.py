@@ -1,4 +1,4 @@
-from protocol import PrimitiveField, Type
+from protocol_codegen.core.field import PrimitiveField, Type
 
 # ============================================================================
 # TRANSPORT STATE FIELDS (Host → Controller feedback)

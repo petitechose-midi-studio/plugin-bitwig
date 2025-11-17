@@ -10,8 +10,8 @@ MESSAGES:
 - HOST_DEACTIVATED: Host plugin is deactivating/closing (Host → Controller)
 """
 
-from protocol import Message
-from ..field.plugin import *
+from field.plugin import *
+from protocol_codegen.core.message import Message
 
 
 # ============================================================================

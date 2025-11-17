@@ -9,8 +9,8 @@ MESSAGES:
 - TRANSPORT_RECORD: Record arm state (bidirectional)
 """
 
-from protocol import Message
-from ..field.transport import *
+from field.transport import *
+from protocol_codegen.core.message import Message
 
 
 # ============================================================================
