@@ -4,5 +4,19 @@
         "string": "cpp"
     },
     "claudeCode.allowDangerouslySkipPermissions": true,
-    "claudeCode.initialPermissionMode": "bypassPermissions"
+    "claudeCode.initialPermissionMode": "bypassPermissions",
+    "taskexplorer.exclude": [
+        "**/.*/**"
+    ],
+    "taskexplorer.enabledTasks": {
+        "python": false,
+        "batch": false,
+        "eslint": false,
+        "npm": false,
+        "powershell": false,
+        "tsc": false,
+        "workspace": false
+    },
+    "taskexplorer.taskButtons.clickAction": "Execute",
+    "taskexplorer.usage.enabled": false
 }
