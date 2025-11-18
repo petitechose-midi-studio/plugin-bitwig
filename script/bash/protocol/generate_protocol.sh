@@ -15,7 +15,7 @@
 set -e  # Exit on error
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 echo "==================================="
 echo "Protocol Code Generator"
@@ -41,9 +41,9 @@ echo ""
 uvx --python python3.13 --from git+https://github.com/petitechose-audio/protocol-codegen \
     protocol-codegen generate \
     --method sysex \
-    --messages "$PROJECT_ROOT/sysex_protocol/message" \
-    --config "$PROJECT_ROOT/sysex_protocol/sysex_protocol_config.py" \
-    --plugin-paths "$PROJECT_ROOT/sysex_protocol/plugin_paths.py" \
+    --messages "$PROJECT_ROOT/protocol/message" \
+    --config "$PROJECT_ROOT/protocol/sysex_protocol_config.py" \
+    --plugin-paths "$PROJECT_ROOT/protocol/plugin_paths.py" \
     --output-base "$PROJECT_ROOT" \
     --verbose
 

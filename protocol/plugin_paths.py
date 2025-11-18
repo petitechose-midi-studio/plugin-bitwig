@@ -52,12 +52,12 @@ PLUGIN_PATHS: PluginPathsConfig = {
     'plugin_display_name': 'Bitwig Studio',
 
     'output_cpp': {
-        'base_path': 'embedded/protocol',
-        'encoder': 'embedded/protocol/',
-        'messageid': 'embedded/protocol/',
-        'registry': 'embedded/protocol/',
-        'structs': 'embedded/protocol/struct/',
-        'constants': 'embedded/protocol/',
+        'base_path': 'src/protocol',
+        'encoder': 'src/protocol/',
+        'messageid': 'src/protocol/',
+        'registry': 'src/protocol/',
+        'structs': 'src/protocol/struct/',
+        'constants': 'src/protocol/',
     },
 
     'output_java': {

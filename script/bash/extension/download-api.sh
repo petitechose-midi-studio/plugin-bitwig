@@ -2,11 +2,20 @@
 
 # Script multiplateforme pour télécharger l'API Bitwig
 API_VERSION=25
-API_DIR="api/$API_VERSION"
+
+# Détecter la racine du projet (où se trouve platformio.ini)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+# Créer l'arborescence dans host/ depuis la racine du projet
+API_DIR="$PROJECT_ROOT/host/api/$API_VERSION"
 
 echo "=========================================="
 echo "   Download Bitwig API v$API_VERSION"
 echo "=========================================="
+echo ""
+echo "📂 Project root: $PROJECT_ROOT"
+echo "📂 API directory: $API_DIR"
 echo ""
 
 # Créer le dossier si nécessaire

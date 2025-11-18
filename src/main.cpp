@@ -2,7 +2,7 @@
 
 #include "app/MidiStudioApp.hpp"
 #include "log/Macros.hpp"
-#include "../embedded/Plugin.hpp"
+#include "Plugin.hpp"
 
 // Plugin registration callback
 void setupPlugins(PluginManager& manager) {
