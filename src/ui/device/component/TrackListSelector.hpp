@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TrackListOverlay.hpp"
-#include "resource/common/ui/interface/IComponent.hpp"
+#include "interface/IComponent.hpp"
 #include <string>
 #include <vector>
 

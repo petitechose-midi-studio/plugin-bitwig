@@ -1,9 +1,9 @@
 #include "DeviceView.hpp"
 
-#include "resource/common/ui/font/binary_font_buffer.hpp"
-#include "resource/common/ui/widget/ParameterButtonWidget.hpp"
-#include "resource/common/ui/widget/ParameterKnobWidget.hpp"
-#include "resource/common/ui/widget/ParameterListWidget.hpp"
+#include "font/binary_font_buffer.hpp"
+#include "widget/ParameterButtonWidget.hpp"
+#include "widget/ParameterKnobWidget.hpp"
+#include "widget/ParameterListWidget.hpp"
 #include "log/Macros.hpp"
 
 namespace Bitwig

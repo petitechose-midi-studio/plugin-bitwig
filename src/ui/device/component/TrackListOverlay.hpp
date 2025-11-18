@@ -1,7 +1,7 @@
 #pragma once
 
-#include "resource/common/ui/widget/ListOverlay.hpp"
-#include "resource/common/ui/interface/IComponent.hpp"
+#include "widget/ListOverlay.hpp"
+#include "interface/IComponent.hpp"
 #include <vector>
 #include <string>
 #include <array>

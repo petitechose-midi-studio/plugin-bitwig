@@ -1,6 +1,6 @@
 #pragma once
 
-#include "resource/common/ui/interface/IView.hpp"
+#include "interface/IView.hpp"
 #include <lvgl.h>
 #include <functional>
 

@@ -1,5 +1,5 @@
 #include "TrackListSelector.hpp"
-#include "resource/common/ui/font/binary_font_buffer.hpp"
+#include "font/binary_font_buffer.hpp"
 #include "../../theme/BitwigTheme.hpp"
 
 namespace Bitwig

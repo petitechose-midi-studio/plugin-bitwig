@@ -1,6 +1,6 @@
 #include "TrackListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "resource/common/ui/font/binary_font_buffer.hpp"
+#include "font/binary_font_buffer.hpp"
 #include <algorithm>
 
 using namespace Theme;

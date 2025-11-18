@@ -187,41 +187,39 @@ namespace Bitwig
                                   (itemName == "Back to parent");
             }
 
-            if (isNonDeviceItem)
-            {
-                lv_obj_set_style_bg_opa(bullet, LV_OPA_TRANSP, 0);
-                continue;
-            }
-
+            bool isHighlighted = (i == selectedIndex);
             bool isEnabled = (i < static_cast<int>(device_states_.size()))
                                  ? device_states_[i]
                                  : false;
-            lv_color_t color = isEnabled
-                                   ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
-                                   : lv_color_hex(Color::DEVICE_STATE_DISABLED);
 
-            bool isHighlighted = (i == selectedIndex);
-            bool isCurrent = (i == current_device_index_);
+            // Update bullet (hide for non-device items)
+            if (isNonDeviceItem)
+            {
+                lv_obj_set_style_bg_opa(bullet, LV_OPA_TRANSP, 0);
+            }
+            else
+            {
+                lv_color_t color = isEnabled
+                                       ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
+                                       : lv_color_hex(Color::DEVICE_STATE_DISABLED);
+                bool isCurrent = (i == current_device_index_);
+                lv_opa_t opa = isHighlighted ? LV_OPA_COVER : isCurrent ? LV_OPA_70 : LV_OPA_50;
 
-            lv_opa_t opa = isHighlighted ? LV_OPA_COVER : isCurrent ? LV_OPA_70
-                                                                    : LV_OPA_50;
+                lv_obj_set_style_bg_color(bullet, color, 0);
+                lv_obj_set_style_bg_opa(bullet, opa, 0);
+            }
 
-            lv_obj_set_style_bg_color(bullet, color, 0);
-            lv_obj_set_style_bg_opa(bullet, opa, 0);
-
-            // Update label color and opacity
-            // Label is now after state bullet: state_bullet=0, label=1, [dots...]
+            // Update label (same logic for all items)
             lv_obj_t *label = lv_obj_get_child(btn, 1);
             if (label)
             {
-                // Change color based on highlight (like track list)
                 lv_color_t label_color = isHighlighted
                                              ? lv_color_hex(Color::TEXT_PRIMARY)
                                              : lv_color_hex(Color::INACTIVE_LIGHTER);
                 lv_obj_set_style_text_color(label, label_color, 0);
 
-                // Update opacity based on device state (matching DeviceStateBar behavior)
-                lv_opa_t label_opa = isEnabled ? LV_OPA_COVER : LV_OPA_50;
+                // Opacity based on device state (full opacity for non-device items)
+                lv_opa_t label_opa = isNonDeviceItem ? LV_OPA_COVER : (isEnabled ? LV_OPA_COVER : LV_OPA_50);
                 lv_obj_set_style_text_opa(label, label_opa, 0);
             }
         }

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "resource/common/ui/theme/BaseTheme.hpp"
+#include "theme/BaseTheme.hpp"
 
 namespace Theme {
 

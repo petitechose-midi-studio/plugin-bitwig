@@ -2,8 +2,8 @@
 
 #include <lvgl.h>
 #include <memory>
-#include "resource/common/ui/interface/IComponent.hpp"
-#include "resource/common/ui/widget/ButtonIndicator.hpp"
+#include "interface/IComponent.hpp"
+#include "widget/ButtonIndicator.hpp"
 
 class TransportBar : public UI::IComponent {
 public:

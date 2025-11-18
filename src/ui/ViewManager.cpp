@@ -4,7 +4,7 @@
 
 #include "api/ControllerAPI.hpp"
 #include "ViewContainer.hpp"
-#include "resource/common/ui/interface/IView.hpp"
+#include "interface/IView.hpp"
 #include "log/Macros.hpp"
 #include "splash/SplashView.hpp"
 

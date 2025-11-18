@@ -1,8 +1,8 @@
 ﻿#include "DeviceStateBar.hpp"
 
-#include "resource/common/ui/font/binary_font_buffer.hpp"
+#include "font/binary_font_buffer.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "resource/common/ui/util/TextUtils.hpp"
+#include "util/TextUtils.hpp"
 
 namespace Bitwig
 {
