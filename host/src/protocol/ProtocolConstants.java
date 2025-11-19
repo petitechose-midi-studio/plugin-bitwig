@@ -62,34 +62,5 @@ public final class ProtocolConstants {
     /** Maximum total message bytes */
     public static final int MAX_MESSAGE_SIZE = 512;
 
-    // ============================================================================
-    // MESSAGE ID RANGES
-    // ============================================================================
-
-    /** Controller → Host range start */
-    public static final byte ID_RANGE_CONTROLLER_TO_HOST_START = 0x00;
-
-    /** Controller → Host range end */
-    public static final byte ID_RANGE_CONTROLLER_TO_HOST_END = 0x3f;
-
-    /** Host → Controller range start */
-    public static final byte ID_RANGE_HOST_TO_CONTROLLER_START = 0x40;
-
-    /** Host → Controller range end */
-    public static final byte ID_RANGE_HOST_TO_CONTROLLER_END = (byte) 0xbf;
-
-    /** Bidirectional range start */
-    public static final byte ID_RANGE_BIDIRECTIONAL_START = (byte) 0xc0;
-
-    /** Bidirectional range end */
-    public static final byte ID_RANGE_BIDIRECTIONAL_END = (byte) 0xff;
-
-    // ============================================================================
-    // ROLE CONFIGURATION
-    // ============================================================================
-
-    /** This code's role in the protocol */
-    public static final boolean IS_HOST = true;
-
 
 }  // class ProtocolConstants

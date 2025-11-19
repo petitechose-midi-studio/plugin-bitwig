@@ -49,7 +49,7 @@ public:
         sysex[offset++] = MANUFACTURER_ID;
         sysex[offset++] = DEVICE_ID;
         sysex[offset++] = static_cast<uint8_t>(messageId);
-        sysex[offset++] = IS_HOST;  // fromHost flag (auto from config)
+        sysex[offset++] = 0;  // fromHost flag (C++ = controller = 0)
 
         for (uint16_t i = 0; i < payloadLen; ++i) {
             sysex[offset++] = payload[i];

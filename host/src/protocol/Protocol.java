@@ -143,7 +143,7 @@ public class Protocol extends ProtocolCallbacks {
         sysex[offset++] = ProtocolConstants.MANUFACTURER_ID;
         sysex[offset++] = ProtocolConstants.DEVICE_ID;
         sysex[offset++] = messageId;
-        sysex[offset++] = (byte) (ProtocolConstants.IS_HOST ? 1 : 0);  // fromHost flag (auto from config)
+        sysex[offset++] = 1;  // fromHost flag (Java = host)
 
         System.arraycopy(payload, 0, sysex, offset, payload.length);
         offset += payload.length;

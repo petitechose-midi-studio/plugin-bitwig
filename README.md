@@ -1,14 +1,14 @@
 # MIDI Studio - Bitwig Plugin
 
-Bidirectional Bitwig Studio extension with Teensy 4.1 hardware controller.
+Bitwig Studio extension with Teensy 4.1 hardware controller for advanced DAW control.
 
 ## Overview
 
-MIDI Studio is a bidirectional system for advanced DAW control:
+MIDI Studio connects Bitwig with custom hardware:
 
-- **Bitwig Extension (Host)**: Java plugin using Bitwig Extension API
-- **Teensy Firmware (Device)**: C++ embedded application with LVGL interface
-- **Custom SysEx Protocol**: Auto-generated bidirectional communication
+- **Bitwig Extension**: Java plugin using Bitwig Extension API v25
+- **Teensy Firmware**: C++ embedded application with LVGL interface
+- **SysEx Protocol**: Type-safe auto-generated communication layer
 
 ### Key Features
 
@@ -44,26 +44,29 @@ MIDI Studio is a bidirectional system for advanced DAW control:
 
 ```
 plugin-bitwig/
-├── host/                    # Bitwig Extension (Java)
-│   ├── src/main/java/com/midi_studio/
-│   │   ├── MidiStudioExtension.java
-│   │   ├── handler/
-│   │   │   ├── controller/  # Device → Bitwig
-│   │   │   └── host/        # Bitwig → Device
-│   │   └── protocol/        # Generated SysEx code
-│   └── pom.xml
+├── host/src/               # Bitwig Extension (Java)
+│   ├── midistudio/         # Main extension code
+│   ├── handler/            # Message handlers
+│   │   ├── controller/     # Hardware → Bitwig
+│   │   └── host/           # Bitwig → Hardware
+│   ├── protocol/           # Generated protocol (package: protocol)
+│   └── util/               # Utilities
 │
-├── src/                     # Teensy Firmware (C++)
-│   ├── main.cpp
-│   ├── handler/             # Protocol handlers
-│   ├── protocol/            # Generated SysEx code
-│   └── ui/                  # LVGL interface
+├── src/                    # Teensy Firmware (C++)
+│   ├── main.cpp            # Entry point
+│   ├── handler/            # Protocol handlers
+│   ├── protocol/           # Generated protocol (namespace: Protocol)
+│   └── ui/                 # LVGL interface
 │
-├── protocol/                # Protocol generator (Python)
-│   ├── sysex_messages.py
-│   └── field/
+├── protocol/               # Protocol Definitions (Python)
+│   ├── message/            # Message definitions
+│   ├── field/              # Field definitions
+│   ├── plugin_paths.py     # Output configuration
+│   └── sysex_protocol_config.py
 │
-└── script/bash/extension/   # Build scripts
+└── script/bash/            # Build & generation scripts
+    ├── extension/          # Java build scripts
+    └── protocol/           # Protocol generator
 ```
 
 ## Quick Start

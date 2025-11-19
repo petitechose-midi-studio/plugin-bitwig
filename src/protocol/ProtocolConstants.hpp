@@ -40,11 +40,5 @@ constexpr uint8_t ARRAY_MAX_ITEMS = 32;      // Max items per array field
 constexpr uint16_t MAX_PAYLOAD_SIZE = 256;    // Max payload bytes
 constexpr uint16_t MAX_MESSAGE_SIZE = 512;    // Max total message bytes
 
-// ============================================================================
-// ROLE CONFIGURATION
-// ============================================================================
-
-constexpr bool IS_HOST = false;  // This code's role in the protocol
-
 
 }  // namespace Protocol
