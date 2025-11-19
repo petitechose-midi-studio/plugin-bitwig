@@ -61,18 +61,18 @@ PLUGIN_PATHS: PluginPathsConfig = {
     },
 
     'output_java': {
-        'base_path': 'host/src/main/java/com/midi_studio/protocol',
-        'package': 'com.midi_studio.protocol',
-        'encoder': 'host/src/main/java/com/midi_studio/protocol/',
-        'messageid': 'host/src/main/java/com/midi_studio/protocol/',
-        'registry': 'host/src/main/java/com/midi_studio/protocol/',
-        'structs': 'host/src/main/java/com/midi_studio/protocol/struct/',
-        'constants': 'host/src/main/java/com/midi_studio/protocol/',
+        'base_path': 'host/src/protocol',
+        'package': 'protocol',
+        'encoder': 'host/src/protocol/',
+        'messageid': 'host/src/protocol/',
+        'registry': 'host/src/protocol/',
+        'structs': 'host/src/protocol/struct/',
+        'constants': 'host/src/protocol/',
     },
 
     'options': {
         'cpp_namespace': 'Protocol',
-        'java_package': 'com.midi_studio.protocol',
+        'java_package': 'protocol',
         'generate_validation': True,
         'generate_debug': True,
     },

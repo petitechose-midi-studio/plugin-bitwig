@@ -1,0 +1,134 @@
+package protocol.struct;
+
+import protocol.MessageID;
+import protocol.Encoder;
+import protocol.Decoder;
+
+/**
+ * TransportStopMessage - Auto-generated Protocol Message
+ *
+ * AUTO-GENERATED - DO NOT EDIT
+ * Generated from: types.yaml
+ *
+ * Description: TRANSPORT_STOP message
+ *
+ * This class is immutable and uses Encoder for encode/decode operations.
+ * All encoding is 7-bit MIDI-safe.
+ */
+public final class TransportStopMessage {
+
+
+    // ============================================================================
+    // Auto-detected MessageID for protocol.send()
+    // ============================================================================
+
+    public static final MessageID MESSAGE_ID = MessageID.TRANSPORT_STOP;
+
+
+    // ============================================================================
+    // Fields
+    // ============================================================================
+
+    // Origin tracking (set by DecoderRegistry during decode)
+    public boolean fromHost = false;
+
+    private final boolean isStopping;
+
+    // ============================================================================
+    // Constructor
+    // ============================================================================
+
+    /**
+     * Construct a new TransportStopMessage
+     *
+     * @param isStopping The isStopping value
+     */
+    public TransportStopMessage(boolean isStopping) {
+        this.isStopping = isStopping;
+    }
+
+    // ============================================================================
+    // Getters
+    // ============================================================================
+
+    /**
+     * Get the isStopping value
+     *
+     * @return isStopping
+     */
+    public boolean isStopping() {
+        return isStopping;
+    }
+
+    // ============================================================================
+    // Encoding
+    // ============================================================================
+
+    /**
+     * Maximum payload size in bytes (7-bit encoded)
+     */
+    public static final int MAX_PAYLOAD_SIZE = 1;
+
+    /**
+     * Encode message to MIDI-safe bytes
+     *
+     * @return Encoded byte array
+     */
+    public byte[] encode() {
+        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
+        int offset = 0;
+
+        byte[] isStopping_encoded = Encoder.encodeBool(isStopping);
+        System.arraycopy(isStopping_encoded, 0, buffer, offset, isStopping_encoded.length);
+        offset += isStopping_encoded.length;
+
+        return buffer;
+    }
+
+    // ============================================================================
+    // Decoding
+    // ============================================================================
+
+    /**
+     * Minimum payload size in bytes (with empty strings)
+     */
+    private static final int MIN_PAYLOAD_SIZE = 1;
+
+    /**
+     * Decode message from MIDI-safe bytes
+     *
+     * @param data Input buffer with encoded data
+     * @return Decoded TransportStopMessage instance
+     * @throws IllegalArgumentException if data is invalid or insufficient
+     */
+    public static TransportStopMessage decode(byte[] data) {
+        if (data.length < MIN_PAYLOAD_SIZE) {
+            throw new IllegalArgumentException("Insufficient data for TransportStopMessage decode");
+        }
+
+        int offset = 0;
+
+        boolean isStopping = Decoder.decodeBool(data, offset);
+        offset += 1;
+
+        return new TransportStopMessage(isStopping);
+    }
+
+    // ============================================================================
+    // Logging
+    // ============================================================================
+    
+    /**
+     * Convert message to YAML format for logging.
+     * 
+     * @return YAML string representation
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("# TransportStop\n");
+        sb.append("transportStop:\n");
+        sb.append("  isStopping: ").append(isStopping() ? "true" : "false").append("\n");
+        return sb.toString();
+    }
+}  // class Message
