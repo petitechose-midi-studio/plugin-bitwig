@@ -96,6 +96,20 @@ namespace Bitwig
         return list_.getItemCount();
     }
 
+    // Helper function to create a circular indicator dot
+    static lv_obj_t* createDot(lv_obj_t* parent, uint32_t color)
+    {
+        lv_obj_t *dot = lv_obj_create(parent);
+        lv_obj_set_size(dot, 10, 10);
+        lv_obj_set_style_bg_color(dot, lv_color_hex(color), 0);
+        lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
+        lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_border_width(dot, 0, 0);
+        lv_obj_set_style_pad_all(dot, 0, 0);
+        lv_obj_clear_flag(dot, LV_OBJ_FLAG_SCROLLABLE);
+        return dot;
+    }
+
     void DeviceListOverlay::createIndicators()
     {
         indicator_dots_.clear();
@@ -107,58 +121,15 @@ namespace Bitwig
             if (!btn)
                 continue;
 
-            std::vector<lv_obj_t *> item_dots;
-
-            // Create state bullet (enabled/disabled indicator) first
-            lv_obj_t *state_bullet = lv_obj_create(btn);
-            lv_obj_set_size(state_bullet, 10, 10);
-            lv_obj_set_style_bg_color(state_bullet, lv_color_hex(Color::DEVICE_STATE_ENABLED), 0);
-            lv_obj_set_style_bg_opa(state_bullet, LV_OPA_COVER, 0);
-            lv_obj_set_style_radius(state_bullet, LV_RADIUS_CIRCLE, 0);
-            lv_obj_set_style_border_width(state_bullet, 0, 0);
-            lv_obj_set_style_pad_all(state_bullet, 0, 0);
-            lv_obj_clear_flag(state_bullet, LV_OBJ_FLAG_SCROLLABLE);
-            // Move to index 0 (before label)
+            // Create state bullet (enabled/disabled indicator) and move to index 0
+            lv_obj_t *state_bullet = createDot(btn, Color::DEVICE_STATE_ENABLED);
             lv_obj_move_to_index(state_bullet, 0);
 
-            if (has_drums_[i])
-            {
-                lv_obj_t *dot = lv_obj_create(btn);
-                lv_obj_set_size(dot, 10, 10);
-                lv_obj_set_style_bg_color(dot, lv_color_hex(Color::DEVICE_DRUM_PAD), 0);
-                lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
-                lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
-                lv_obj_set_style_border_width(dot, 0, 0);
-                lv_obj_set_style_pad_all(dot, 0, 0);
-                lv_obj_clear_flag(dot, LV_OBJ_FLAG_SCROLLABLE);
-                item_dots.push_back(dot);
-            }
-
-            if (has_layers_[i])
-            {
-                lv_obj_t *dot = lv_obj_create(btn);
-                lv_obj_set_size(dot, 10, 10);
-                lv_obj_set_style_bg_color(dot, lv_color_hex(Color::DEVICE_LAYER), 0);
-                lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
-                lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
-                lv_obj_set_style_border_width(dot, 0, 0);
-                lv_obj_set_style_pad_all(dot, 0, 0);
-                lv_obj_clear_flag(dot, LV_OBJ_FLAG_SCROLLABLE);
-                item_dots.push_back(dot);
-            }
-
-            if (has_slots_[i])
-            {
-                lv_obj_t *dot = lv_obj_create(btn);
-                lv_obj_set_size(dot, 10, 10);
-                lv_obj_set_style_bg_color(dot, lv_color_hex(Color::DEVICE_SLOT), 0);
-                lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
-                lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
-                lv_obj_set_style_border_width(dot, 0, 0);
-                lv_obj_set_style_pad_all(dot, 0, 0);
-                lv_obj_clear_flag(dot, LV_OBJ_FLAG_SCROLLABLE);
-                item_dots.push_back(dot);
-            }
+            // Create type indicator dots (drums, layers, slots)
+            std::vector<lv_obj_t *> item_dots;
+            if (has_drums_[i])  item_dots.push_back(createDot(btn, Color::DEVICE_DRUM_PAD));
+            if (has_layers_[i]) item_dots.push_back(createDot(btn, Color::DEVICE_LAYER));
+            if (has_slots_[i])  item_dots.push_back(createDot(btn, Color::DEVICE_SLOT));
 
             indicator_dots_[i] = item_dots;
         }
@@ -169,14 +140,12 @@ namespace Bitwig
         int itemCount = list_.getItemCount();
         int selectedIndex = list_.getSelectedIndex();
 
+        bool hasIndicators = !indicator_dots_.empty();
+
         for (int i = 0; i < itemCount; i++)
         {
             lv_obj_t *btn = list_.getButton(i);
             if (!btn)
-                continue;
-
-            lv_obj_t *bullet = lv_obj_get_child(btn, 0);
-            if (!bullet)
                 continue;
 
             bool isNonDeviceItem = false;
@@ -192,35 +161,42 @@ namespace Bitwig
                                  ? device_states_[i]
                                  : false;
 
-            // Update bullet (hide for non-device items)
-            if (isNonDeviceItem)
+            // Update bullet only if indicators exist
+            if (hasIndicators)
             {
-                lv_obj_set_style_bg_opa(bullet, LV_OPA_TRANSP, 0);
-            }
-            else
-            {
-                lv_color_t color = isEnabled
-                                       ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
-                                       : lv_color_hex(Color::DEVICE_STATE_DISABLED);
-                bool isCurrent = (i == current_device_index_);
-                lv_opa_t opa = isHighlighted ? LV_OPA_COVER : isCurrent ? LV_OPA_70 : LV_OPA_50;
+                lv_obj_t *bullet = lv_obj_get_child(btn, 0);
+                if (bullet)
+                {
+                    // Update bullet (hide for non-device items)
+                    if (isNonDeviceItem)
+                    {
+                        lv_obj_set_style_bg_opa(bullet, LV_OPA_TRANSP, 0);
+                    }
+                    else
+                    {
+                        lv_color_t color = isEnabled
+                                               ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
+                                               : lv_color_hex(Color::DEVICE_STATE_DISABLED);
+                        bool isCurrent = (i == current_device_index_);
+                        lv_opa_t opa = isHighlighted ? LV_OPA_COVER : isCurrent ? LV_OPA_70 : LV_OPA_50;
 
-                lv_obj_set_style_bg_color(bullet, color, 0);
-                lv_obj_set_style_bg_opa(bullet, opa, 0);
+                        lv_obj_set_style_bg_color(bullet, color, 0);
+                        lv_obj_set_style_bg_opa(bullet, opa, 0);
+                    }
+                }
             }
 
             // Update label (same logic for all items)
-            lv_obj_t *label = lv_obj_get_child(btn, 1);
+            // Label is at index 1 if indicators exist, index 0 otherwise
+            int labelIndex = hasIndicators ? 1 : 0;
+            lv_obj_t *label = lv_obj_get_child(btn, labelIndex);
             if (label)
             {
                 lv_color_t label_color = isHighlighted
                                              ? lv_color_hex(Color::TEXT_PRIMARY)
                                              : lv_color_hex(Color::INACTIVE_LIGHTER);
                 lv_obj_set_style_text_color(label, label_color, 0);
-
-                // Opacity based on device state (full opacity for non-device items)
-                lv_opa_t label_opa = isNonDeviceItem ? LV_OPA_COVER : (isEnabled ? LV_OPA_COVER : LV_OPA_50);
-                lv_obj_set_style_text_opa(label, label_opa, 0);
+                lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
             }
         }
     }
