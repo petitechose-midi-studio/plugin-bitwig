@@ -635,6 +635,7 @@ public class DeviceHost {
         boolean exists = param.exists().get();
         int discreteCount = param.value().discreteValueCount().get();
         String displayValue = param.value().displayedValue().get();
+        double origin = param.value().getOrigin().get();
 
         // Sync parameter metadata to DeviceController for echo suppression logic
         if (deviceController != null) {
@@ -650,7 +651,7 @@ public class DeviceHost {
             param.name().get(),
             (float) param.value().get(),
             displayValue,
-            (float) param.value().getOrigin().get(),
+            (float) origin,
             exists,
             (byte) typeInfo.parameterType,
             (short) discreteCount,

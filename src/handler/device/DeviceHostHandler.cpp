@@ -101,22 +101,18 @@ namespace Bitwig
         // Track context change handler (granular track updates)
         protocol_.onTrackChange = [this](const Protocol::TrackChangeMessage &msg)
         {
-            api_.log(msg.toString());
             view_controller_.handleTrackChange(msg);
         };
 
         // Lightweight device header handler (optimized for speed)
         protocol_.onDeviceChangeHeader = [this](const Protocol::DeviceChangeHeaderMessage &msg)
         {
-            api_.log(msg.toString());
             view_controller_.handleDeviceChangeHeader(msg);
         };
 
         // Individual macro update handler
         protocol_.onDeviceMacroUpdate = [this](const Protocol::DeviceMacroUpdateMessage &msg)
         {
-            // api_.log(msg.toString());
-
             // Cache parameter type for echo handling
             if (msg.parameterIndex < Device::PARAMETER_COUNT)
             {

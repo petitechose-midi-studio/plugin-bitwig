@@ -197,11 +197,6 @@ namespace Bitwig
             {
                 widgets_[paramIndex]->setDiscreteMetadata(discreteCount, discreteValueNames, currentValueIndex);
             }
-
-            if (displayValue)
-            {
-                widgets_[paramIndex]->setValueWithDisplay(0.0f, displayValue);
-            }
         }
     }
 
