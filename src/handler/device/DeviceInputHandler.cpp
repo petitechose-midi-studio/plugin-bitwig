@@ -36,6 +36,11 @@ namespace Bitwig
         api_.clearScope(scope_);
     }
 
+    bool DeviceInputHandler::isTrackListRequested() const
+    {
+        return trackInputHandler_ ? trackInputHandler_->isTrackListRequested() : false;
+    }
+
     EncoderID DeviceInputHandler::getEncoderIdForParameter(uint8_t paramIndex)
     {
         static constexpr EncoderID PARAM_TO_ENCODER[Device::PARAMETER_COUNT] = {
@@ -190,7 +195,7 @@ namespace Bitwig
             [this]()
             {
                 // Toggle the selected device in the list (not the current device)
-                const int selectorIndex = view_.getDeviceSelector().getSelectedIndex();
+                const int selectorIndex = view_controller_.getDeviceSelectorSelectedIndex();
                 const int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
 
                 // Only toggle if it's a valid device (not "Back to parent")
@@ -199,19 +204,21 @@ namespace Bitwig
                     protocol_.send(Protocol::DeviceStateChangeMessage{static_cast<uint8_t>(deviceIndex), true});
                 }
             },
-            view_.getDeviceSelector().getElement()); // Scoped to selector overlay
+            view_.getDeviceSelectorElement());
 
-        // Track list selector: scoped to DeviceSelector overlay (only active when device selector
-        // visible)
         api_.onPressed(
             ButtonID::BOTTOM_LEFT,
             [this]()
             {
                 protocol_.send(Protocol::RequestTrackListMessage{});
-                view_.getDeviceSelector().hide();
-                view_.getTrackListSelector().show();
+                if (trackInputHandler_)
+                {
+                    trackInputHandler_->setTrackListRequested(true);
+                }
+                view_.hideDeviceSelector();
+                view_.showTrackSelector();
             },
-            view_.getDeviceSelector().getElement()); // Scoped to device selector overlay
+            view_.getDeviceSelectorElement());
     }
 
     void DeviceInputHandler::handleParameterChange(uint8_t index, float value)
@@ -255,7 +262,7 @@ namespace Bitwig
 
     void DeviceInputHandler::handleDeviceSelectorNavigation(float position)
     {
-        int itemCount = view_.getDeviceSelector().getItemCount();
+        int itemCount = view_.getDeviceSelectorItemCount();
         if (itemCount == 0)
             return;
 
@@ -333,8 +340,8 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
     const int selectorIndex = view_controller_.getDeviceSelectorSelectedIndex();
 
     // If track selector is open on top, close it too (user released device selector button first)
-    if (view_.getTrackListSelector().isVisible()) {
-        view_.getTrackListSelector().hide();
+    if (view_.isTrackSelectorVisible()) {
+        view_.hideTrackSelector();
     }
 
     if (navigation_.mode == SelectorMode::DEVICES && selectorIndex >= 0) {

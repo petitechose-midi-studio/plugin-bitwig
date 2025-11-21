@@ -22,23 +22,65 @@ MIDI Studio connects Bitwig with custom hardware:
 
 ### Host Development
 
-- **JDK 25+**: [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) or [Temurin](https://adoptium.net/)
-- **Maven 3.9+**: [Installation](https://maven.apache.org/install.html)
-- **Bitwig Studio 6 Beta**: Currently in development for Bitwig 6
-  - Uses latest API features (text value lists, etc.)
-  - Bitwig 5 backport may be considered if needed
+#### Windows
+```powershell
+# OpenJDK 25
+winget install Microsoft.OpenJDK.25
+
+# Maven
+winget install Apache.Maven
+```
+
+#### Linux (Fedora/RHEL)
+```bash
+# OpenJDK 25
+sudo dnf install java-25-openjdk.x86_64
+
+# Maven
+sudo dnf install maven
+```
+
+#### Linux (Ubuntu/Debian)
+```bash
+# OpenJDK 25
+sudo apt update
+sudo apt install openjdk-25-jdk
+
+# Maven
+sudo apt install maven
+```
+
+#### Verify Installation
+```bash
+java -version   # Should show OpenJDK 25
+mvn -version    # Should show Maven 3.9+
+```
 
 ### Device Development
 
-- **PlatformIO**: [Installation](https://platformio.org/install)
-- **Python 3.11+** with **uv**: `pip install uv`
+See [Core README](https://github.com/petitechose-midi-studio/core#prerequisites) for:
+- **PlatformIO** installation
+- **Python 3.11+** with **uv**
+- **Teensy board support**
+
+Quick summary:
+```bash
+# Python + uv
+pip install uv
+
+# PlatformIO (recommended via VS Code extension)
+# Or: pip install platformio
+```
 
 ### Hardware
 
-- **Teensy 4.1** (600 MHz ARM Cortex-M7)
-- **ILI9341 Display** (320x240, SPI)
-- **8 Rotary Encoders** with push-buttons
-- **CD74HC4067 Multiplexer** (optional)
+See [Core README](https://github.com/petitechose-midi-studio/core#hardware) for hardware requirements (Teensy 4.1, display, encoders, etc.)
+
+### Bitwig Studio
+
+- **Bitwig Studio 6 Beta**: Currently in development for Bitwig 6
+  - Uses latest API features (text value lists, etc.)
+  - Bitwig 5 backport may be considered if needed
 
 ## Project Structure
 
@@ -108,8 +150,14 @@ pio device monitor
 ### Activate in Bitwig
 
 1. Settings → Controllers → Add controller
-2. Search "MIDI Studio"
-3. Select MIDI ports
+2. Search "petitechose.audio" vendor and select "MIDI Studio"
+
+   ![Extension Selection](asset/extension_select.png)
+
+3. Configure MIDI ports (Input/Output)
+
+   ![Extension I/O Configuration](asset/extension_io.png)
+
 4. Extension shows "MIDI Studio : Connected"
 
 ## Development
@@ -215,7 +263,7 @@ cd host && mvn clean package
 
 ### "Unsupported class file major version"
 
-Check Java version: `java -version` (must be ≥ 25)
+Check Java version: `java -version`
 
 ### No Host ↔ Device communication
 

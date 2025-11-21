@@ -121,11 +121,16 @@ namespace Bitwig
             if (!btn)
                 continue;
 
-            // Create state bullet (enabled/disabled indicator) and move to index 0
-            lv_obj_t *state_bullet = createDot(btn, Color::DEVICE_STATE_ENABLED);
-            lv_obj_move_to_index(state_bullet, 0);
+            bool isNonDeviceItem = (i < item_names_.size()) &&
+                                   (item_names_[i] == "Back to parent" ||
+                                    (!item_names_[i].empty() && item_names_[i][0] == '['));
 
-            // Create type indicator dots (drums, layers, slots)
+            if (!isNonDeviceItem)
+            {
+                lv_obj_t *state_bullet = createDot(btn, Color::DEVICE_STATE_ENABLED);
+                lv_obj_move_to_index(state_bullet, 0);
+            }
+
             std::vector<lv_obj_t *> item_dots;
             if (has_drums_[i])  item_dots.push_back(createDot(btn, Color::DEVICE_DRUM_PAD));
             if (has_layers_[i]) item_dots.push_back(createDot(btn, Color::DEVICE_LAYER));
@@ -148,48 +153,33 @@ namespace Bitwig
             if (!btn)
                 continue;
 
-            bool isNonDeviceItem = false;
-            if (i < static_cast<int>(item_names_.size()))
-            {
-                const std::string &itemName = item_names_[i];
-                isNonDeviceItem = (!itemName.empty() && itemName[0] == '[') ||
-                                  (itemName == "Back to parent");
-            }
-
             bool isHighlighted = (i == selectedIndex);
             bool isEnabled = (i < static_cast<int>(device_states_.size()))
                                  ? device_states_[i]
                                  : false;
 
-            // Update bullet only if indicators exist
-            if (hasIndicators)
-            {
-                lv_obj_t *bullet = lv_obj_get_child(btn, 0);
-                if (bullet)
-                {
-                    // Update bullet (hide for non-device items)
-                    if (isNonDeviceItem)
-                    {
-                        lv_obj_set_style_bg_opa(bullet, LV_OPA_TRANSP, 0);
-                    }
-                    else
-                    {
-                        lv_color_t color = isEnabled
-                                               ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
-                                               : lv_color_hex(Color::DEVICE_STATE_DISABLED);
-                        bool isCurrent = (i == current_device_index_);
-                        lv_opa_t opa = isHighlighted ? LV_OPA_COVER : isCurrent ? LV_OPA_70 : LV_OPA_50;
+            // Determine if this is a non-device item (Back to parent or folder)
+            bool isNonDeviceItem = (i < static_cast<int>(item_names_.size())) &&
+                                   (item_names_[i] == "Back to parent" ||
+                                    (!item_names_[i].empty() && item_names_[i][0] == '['));
 
-                        lv_obj_set_style_bg_color(bullet, color, 0);
-                        lv_obj_set_style_bg_opa(bullet, opa, 0);
-                    }
-                }
+            uint32_t childCount = lv_obj_get_child_cnt(btn);
+            lv_obj_t *firstChild = (childCount > 0) ? lv_obj_get_child(btn, 0) : nullptr;
+
+            // Update state bullet (only for real devices, not Back/folders)
+            if (hasIndicators && firstChild && !isNonDeviceItem)
+            {
+                lv_color_t color = isEnabled
+                                       ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
+                                       : lv_color_hex(Color::DEVICE_STATE_DISABLED);
+                lv_opa_t opa = isHighlighted ? LV_OPA_COVER : LV_OPA_50;
+
+                lv_obj_set_style_bg_color(firstChild, color, 0);
+                lv_obj_set_style_bg_opa(firstChild, opa, 0);
             }
 
-            // Update label (same logic for all items)
-            // Label is at index 1 if indicators exist, index 0 otherwise
-            int labelIndex = hasIndicators ? 1 : 0;
-            lv_obj_t *label = lv_obj_get_child(btn, labelIndex);
+            uint32_t labelIndex = isNonDeviceItem ? 0 : 1;
+            lv_obj_t *label = (labelIndex < childCount) ? lv_obj_get_child(btn, labelIndex) : nullptr;
             if (label)
             {
                 lv_color_t label_color = isHighlighted
@@ -201,16 +191,8 @@ namespace Bitwig
         }
     }
 
-    void DeviceListOverlay::setDeviceStateAtIndex(uint8_t deviceIndex, bool enabled)
+    void DeviceListOverlay::setDeviceStateAtIndex(int displayIndex, bool enabled)
     {
-        // Check if we have a back button (nested mode)
-        bool isNested = !item_names_.empty() &&
-                        (item_names_[0] == "Back to parent" || item_names_[0] == "[^ Back]");
-
-        // Adjust index for display (add 1 if nested to skip back button)
-        int displayIndex = isNested ? deviceIndex + 1 : deviceIndex;
-
-        // Update the cached state at the display index
         if (displayIndex >= 0 && displayIndex < static_cast<int>(device_states_.size()))
         {
             device_states_[displayIndex] = enabled;

@@ -67,6 +67,12 @@ namespace Bitwig
          */
         bool isDeviceListRequested() const { return deviceList_.requested; }
 
+        /**
+         * @brief Check if track list was explicitly requested by user
+         * @return true if user requested the track list, false otherwise
+         */
+        bool isTrackListRequested() const;
+
     private:
         void setupBindings();
         void setupMacroBindings();

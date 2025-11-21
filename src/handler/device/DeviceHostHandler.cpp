@@ -68,34 +68,6 @@ namespace Bitwig
         }
     }
 
-    DeviceHostHandler::DeviceSelectorData DeviceHostHandler::transformDeviceListMessage(
-        const Protocol::DeviceListMessage &msg)
-    {
-        DeviceSelectorData data;
-
-        if (msg.isNested)
-        {
-            data.names.push_back(Device::BACK_TO_PARENT_TEXT);
-            data.states.push_back(false);
-            data.hasSlots.push_back(false);
-            data.hasLayers.push_back(false);
-            data.hasDrums.push_back(false);
-        }
-
-        for (uint8_t i = 0; i < msg.deviceCount; i++)
-        {
-            data.names.push_back(std::string(msg.devices[i].deviceName.data()));
-            data.states.push_back(msg.devices[i].isEnabled);
-
-            uint8_t flags = Device::getChildTypeFlags(msg.devices[i].childrenTypes);
-            data.hasSlots.push_back(flags & Device::Slots);
-            data.hasLayers.push_back(flags & Device::Layers);
-            data.hasDrums.push_back(flags & Device::Drums);
-        }
-
-        return data;
-    }
-
     void DeviceHostHandler::setupProtocolCallbacks()
     {
         // Track context change handler (granular track updates)
@@ -222,7 +194,6 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            // Update input handler state
             etl::array<etl::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> allChildrenTypes;
             for (uint8_t i = 0; i < msg.deviceCount && i < Device::MAX_DEVICES; i++)
             {
@@ -235,22 +206,12 @@ namespace Bitwig
                                               allChildrenTypes.data(),
                                               msg.deviceCount);
 
-            // Only display if explicitly requested by user
             if (!input_handler_.isDeviceListRequested())
             {
                 return;
             }
 
-            // Transform and display
-            DeviceSelectorData data = transformDeviceListMessage(msg);
-            int displayIndex = msg.isNested ? msg.deviceIndex + 1 : msg.deviceIndex;
-
-            view_controller_.handleShowDeviceSelectorWithIndicators(data.names,
-                                                                    displayIndex,
-                                                                    data.states,
-                                                                    data.hasSlots,
-                                                                    data.hasLayers,
-                                                                    data.hasDrums);
+            view_controller_.handleDeviceList(msg);
         };
 
         protocol_.onDeviceChildren = [this](const Protocol::DeviceChildrenMessage &msg)
@@ -292,6 +253,12 @@ namespace Bitwig
 
             // Update input handler state
             input_handler_.setTrackListState(msg.trackCount, msg.trackIndex, msg.isNested);
+
+            // Only display if explicitly requested by user
+            if (!input_handler_.isTrackListRequested())
+            {
+                return;
+            }
 
             // Delegate to controller for display
             view_controller_.handleTrackList(msg);

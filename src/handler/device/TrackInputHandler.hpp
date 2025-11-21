@@ -29,6 +29,18 @@ namespace Bitwig
          */
         void setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex, bool isNested);
 
+        /**
+         * @brief Check if track list was explicitly requested by user
+         * @return true if user requested the track list, false otherwise
+         */
+        bool isTrackListRequested() const { return trackList_.requested; }
+
+        /**
+         * @brief Mark track list as requested by user
+         * @param requested True if user requested the track list
+         */
+        void setTrackListRequested(bool requested) { trackList_.requested = requested; }
+
     private:
         void setupBindings();
 

@@ -12,6 +12,7 @@ struct DeviceMacroDiscreteValuesMessage;
 struct DevicePageChangeMessage;
 struct TrackChangeMessage;
 struct TrackListMessage;
+struct DeviceListMessage;
 }  // namespace Protocol
 
 namespace Bitwig
@@ -119,22 +120,8 @@ namespace Bitwig
          */
         int getPageSelectorSelectedIndex() const;
 
-        /**
-         * @brief Handle device selector display request
-         * @param items Vector of formatted device names (already formatted with [S]/[L]/etc.)
-         * @param currentIndex Currently active device index
-         */
-        void handleShowDeviceSelector(const std::vector<std::string> &items, int currentIndex);
+        void handleDeviceList(const Protocol::DeviceListMessage &msg);
 
-        /**
-         * @brief Show device selector with colored indicators
-         * @param names Device names (without text indicators)
-         * @param currentIndex Current device index
-         * @param deviceStates Device enabled states (per device)
-         * @param hasSlots Device has slots (per device)
-         * @param hasLayers Device has layers (per device)
-         * @param hasDrums Device has drum pads (per device)
-         */
         void handleShowDeviceSelectorWithIndicators(
             const std::vector<std::string> &names,
             int currentIndex,
@@ -188,7 +175,29 @@ namespace Bitwig
         void handleTrackSoloState(uint8_t trackIndex, bool isSoloed);
 
     private:
+        int toDisplayIndex(int rawIndex) const
+        {
+            return is_device_nested_ ? rawIndex + 1 : rawIndex;
+        }
+
+        int toRawIndex(int displayIndex) const
+        {
+            return is_device_nested_ ? displayIndex - 1 : displayIndex;
+        }
+
+        int toTrackDisplayIndex(int rawIndex) const
+        {
+            return is_track_nested_ ? rawIndex + 1 : rawIndex;
+        }
+
+        int toTrackRawIndex(int displayIndex) const
+        {
+            return is_track_nested_ ? displayIndex - 1 : displayIndex;
+        }
+
         DeviceView &view_;
+        bool is_device_nested_ = false;
+        bool is_track_nested_ = false;
     };
 
 } // namespace Bitwig

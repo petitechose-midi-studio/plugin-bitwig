@@ -432,4 +432,193 @@ namespace Bitwig
         track_list_selector_ = std::make_unique<TrackListSelector>(zone_);
     }
 
+    void DeviceView::showPageSelector(const std::vector<std::string> &pageNames, int currentIndex)
+    {
+        if (!page_selector_)
+            return;
+        page_selector_->setPageNames(pageNames);
+        page_selector_->setCurrentPageIndex(currentIndex);
+        page_selector_->show();
+    }
+
+    void DeviceView::setPageSelectorIndex(int index)
+    {
+        if (!page_selector_)
+            return;
+        page_selector_->setSelectedIndex(index);
+    }
+
+    void DeviceView::hidePageSelector()
+    {
+        if (!page_selector_)
+            return;
+        page_selector_->hide();
+    }
+
+    int DeviceView::getPageSelectorIndex() const
+    {
+        if (!page_selector_)
+            return -1;
+        return page_selector_->getSelectedIndex();
+    }
+
+    lv_obj_t *DeviceView::getPageSelectorElement() const
+    {
+        if (!page_selector_)
+            return nullptr;
+        return page_selector_->getElement();
+    }
+
+    void DeviceView::showDeviceList(const std::vector<std::string> &names,
+                                    int currentIndex,
+                                    const std::vector<bool> &deviceStates,
+                                    const std::vector<bool> &hasSlots,
+                                    const std::vector<bool> &hasLayers,
+                                    const std::vector<bool> &hasDrums)
+    {
+        if (!device_selector_)
+            return;
+        device_selector_->setDeviceItems(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
+        device_selector_->showWithFooter();
+    }
+
+    void DeviceView::showDeviceChildren(const std::vector<std::string> &items)
+    {
+        if (!device_selector_)
+            return;
+        device_selector_->setItems(items);
+        device_selector_->setCurrentItemIndex(1);
+        device_selector_->showWithoutFooter();
+    }
+
+    void DeviceView::setDeviceSelectorIndex(int index)
+    {
+        if (!device_selector_)
+            return;
+        device_selector_->setSelectedIndex(index);
+    }
+
+    void DeviceView::hideDeviceSelector()
+    {
+        if (!device_selector_)
+            return;
+        device_selector_->hide();
+    }
+
+    void DeviceView::showDeviceSelector()
+    {
+        if (!device_selector_)
+            return;
+        device_selector_->show();
+    }
+
+    int DeviceView::getDeviceSelectorIndex() const
+    {
+        if (!device_selector_)
+            return -1;
+        return device_selector_->getSelectedIndex();
+    }
+
+    int DeviceView::getDeviceSelectorItemCount() const
+    {
+        if (!device_selector_)
+            return 0;
+        return device_selector_->getItemCount();
+    }
+
+    lv_obj_t *DeviceView::getDeviceSelectorElement() const
+    {
+        if (!device_selector_)
+            return nullptr;
+        return device_selector_->getElement();
+    }
+
+    bool DeviceView::isDeviceSelectorVisible() const
+    {
+        if (!device_selector_)
+            return false;
+        return device_selector_->isVisible();
+    }
+
+    void DeviceView::updateDeviceState(int displayIndex, bool enabled)
+    {
+        if (!device_selector_ || !device_selector_->isVisible())
+            return;
+        device_selector_->setDeviceStateAtIndex(displayIndex, enabled);
+    }
+
+    void DeviceView::showTrackList(const std::vector<std::string> &names,
+                                   int currentIndex,
+                                   const std::vector<bool> &muteStates,
+                                   const std::vector<bool> &soloStates)
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates);
+        track_list_selector_->show();
+    }
+
+    void DeviceView::setTrackListSelectorIndex(int index)
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->setSelectedIndex(index);
+    }
+
+    void DeviceView::hideTrackSelector()
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->hide();
+    }
+
+    void DeviceView::showTrackSelector()
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->show();
+    }
+
+    int DeviceView::getTrackListSelectorIndex() const
+    {
+        if (!track_list_selector_)
+            return -1;
+        return track_list_selector_->getSelectedIndex();
+    }
+
+    int DeviceView::getTrackListSelectorItemCount() const
+    {
+        if (!track_list_selector_)
+            return 0;
+        return track_list_selector_->getItemCount();
+    }
+
+    lv_obj_t *DeviceView::getTrackListSelectorElement() const
+    {
+        if (!track_list_selector_)
+            return nullptr;
+        return track_list_selector_->getElement();
+    }
+
+    bool DeviceView::isTrackSelectorVisible() const
+    {
+        if (!track_list_selector_)
+            return false;
+        return track_list_selector_->isVisible();
+    }
+
+    void DeviceView::updateTrackMuteState(int displayIndex, bool isMuted)
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->setTrackMuteStateAtIndex(displayIndex, isMuted);
+    }
+
+    void DeviceView::updateTrackSoloState(int displayIndex, bool isSoloed)
+    {
+        if (!track_list_selector_)
+            return;
+        track_list_selector_->setTrackSoloStateAtIndex(displayIndex, isSoloed);
+    }
+
 } // namespace Bitwig

@@ -6,6 +6,8 @@
 #include "../../protocol/struct/DevicePageChangeMessage.hpp"
 #include "../../protocol/struct/TrackChangeMessage.hpp"
 #include "../../protocol/struct/TrackListMessage.hpp"
+#include "../../protocol/struct/DeviceListMessage.hpp"
+#include "../../handler/device/DeviceConstants.hpp"
 #include "DeviceView.hpp"
 #include "component/DeviceSelector.hpp"
 #include "component/PageSelector.hpp"
@@ -37,11 +39,7 @@ namespace Bitwig
 
     void DeviceController::handleDeviceStateAtIndex(uint8_t deviceIndex, bool enabled)
     {
-        auto &selector = view_.getDeviceSelector();
-        if (selector.isVisible())
-        {
-            selector.setDeviceStateAtIndex(deviceIndex, enabled);
-        }
+        view_.updateDeviceState(toDisplayIndex(deviceIndex), enabled);
     }
 
     void DeviceController::handleTrackChange(const Protocol::TrackChangeMessage &msg)
@@ -115,33 +113,52 @@ namespace Bitwig
 
     void DeviceController::handleShowPageSelector(const std::vector<std::string> &pageNames, int currentIndex)
     {
-        auto &selector = view_.getPageSelector();
-        selector.setPageNames(pageNames);
-        selector.setCurrentPageIndex(currentIndex);
-        selector.show();
+        view_.showPageSelector(pageNames, currentIndex);
     }
 
     void DeviceController::handlePageSelectorSetIndex(int index)
     {
-        view_.getPageSelector().setSelectedIndex(index);
+        view_.setPageSelectorIndex(index);
     }
 
     void DeviceController::handlePageSelectorConfirm()
     {
-        view_.getPageSelector().hide();
+        view_.hidePageSelector();
     }
 
     int DeviceController::getPageSelectorSelectedIndex() const
     {
-        return view_.getPageSelector().getSelectedIndex();
+        return view_.getPageSelectorIndex();
     }
 
-    void DeviceController::handleShowDeviceSelector(const std::vector<std::string> &items, int currentIndex)
+    void DeviceController::handleDeviceList(const Protocol::DeviceListMessage &msg)
     {
-        auto &selector = view_.getDeviceSelector();
-        selector.setItems(items);
-        selector.setCurrentItemIndex(currentIndex);
-        selector.show();
+        std::vector<std::string> names;
+        std::vector<bool> states, hasSlots, hasLayers, hasDrums;
+
+        if (msg.isNested)
+        {
+            names.push_back(Device::BACK_TO_PARENT_TEXT);
+            states.push_back(false);
+            hasSlots.push_back(false);
+            hasLayers.push_back(false);
+            hasDrums.push_back(false);
+        }
+
+        for (uint8_t i = 0; i < msg.deviceCount; i++)
+        {
+            names.push_back(std::string(msg.devices[i].deviceName.data()));
+            states.push_back(msg.devices[i].isEnabled);
+
+            uint8_t flags = Device::getChildTypeFlags(msg.devices[i].childrenTypes);
+            hasSlots.push_back(flags & Device::Slots);
+            hasLayers.push_back(flags & Device::Layers);
+            hasDrums.push_back(flags & Device::Drums);
+        }
+
+        is_device_nested_ = msg.isNested;
+
+        view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), states, hasSlots, hasLayers, hasDrums);
     }
 
     void DeviceController::handleShowDeviceSelectorWithIndicators(
@@ -149,31 +166,28 @@ namespace Bitwig
         const std::vector<bool> &deviceStates, const std::vector<bool> &hasSlots,
         const std::vector<bool> &hasLayers, const std::vector<bool> &hasDrums)
     {
-        auto &selector = view_.getDeviceSelector();
-        selector.setDeviceItems(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
-        selector.show();
+        is_device_nested_ = (!names.empty() && names[0] == Device::BACK_TO_PARENT_TEXT);
+        view_.showDeviceList(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
     }
 
     void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items)
     {
-        auto &selector = view_.getDeviceSelector();
-        selector.setItems(items);
-        selector.setCurrentItemIndex(1);
+        view_.showDeviceChildren(items);
     }
 
     void DeviceController::handleDeviceSelectorSetIndex(int index)
     {
-        view_.getDeviceSelector().setSelectedIndex(index);
+        view_.setDeviceSelectorIndex(index);
     }
 
     void DeviceController::handleDeviceSelectorConfirm()
     {
-        view_.getDeviceSelector().hide();
+        view_.hideDeviceSelector();
     }
 
     int DeviceController::getDeviceSelectorSelectedIndex() const
     {
-        return view_.getDeviceSelector().getSelectedIndex();
+        return view_.getDeviceSelectorIndex();
     }
 
     void DeviceController::handleTrackList(const Protocol::TrackListMessage &msg)
@@ -196,18 +210,19 @@ namespace Bitwig
             soloStates.push_back(msg.tracks[i].isSolo);
         }
 
-        int displayIndex = msg.isNested ? msg.trackIndex + 1 : msg.trackIndex;
-        view_.getTrackListSelector().setTrackItems(trackNames, displayIndex, muteStates, soloStates);
+        is_track_nested_ = msg.isNested;
+
+        view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates);
     }
 
     void DeviceController::handleTrackMuteState(uint8_t trackIndex, bool isMuted)
     {
-        view_.getTrackListSelector().setTrackMuteStateAtIndex(trackIndex, isMuted);
+        view_.updateTrackMuteState(toTrackDisplayIndex(trackIndex), isMuted);
     }
 
     void DeviceController::handleTrackSoloState(uint8_t trackIndex, bool isSoloed)
     {
-        view_.getTrackListSelector().setTrackSoloStateAtIndex(trackIndex, isSoloed);
+        view_.updateTrackSoloState(toTrackDisplayIndex(trackIndex), isSoloed);
     }
 
 } // namespace Bitwig

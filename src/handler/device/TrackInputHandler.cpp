@@ -45,7 +45,7 @@ namespace Bitwig
     void TrackInputHandler::setupBindings()
     {
         // All bindings scoped to TrackListSelector overlay
-        lv_obj_t *trackSelectorScope = view_.getTrackListSelector().getElement();
+        lv_obj_t *trackSelectorScope = view_.getTrackListSelectorElement();
 
         // Navigation with encoder while BOTTOM_LEFT is pressed
         api_.onTurnedWhilePressed(
@@ -97,26 +97,27 @@ namespace Bitwig
 
     void TrackInputHandler::handleTrackSelectorNavigation(float position)
     {
-        int itemCount = view_.getTrackListSelector().getItemCount();
+        int itemCount = view_.getTrackListSelectorItemCount();
         if (itemCount == 0)
             return;
 
         int wrappedIndex = wrapIndex(position, itemCount);
-        view_.getTrackListSelector().setSelectedIndex(wrappedIndex);
+        view_.setTrackListSelectorIndex(wrappedIndex);
     }
 
     void TrackInputHandler::handleTrackSelectorRelease()
     {
         // If track selector was already closed (device selector button was released first), do nothing
-        if (!view_.getTrackListSelector().isVisible())
+        if (!view_.isTrackSelectorVisible())
         {
+            trackList_.requested = false;
             return;
         }
 
-        const int selectedIndex = view_.getTrackListSelector().getSelectedIndex();
+        const int selectedIndex = view_.getTrackListSelectorIndex();
 
-        view_.getTrackListSelector().hide();
-        view_.getDeviceSelector().show();
+        view_.hideTrackSelector();
+        view_.showDeviceSelector();
 
         // Check if "Back to parent" was selected (index 0 when nested)
         if (trackList_.isNested && selectedIndex == 0)
@@ -137,11 +138,12 @@ namespace Bitwig
 
         // Reset encoder position
         api_.setEncoderPosition(EncoderID::NAV, 0.0f);
+        trackList_.requested = false;
     }
 
     void TrackInputHandler::handleTrackSelectorEnter()
     {
-        const int selectedIndex = view_.getTrackListSelector().getSelectedIndex();
+        const int selectedIndex = view_.getTrackListSelectorIndex();
 
         if (trackList_.isNested && selectedIndex == 0)
         {
@@ -164,7 +166,7 @@ namespace Bitwig
 
     void TrackInputHandler::handleTrackMute()
     {
-        const int selectedIndex = view_.getTrackListSelector().getSelectedIndex();
+        const int selectedIndex = view_.getTrackListSelectorIndex();
 
         // Don't mute "Back to parent"
         if (trackList_.isNested && selectedIndex == 0)
@@ -181,7 +183,7 @@ namespace Bitwig
 
     void TrackInputHandler::handleTrackSolo()
     {
-        const int selectedIndex = view_.getTrackListSelector().getSelectedIndex();
+        const int selectedIndex = view_.getTrackListSelectorIndex();
 
         // Don't solo "Back to parent"
         if (trackList_.isNested && selectedIndex == 0)

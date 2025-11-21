@@ -36,17 +36,6 @@ namespace Bitwig
         template <typename MacroArray>
         void updateMacroEncoderPositions(const MacroArray &macros);
 
-        struct DeviceSelectorData
-        {
-            std::vector<std::string> names;
-            std::vector<bool> states;
-            std::vector<bool> hasSlots;
-            std::vector<bool> hasLayers;
-            std::vector<bool> hasDrums;
-        };
-
-        DeviceSelectorData transformDeviceListMessage(const Protocol::DeviceListMessage &msg);
-
         Protocol::Protocol &protocol_;
         ControllerAPI &api_;
         DeviceView &view_;

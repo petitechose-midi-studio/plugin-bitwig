@@ -109,10 +109,10 @@ namespace Bitwig
 
         /**
          * @brief Set device state at specific index (updates bullet visibility)
-         * @param deviceIndex Device index in bank
+         * @param displayIndex Display index in list (already accounts for nested mode)
          * @param enabled Device enabled state
          */
-        void setDeviceStateAtIndex(uint8_t deviceIndex, bool enabled);
+        void setDeviceStateAtIndex(int displayIndex, bool enabled);
 
         /**
          * @brief Get underlying LVGL element (from IElement)

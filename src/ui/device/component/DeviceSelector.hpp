@@ -33,22 +33,6 @@ namespace Bitwig
     class DeviceSelector : public UI::IComponent
     {
     public:
-        /**
-         * @brief Navigation mode for selector
-         *
-         * Used internally to track state, but not exposed to protocol.
-         */
-        enum class NavigationMode
-        {
-            DEVICES, // List of devices in bank
-            FOLDERS, // List of child type folders (when multiple types)
-            CHILDREN // List of children (slots/layers/drum pads)
-        };
-
-        /**
-         * @brief Construct device selector
-         * @param parent Parent LVGL object (typically screen)
-         */
         explicit DeviceSelector(lv_obj_t *parent);
 
         /**
@@ -109,19 +93,9 @@ namespace Bitwig
          */
         void setSelectedIndex(int index);
 
-        /**
-         * @brief Set navigation mode (for internal state tracking)
-         * @param mode Navigation mode
-         *
-         * This is used by controller to track state, but doesn't affect UI directly.
-         * The UI is driven by setItems() and setTitle().
-         */
-        void setMode(NavigationMode mode);
-
-        /**
-         * @brief Show device selector overlay (from IComponent)
-         */
         void show() override;
+        void showWithFooter();
+        void showWithoutFooter();
 
         /**
          * @brief Hide device selector overlay (from IComponent)
@@ -146,18 +120,7 @@ namespace Bitwig
          */
         int getItemCount() const;
 
-        /**
-         * @brief Get current navigation mode
-         * @return Current mode (DEVICES, FOLDERS, or CHILDREN)
-         */
-        NavigationMode getMode() const { return mode_; }
-
-        /**
-         * @brief Set device state at specific index in list
-         * @param deviceIndex Device index in bank
-         * @param enabled Device enabled state
-         */
-        void setDeviceStateAtIndex(uint8_t deviceIndex, bool enabled);
+        void setDeviceStateAtIndex(int displayIndex, bool enabled);
 
         /**
          * @brief Get underlying LVGL element (from IElement)
@@ -169,13 +132,11 @@ namespace Bitwig
         void createFooter();
         void destroyFooter();
 
-        lv_obj_t *parent_; // Parent screen for footer
+        lv_obj_t *parent_;
         DeviceListOverlay overlay_;
         std::vector<std::string> items_;
         int current_item_index_ = 0;
-        NavigationMode mode_ = NavigationMode::DEVICES;
 
-        // Footer labels (shown in DEVICES mode only, at parent screen level)
         lv_obj_t *footer_container_ = nullptr;
         lv_obj_t *footer_left_label_ = nullptr;   // "Track"
         lv_obj_t *footer_center_label_ = nullptr; // "State"

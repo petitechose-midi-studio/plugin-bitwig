@@ -51,27 +51,35 @@ namespace Bitwig
         overlay_.setSelectedIndex(index);
     }
 
-    void DeviceSelector::setMode(NavigationMode mode)
-    {
-        mode_ = mode;
-    }
-
     void DeviceSelector::show()
     {
         overlay_.setSelectedIndex(current_item_index_);
         overlay_.show();
+    }
 
-        // Show/create footer (DEVICES mode only)
-        if (mode_ == NavigationMode::DEVICES)
+    void DeviceSelector::showWithFooter()
+    {
+        overlay_.setSelectedIndex(current_item_index_);
+        overlay_.show();
+
+        if (!footer_container_)
         {
-            if (!footer_container_)
-            {
-                createFooter();
-            }
-            else
-            {
-                lv_obj_clear_flag(footer_container_, LV_OBJ_FLAG_HIDDEN);
-            }
+            createFooter();
+        }
+        else
+        {
+            lv_obj_clear_flag(footer_container_, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    void DeviceSelector::showWithoutFooter()
+    {
+        overlay_.setSelectedIndex(current_item_index_);
+        overlay_.show();
+
+        if (footer_container_)
+        {
+            lv_obj_add_flag(footer_container_, LV_OBJ_FLAG_HIDDEN);
         }
     }
 
@@ -101,9 +109,9 @@ namespace Bitwig
         return overlay_.getItemCount();
     }
 
-    void DeviceSelector::setDeviceStateAtIndex(uint8_t deviceIndex, bool enabled)
+    void DeviceSelector::setDeviceStateAtIndex(int displayIndex, bool enabled)
     {
-        overlay_.setDeviceStateAtIndex(deviceIndex, enabled);
+        overlay_.setDeviceStateAtIndex(displayIndex, enabled);
     }
 
     void DeviceSelector::createFooter()

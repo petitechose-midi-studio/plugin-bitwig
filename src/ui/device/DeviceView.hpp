@@ -65,9 +65,41 @@ namespace Bitwig
         void setButtonState(uint16_t button_id, bool pressed, bool animate = true);
         IParameterWidget *getWidgetForButton(uint16_t button_id);
 
-        PageSelector &getPageSelector() { return *page_selector_; }
-        DeviceSelector &getDeviceSelector() { return *device_selector_; }
-        TrackListSelector &getTrackListSelector() { return *track_list_selector_; }
+        void showPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
+        void setPageSelectorIndex(int index);
+        void hidePageSelector();
+        int getPageSelectorIndex() const;
+        lv_obj_t *getPageSelectorElement() const;
+
+        void showDeviceList(const std::vector<std::string> &names,
+                           int currentIndex,
+                           const std::vector<bool> &deviceStates,
+                           const std::vector<bool> &hasSlots,
+                           const std::vector<bool> &hasLayers,
+                           const std::vector<bool> &hasDrums);
+        void showDeviceChildren(const std::vector<std::string> &items);
+        void setDeviceSelectorIndex(int index);
+        void hideDeviceSelector();
+        void showDeviceSelector();
+        int getDeviceSelectorIndex() const;
+        int getDeviceSelectorItemCount() const;
+        lv_obj_t *getDeviceSelectorElement() const;
+        bool isDeviceSelectorVisible() const;
+        void updateDeviceState(int displayIndex, bool enabled);
+
+        void showTrackList(const std::vector<std::string> &names,
+                          int currentIndex,
+                          const std::vector<bool> &muteStates,
+                          const std::vector<bool> &soloStates);
+        void setTrackListSelectorIndex(int index);
+        void hideTrackSelector();
+        void showTrackSelector();
+        int getTrackListSelectorIndex() const;
+        int getTrackListSelectorItemCount() const;
+        lv_obj_t *getTrackListSelectorElement() const;
+        bool isTrackSelectorVisible() const;
+        void updateTrackMuteState(int displayIndex, bool isMuted);
+        void updateTrackSoloState(int displayIndex, bool isSoloed);
 
         /**
          * @brief Set parameter type and metadata (called ONCE per device/page change)
