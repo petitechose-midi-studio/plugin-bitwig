@@ -7,7 +7,6 @@ import config.BitwigConfig;
 import util.ColorUtils;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * TrackHost - Observes Bitwig Tracks and sends updates TO controller
@@ -24,6 +23,9 @@ public class TrackHost {
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
     private final Track parentTrack;  // Parent track for navigation
+
+    // Navigation depth tracking
+    private int navigationDepth = 0;  // 0 = root level, >0 = inside group(s)
 
     // Cache for change detection
     private String lastTrackName = "";
@@ -66,34 +68,17 @@ public class TrackHost {
 
         // Mark all tracks in bank as interested (32 slots)
         for (int i = 0; i < 32; i++) {
-            Track track = mainTrackBank.getItemAt(i);
-            track.exists().markInterested();
-            track.name().markInterested();
-            track.color().markInterested();
-            track.position().markInterested();
-            track.isActivated().markInterested();
-            track.mute().markInterested();
-            track.solo().markInterested();
-            track.isGroup().markInterested();
+            markTrackInterested(mainTrackBank.getItemAt(i));
         }
 
         // Mark parent track observables as interested
         parentTrack.exists().markInterested();
         parentTrack.name().markInterested();
-        parentTrack.isGroup().markInterested();
 
         // Mark sibling track bank observables as interested
         siblingTrackBank.itemCount().markInterested();
         for (int i = 0; i < 32; i++) {
-            Track track = siblingTrackBank.getItemAt(i);
-            track.exists().markInterested();
-            track.name().markInterested();
-            track.color().markInterested();
-            track.position().markInterested();
-            track.isActivated().markInterested();
-            track.mute().markInterested();
-            track.solo().markInterested();
-            track.isGroup().markInterested();
+            markTrackInterested(siblingTrackBank.getItemAt(i));
         }
 
         // Observer on cursor track name change
@@ -114,21 +99,50 @@ public class TrackHost {
     }
 
     /**
+     * Mark all relevant observables of a track as interested
+     * @param track Track to mark observables for
+     */
+    private void markTrackInterested(Track track) {
+        track.exists().markInterested();
+        track.name().markInterested();
+        track.color().markInterested();
+        track.position().markInterested();
+        track.isActivated().markInterested();
+        track.mute().markInterested();
+        track.solo().markInterested();
+        track.isGroup().markInterested();
+    }
+
+    /**
+     * Get current track bank based on navigation depth
+     * @return siblingTrackBank if nested, mainTrackBank otherwise
+     */
+    private TrackBank getCurrentBank() {
+        return navigationDepth > 0 ? siblingTrackBank : mainTrackBank;
+    }
+
+    /**
+     * Check if cursor track has a parent group (not just master/root)
+     * Uses navigation depth counter instead of parentTrack (which has issues with group master tracks)
+     * @return true if inside a track group
+     */
+    private boolean hasParentGroup() {
+        return navigationDepth > 0;
+    }
+
+    /**
      * Send track list to controller with hierarchical navigation info
      * Called by TrackController when REQUEST_TRACK_LIST received
      */
     public void sendTrackList() {
-        // Automatically detect if cursor track has a parent GROUP (not just technical parent)
-        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
-
-        // Use siblingTrackBank if track has parent, mainTrackBank otherwise
-        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
+        TrackBank currentBank = getCurrentBank();
+        boolean hasParent = hasParentGroup();
 
         int totalTrackCount = currentBank.itemCount().get();
         int currentTrackPosition = cursorTrack.position().get();
         String parentGroupName = hasParent ? parentTrack.name().get() : "";
 
-        host.println("\n[TRACK HOST] Sending track list: " + totalTrackCount + " tracks (cursor=" + currentTrackPosition + ", hasParent=" + hasParent + ", parent=" + parentGroupName + ")\n");
+        host.println("\n[TRACK HOST] Sending track list: " + totalTrackCount + " tracks (cursor=" + currentTrackPosition + ", hasParent=" + hasParent + ", depth=" + navigationDepth + ", parent=" + parentGroupName + ")\n");
 
         // Build list of tracks in current bank
         List<TrackListMessage.Tracks> tracksList = new ArrayList<>();
@@ -183,8 +197,7 @@ public class TrackHost {
      * @param trackIndex Index in current bank
      */
     public void enterTrackGroup(int trackIndex) {
-        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
-        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
+        TrackBank currentBank = getCurrentBank();
         Track track = currentBank.getItemAt(trackIndex);
 
         if (!track.exists().get() || !track.isGroup().get()) {
@@ -194,6 +207,9 @@ public class TrackHost {
         }
 
         host.println("\n[TRACK HOST] ▶ Entering group: " + track.name().get() + "\n");
+
+        // Increment navigation depth
+        navigationDepth++;
 
         // Select the group track, then select its first child
         cursorTrack.selectChannel(track);
@@ -211,9 +227,7 @@ public class TrackHost {
      * Called by TrackController when EXIT_TRACK_GROUP received
      */
     public void exitTrackGroup() {
-        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
-
-        if (!hasParent) {
+        if (!hasParentGroup()) {
             host.println("\n[TRACK HOST] ⚠ Already at root level\n");
             sendTrackList();
             return;
@@ -221,6 +235,9 @@ public class TrackHost {
 
         String parentName = parentTrack.name().get();
         host.println("\n[TRACK HOST] ◀ Exiting to parent: " + parentName + "\n");
+
+        // Decrement navigation depth
+        navigationDepth--;
 
         // Select the parent track
         cursorTrack.selectParent();
@@ -237,8 +254,6 @@ public class TrackHost {
      * @return Track at index, or null if doesn't exist
      */
     public Track getTrackAtIndex(int trackIndex) {
-        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
-        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
-        return currentBank.getItemAt(trackIndex);
+        return getCurrentBank().getItemAt(trackIndex);
     }
 }

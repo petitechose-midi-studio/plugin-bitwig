@@ -100,6 +100,9 @@ children_types = PrimitiveField('childrenTypes', type_name=Type.UINT8, array=4)
 # Child name (includes notation for drums: "Kick (C1)")
 child_name = PrimitiveField('childName', type_name=Type.STRING)
 
+# Item type for children (1=Slot, 2=Layer, 3=DrumPad)
+child_item_type = PrimitiveField('itemType', type_name=Type.UINT8)
+
 # ============================================================================
 # COMPOSITE STRUCTS FOR DEVICE NAVIGATION
 # ============================================================================
@@ -116,12 +119,13 @@ device_info = [
 # Memory impact: 32 devices * ~25 bytes = 800 bytes (acceptable for Teensy)
 device_list = CompositeField('devices', fields=device_info, array=32)
 
-# ChildInfo: Information about a child (slot/layer/pad)
+# ChildInfo: Information about a child (slot/layer/pad) with type
 child_info = [
     child_index,           # Index (0-N for slots/layers, MIDI note 0-127 for drums)
-    child_name             # Name (with notation for drums: "Kick (C1)")
+    child_name,            # Name (with notation for drums: "Kick (C1)")
+    child_item_type        # 1=Slot, 2=Layer, 3=DrumPad
 ]
 
-# Array of children (max 32: layers, slots, or drum pads)
-# Memory impact: 32 children * ~20 bytes = 640 bytes (acceptable for Teensy)
-children_list = CompositeField('children', fields=child_info, array=32)
+# Array of children (max 16: flat list of slots + layers + drums)
+# Memory impact: 16 children * ~20 bytes = 320 bytes (acceptable for Teensy)
+children_list = CompositeField('children', fields=child_info, array=16)

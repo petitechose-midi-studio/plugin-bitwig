@@ -88,14 +88,11 @@ namespace Bitwig
         void handleDeviceSelectorRelease();
 
         void handleDevicesModeEnter(int selectorIndex);
-        void handleFoldersModeEnter(int selectorIndex);
         void handleChildrenModeEnter(int selectorIndex);
 
         bool hasChildren(uint8_t deviceIndex) const;
-        bool hasMultipleChildTypes(uint8_t deviceIndex) const;
         uint8_t getFirstChildType(uint8_t deviceIndex) const;
         int getAdjustedDeviceIndex(int selectorIndex) const;
-        void showFoldersForDevice(uint8_t deviceIndex);
         void handleBackNavigation();
 
         // Helper for circular index wrapping (handles negative values)
@@ -132,7 +129,6 @@ namespace Bitwig
         enum class SelectorMode
         {
             DEVICES,
-            FOLDERS,
             CHILDREN
         };
         struct

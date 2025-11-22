@@ -77,7 +77,7 @@ namespace Bitwig
                            const std::vector<bool> &hasSlots,
                            const std::vector<bool> &hasLayers,
                            const std::vector<bool> &hasDrums);
-        void showDeviceChildren(const std::vector<std::string> &items);
+        void showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
         void setDeviceSelectorIndex(int index);
         void hideDeviceSelector();
         void showDeviceSelector();

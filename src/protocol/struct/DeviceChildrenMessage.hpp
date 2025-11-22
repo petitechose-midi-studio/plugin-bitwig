@@ -31,6 +31,7 @@ namespace Protocol {
 struct Children {
     uint8_t childIndex;
     etl::string<STRING_MAX_LENGTH> childName;
+    uint8_t itemType;
 };
 
 #endif // PROTOCOL_CHILDREN_STRUCT
@@ -42,7 +43,7 @@ struct DeviceChildrenMessage {
     uint8_t deviceIndex;
     uint8_t childType;
     uint8_t childrenCount;
-    etl::array<Children, 32> children;
+    etl::array<Children, 16> children;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -50,12 +51,12 @@ struct DeviceChildrenMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 580;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 308;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 68;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 52;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -76,6 +77,7 @@ struct DeviceChildrenMessage {
         for (const auto& item : children) {
             encodeUint8(ptr, item.childIndex);
             encodeString(ptr, item.childName);
+            encodeUint8(ptr, item.itemType);
         }
 
         return ptr - buffer;
@@ -105,11 +107,12 @@ struct DeviceChildrenMessage {
         if (!decodeUint8(ptr, remaining, childrenCount)) return etl::nullopt;
         uint8_t count_children;
         if (!decodeUint8(ptr, remaining, count_children)) return etl::nullopt;
-        etl::array<Children, 32> children_data;
-        for (uint8_t i = 0; i < count_children && i < 32; ++i) {
+        etl::array<Children, 16> children_data;
+        for (uint8_t i = 0; i < count_children && i < 16; ++i) {
             Children item;
             if (!decodeUint8(ptr, remaining, item.childIndex)) return etl::nullopt;
             if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.childName)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.itemType)) return etl::nullopt;
             children_data[i] = item;
         }
 
@@ -143,6 +146,7 @@ struct DeviceChildrenMessage {
         for (size_t i = 0; i < children.size(); ++i) {
             ptr += snprintf(ptr, end - ptr, "    - childIndex: %lu\n", (unsigned long)children[i].childIndex);
         ptr += snprintf(ptr, end - ptr, "      childName: \"%s\"\n", children[i].childName.c_str());
+        ptr += snprintf(ptr, end - ptr, "      itemType: %lu\n", (unsigned long)children[i].itemType);
         }
         
         *ptr = '\0';

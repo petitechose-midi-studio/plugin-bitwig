@@ -34,10 +34,12 @@ public final class DeviceChildrenMessage {
     public static final class Children {
         private final int childIndex;
         private final String childName;
+        private final int itemType;
 
-        public Children(int childIndex, String childName) {
+        public Children(int childIndex, String childName, int itemType) {
             this.childIndex = childIndex;
             this.childName = childName;
+            this.itemType = itemType;
         }
 
         public int getChildIndex() {
@@ -46,6 +48,10 @@ public final class DeviceChildrenMessage {
 
         public String getChildName() {
             return childName;
+        }
+
+        public int getItemType() {
+            return itemType;
         }
 
     }
@@ -128,7 +134,7 @@ public final class DeviceChildrenMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 580;
+    public static final int MAX_PAYLOAD_SIZE = 308;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -159,6 +165,9 @@ public final class DeviceChildrenMessage {
     byte[] item_childName_encoded = Encoder.encodeString(item.getChildName(), ProtocolConstants.STRING_MAX_LENGTH);
             System.arraycopy(item_childName_encoded, 0, buffer, offset, item_childName_encoded.length);
             offset += item_childName_encoded.length;
+    byte[] item_itemType_encoded = Encoder.encodeUint8(item.getItemType());
+            System.arraycopy(item_itemType_encoded, 0, buffer, offset, item_itemType_encoded.length);
+            offset += item_itemType_encoded.length;
         }
 
 
@@ -172,7 +181,7 @@ public final class DeviceChildrenMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 68;
+    private static final int MIN_PAYLOAD_SIZE = 52;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -203,7 +212,9 @@ public final class DeviceChildrenMessage {
             offset += 1;
     String item_childName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_childName.length();
-            children_list.add(new Children(item_childIndex, item_childName));
+    int item_itemType = Decoder.decodeUint8(data, offset);
+            offset += 1;
+            children_list.add(new Children(item_childIndex, item_childName, item_itemType));
         }
 
 
@@ -231,6 +242,7 @@ public final class DeviceChildrenMessage {
         for (Children item : getChildren()) {
             sb.append("    - childIndex: ").append(item.getChildIndex()).append("\n");
             sb.append("      childName: \"").append(item.getChildName()).append("\"\n");
+            sb.append("      itemType: ").append(item.getItemType()).append("\n");
         }
         return sb.toString();
     }

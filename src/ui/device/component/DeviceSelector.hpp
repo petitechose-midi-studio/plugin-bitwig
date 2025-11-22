@@ -80,6 +80,15 @@ namespace Bitwig
                             const std::vector<bool> &hasDrums);
 
         /**
+         * @brief Set children items with type-specific icons
+         * @param items Child names (slots/layers/drums)
+         * @param itemTypes Item types (0=slot/LIST, 1=layer/COPY, 2=drum/KEYBOARD)
+         *
+         * Displays children with icons: 📋 slots, 📑 layers, ⌨️ drums
+         */
+        void setChildrenItems(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
+
+        /**
          * @brief Set current item index (initial selection when showing)
          * @param index Current item index (0-based)
          *

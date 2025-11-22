@@ -264,15 +264,28 @@ public class DeviceHost {
             return;
         }
 
-        List<DeviceChildrenMessage.Children> children = new ArrayList<>();
+        // Build flat list of ALL children (slots + layers + drums), max 16
+        List<DeviceChildrenMessage.Children> allChildren = new ArrayList<>();
 
-        switch (childType) {
-            case 1: children = getSlots(device); break;
-            case 2: children = getLayers(device); break;
-            case 3: children = getAllDrumPads(device); break;
+        // Add slots first (itemType=0)
+        for (DeviceChildrenMessage.Children slot : getSlots(device)) {
+            if (allChildren.size() >= 16) break;
+            allChildren.add(slot);
         }
 
-        protocol.send(new DeviceChildrenMessage(deviceIndex, childType, children.size(), children));
+        // Add layers (itemType=1)
+        for (DeviceChildrenMessage.Children layer : getLayers(device)) {
+            if (allChildren.size() >= 16) break;
+            allChildren.add(layer);
+        }
+
+        // Add drum pads (itemType=2)
+        for (DeviceChildrenMessage.Children drum : getAllDrumPads(device)) {
+            if (allChildren.size() >= 16) break;
+            allChildren.add(drum);
+        }
+
+        protocol.send(new DeviceChildrenMessage(deviceIndex, childType, allChildren.size(), allChildren));
     }
 
     public void enterDeviceChild(int deviceIndex, int childType, int childIndex) {
@@ -314,8 +327,8 @@ public class DeviceHost {
         String[] slotNames = device.slotNames().get();
 
         if (slotNames != null) {
-            for (int i = 0; i < slotNames.length; i++) {
-                slots.add(new DeviceChildrenMessage.Children(i, slotNames[i]));
+            for (int i = 0; i < slotNames.length && i < 16; i++) {
+                slots.add(new DeviceChildrenMessage.Children(i, slotNames[i], 0)); // itemType=0 for Slot
             }
         }
 
@@ -324,13 +337,15 @@ public class DeviceHost {
 
     private List<DeviceChildrenMessage.Children> getLayers(Device device) {
         List<DeviceChildrenMessage.Children> layers = new ArrayList<>();
-        int layerCount = layerBank.itemCount().get();
-        for (int i = 0; i < layerCount && i < 16; i++) {
+
+        // Limit to 16 layers max, only active ones
+        for (int i = 0; i < 16; i++) {
             DeviceLayer layer = layerBank.getItemAt(i);
             if (layer.exists().get()) {
-                layers.add(new DeviceChildrenMessage.Children(i, layer.name().get()));
+                layers.add(new DeviceChildrenMessage.Children(i, layer.name().get(), 1)); // itemType=1 for Layer
             }
         }
+
         return layers;
     }
 
@@ -344,13 +359,15 @@ public class DeviceHost {
         do {
             int scrollPos = drumPadBank.scrollPosition().get();
             for (int i = 0; i < 16; i++) {
+                if (allPads.size() >= 16) break; // Limit to 16 drum pads max
                 DrumPad pad = drumPadBank.getItemAt(i);
                 if (pad.exists().get()) {
                     int midiNote = scrollPos + i;
-                    allPads.add(new DeviceChildrenMessage.Children(midiNote, pad.name().get() + " (" + getMidiNoteName(midiNote) + ")"));
+                    String padName = pad.name().get() + " (" + getMidiNoteName(midiNote) + ")";
+                    allPads.add(new DeviceChildrenMessage.Children(midiNote, padName, 2)); // itemType=2 for DrumPad
                 }
             }
-            if (!drumPadBank.canScrollForwards().get()) break;
+            if (allPads.size() >= 16 || !drumPadBank.canScrollForwards().get()) break;
             drumPadBank.scrollForwards();
         } while (true);
 

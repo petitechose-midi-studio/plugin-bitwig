@@ -132,9 +132,10 @@ namespace Bitwig
 
         /**
          * @brief Handle device children display request
-         * @param items Vector of formatted children names (folders or actual children)
+         * @param items Vector of formatted children names
+         * @param itemTypes Vector of item types (0=LIST/slot, 1=COPY/layer, 2=KEYBOARD/drum)
          */
-        void handleShowDeviceChildren(const std::vector<std::string> &items);
+        void handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
 
         /**
          * @brief Handle device selector navigation (encoder position)
@@ -180,19 +181,9 @@ namespace Bitwig
             return is_device_nested_ ? rawIndex + 1 : rawIndex;
         }
 
-        int toRawIndex(int displayIndex) const
-        {
-            return is_device_nested_ ? displayIndex - 1 : displayIndex;
-        }
-
         int toTrackDisplayIndex(int rawIndex) const
         {
             return is_track_nested_ ? rawIndex + 1 : rawIndex;
-        }
-
-        int toTrackRawIndex(int displayIndex) const
-        {
-            return is_track_nested_ ? displayIndex - 1 : displayIndex;
         }
 
         DeviceView &view_;

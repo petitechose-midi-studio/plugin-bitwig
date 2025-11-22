@@ -36,6 +36,64 @@ void DeviceListOverlay::setItems(const std::vector<std::string> &items)
     clearIndicators();
 }
 
+void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
+{
+    item_names_ = items;
+    device_states_.clear();
+    has_slots_.clear();
+    has_layers_.clear();
+    has_drums_.clear();
+    current_device_index_ = -1;
+
+    list_.setItems(items);
+
+    // Add icon labels (same approach as TrackListOverlay)
+    for (size_t i = 0; i < items.size(); i++)
+    {
+        if (i == 0 || i >= itemTypes.size())
+            continue; // Skip BACK button
+
+        lv_obj_t *btn = list_.getButton(i);
+        if (!btn)
+            continue;
+
+        const char *iconSymbol = nullptr;
+        switch (itemTypes[i])
+        {
+        case 0:
+            iconSymbol = LV_SYMBOL_LIST;
+            break; // Slot
+        case 1:
+            iconSymbol = LV_SYMBOL_COPY;
+            break; // Layer
+        case 2:
+            iconSymbol = LV_SYMBOL_KEYBOARD;
+            break; // Drum pad
+        }
+
+        if (iconSymbol)
+        {
+            lv_obj_t *icon_label = lv_label_create(btn);
+            lv_label_set_text(icon_label, iconSymbol);
+            if (fonts.lvgl_symbols)
+            {
+                lv_obj_set_style_text_font(icon_label, fonts.lvgl_symbols, 0);
+            }
+
+            // Apply state-based colors to icons (same as labels)
+            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
+            lv_obj_set_style_text_color(icon_label, lv_color_white(), LV_STATE_PRESSED);
+            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
+            lv_obj_set_style_text_opa(icon_label, LV_OPA_50, LV_STATE_DISABLED);
+
+            lv_obj_move_to_index(icon_label, 0); // Icon before text
+        }
+    }
+
+    clearIndicators();
+}
+
 void DeviceListOverlay::setDeviceItems(const std::vector<std::string> &names, int currentIndex,
                                        const std::vector<bool> &deviceStates,
                                        const std::vector<bool> &hasSlots,
@@ -61,19 +119,16 @@ void DeviceListOverlay::setDeviceItems(const std::vector<std::string> &names, in
 
     clearIndicators();
     createIndicators();
-    updateBulletStates();
 }
 
 void DeviceListOverlay::setSelectedIndex(int index)
 {
     list_.setSelectedIndex(index);
-    updateBulletStates();
 }
 
 void DeviceListOverlay::show()
 {
     list_.show();
-    updateBulletStates();
 }
 
 void DeviceListOverlay::hide()
@@ -98,10 +153,27 @@ int DeviceListOverlay::getItemCount() const
 
 void DeviceListOverlay::setDeviceStateAtIndex(int displayIndex, bool enabled)
 {
-    if (displayIndex >= 0 && displayIndex < static_cast<int>(device_states_.size()))
+    if (displayIndex < 0 || displayIndex >= static_cast<int>(device_states_.size()))
+        return;
+
+    device_states_[displayIndex] = enabled;
+
+    lv_obj_t *button = list_.getButton(displayIndex);
+    if (!button)
+        return;
+
+    bool isDevice = !isNonDeviceItem(displayIndex);
+    if (!isDevice)
+        return;
+
+    // Bullet is always at index 0 for devices
+    uint32_t childCount = lv_obj_get_child_cnt(button);
+    if (childCount > 0)
     {
-        device_states_[displayIndex] = enabled;
-        updateBulletStates();
+        lv_obj_t *bullet = lv_obj_get_child(button, 0);
+        lv_color_t color = enabled ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
+                                   : lv_color_hex(Color::DEVICE_STATE_DISABLED);
+        lv_obj_set_style_bg_color(bullet, color, 0);
     }
 }
 
@@ -153,8 +225,19 @@ lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent)
     {
         lv_obj_set_style_text_font(icon, fonts.lvgl_symbols, 0);
     }
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, 0);
+
+    // Apply state-based colors with reduced opacity for folder icon
+    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_DEFAULT);
+
+    lv_obj_set_style_text_color(icon, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_FOCUSED);
+
+    lv_obj_set_style_text_color(icon, lv_color_white(), LV_STATE_PRESSED);
+    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_PRESSED);
+
+    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
+    lv_obj_set_style_text_opa(icon, LV_OPA_30, LV_STATE_DISABLED);
 
     return container;
 }
@@ -170,65 +253,28 @@ void DeviceListOverlay::createIndicators()
         if (!button)
             continue;
 
+        bool isDevice = !isNonDeviceItem(i);
+
+        // Always create bullet at index 0 for devices
+        if (isDevice)
+        {
+            bool isEnabled = (i < device_states_.size()) && device_states_[i];
+            uint32_t color = isEnabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED;
+
+            lv_obj_t *stateBullet = createDot(button, color);
+            lv_obj_move_to_index(stateBullet, 0);
+        }
+
+        // Always create folder icon container at index 1 (2nd position)
         bool isFolder = hasChildren(i);
-        bool isDevice = !isNonDeviceItem(i);
+        lv_obj_t *folderIcon = createFolderIcon(button);
+        lv_obj_move_to_index(folderIcon, 1);
+        folder_icons_[i] = folderIcon;
 
-        if (isFolder)
+        // Hide if not a folder
+        if (!isFolder)
         {
-            lv_obj_t *folderIcon = createFolderIcon(button);
-            lv_obj_move_to_index(folderIcon, 0);
-            folder_icons_[i] = folderIcon;
-        }
-
-        if (isDevice)
-        {
-            lv_obj_t *stateBullet = createDot(button, Color::DEVICE_STATE_ENABLED);
-            lv_obj_move_to_index(stateBullet, isFolder ? 1 : 0);
-        }
-    }
-}
-
-void DeviceListOverlay::updateBulletStates()
-{
-    int itemCount = list_.getItemCount();
-    int selectedIndex = list_.getSelectedIndex();
-
-    for (int i = 0; i < itemCount; i++)
-    {
-        lv_obj_t *button = list_.getButton(i);
-        if (!button)
-            continue;
-
-        bool isSelected = (i == selectedIndex);
-        bool isEnabled = (i < static_cast<int>(device_states_.size())) && device_states_[i];
-        bool isDevice = !isNonDeviceItem(i);
-        bool hasFolder = (i < static_cast<int>(folder_icons_.size())) && folder_icons_[i];
-
-        uint32_t childCount = lv_obj_get_child_cnt(button);
-
-        if (isDevice)
-        {
-            uint32_t bulletIndex = hasFolder ? 1 : 0;
-            if (bulletIndex < childCount)
-            {
-                lv_obj_t *bullet = lv_obj_get_child(button, bulletIndex);
-                lv_color_t color = isEnabled ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
-                                             : lv_color_hex(Color::DEVICE_STATE_DISABLED);
-                lv_opa_t opacity = isSelected ? LV_OPA_COVER : LV_OPA_50;
-
-                lv_obj_set_style_bg_color(bullet, color, 0);
-                lv_obj_set_style_bg_opa(bullet, opacity, 0);
-            }
-        }
-
-        uint32_t labelIndex = (hasFolder ? 1 : 0) + (isDevice ? 1 : 0);
-        if (labelIndex < childCount)
-        {
-            lv_obj_t *label = lv_obj_get_child(button, labelIndex);
-            lv_color_t labelColor = isSelected ? lv_color_hex(Color::TEXT_PRIMARY)
-                                                : lv_color_hex(Color::INACTIVE_LIGHTER);
-            lv_obj_set_style_text_color(label, labelColor, 0);
-            lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
+            lv_obj_add_flag(folderIcon, LV_OBJ_FLAG_HIDDEN);
         }
     }
 }

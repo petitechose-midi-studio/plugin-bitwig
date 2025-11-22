@@ -482,11 +482,11 @@ namespace Bitwig
         device_selector_->showWithFooter();
     }
 
-    void DeviceView::showDeviceChildren(const std::vector<std::string> &items)
+    void DeviceView::showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
     {
         if (!device_selector_)
             return;
-        device_selector_->setItems(items);
+        device_selector_->setChildrenItems(items, itemTypes);
         device_selector_->setCurrentItemIndex(1);
         device_selector_->showWithoutFooter();
     }

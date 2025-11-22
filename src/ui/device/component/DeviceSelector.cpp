@@ -39,6 +39,12 @@ namespace Bitwig
         overlay_.setDeviceItems(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
     }
 
+    void DeviceSelector::setChildrenItems(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
+    {
+        items_ = items;
+        overlay_.setChildrenItems(items, itemTypes);
+    }
+
     void DeviceSelector::setCurrentItemIndex(int index)
     {
         current_item_index_ = index;

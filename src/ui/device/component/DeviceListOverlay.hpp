@@ -56,6 +56,15 @@ namespace Bitwig
         void setItems(const std::vector<std::string> &items);
 
         /**
+         * @brief Set children items with type-specific icons
+         * @param items Child names (slots/layers/drums)
+         * @param itemTypes Item types (0=slot/LIST, 1=layer/COPY, 2=drum/KEYBOARD)
+         *
+         * Displays children with icons: 📋 slots, 📑 layers, ⌨️ drums
+         */
+        void setChildrenItems(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
+
+        /**
          * @brief Set device items with state and children type indicators
          * @param names Device names
          * @param currentIndex Index of device with Bitwig focus
@@ -123,7 +132,6 @@ namespace Bitwig
     private:
         void createIndicators();
         void clearIndicators();
-        void updateBulletStates();
 
         bool isNonDeviceItem(size_t index) const;
         bool hasChildren(size_t index) const;

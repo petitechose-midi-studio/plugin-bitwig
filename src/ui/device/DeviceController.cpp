@@ -170,9 +170,9 @@ namespace Bitwig
         view_.showDeviceList(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
     }
 
-    void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items)
+    void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
     {
-        view_.showDeviceChildren(items);
+        view_.showDeviceChildren(items, itemTypes);
     }
 
     void DeviceController::handleDeviceSelectorSetIndex(int index)

@@ -136,7 +136,7 @@ public class TrackController {
 
                 // Send updated state back to controller after toggle completes
                 host.scheduleTask(() -> {
-                    boolean newSoloState = !track.solo().get();
+                    boolean newSoloState = track.solo().get();
                     String trackName = track.name().get();
                     host.println("\n[TRACK CTRL] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (newSoloState ? "SOLOED" : "UNSOLOED") + "\n");
                     protocol.send(new protocol.struct.TrackSoloMessage(

@@ -218,18 +218,23 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            input_handler_.setDeviceChildrenState(msg.deviceIndex, msg.childType, msg.childrenCount);
+            // Note: childType is now unused - children are flat with individual itemTypes
+            input_handler_.setDeviceChildrenState(msg.deviceIndex, 0, msg.childrenCount);
 
             std::vector<std::string> formattedItems;
+            std::vector<uint8_t> itemTypes;
+
             formattedItems.push_back(Device::BACK_TO_PARENT_TEXT);
+            itemTypes.push_back(0); // BACK button has type 0
 
             for (uint8_t i = 0; i < msg.childrenCount; i++)
             {
                 std::string formatted = std::string(msg.children[i].childName.data());
                 formattedItems.push_back(formatted);
+                itemTypes.push_back(msg.children[i].itemType);
             }
 
-            view_controller_.handleShowDeviceChildren(formattedItems);
+            view_controller_.handleShowDeviceChildren(formattedItems, itemTypes);
         };
 
         // Track list handler

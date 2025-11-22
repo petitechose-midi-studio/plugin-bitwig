@@ -281,9 +281,6 @@ namespace Bitwig
         case SelectorMode::DEVICES:
             handleDevicesModeEnter(selectorIndex);
             break;
-        case SelectorMode::FOLDERS:
-            handleFoldersModeEnter(selectorIndex);
-            break;
         case SelectorMode::CHILDREN:
             handleChildrenModeEnter(selectorIndex);
             break;
@@ -299,28 +296,12 @@ void DeviceInputHandler::handleDevicesModeEnter(int selectorIndex) {
     const int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
     if (deviceIndex < 0 || deviceIndex >= deviceList_.count) return;
 
-    if (!hasChildren(deviceIndex)) {
-        // No children, nothing to navigate into
-    } else if (hasMultipleChildTypes(deviceIndex)) {
-        showFoldersForDevice(deviceIndex);
-    } else {
-        uint8_t childType = getFirstChildType(deviceIndex);
+    // If device has children, request flat list (slots+layers+drums)
+    if (hasChildren(deviceIndex)) {
         navigation_.deviceIndex = deviceIndex;
-
         api_.setEncoderPosition(EncoderID::NAV, 0.0f);
-        protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), childType});
-    }
-}
-
-void DeviceInputHandler::handleFoldersModeEnter(int selectorIndex) {
-    if (selectorIndex == 0) {
-        protocol_.send(Protocol::RequestDeviceListMessage{});
-    } else {
-        int folderIndex = selectorIndex - 1;
-        uint8_t childType = deviceList_.childrenTypes[navigation_.deviceIndex][folderIndex];
-
-        api_.setEncoderPosition(EncoderID::NAV, 0.0f);
-        protocol_.send(Protocol::RequestDeviceChildrenMessage{navigation_.deviceIndex, childType});
+        // childType=0: Java now returns ALL children (flat list)
+        protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
     }
 }
 
@@ -357,16 +338,6 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
                 }
                 break;
 
-            case SelectorMode::FOLDERS:
-                if (selectorIndex == 0) {
-                    protocol_.send(Protocol::RequestDeviceListMessage{});
-                } else {
-                    int folderIndex = selectorIndex - 1;
-                    uint8_t childType = deviceList_.childrenTypes[navigation_.deviceIndex][folderIndex];
-                    protocol_.send(Protocol::RequestDeviceChildrenMessage{navigation_.deviceIndex, childType});
-                }
-                break;
-
             case SelectorMode::CHILDREN:
                 if (selectorIndex == 0) {
                     handleBackNavigation();
@@ -392,12 +363,6 @@ bool DeviceInputHandler::hasChildren(uint8_t deviceIndex) const {
     return deviceList_.childrenTypes[deviceIndex][0] != Device::None;
 }
 
-bool DeviceInputHandler::hasMultipleChildTypes(uint8_t deviceIndex) const {
-    if (deviceIndex >= Device::MAX_DEVICES) return false;
-    return deviceList_.childrenTypes[deviceIndex][0] != Device::None &&
-           deviceList_.childrenTypes[deviceIndex][1] != Device::None;
-}
-
 uint8_t DeviceInputHandler::getFirstChildType(uint8_t deviceIndex) const {
     if (deviceIndex >= Device::MAX_DEVICES) return Device::None;
     return deviceList_.childrenTypes[deviceIndex][0];
@@ -410,32 +375,9 @@ int DeviceInputHandler::getAdjustedDeviceIndex(int selectorIndex) const {
     return selectorIndex;
 }
 
-void DeviceInputHandler::showFoldersForDevice(uint8_t deviceIndex) {
-    navigation_.deviceIndex = deviceIndex;
-    navigation_.mode = SelectorMode::FOLDERS;
-
-    std::vector<std::string> folderItems;
-    folderItems.push_back(Device::BACK_TO_PARENT_TEXT);
-
-    for (uint8_t type : deviceList_.childrenTypes[deviceIndex]) {
-        if (type == Device::None) break;
-
-        const char* typeName = Device::getChildTypeName(type);
-        if (typeName[0] != '\0') {
-            folderItems.push_back(typeName);
-        }
-    }
-
-    view_controller_.handleShowDeviceChildren(folderItems);
-    api_.setEncoderPosition(EncoderID::NAV, 1.0f);  // Start at first folder
-}
-
 void DeviceInputHandler::handleBackNavigation() {
-    if (hasMultipleChildTypes(navigation_.deviceIndex)) {
-        showFoldersForDevice(navigation_.deviceIndex);
-    } else {
-        protocol_.send(Protocol::RequestDeviceListMessage{});
-    }
+    // Back from children → show device list
+    protocol_.send(Protocol::RequestDeviceListMessage{});
 }
 
 } // namespace Bitwig
