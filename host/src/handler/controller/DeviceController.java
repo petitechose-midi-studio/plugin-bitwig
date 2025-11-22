@@ -236,6 +236,8 @@ public class DeviceController {
             Device device = deviceBank.getItemAt(deviceIndex);
             if (device.exists().get()) {
                 cursorDevice.selectDevice(device);
+                // NOTE: Don't auto-select first layer here
+                // Let enterDeviceChild handle layer/slot/drumpad navigation explicitly
             }
         };
     }

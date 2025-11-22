@@ -12,8 +12,8 @@ void setupPlugins(PluginManager& manager) {
 // Instantiate app with Bitwig plugin
 MidiStudioApp app(setupPlugins);
 
-void setup() {
-    delay(200);
+void setup()
+{
     LOGLN("=======================================");
     LOGLN("=== MIDI Studio - Bitwig Plugin Dev ===");
     LOGLN("=======================================");

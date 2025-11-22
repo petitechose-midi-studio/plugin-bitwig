@@ -22,10 +22,8 @@ public class TrackHost {
     private final Protocol protocol;
     private final CursorTrack cursorTrack;
     private final TrackBank mainTrackBank;
-    private final TrackBank cursorGroupBank;  // Pre-created bank for group navigation
-
-    // Navigation state
-    private boolean isInGroup = false;
+    private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
+    private final Track parentTrack;  // Parent track for navigation
 
     // Cache for change detection
     private String lastTrackName = "";
@@ -41,9 +39,11 @@ public class TrackHost {
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
 
-        // Create a TrackBank for group navigation (follows cursorTrack's children)
-        // This must be created during init, not dynamically
-        this.cursorGroupBank = cursorTrack.createTrackBank(32, 0, 0, false);
+        // Create a TrackBank for sibling tracks (same level as cursor track)
+        this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(32, 0, 0, true, false);
+
+        // Create parent track object to detect if cursor track has a parent
+        this.parentTrack = cursorTrack.createParentTrack(0, 0);
     }
 
     /**
@@ -77,10 +77,15 @@ public class TrackHost {
             track.isGroup().markInterested();
         }
 
-        // Mark cursor group bank observables as interested
-        cursorGroupBank.itemCount().markInterested();
+        // Mark parent track observables as interested
+        parentTrack.exists().markInterested();
+        parentTrack.name().markInterested();
+        parentTrack.isGroup().markInterested();
+
+        // Mark sibling track bank observables as interested
+        siblingTrackBank.itemCount().markInterested();
         for (int i = 0; i < 32; i++) {
-            Track track = cursorGroupBank.getItemAt(i);
+            Track track = siblingTrackBank.getItemAt(i);
             track.exists().markInterested();
             track.name().markInterested();
             track.color().markInterested();
@@ -113,14 +118,17 @@ public class TrackHost {
      * Called by TrackController when REQUEST_TRACK_LIST received
      */
     public void sendTrackList() {
-        // Use cursorGroupBank if in group, mainTrackBank otherwise
-        TrackBank currentBank = isInGroup ? cursorGroupBank : mainTrackBank;
+        // Automatically detect if cursor track has a parent GROUP (not just technical parent)
+        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
+
+        // Use siblingTrackBank if track has parent, mainTrackBank otherwise
+        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
 
         int totalTrackCount = currentBank.itemCount().get();
         int currentTrackPosition = cursorTrack.position().get();
-        String parentGroupName = "";
+        String parentGroupName = hasParent ? parentTrack.name().get() : "";
 
-        host.println("[TrackHost] sendTrackList: totalCount=" + totalTrackCount + ", cursorPos=" + currentTrackPosition + ", isInGroup=" + isInGroup);
+        host.println("\n[TRACK HOST] Sending track list: " + totalTrackCount + " tracks (cursor=" + currentTrackPosition + ", hasParent=" + hasParent + ", parent=" + parentGroupName + ")\n");
 
         // Build list of tracks in current bank
         List<TrackListMessage.Tracks> tracksList = new ArrayList<>();
@@ -159,16 +167,10 @@ public class TrackHost {
             }
         }
 
-        host.println("[TrackHost] Sending TRACK_LIST: " + tracksList.size() + " tracks, currentIndex=" + currentTrackIndex);
-        for (int i = 0; i < tracksList.size(); i++) {
-            TrackListMessage.Tracks t = tracksList.get(i);
-            host.println("  [" + i + "] " + t.getTrackName() + " (act=" + t.isActivated() + ", mute=" + t.isMute() + ", solo=" + t.isSolo() + ", group=" + t.isGroup() + ")");
-        }
-
         protocol.send(new TrackListMessage(
             totalTrackCount,
             currentTrackIndex,
-            isInGroup,
+            hasParent,
             parentGroupName,
             tracksList
         ));
@@ -181,25 +183,27 @@ public class TrackHost {
      * @param trackIndex Index in current bank
      */
     public void enterTrackGroup(int trackIndex) {
-        TrackBank currentBank = isInGroup ? cursorGroupBank : mainTrackBank;
+        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
+        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
         Track track = currentBank.getItemAt(trackIndex);
 
         if (!track.exists().get() || !track.isGroup().get()) {
-            host.println("[TrackHost] enterTrackGroup: track " + trackIndex + " is not a group or doesn't exist");
+            host.println("\n[TRACK HOST] ⚠ Cannot enter track " + trackIndex + " (not a group or doesn't exist)\n");
             sendTrackList();
             return;
         }
 
-        host.println("[TrackHost] enterTrackGroup: entering group " + track.name().get());
+        host.println("\n[TRACK HOST] ▶ Entering group: " + track.name().get() + "\n");
 
-        // Select the group track (cursorGroupBank will automatically follow its children)
+        // Select the group track, then select its first child
         cursorTrack.selectChannel(track);
 
-        // Switch to group mode
-        isInGroup = true;
-
-        // Wait for Bitwig to update cursorGroupBank, then send list
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        // Wait for Bitwig to update, then select first child
+        host.scheduleTask(() -> {
+            cursorTrack.selectFirstChild();
+            // Wait again before sending track list
+            host.scheduleTask(() -> sendTrackList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
     }
 
     /**
@@ -207,18 +211,34 @@ public class TrackHost {
      * Called by TrackController when EXIT_TRACK_GROUP received
      */
     public void exitTrackGroup() {
-        if (!isInGroup) {
-            host.println("[TrackHost] exitTrackGroup: already at root");
+        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
+
+        if (!hasParent) {
+            host.println("\n[TRACK HOST] ⚠ Already at root level\n");
             sendTrackList();
             return;
         }
 
-        host.println("[TrackHost] exitTrackGroup: returning to main track bank");
+        String parentName = parentTrack.name().get();
+        host.println("\n[TRACK HOST] ◀ Exiting to parent: " + parentName + "\n");
 
-        // Switch back to main track bank
-        isInGroup = false;
+        // Select the parent track
+        cursorTrack.selectParent();
 
         // Wait for Bitwig to update context, then send list
         host.scheduleTask(() -> sendTrackList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+    }
+
+    /**
+     * Get track at index from current context (siblings or main bank)
+     * Called by TrackController to get correct track based on current navigation level
+     *
+     * @param trackIndex Index in current bank
+     * @return Track at index, or null if doesn't exist
+     */
+    public Track getTrackAtIndex(int trackIndex) {
+        boolean hasParent = parentTrack.exists().get() && parentTrack.isGroup().get();
+        TrackBank currentBank = hasParent ? siblingTrackBank : mainTrackBank;
+        return currentBank.getItemAt(trackIndex);
     }
 }

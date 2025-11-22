@@ -125,6 +125,11 @@ namespace Bitwig
         void clearIndicators();
         void updateBulletStates();
 
+        bool isNonDeviceItem(size_t index) const;
+        bool hasChildren(size_t index) const;
+        lv_obj_t* createDot(lv_obj_t* parent, uint32_t color);
+        lv_obj_t* createFolderIcon(lv_obj_t* parent);
+
         ListOverlay list_;
 
         std::vector<std::string> item_names_;
@@ -135,7 +140,8 @@ namespace Bitwig
         std::vector<bool> has_layers_;
         std::vector<bool> has_drums_;
 
-        std::vector<std::vector<lv_obj_t *>> indicator_dots_;
+        // Store folder icons: [device_index]
+        std::vector<lv_obj_t *> folder_icons_;
     };
 
 } // namespace Bitwig

@@ -550,11 +550,12 @@ namespace Bitwig
     void DeviceView::showTrackList(const std::vector<std::string> &names,
                                    int currentIndex,
                                    const std::vector<bool> &muteStates,
-                                   const std::vector<bool> &soloStates)
+                                   const std::vector<bool> &soloStates,
+                                   const std::vector<bool> &groupStates)
     {
         if (!track_list_selector_)
             return;
-        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates);
+        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates, groupStates);
         track_list_selector_->show();
     }
 

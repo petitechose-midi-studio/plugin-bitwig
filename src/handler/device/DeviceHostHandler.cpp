@@ -76,15 +76,14 @@ namespace Bitwig
             view_controller_.handleTrackChange(msg);
         };
 
-        // Lightweight device header handler (optimized for speed)
         protocol_.onDeviceChangeHeader = [this](const Protocol::DeviceChangeHeaderMessage &msg)
         {
             view_controller_.handleDeviceChangeHeader(msg);
         };
 
-        // Individual macro update handler
         protocol_.onDeviceMacroUpdate = [this](const Protocol::DeviceMacroUpdateMessage &msg)
         {
+
             // Cache parameter type for echo handling
             if (msg.parameterIndex < Device::PARAMETER_COUNT)
             {
@@ -239,18 +238,6 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            LOGF("[DeviceHostHandler] Received TRACK_LIST: count=%u, index=%u, nested=%u",
-                 msg.trackCount, msg.trackIndex, msg.isNested);
-
-            // Log track details
-            for (uint8_t i = 0; i < msg.trackCount; i++)
-            {
-                std::string name = std::string(msg.tracks[i].trackName.data());
-                LOGF("[DeviceHostHandler] Track %u: %s (activated=%u, mute=%u, solo=%u, group=%u)",
-                     i, name.c_str(), msg.tracks[i].isActivated, msg.tracks[i].isMute,
-                     msg.tracks[i].isSolo, msg.tracks[i].isGroup);
-            }
-
             // Update input handler state
             input_handler_.setTrackListState(msg.trackCount, msg.trackIndex, msg.isNested);
 
@@ -270,9 +257,6 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            LOGF("[DeviceHostHandler] Received TRACK_MUTE: track=%u, isMute=%u",
-                 msg.trackIndex, msg.isMute);
-
             // Update view
             view_controller_.handleTrackMuteState(msg.trackIndex, msg.isMute);
         };
@@ -282,9 +266,6 @@ namespace Bitwig
         {
             if (!msg.fromHost)
                 return;
-
-            LOGF("[DeviceHostHandler] Received TRACK_SOLO: track=%u, isSolo=%u",
-                 msg.trackIndex, msg.isSolo);
 
             // Update view
             view_controller_.handleTrackSoloState(msg.trackIndex, msg.isSolo);

@@ -21,19 +21,19 @@ public class BitwigConfig {
      * Default: 10ms (optimized for maximum speed)
      * Previous values: 20ms, 50ms
      */
-    public static final int CURSOR_UPDATE_DELAY_MS = 15;
+    public static final int CURSOR_UPDATE_DELAY_MS = 20;
 
     /**
      * Delay in milliseconds before writing automation after touch press.
      * Prevents premature automation writes during initial touch detection.
      */
-    public static final int TOUCH_PRESS_DELAY_MS = 15;
+    public static final int TOUCH_PRESS_DELAY_MS = 20;
 
     /**
      * Grace period in milliseconds after touch release.
      * Blocks parameter value updates to prevent automation playback re-trigger.
      */
-    public static final int TOUCH_RELEASE_GRACE_MS = 15;
+    public static final int TOUCH_RELEASE_GRACE_MS = 20;
 
     private BitwigConfig() {
         // Prevent instantiation

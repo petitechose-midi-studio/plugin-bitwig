@@ -54,11 +54,13 @@ namespace Bitwig
          * @param currentIndex Current track index (0-based)
          * @param muteStates Mute state per track
          * @param soloStates Solo state per track
+         * @param groupStates Group state per track (shows folder icon if true)
          */
         void setTrackItems(const std::vector<std::string> &items,
                            int currentIndex,
                            const std::vector<bool> &muteStates,
-                           const std::vector<bool> &soloStates);
+                           const std::vector<bool> &soloStates,
+                           const std::vector<bool> &groupStates = {});
 
         /**
          * @brief Set current item index (initial selection when showing)

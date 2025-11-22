@@ -103,6 +103,9 @@ namespace Bitwig
 
         int wrappedIndex = wrapIndex(position, itemCount);
         view_.setTrackListSelectorIndex(wrappedIndex);
+
+        // NOTE: Track selection only sent on release or NAV button press
+        // This keeps navigation smooth without triggering Bitwig API calls
     }
 
     void TrackInputHandler::handleTrackSelectorRelease()
@@ -131,10 +134,13 @@ namespace Bitwig
 
             if (trackIndex >= 0 && trackIndex < trackList_.count)
             {
-                // Select track - Java will automatically send updated device list
+                // Select track (already done during navigation)
                 protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
             }
         }
+
+        // Request full device list now that navigation is complete
+        protocol_.send(Protocol::RequestDeviceListMessage{});
 
         // Reset encoder position
         api_.setEncoderPosition(EncoderID::NAV, 0.0f);
@@ -162,6 +168,9 @@ namespace Bitwig
                 protocol_.send(Protocol::EnterTrackGroupMessage{static_cast<uint8_t>(trackIndex)});
             }
         }
+
+        // Request full device list after entering/exiting group
+        protocol_.send(Protocol::RequestDeviceListMessage{});
     }
 
     void TrackInputHandler::handleTrackMute()

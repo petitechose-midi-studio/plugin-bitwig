@@ -52,7 +52,7 @@ public class TrackController {
         // Request track list FROM controller
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;
-            host.println("[TrackController] Received REQUEST_TRACK_LIST from controller");
+            host.println("\n[TRACK CTRL] → Requesting track list\n");
             if (trackHost != null) {
                 trackHost.sendTrackList();
             }
@@ -62,8 +62,14 @@ public class TrackController {
         protocol.onTrackSelectByIndex = msg -> {
             if (msg.fromHost) return;
             int trackIndex = msg.getTrackIndex();
-            Track track = trackBank.getItemAt(trackIndex);
-            if (track.exists().get()) {
+
+            // Use TrackHost to get track from correct bank (siblings or main)
+            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
+
+            if (track != null && track.exists().get()) {
+                String trackName = track.name().get();
+                host.println("\n[TRACK CTRL] SELECT → \"" + trackName + "\" [" + trackIndex + "]\n");
+
                 cursorTrack.selectChannel(track);
                 host.scheduleTask(() -> {
                     com.bitwig.extension.controller.api.Device firstDevice = deviceBank.getItemAt(0);
@@ -71,12 +77,9 @@ public class TrackController {
                         cursorDevice.selectDevice(firstDevice);}
 
                 }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
-                
-                host.scheduleTask(() -> {
-                    if (deviceHost != null) {
-                        deviceHost.sendDeviceList();
-                    }
-                }, BitwigConfig.CURSOR_UPDATE_DELAY_MS*2);
+
+                // NOTE: DeviceHost observers will send device updates automatically
+                // Full sendDeviceList() only called when track selector is released
             }
         };
 
@@ -100,13 +103,18 @@ public class TrackController {
         protocol.onTrackMute = msg -> {
             if (msg.fromHost) return;
             int trackIndex = msg.getTrackIndex();
-            Track track = trackBank.getItemAt(trackIndex);
-            if (track.exists().get()) {
+
+            // Use TrackHost to get track from correct bank (siblings or main)
+            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
+
+            if (track != null && track.exists().get()) {
                 track.mute().toggle();
 
                 // Send updated state back to controller after toggle completes
                 host.scheduleTask(() -> {
                     boolean newMuteState = track.mute().get();
+                    String trackName = track.name().get();
+                    host.println("\n[TRACK CTRL] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (newMuteState ? "MUTED" : "UNMUTED") + "\n");
                     protocol.send(new protocol.struct.TrackMuteMessage(
                         trackIndex,
                         newMuteState
@@ -119,13 +127,18 @@ public class TrackController {
         protocol.onTrackSolo = msg -> {
             if (msg.fromHost) return;
             int trackIndex = msg.getTrackIndex();
-            Track track = trackBank.getItemAt(trackIndex);
-            if (track.exists().get()) {
+
+            // Use TrackHost to get track from correct bank (siblings or main)
+            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
+
+            if (track != null && track.exists().get()) {
                 track.solo().toggle();
 
                 // Send updated state back to controller after toggle completes
                 host.scheduleTask(() -> {
-                    boolean newSoloState = track.solo().get();
+                    boolean newSoloState = !track.solo().get();
+                    String trackName = track.name().get();
+                    host.println("\n[TRACK CTRL] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (newSoloState ? "SOLOED" : "UNSOLOED") + "\n");
                     protocol.send(new protocol.struct.TrackSoloMessage(
                         trackIndex,
                         newSoloState
@@ -137,8 +150,11 @@ public class TrackController {
         // Toggle track activated FROM controller
         protocol.onTrackActivate = msg -> {
             if (msg.fromHost) return;
-            Track track = trackBank.getItemAt(msg.getTrackIndex());
-            if (track.exists().get()) {
+
+            // Use TrackHost to get track from correct bank (siblings or main)
+            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(msg.getTrackIndex()) : trackBank.getItemAt(msg.getTrackIndex());
+
+            if (track != null && track.exists().get()) {
                 track.isActivated().toggle();
             }
         };

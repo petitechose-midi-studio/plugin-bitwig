@@ -61,13 +61,15 @@ namespace Bitwig
          * @param currentIndex Index of current track with Bitwig focus
          * @param muteStates Mute state per track
          * @param soloStates Solo state per track
+         * @param groupStates Group state per track (shows folder icon if true)
          *
          * Note: All vectors should have the same size. Missing entries = false.
          */
         void setTrackItems(const std::vector<std::string> &names,
                            int currentIndex,
                            const std::vector<bool> &muteStates = {},
-                           const std::vector<bool> &soloStates = {});
+                           const std::vector<bool> &soloStates = {},
+                           const std::vector<bool> &groupStates = {});
 
         /**
          * @brief Set selected item index
@@ -134,9 +136,13 @@ namespace Bitwig
         int current_track_index_ = -1;
         std::vector<bool> mute_states_;
         std::vector<bool> solo_states_;
+        std::vector<bool> group_states_;
 
         // Store indicator objects: [track_index][0=mute, 1=solo]
         std::vector<std::array<lv_obj_t *, 2>> indicator_circles_;
+
+        // Store folder icons: [track_index]
+        std::vector<lv_obj_t *> folder_icons_;
     };
 
 } // namespace Bitwig

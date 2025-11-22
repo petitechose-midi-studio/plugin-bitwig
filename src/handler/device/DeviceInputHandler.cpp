@@ -344,17 +344,41 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
         view_.hideTrackSelector();
     }
 
-    if (navigation_.mode == SelectorMode::DEVICES && selectorIndex >= 0) {
-        if (deviceList_.isNested && selectorIndex == 0) {
-            protocol_.send(Protocol::ExitToParentMessage{});
-            view_controller_.handleDeviceSelectorConfirm();
-        } else {
-            int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
-            if (deviceIndex >= 0 && deviceIndex < deviceList_.count) {
-                protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
-                view_controller_.handleDeviceSelectorConfirm();
-            }
+    if (selectorIndex >= 0) {
+        switch (navigation_.mode) {
+            case SelectorMode::DEVICES:
+                if (deviceList_.isNested && selectorIndex == 0) {
+                    protocol_.send(Protocol::ExitToParentMessage{});
+                } else {
+                    int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
+                    if (deviceIndex >= 0 && deviceIndex < deviceList_.count) {
+                        protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
+                    }
+                }
+                break;
+
+            case SelectorMode::FOLDERS:
+                if (selectorIndex == 0) {
+                    protocol_.send(Protocol::RequestDeviceListMessage{});
+                } else {
+                    int folderIndex = selectorIndex - 1;
+                    uint8_t childType = deviceList_.childrenTypes[navigation_.deviceIndex][folderIndex];
+                    protocol_.send(Protocol::RequestDeviceChildrenMessage{navigation_.deviceIndex, childType});
+                }
+                break;
+
+            case SelectorMode::CHILDREN:
+                if (selectorIndex == 0) {
+                    handleBackNavigation();
+                } else {
+                    int childIndex = selectorIndex - 1;
+                    protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex,
+                                                                     navigation_.childType,
+                                                                     static_cast<uint8_t>(childIndex)});
+                }
+                break;
         }
+        view_controller_.handleDeviceSelectorConfirm();
     } else {
         view_controller_.handleDeviceSelectorConfirm();
     }

@@ -90,7 +90,8 @@ namespace Bitwig
         void showTrackList(const std::vector<std::string> &names,
                           int currentIndex,
                           const std::vector<bool> &muteStates,
-                          const std::vector<bool> &soloStates);
+                          const std::vector<bool> &soloStates,
+                          const std::vector<bool> &groupStates);
         void setTrackListSelectorIndex(int index);
         void hideTrackSelector();
         void showTrackSelector();

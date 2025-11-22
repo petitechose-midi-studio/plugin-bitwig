@@ -40,6 +40,10 @@ public class DeviceHost {
     // Track parameter changes from protocol (to suppress echo)
     private final boolean[] ignoreNextParameterChange = new boolean[8];
 
+    // Throttling for sendDeviceChange() to avoid race conditions
+    private long lastDeviceChangeTime = 0;
+    private static final long DEVICE_CHANGE_THROTTLE_MS = 50;
+
     public DeviceHost(
         ControllerHost host,
         Protocol protocol,
@@ -207,29 +211,16 @@ public class DeviceHost {
             final int paramIndex = i;
             RemoteControl param = remoteControls.getParameter(i);
 
-            // Use displayedValue observer to ensure value/displayValue synchronization
             param.value().displayedValue().addValueObserver(displayValue -> {
                 double value = param.value().get();
+                boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
 
-                host.println("[DeviceHost] >>> Observer fired: param=" + paramIndex + " value=" + value + " displayValue=" + displayValue);
-
-                // Check if this is an echo of a controller change or a host-initiated change
-                boolean isEcho = false;
-                if (deviceController != null) {
-                    isEcho = deviceController.consumeEcho(paramIndex);
-                }
-
-                host.println("[DeviceHost] Bitwig callback param=" + paramIndex + " value=" + value +
-                            " displayValue=" + displayValue + (isEcho ? " (ECHO)" : " (HOST-INITIATED)"));
-
-                // Send with isEcho flag: true=echo (skip on controller), false=host-initiated (apply on controller)
-                DeviceMacroValueChangeMessage message = new DeviceMacroValueChangeMessage(
+                protocol.send(new DeviceMacroValueChangeMessage(
                     paramIndex,
                     (float) value,
                     displayValue,
                     isEcho
-                );
-                protocol.send(message);
+                ));
             });
 
             // Parameter name changed
@@ -263,7 +254,6 @@ public class DeviceHost {
 
     public void suppressNextParameterChange(int paramIndex) {
         if (paramIndex >= 0 && paramIndex < 8) {
-            host.println("[DeviceHost] suppressNextParameterChange param=" + paramIndex + " FLAG SET");
             ignoreNextParameterChange[paramIndex] = true;
         }
     }
@@ -406,29 +396,33 @@ public class DeviceHost {
         Device device = deviceBank.getItemAt(deviceIndex);
         if (!device.exists().get()) return;
 
-        // Select the device first
         cursorDevice.selectDevice(device);
 
-        // Enter the child based on type
-        switch (childType) {
-            case 1: // Slot
-                String[] slotNames = device.slotNames().get();
-                if (childIndex >= 0 && childIndex < slotNames.length) {
-                    cursorDevice.selectFirstInSlot(slotNames[childIndex]);
-                }
-                break;
-            case 2: // Layer
-                cursorDevice.selectFirstInLayer(childIndex);
-                break;
-            case 3: // DrumPad
-                // childIndex is the MIDI note (0-127)
-                cursorDevice.selectFirstInKeyPad(childIndex);
-                break;
-        }
+        host.scheduleTask(() -> {
+            switch (childType) {
+                case 1: // Slot
+                    String[] slotNames = device.slotNames().get();
+                    if (childIndex >= 0 && childIndex < slotNames.length) {
+                        cursorDevice.selectFirstInSlot(slotNames[childIndex]);
+                    }
+                    break;
 
-        // After entering child, send updated device list showing devices in this chain
-        // Wait for Bitwig to update the cursor to the new context
-        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                case 2: // Layer
+                    DeviceLayer layer = layerBank.getItemAt(childIndex);
+                    if (layer != null && layer.exists().get()) {
+                        layer.selectInEditor();
+                        host.scheduleTask(() -> cursorDevice.selectFirstInChannel(layer),
+                                         BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                    }
+                    break;
+
+                case 3: // DrumPad
+                    cursorDevice.selectFirstInKeyPad(childIndex);
+                    break;
+            }
+
+            host.scheduleTask(() -> sendDeviceList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
     }
 
     /**
@@ -556,19 +550,20 @@ public class DeviceHost {
     // ========================================================================
 
     private void sendDeviceChange() {
+        // Throttle: ignore calls less than 50ms apart to avoid race conditions
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastDeviceChangeTime < DEVICE_CHANGE_THROTTLE_MS) return;
+        lastDeviceChangeTime = currentTime;
+
         String deviceName = cursorDevice.name().get();
         boolean isEnabled = cursorDevice.isEnabled().get();
-
-        // Build page info
         int pageIndex = remoteControls.selectedPageIndex().get();
         int pageCount = remoteControls.pageCount().get();
         String pageName = getPageName(pageIndex, pageCount);
 
-        // OPTIMIZED FLOW: Send header immediately (observer already has delay)
         sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName);
 
-        // Send macros with minimal stagger (5ms) to avoid MIDI buffer overflow
-        // Total time: 35ms for all 8 macros (vs 180ms before)
+        // Send macros with 5ms stagger to avoid MIDI buffer overflow
         for (int i = 0; i < 8; i++) {
             final int index = i;
             host.scheduleTask(() -> sendMacroUpdate(index), i * 5);
