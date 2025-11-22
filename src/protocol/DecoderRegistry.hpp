@@ -408,6 +408,16 @@ public:
                 }
             }
             break;
+        case MessageID::TRANSPORT_TEMPO:
+            if (callbacks.onTransportTempo) {
+                auto decoded = TransportTempoMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto msg = decoded.value();
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportTempo(msg);
+                }
+            }
+            break;
             default:
                 // Unknown message type - silently ignore
                 break;

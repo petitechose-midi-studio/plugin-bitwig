@@ -12,6 +12,7 @@ import protocol.Protocol;
  * SINGLE RESPONSIBILITY: Controller → Bitwig (Transport)
  */
 public class TransportController {
+    private final ControllerHost host;
     private final Transport transport;
     private final Protocol protocol;
 
@@ -20,7 +21,7 @@ public class TransportController {
         Transport transport,
         Protocol protocol
     ) {
-        // host parameter kept for future logging/debug needs
+        this.host = host;
         this.transport = transport;
         this.protocol = protocol;
 
@@ -28,7 +29,6 @@ public class TransportController {
     }
 
     private void setupCallbacks() {
-        // Receive TransportPlay command FROM controller
         protocol.onTransportPlay = msg -> {
             if (msg.isPlaying()) {
                 transport.play();
@@ -37,14 +37,19 @@ public class TransportController {
             }
         };
 
-        // Receive TransportRecord command FROM controller
         protocol.onTransportRecord = msg -> {
             transport.record();
         };
-        
-        // Receive TransportRecord command FROM controller
+
         protocol.onTransportStop = msg -> {
             transport.stop();
+        };
+
+        protocol.onTransportTempo = msg -> {
+            float tempo = msg.getTempo();
+            host.println("TransportController: received tempo " + tempo + " BPM, setting...");
+            transport.tempo().setRaw(tempo);
+            host.println("TransportController: tempo set to " + transport.tempo().getRaw() + " BPM");
         };
     }
 }

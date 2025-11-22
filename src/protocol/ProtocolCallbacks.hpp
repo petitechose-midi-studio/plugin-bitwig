@@ -65,6 +65,7 @@ public:
     std::function<void(const TransportPlayMessage&)> onTransportPlay;
     std::function<void(const TransportRecordMessage&)> onTransportRecord;
     std::function<void(const TransportStopMessage&)> onTransportStop;
+    std::function<void(const TransportTempoMessage&)> onTransportTempo;
 
 protected:
     ProtocolCallbacks() = default;

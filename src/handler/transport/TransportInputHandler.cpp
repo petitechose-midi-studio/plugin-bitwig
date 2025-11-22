@@ -24,6 +24,9 @@ namespace Bitwig
 
         api_.onPressed(ButtonID::BOTTOM_CENTER, [this]()
                        { stop(); });
+
+        api_.onTurned(EncoderID::NAV, [this](float normalizedValue)
+                      { adjustTempo(normalizedValue); });
     }
 
     void TransportInputHandler::togglePlay()
@@ -39,6 +42,11 @@ namespace Bitwig
     void TransportInputHandler::stop()
     {
         protocol_.send(Protocol::TransportStopMessage{});
+    }
+
+    void TransportInputHandler::adjustTempo(float normalizedValue)
+    {
+        protocol_.send(Protocol::TransportTempoMessage{normalizedValue});
     }
 
 } // namespace Bitwig

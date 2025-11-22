@@ -6,9 +6,9 @@
 namespace Bitwig
 {
 
-    TransportHostHandler::TransportHostHandler(Protocol::Protocol &protocol,
+    TransportHostHandler::TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol,
                                                TransportBarController &controller)
-        : protocol_(protocol), view_controller_(controller)
+        : api_(api), protocol_(protocol), view_controller_(controller)
     {
         setupProtocolCallbacks();
     }
@@ -24,10 +24,17 @@ namespace Bitwig
         {
             view_controller_.setRecording(msg.isRecording);
         };
+
         protocol_.onTransportStop = [this](const Protocol::TransportStopMessage &msg)
         {
             view_controller_.setPlaying(false);
             view_controller_.setRecording(false);
+        };
+
+        protocol_.onTransportTempo = [this](const Protocol::TransportTempoMessage &msg)
+        {
+            api_.setEncoderPosition(EncoderID::NAV, msg.tempo);
+            view_controller_.setTempo(msg.tempo);
         };
     }
 

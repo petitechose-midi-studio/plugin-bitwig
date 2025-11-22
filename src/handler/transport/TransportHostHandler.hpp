@@ -2,27 +2,23 @@
 
 #include "../../protocol/Protocol.hpp"
 
+class ControllerAPI;
+
 namespace Bitwig
 {
 
     class TransportBarController;
 
-    /**
-     * @brief Listen to transport updates FROM Bitwig host
-     *
-     * SERVER AUTHORITY for transport state:
-     * - Update UI (idempotent with optimistic update)
-     * - Sync InputHandler state (for next toggle)
-     */
     class TransportHostHandler
     {
     public:
-        TransportHostHandler(Protocol::Protocol &protocol, TransportBarController &controller);
+        TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol, TransportBarController &controller);
         ~TransportHostHandler() = default;
 
     private:
         void setupProtocolCallbacks();
 
+        ControllerAPI &api_;
         Protocol::Protocol &protocol_;
         TransportBarController &view_controller_;
     };

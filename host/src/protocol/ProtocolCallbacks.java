@@ -66,6 +66,7 @@ public class ProtocolCallbacks {
     public MessageHandler<TransportPlayMessage> onTransportPlay;
     public MessageHandler<TransportRecordMessage> onTransportRecord;
     public MessageHandler<TransportStopMessage> onTransportStop;
+    public MessageHandler<TransportTempoMessage> onTransportTempo;
 
     protected ProtocolCallbacks() {}
 }

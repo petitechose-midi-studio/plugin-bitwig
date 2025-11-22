@@ -9,7 +9,7 @@ package protocol;
  * This enum defines all valid SysEx message identifiers.
  * IDs are auto-allocated sequentially starting from 0x00.
  *
- * Total messages: 37
+ * Total messages: 38
  */
 public enum MessageID {
 
@@ -53,7 +53,8 @@ public enum MessageID {
     TRACK_SOLO(0x21),  // Toggle track solo state
     TRANSPORT_PLAY(0x22),  // Transport play/pause state
     TRANSPORT_RECORD(0x23),  // Transport Record Request
-    TRANSPORT_STOP(0x24);  // Transport Stop Request
+    TRANSPORT_STOP(0x24),  // Transport Stop Request
+    TRANSPORT_TEMPO(0x25);  // Tempo in BPM (bidirectional)
 
 
     private final byte value;

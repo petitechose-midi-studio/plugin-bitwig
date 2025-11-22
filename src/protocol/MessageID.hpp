@@ -7,7 +7,7 @@
  * This file defines the MessageID enum containing all valid SysEx message
  * identifiers. IDs are auto-allocated sequentially starting from 0x00.
  *
- * Total messages: 37
+ * Total messages: 38
  */
 
 #pragma once
@@ -65,13 +65,14 @@ enum class MessageID : uint8_t {
     TRANSPORT_PLAY = 0x22,  // Transport play/pause state
     TRANSPORT_RECORD = 0x23,  // Transport Record Request
     TRANSPORT_STOP = 0x24,  // Transport Stop Request
+    TRANSPORT_TEMPO = 0x25,  // Tempo in BPM (bidirectional)
 
 };
 
 /**
  * Total number of defined messages
  */
-constexpr uint8_t MESSAGE_COUNT = 37;
+constexpr uint8_t MESSAGE_COUNT = 38;
 
 
 }  // namespace Protocol

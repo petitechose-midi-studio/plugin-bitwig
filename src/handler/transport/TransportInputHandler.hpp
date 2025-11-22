@@ -28,6 +28,7 @@ namespace Bitwig
         void togglePlay();
         void toggleRecord();
         void stop();
+        void adjustTempo(float normalizedValue);
 
         ControllerAPI &api_;
         TransportBarController &view_controller_;

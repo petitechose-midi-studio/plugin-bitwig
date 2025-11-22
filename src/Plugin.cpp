@@ -13,7 +13,7 @@ namespace Bitwig
           transport_{.bar = TransportBar(viewContainer_.getBottomZone()),
                      .controller = TransportBarController(transport_.bar),
                      .inputHandler = TransportInputHandler(api_, transport_.controller, protocol_),
-                     .hostHandler = TransportHostHandler(protocol_, transport_.controller)},
+                     .hostHandler = TransportHostHandler(api_, protocol_, transport_.controller)},
           device_{.view = DeviceView(viewContainer_.getMainZone()),
                   .controller = DeviceController(device_.view),
                   .inputHandler = DeviceInputHandler(api_, device_.view, device_.controller, protocol_,

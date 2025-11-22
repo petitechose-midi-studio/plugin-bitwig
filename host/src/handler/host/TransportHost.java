@@ -14,6 +14,7 @@ import protocol.struct.*;
  * SINGLE RESPONSIBILITY: Bitwig → Controller (Transport)
  */
 public class TransportHost {
+    private final ControllerHost host;
     private final Protocol protocol;
     private final Transport transport;
 
@@ -22,7 +23,7 @@ public class TransportHost {
         Protocol protocol,
         Transport transport
     ) {
-        // host parameter kept for future logging/debug needs
+        this.host = host;
         this.protocol = protocol;
         this.transport = transport;
     }
@@ -31,18 +32,20 @@ public class TransportHost {
      * Setup transport state observers
      */
     public void setup() {
-        // Mark all observables as interested (required before .get() calls)
         transport.isPlaying().markInterested();
         transport.isArrangerRecordEnabled().markInterested();
+        transport.tempo().markInterested();
 
-        // Observe play/stop state changes
         transport.isPlaying().addValueObserver(isPlaying -> {
             protocol.send(new TransportPlayMessage(isPlaying));
         });
 
-        // Observe record state changes
         transport.isArrangerRecordEnabled().addValueObserver(isRecording -> {
             protocol.send(new TransportRecordMessage(isRecording));
+        });
+
+        transport.tempo().value().addRawValueObserver(tempo -> {
+            protocol.send(new TransportTempoMessage((float) tempo));
         });
     }
 
@@ -51,8 +54,8 @@ public class TransportHost {
      */
     public void sendInitialState() {
         protocol.send(new TransportPlayMessage(transport.isPlaying().get()));
-        protocol.send(new TransportRecordMessage(
-            transport.isArrangerRecordEnabled().get()
-        ));
+        protocol.send(new TransportRecordMessage(transport.isArrangerRecordEnabled().get()));
+        double tempo = transport.tempo().get();
+        protocol.send(new TransportTempoMessage((float) tempo));
     }
 }

@@ -53,3 +53,4 @@
 #include "struct/TransportPlayMessage.hpp"
 #include "struct/TransportRecordMessage.hpp"
 #include "struct/TransportStopMessage.hpp"
+#include "struct/TransportTempoMessage.hpp"

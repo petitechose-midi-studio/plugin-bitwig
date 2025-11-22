@@ -288,6 +288,13 @@ public class DecoderRegistry {
                     callbacks.onTransportStop.handle(msg);
                 }
                 break;
+            case TRANSPORT_TEMPO:
+                if (callbacks.onTransportTempo != null) {
+                    TransportTempoMessage msg = TransportTempoMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportTempo.handle(msg);
+                }
+                break;
             default:
                 // Unknown message type - silently ignore
                 break;
