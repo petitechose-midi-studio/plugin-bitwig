@@ -137,23 +137,22 @@ public class TrackHost {
      * Send track list to controller
      */
     public void sendTrackList() {
-        final TrackBank bank = getCurrentBank();
-        final boolean hasParent = hasParentGroup();
-        final String parentName = hasParent ? parentTrack.name().get() : "";
+        TrackBank bank = getCurrentBank();
+        boolean hasParent = hasParentGroup();
+        String parentName = hasParent ? parentTrack.name().get() : "";
 
         // Build list of tracks
-        final List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
+        List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
 
         // Find which track is selected
-        final int selectedIndex = findSelectedTrackIndex(tracks);
+        int selectedIndex = findSelectedTrackIndex(tracks);
 
         // Log
         String context = hasParent ? " ↳ " + parentName : " ⌂ root";
         host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
 
-        host.scheduleTask(() -> {
-            protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
-        }, BitwigConfig.LIST_OPERATION_DELAY_MS);
+        // Send immediately (caller handles delay if needed)
+        protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
     }
 
     private List<TrackListMessage.Tracks> buildTrackList(TrackBank bank) {
@@ -208,12 +207,11 @@ public class TrackHost {
 
         // Select the group track, then select its first child
         cursorTrack.selectChannel(track);
-
-        // Single element operation: select first child
         host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
 
-        // List operation: refresh track list
-        sendTrackList();
+        // Send track list AFTER selectFirstChild completes (SINGLE_ELEMENT + LIST_OPERATION)
+        host.scheduleTask(() -> sendTrackList(),
+            BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     /**
@@ -236,8 +234,8 @@ public class TrackHost {
         // Select the parent track
         cursorTrack.selectParent();
 
-        // List operation: refresh track list
-        sendTrackList();
+        // List operation: refresh track list AFTER selectParent completes
+        host.scheduleTask(() -> sendTrackList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     /**

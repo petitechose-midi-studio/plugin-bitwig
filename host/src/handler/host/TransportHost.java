@@ -38,15 +38,24 @@ public class TransportHost {
         transport.tempo().markInterested();
 
         transport.isPlaying().addValueObserver(isPlaying -> {
-            protocol.send(new TransportPlayMessage(isPlaying));
+            final boolean state = isPlaying;
+            host.scheduleTask(() -> {
+                protocol.send(new TransportPlayMessage(state));
+            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
         });
 
         transport.isArrangerRecordEnabled().addValueObserver(isRecording -> {
-            protocol.send(new TransportRecordMessage(isRecording));
+            final boolean state = isRecording;
+            host.scheduleTask(() -> {
+                protocol.send(new TransportRecordMessage(state));
+            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
         });
 
         transport.tempo().value().addRawValueObserver(tempo -> {
-            protocol.send(new TransportTempoMessage((float) tempo));
+            final float tempoValue = (float) tempo;
+            host.scheduleTask(() -> {
+                protocol.send(new TransportTempoMessage(tempoValue));
+            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
         });
     }
 

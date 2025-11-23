@@ -12,21 +12,21 @@ public class BitwigConfig {
      * Lightweight operations on individual items.
      * Used for: selectDevice, selectParent, selectFirstChild, selectFirstInSlot
      */
-    public static final int SINGLE_ELEMENT_DELAY_MS = 6;
+    public static final int SINGLE_ELEMENT_DELAY_MS = 8;
 
     /**
      * Delay for list/bulk operations.
      * Heavier operations that query multiple items and build lists.
      * Used for: sendDeviceList, sendTrackList, sendDeviceChildren
      */
-    public static final int LIST_OPERATION_DELAY_MS = 7;
+    public static final int LIST_OPERATION_DELAY_MS = 10;
 
     /**
      * Delay for complex nested operations.
      * Operations requiring multiple sequential API calls.
      * Used for: selectInEditor + selectFirstInChannel (layers)
      */
-    public static final int COMPLEX_OPERATION_DELAY_MS = 10;
+    public static final int COMPLEX_OPERATION_DELAY_MS = 12;
 
     /**
      * Stagger factor for bulk message sending
@@ -38,7 +38,7 @@ public class BitwigConfig {
      * Delay in milliseconds before writing automation after touch press.
      * Prevents premature automation writes during initial touch detection.
      */
-    public static final int TOUCH_PRESS_DELAY_MS = 10;
+    public static final int TOUCH_PRESS_DELAY_MS = 20;
 
     /**
      * Grace period in milliseconds after touch release.

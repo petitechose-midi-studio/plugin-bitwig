@@ -180,10 +180,11 @@ public class DeviceHost {
     }
 
     public void sendPageNames() {
-        int pageCount = remoteControls.pageCount().get();
-        int currentIndex = remoteControls.selectedPageIndex().get();
+        // Capture all API data immediately
+        final int pageCount = remoteControls.pageCount().get();
+        final int currentIndex = remoteControls.selectedPageIndex().get();
 
-        java.util.List<String> names = new java.util.ArrayList<>();
+        final java.util.List<String> names = new java.util.ArrayList<>();
         for (int i = 0; i < pageCount; i++) {
             try {
                 names.add(remoteControls.pageNames().get(i));
@@ -192,10 +193,14 @@ public class DeviceHost {
             }
         }
 
-        protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
+        // Only protocol.send in scheduleTask
+        host.scheduleTask(() -> {
+            protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
+        }, BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     public void sendDeviceList() {
+        // Capture all API data NOW (at the moment of call, which should be properly delayed by caller)
         int totalDeviceCount = deviceBank.itemCount().get();
         int currentDevicePosition = cursorDevice.position().get();
         boolean isNested = cursorDevice.isNested().get();
@@ -227,6 +232,7 @@ public class DeviceHost {
             }
         }
 
+        // Find current device index
         int currentDeviceIndex = 0;
         for (int i = 0; i < devicesList.size(); i++) {
             if (devicesList.get(i).getDeviceIndex() == currentDevicePosition) {
@@ -235,6 +241,7 @@ public class DeviceHost {
             }
         }
 
+        // Send immediately (caller handles delay)
         protocol.send(new DeviceListMessage(
             totalDeviceCount,
             currentDeviceIndex,
@@ -247,6 +254,7 @@ public class DeviceHost {
     public void sendDeviceChildren(int deviceIndex, int childType) {
         Device device = deviceBank.getItemAt(deviceIndex);
         if (!device.exists().get()) {
+            // Device doesn't exist - send empty list immediately
             protocol.send(new DeviceChildrenMessage(deviceIndex, 0, 0, new ArrayList<>()));
             return;
         }
@@ -280,6 +288,7 @@ public class DeviceHost {
                     + getItemTypeString(child.getItemType()) + ", childIndex=" + child.getChildIndex() + ")");
         }
 
+        // Send immediately (caller handles delay if needed)
         protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
     }
 
@@ -413,19 +422,29 @@ public class DeviceHost {
     }
 
     private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int pageIndex, int pageCount, String pageName) {
-        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName)));
+        // Data already captured by caller, only wrap protocol.send
+        host.scheduleTask(() -> {
+            protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName)));
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
     }
 
     private void sendTrackChange() {
-        String trackName = cursorTrack.name().get();
-        long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
-        int trackPosition = cursorTrack.position().get();
+        // Capture all API data immediately
+        final String trackName = cursorTrack.name().get();
+        final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
+        final int trackPosition = cursorTrack.position().get();
 
-        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition));
+        // Only protocol.send in scheduleTask
+        host.scheduleTask(() -> {
+            protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition));
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
     }
 
     private void sendDeviceCleared() {
-        protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
+        // Send header clear message
+        host.scheduleTask(() -> {
+            protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
 
         // Stagger macro clear messages to avoid bandwidth saturation
         for (int i = 0; i < 8; i++) {
@@ -434,35 +453,45 @@ public class DeviceHost {
                 protocol.send(new DeviceMacroUpdateMessage(
                     (byte) index, "", 0.0f, "", 0.0f, false, (byte) 0, (short) 0, (byte) 0
                 ));
-            }, index * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
+            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS + index * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
         }
     }
 
     private void sendMacroUpdate(int paramIndex) {
+        // Capture all API data immediately
         RemoteControl param = remoteControls.getParameter(paramIndex);
-        int discreteCount = param.value().discreteValueCount().get();
+        final int discreteCount = param.value().discreteValueCount().get();
+        final String name = param.name().get();
+        final float value = (float) param.value().get();
+        final String displayedValue = param.value().displayedValue().get();
+        final float origin = (float) param.value().getOrigin().get();
+        final boolean exists = param.exists().get();
 
+        // Perform calculations immediately
         if (deviceController != null) {
             deviceController.updateParameterMetadata(paramIndex, discreteCount);
         }
 
-        ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
+        final ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
 
-        protocol.send(new DeviceMacroUpdateMessage(
-            (byte) paramIndex,
-            param.name().get(),
-            (float) param.value().get(),
-            param.value().displayedValue().get(),
-            (float) param.value().getOrigin().get(),
-            param.exists().get(),
-            (byte) typeInfo.parameterType,
-            (short) discreteCount,
-            (byte) typeInfo.currentValueIndex
-        ));
+        // Only protocol.send in scheduleTask
+        host.scheduleTask(() -> {
+            protocol.send(new DeviceMacroUpdateMessage(
+                (byte) paramIndex,
+                name,
+                value,
+                displayedValue,
+                origin,
+                exists,
+                (byte) typeInfo.parameterType,
+                (short) discreteCount,
+                (byte) typeInfo.currentValueIndex
+            ));
 
-        if (typeInfo.parameterType == 2 && typeInfo.discreteValueNames.length > 0) {
-            sendMacroDiscreteValues(paramIndex, typeInfo.discreteValueNames, typeInfo.currentValueIndex);
-        }
+            if (typeInfo.parameterType == 2 && typeInfo.discreteValueNames.length > 0) {
+                sendMacroDiscreteValues(paramIndex, typeInfo.discreteValueNames, typeInfo.currentValueIndex);
+            }
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
     }
 
     private void sendMacroDiscreteValues(int paramIndex, String[] discreteNames, int currentIndex) {
@@ -470,12 +499,19 @@ public class DeviceHost {
     }
 
     private void sendPageChange() {
-        int pageIndex = remoteControls.selectedPageIndex().get();
-        int pageCount = remoteControls.pageCount().get();
-        protocol.send(new DevicePageChangeMessage(
-            new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, remoteControls.getName().get()),
-            buildMacrosListForPageChange()
-        ));
+        // Capture all API data immediately
+        final int pageIndex = remoteControls.selectedPageIndex().get();
+        final int pageCount = remoteControls.pageCount().get();
+        final String pageName = remoteControls.getName().get();
+        final List<DevicePageChangeMessage.Macros> macrosList = buildMacrosListForPageChange();
+
+        // Only protocol.send in scheduleTask
+        host.scheduleTask(() -> {
+            protocol.send(new DevicePageChangeMessage(
+                new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
+                macrosList
+            ));
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
     }
 
     private String getPageName(int pageIndex, int pageCount) {

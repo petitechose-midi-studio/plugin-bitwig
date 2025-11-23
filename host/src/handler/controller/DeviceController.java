@@ -139,8 +139,14 @@ public class DeviceController {
                 boolean newState = !currentState;
                 device.isEnabled().set(newState);
 
+                // Capture data before scheduling
+                final int finalDeviceIndex = deviceIndex;
+                final boolean finalNewState = newState;
+
                 // Send confirmation back to controller with correct index
-                protocol.send(new DeviceStateChangeMessage(deviceIndex, newState));
+                host.scheduleTask(() -> {
+                    protocol.send(new DeviceStateChangeMessage(finalDeviceIndex, finalNewState));
+                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         };
 
@@ -197,6 +203,7 @@ public class DeviceController {
         protocol.onRequestDeviceList = msg -> {
             if (msg.fromHost) return;
             if (deviceHost != null) {
+                // Send immediately - deviceBank should already be up-to-date
                 deviceHost.sendDeviceList();
             }
         };

@@ -218,6 +218,8 @@ namespace Bitwig
 
         is_track_nested_ = msg.isNested;
 
+        // Hide device selector just before showing track selector - no visual gap
+        view_.hideDeviceSelector();
         view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, groupStates, trackColors);
     }
 

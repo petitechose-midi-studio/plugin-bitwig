@@ -69,28 +69,31 @@ public class LastClicked {
      * Send full parameter info (when new parameter clicked)
      */
     private void sendLastClickedUpdate() {
-        // Use lastClicked.parameter() directly (already marked interested in setup)
-        String name = lastClicked.parameter().name().get();
-        double value = lastClicked.parameter().value().get();
-        String displayValue = lastClicked.parameter().displayedValue().get();
-        double origin = lastClicked.parameter().value().getOrigin().get();
-        boolean exists = lastClicked.parameter().exists().get();
+        // Capture all API data immediately (outside scheduleTask)
+        final String name = lastClicked.parameter().name().get();
+        final double value = lastClicked.parameter().value().get();
+        final String displayValue = lastClicked.parameter().displayedValue().get();
+        final double origin = lastClicked.parameter().value().getOrigin().get();
+        final boolean exists = lastClicked.parameter().exists().get();
+        final int discreteCount = lastClicked.parameter().value().discreteValueCount().get(); // -1=continuous (default)
 
-        // Detect parameter type (simplified - could be enhanced)
-        int discreteCount = lastClicked.parameter().value().discreteValueCount().get(); // -1=continuous (default)
-        int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1: 0; // 0=Knob (default)
-        int currentValueIndex = (int)(value * (double)discreteCount);
+        // Perform calculations immediately (outside scheduleTask)
+        final int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1: 0; // 0=Knob (default)
+        final int currentValueIndex = (int)(value * (double)discreteCount);
 
-        protocol.send(new LastClickedUpdateMessage(
-            name,
-            (float) value,
-            displayValue,
-            (float) origin,
-            exists,
-            (byte) paramType,
-            (short) discreteCount,
-            (byte) currentValueIndex
-        ));
+        // Only protocol.send in scheduleTask
+        host.scheduleTask(() -> {
+            protocol.send(new LastClickedUpdateMessage(
+                name,
+                (float) value,
+                displayValue,
+                (float) origin,
+                exists,
+                (byte) paramType,
+                (short) discreteCount,
+                (byte) currentValueIndex
+            ));
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
     }
 
     /**

@@ -245,8 +245,7 @@ namespace Bitwig
                 {
                     trackInputHandler_->setTrackListRequested(true);
                 }
-                view_.hideDeviceSelector();
-                view_.showTrackSelector();
+                // Don't hide device selector here - let handleTrackList() do it just before showing track selector
             },
             view_.getDeviceSelectorElement());
     }
