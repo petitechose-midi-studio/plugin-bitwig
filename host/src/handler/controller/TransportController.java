@@ -46,10 +46,15 @@ public class TransportController {
         };
 
         protocol.onTransportTempo = msg -> {
-            float tempo = msg.getTempo();
-            host.println("TransportController: received tempo " + tempo + " BPM, setting...");
-            transport.tempo().setRaw(tempo);
-            host.println("TransportController: tempo set to " + transport.tempo().getRaw() + " BPM");
+            if (msg.fromHost) {
+                // Set absolute tempo from host
+                transport.tempo().setRaw(msg.getTempo());
+                host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM ← host");
+            } else {
+                // Increment tempo from controller
+                transport.tempo().incRaw(msg.getTempo());
+                host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM (Δ" + msg.getTempo() + ")");
+            }
         };
     }
 }

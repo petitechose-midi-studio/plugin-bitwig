@@ -4,6 +4,7 @@ import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.Protocol;
 import protocol.struct.*;
+import config.BitwigConfig;
 
 /**
  * TransportHost - Observes Bitwig Transport and sends updates TO controller
@@ -53,9 +54,17 @@ public class TransportHost {
      * Send current transport state (called at startup)
      */
     public void sendInitialState() {
-        protocol.send(new TransportPlayMessage(transport.isPlaying().get()));
-        protocol.send(new TransportRecordMessage(transport.isArrangerRecordEnabled().get()));
-        double tempo = transport.tempo().get();
-        protocol.send(new TransportTempoMessage((float) tempo));
+        host.scheduleTask(() -> {
+            boolean isPlaying = transport.isPlaying().get();
+            boolean isRecording = transport.isArrangerRecordEnabled().get();
+            double tempo = transport.tempo().getRaw();
+
+            String state = (isPlaying ? "▶" : "⏸") + (isRecording ? " ●" : "");
+            host.println("[TRANSPORT HOST] Init: " + state + " | " + tempo + " BPM");
+
+            protocol.send(new TransportPlayMessage(isPlaying));
+            protocol.send(new TransportRecordMessage(isRecording));
+            protocol.send(new TransportTempoMessage((float) tempo));
+        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
     }
 }

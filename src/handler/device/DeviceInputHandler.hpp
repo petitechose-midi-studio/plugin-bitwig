@@ -114,6 +114,7 @@ namespace Bitwig
             uint8_t count = 0;
             uint8_t cursor = 0;
             bool requested = false;
+            int currentSelectorIndex = 0; // Current position in page selector
         } pageSelection_;
 
         // Device list state
@@ -139,6 +140,7 @@ namespace Bitwig
             uint8_t childType = 0;  // Deprecated - kept for compatibility
             uint8_t childrenCount = 0;
             etl::array<uint8_t, 16> itemTypes = {};  // Store itemType for each child
+            int currentSelectorIndex = 0; // Current position in device/children selector
         } navigation_;
     };
 

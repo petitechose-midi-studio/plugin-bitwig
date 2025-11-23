@@ -66,6 +66,7 @@ namespace Bitwig
             uint8_t currentIndex = 0;
             bool isNested = false;
             bool requested = false;
+            int currentSelectorIndex = 0; // Current position in selector (includes "Back to parent" if nested)
         } trackList_;
     };
 

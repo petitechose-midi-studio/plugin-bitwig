@@ -104,7 +104,7 @@ public class DeviceHost {
             if (exists) {
                 host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.LIST_OPERATION_DELAY_MS);
             } else {
-                sendDeviceCleared();
+                host.scheduleTask(() -> sendDeviceCleared(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         });
 
@@ -134,13 +134,14 @@ public class DeviceHost {
 
         cursorDevice.isEnabled().addValueObserver(isEnabled -> {
             int deviceIndex = cursorDevice.position().get();
-            protocol.send(new DeviceStateChangeMessage(deviceIndex, isEnabled));
+            host.scheduleTask(() -> protocol.send(new DeviceStateChangeMessage(deviceIndex, isEnabled)),
+                BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
         });
 
         remoteControls.selectedPageIndex().addValueObserver(pageIndex -> {
             if (pageIndex != lastPageIndex) {
                 lastPageIndex = pageIndex;
-                sendPageChange();
+                host.scheduleTask(() -> sendPageChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         });
 
@@ -151,18 +152,27 @@ public class DeviceHost {
             param.value().displayedValue().addValueObserver(displayValue -> {
                 double value = param.value().get();
                 boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
-                protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
+                host.scheduleTask(() -> protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho)),
+                    BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             });
 
             param.name().addValueObserver(name -> {
-                protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name));
+                host.scheduleTask(() -> protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name)),
+                    BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             });
         }
     }
 
+    /**
+     * Send current device state (called at startup)
+     *
+     * Delay send to ensure Bitwig API values are stabilized
+     */
     public void sendInitialState() {
-        sendTrackChange();
-        sendDeviceChange();
+        host.scheduleTask(() -> {
+            sendTrackChange();
+            sendDeviceChange();
+        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
     }
 
     public void setDeviceController(handler.controller.DeviceController deviceController) {
@@ -311,9 +321,10 @@ public class DeviceHost {
         }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
 
         // List operation: refresh device list after navigation
+        // All navigation types (slot/layer/drum) are complex operations that change deviceChain context
         int sendDelay = (itemType == 1)
-                ? BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS
-                : BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS;
+                ? BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS
+                : BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS;
         host.scheduleTask(() -> sendDeviceList(), sendDelay);
     }
 

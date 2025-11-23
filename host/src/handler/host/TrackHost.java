@@ -7,6 +7,7 @@ import config.BitwigConfig;
 import util.ColorUtils;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 /**
  * TrackHost - Observes Bitwig Tracks and sends updates TO controller
@@ -92,10 +93,12 @@ public class TrackHost {
 
     /**
      * Send current track state (called at startup)
+     *
+     * Delay send to ensure Bitwig API values are stabilized
      */
     public void sendInitialState() {
-        // Send initial track list
         sendTrackList();
+
     }
 
     /**
@@ -131,63 +134,55 @@ public class TrackHost {
     }
 
     /**
-     * Send track list to controller with hierarchical navigation info
-     * Called by TrackController when REQUEST_TRACK_LIST received
+     * Send track list to controller
      */
     public void sendTrackList() {
-        TrackBank currentBank = getCurrentBank();
-        boolean hasParent = hasParentGroup();
+        final TrackBank bank = getCurrentBank();
+        final boolean hasParent = hasParentGroup();
+        final String parentName = hasParent ? parentTrack.name().get() : "";
 
-        int totalTrackCount = currentBank.itemCount().get();
-        int currentTrackPosition = cursorTrack.position().get();
-        String parentGroupName = hasParent ? parentTrack.name().get() : "";
+        // Build list of tracks
+        final List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
 
-        host.println("\n[TRACK HOST] Sending track list: " + totalTrackCount + " tracks (cursor=" + currentTrackPosition + ", hasParent=" + hasParent + ", depth=" + navigationDepth + ", parent=" + parentGroupName + ")\n");
+        // Find which track is selected
+        final int selectedIndex = findSelectedTrackIndex(tracks);
 
-        // Build list of tracks in current bank
-        List<TrackListMessage.Tracks> tracksList = new ArrayList<>();
-        int bankSize = currentBank.getSizeOfBank();
+        // Log
+        String context = hasParent ? " ↳ " + parentName : " ⌂ root";
+        host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
 
-        for (int i = 0; i < bankSize; i++) {
-            Track track = currentBank.getItemAt(i);
+        host.scheduleTask(() -> {
+            protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
+        }, BitwigConfig.LIST_OPERATION_DELAY_MS);
+    }
 
+    private List<TrackListMessage.Tracks> buildTrackList(TrackBank bank) {
+        final List<TrackListMessage.Tracks> tracks = new ArrayList<>();
+
+        for (int i = 0; i < bank.getSizeOfBank(); i++) {
+            Track track = bank.getItemAt(i);
             if (track.exists().get()) {
-                String name = track.name().get();
-                long color = ColorUtils.toUint32Hex(track.color().get());
-                int position = track.position().get();
-                boolean isActivated = track.isActivated().get();
-                boolean isMute = track.mute().get();
-                boolean isSolo = track.solo().get();
-                boolean isGroup = track.isGroup().get();
-
-                tracksList.add(new TrackListMessage.Tracks(
-                    position,
-                    name,
-                    color,
-                    isActivated,
-                    isMute,
-                    isSolo,
-                    isGroup
+                tracks.add(new TrackListMessage.Tracks(
+                    track.position().get(),
+                    track.name().get(),
+                    ColorUtils.toUint32Hex(track.color().get()),
+                    track.isActivated().get(),
+                    track.mute().get(),
+                    track.solo().get(),
+                    track.isGroup().get()
                 ));
             }
         }
 
-        // Find current track index in the list
-        int currentTrackIndex = 0;
-        for (int i = 0; i < tracksList.size(); i++) {
-            if (tracksList.get(i).getTrackIndex() == currentTrackPosition) {
-                currentTrackIndex = i;
-                break;
-            }
-        }
+        return tracks;
+    }
 
-        protocol.send(new TrackListMessage(
-            totalTrackCount,
-            currentTrackIndex,
-            hasParent,
-            parentGroupName,
-            tracksList
-        ));
+    private int findSelectedTrackIndex(List<TrackListMessage.Tracks> tracks) {
+        final int cursorPosition = cursorTrack.position().get();
+        return IntStream.range(0, tracks.size())
+            .filter(i -> tracks.get(i).getTrackIndex() == cursorPosition)
+            .findFirst()
+            .orElse(0);
     }
 
     /**
@@ -201,12 +196,12 @@ public class TrackHost {
         Track track = currentBank.getItemAt(trackIndex);
 
         if (!track.exists().get() || !track.isGroup().get()) {
-            host.println("\n[TRACK HOST] ⚠ Cannot enter track " + trackIndex + " (not a group or doesn't exist)\n");
+            host.println("[TRACK HOST] ✗ Enter failed: track " + trackIndex + " is not a group");
             sendTrackList();
             return;
         }
 
-        host.println("\n[TRACK HOST] ▶ Entering group: " + track.name().get() + "\n");
+        host.println("[TRACK HOST] ▶ Enter: " + track.name().get());
 
         // Increment navigation depth
         navigationDepth++;
@@ -218,8 +213,7 @@ public class TrackHost {
         host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
 
         // List operation: refresh track list
-        host.scheduleTask(() -> sendTrackList(),
-                BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
+        sendTrackList();
     }
 
     /**
@@ -228,13 +222,13 @@ public class TrackHost {
      */
     public void exitTrackGroup() {
         if (!hasParentGroup()) {
-            host.println("\n[TRACK HOST] ⚠ Already at root level\n");
+            host.println("[TRACK HOST] ✗ Exit failed: already at root");
             sendTrackList();
             return;
         }
 
         String parentName = parentTrack.name().get();
-        host.println("\n[TRACK HOST] ◀ Exiting to parent: " + parentName + "\n");
+        host.println("[TRACK HOST] ◀ Exit: " + parentName);
 
         // Decrement navigation depth
         navigationDepth--;
@@ -243,7 +237,7 @@ public class TrackHost {
         cursorTrack.selectParent();
 
         // List operation: refresh track list
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
+        sendTrackList();
     }
 
     /**

@@ -55,12 +55,14 @@ namespace Bitwig
          * @param muteStates Mute state per track
          * @param soloStates Solo state per track
          * @param groupStates Group state per track (shows folder icon if true)
+         * @param trackColors Track colors (RGB hex values)
          */
         void setTrackItems(const std::vector<std::string> &items,
                            int currentIndex,
                            const std::vector<bool> &muteStates,
                            const std::vector<bool> &soloStates,
-                           const std::vector<bool> &groupStates = {});
+                           const std::vector<bool> &groupStates = {},
+                           const std::vector<uint32_t> &trackColors = {});
 
         /**
          * @brief Set current item index (initial selection when showing)

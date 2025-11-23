@@ -69,27 +69,22 @@ public class MidiStudioExtension extends ControllerExtension {
       trackController.setDeviceHost(deviceHost);
 
       LastClicked lastClickedHost = new LastClicked(host, protocol);
+      protocol.send(new HostInitializedMessage(true));
       lastClickedHost.setup();
+      transportHost.sendInitialState();
+      deviceHost.sendInitialState();
+      trackHost.sendInitialState();
+      lastClickedHost.sendInitialState();
 
       protocol.onRequestHostStatus = msg -> {
          protocol.send(new HostInitializedMessage(true));
-         host.scheduleTask(() -> {
-            transportHost.sendInitialState();
-            deviceHost.sendInitialState();
-            trackHost.sendInitialState();
-            lastClickedHost.sendInitialState();
-         }, 100);
-      };
-
-      protocol.send(new HostInitializedMessage(true));
-      host.showPopupNotification("MIDI Studio : Connected");
-      host.scheduleTask(() -> {
          transportHost.sendInitialState();
          deviceHost.sendInitialState();
          trackHost.sendInitialState();
          lastClickedHost.sendInitialState();
-      }, 1000);
+      };
 
+      host.showPopupNotification("MIDI Studio : Connected");
    }
 
    @Override

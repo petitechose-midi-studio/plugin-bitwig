@@ -33,7 +33,7 @@ namespace Bitwig
 
         protocol_.onTransportTempo = [this](const Protocol::TransportTempoMessage &msg)
         {
-            api_.setEncoderPosition(EncoderID::NAV, msg.tempo);
+            // Update display (encoder position not synced in Relative mode)
             view_controller_.setTempo(msg.tempo);
         };
     }

@@ -91,7 +91,8 @@ namespace Bitwig
                           int currentIndex,
                           const std::vector<bool> &muteStates,
                           const std::vector<bool> &soloStates,
-                          const std::vector<bool> &groupStates);
+                          const std::vector<bool> &groupStates,
+                          const std::vector<uint32_t> &trackColors);
         void setTrackListSelectorIndex(int index);
         void hideTrackSelector();
         void showTrackSelector();

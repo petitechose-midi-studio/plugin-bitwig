@@ -38,17 +38,20 @@ namespace Bitwig
                                          int currentIndex,
                                          const std::vector<bool> &muteStates,
                                          const std::vector<bool> &soloStates,
-                                         const std::vector<bool> &groupStates)
+                                         const std::vector<bool> &groupStates,
+                                         const std::vector<uint32_t> &trackColors)
     {
         item_names_ = names;
         current_track_index_ = currentIndex;
         mute_states_ = muteStates;
         solo_states_ = soloStates;
         group_states_ = groupStates;
+        track_colors_ = trackColors;
 
         mute_states_.resize(names.size(), false);
         solo_states_.resize(names.size(), false);
         group_states_.resize(names.size(), false);
+        track_colors_.resize(names.size(), 0xFFFFFF);
 
         list_.setItems(names);
         list_.setSelectedIndex(currentIndex);
@@ -91,18 +94,39 @@ namespace Bitwig
         return list_.getItemCount();
     }
 
+    lv_obj_t *TrackListOverlay::createVerticalBar(lv_obj_t *parent, uint32_t color)
+    {
+        lv_obj_t *bar = lv_obj_create(parent);
+        lv_obj_set_size(bar, 4, 12);
+        lv_obj_set_style_bg_color(bar, lv_color_hex(color), 0);
+        lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
+        lv_obj_set_style_radius(bar, 0, 0);
+        lv_obj_set_style_border_width(bar, 0, 0);
+        lv_obj_set_style_pad_all(bar, 0, 0);
+        lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
+        return bar;
+    }
+
     void TrackListOverlay::createIndicators()
     {
         indicator_circles_.clear();
         indicator_circles_.resize(item_names_.size());
         folder_icons_.clear();
         folder_icons_.resize(item_names_.size(), nullptr);
+        vertical_bars_.clear();
+        vertical_bars_.resize(item_names_.size(), nullptr);
 
         for (size_t i = 0; i < item_names_.size(); i++)
         {
             lv_obj_t *btn = list_.getButton(i);
             if (!btn)
                 continue;
+
+            // Create vertical bar at the left edge with track color
+            uint32_t barColor = (i < track_colors_.size()) ? track_colors_[i] : 0xFFFFFF;
+            lv_obj_t *vertical_bar = createVerticalBar(btn, barColor);
+            lv_obj_move_to_index(vertical_bar, 0);
+            vertical_bars_[i] = vertical_bar;
 
             std::array<lv_obj_t *, 2> labels = {nullptr, nullptr};
 
@@ -224,6 +248,7 @@ namespace Bitwig
     {
         indicator_circles_.clear();
         folder_icons_.clear();
+        vertical_bars_.clear();
     }
 
     void TrackListOverlay::setTrackMuteStateAtIndex(uint8_t trackIndex, bool isMuted)

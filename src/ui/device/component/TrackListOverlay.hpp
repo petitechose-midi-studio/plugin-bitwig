@@ -62,14 +62,16 @@ namespace Bitwig
          * @param muteStates Mute state per track
          * @param soloStates Solo state per track
          * @param groupStates Group state per track (shows folder icon if true)
+         * @param trackColors Track colors (RGB hex values)
          *
-         * Note: All vectors should have the same size. Missing entries = false.
+         * Note: All vectors should have the same size. Missing entries = false/0.
          */
         void setTrackItems(const std::vector<std::string> &names,
                            int currentIndex,
                            const std::vector<bool> &muteStates = {},
                            const std::vector<bool> &soloStates = {},
-                           const std::vector<bool> &groupStates = {});
+                           const std::vector<bool> &groupStates = {},
+                           const std::vector<uint32_t> &trackColors = {});
 
         /**
          * @brief Set selected item index
@@ -129,6 +131,7 @@ namespace Bitwig
         void createIndicators();
         void clearIndicators();
         void updateIndicatorStates();
+        lv_obj_t *createVerticalBar(lv_obj_t *parent, uint32_t color);
 
         ListOverlay list_;
 
@@ -137,12 +140,16 @@ namespace Bitwig
         std::vector<bool> mute_states_;
         std::vector<bool> solo_states_;
         std::vector<bool> group_states_;
+        std::vector<uint32_t> track_colors_;
 
         // Store indicator objects: [track_index][0=mute, 1=solo]
         std::vector<std::array<lv_obj_t *, 2>> indicator_circles_;
 
         // Store folder icons: [track_index]
         std::vector<lv_obj_t *> folder_icons_;
+
+        // Store vertical bars: [track_index]
+        std::vector<lv_obj_t *> vertical_bars_;
     };
 
 } // namespace Bitwig

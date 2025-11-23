@@ -16,6 +16,9 @@ namespace Bitwig
 
     void TransportInputHandler::setupBindings()
     {
+        // Configure tempo encoder for Relative mode (no bounds to avoid initialization event)
+        api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+
         api_.onPressed(ButtonID::BOTTOM_LEFT, [this]()
                        { togglePlay(); });
 
@@ -25,8 +28,8 @@ namespace Bitwig
         api_.onPressed(ButtonID::BOTTOM_CENTER, [this]()
                        { stop(); });
 
-        api_.onTurned(EncoderID::NAV, [this](float normalizedValue)
-                      { adjustTempo(normalizedValue); });
+        api_.onTurned(EncoderID::NAV, [this](float delta)
+                      { adjustTempo(delta); });
     }
 
     void TransportInputHandler::togglePlay()
@@ -44,9 +47,10 @@ namespace Bitwig
         protocol_.send(Protocol::TransportStopMessage{});
     }
 
-    void TransportInputHandler::adjustTempo(float normalizedValue)
+    void TransportInputHandler::adjustTempo(float delta)
     {
-        protocol_.send(Protocol::TransportTempoMessage{normalizedValue});
+        // In Relative mode, encoder sends delta directly (±1)
+        protocol_.send(Protocol::TransportTempoMessage{delta});
     }
 
 } // namespace Bitwig

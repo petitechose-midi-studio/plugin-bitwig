@@ -37,9 +37,12 @@ namespace Bitwig
         trackList_.currentIndex = currentTrackIndex;
         trackList_.isNested = isNested;
 
-        // Adjust initial encoder position for nested mode (when "Back to parent" is at index 0)
-        int initialPosition = trackList_.isNested ? currentTrackIndex + 1 : currentTrackIndex;
-        api_.setEncoderPosition(EncoderID::NAV, initialPosition);
+        // Set encoder to Relative mode for track navigation (delta-based with wrap)
+        api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+
+        // Initialize selector index (adjust for nested mode where "Back to parent" is at index 0)
+        trackList_.currentSelectorIndex = trackList_.isNested ? currentTrackIndex + 1 : currentTrackIndex;
+        view_.setTrackListSelectorIndex(trackList_.currentSelectorIndex);
     }
 
     void TrackInputHandler::setupBindings()
@@ -95,14 +98,18 @@ namespace Bitwig
             trackSelectorScope);
     }
 
-    void TrackInputHandler::handleTrackSelectorNavigation(float position)
+    void TrackInputHandler::handleTrackSelectorNavigation(float delta)
     {
         int itemCount = view_.getTrackListSelectorItemCount();
         if (itemCount == 0)
             return;
 
-        int wrappedIndex = wrapIndex(position, itemCount);
-        view_.setTrackListSelectorIndex(wrappedIndex);
+        // In Relative mode, delta is ±1 (or ±N for fast scrolling)
+        // Apply delta and wrap around list boundaries
+        trackList_.currentSelectorIndex += static_cast<int>(delta);
+        trackList_.currentSelectorIndex = wrapIndex(trackList_.currentSelectorIndex, itemCount);
+
+        view_.setTrackListSelectorIndex(trackList_.currentSelectorIndex);
 
         // NOTE: Track selection only sent on release or NAV button press
         // This keeps navigation smooth without triggering Bitwig API calls
@@ -142,8 +149,7 @@ namespace Bitwig
         // Request full device list now that navigation is complete
         protocol_.send(Protocol::RequestDeviceListMessage{});
 
-        // Reset encoder position
-        api_.setEncoderPosition(EncoderID::NAV, 0.0f);
+        // Reset state (encoder stays in Relative mode, no need to reset position)
         trackList_.requested = false;
     }
 

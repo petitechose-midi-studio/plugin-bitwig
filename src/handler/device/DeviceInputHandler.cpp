@@ -55,7 +55,12 @@ namespace Bitwig
         pageSelection_.count = pageCount;
         pageSelection_.cursor = currentIndex;
 
-        api_.setEncoderPosition(EncoderID::NAV, currentIndex);
+        // Set encoder to Relative mode for page navigation (delta-based with wrap)
+        api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+
+        // Initialize selector index
+        pageSelection_.currentSelectorIndex = currentIndex;
+        view_controller_.handlePageSelectorSetIndex(currentIndex);
     }
 
     void DeviceInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex,
@@ -73,8 +78,12 @@ namespace Bitwig
             deviceList_.childrenTypes[i] = childrenTypes[i];
         }
 
-        int initialPosition = deviceList_.isNested ? currentDeviceIndex + 1 : currentDeviceIndex;
-        api_.setEncoderPosition(EncoderID::NAV, initialPosition);
+        // Set encoder to Relative mode for device navigation (delta-based with wrap)
+        api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+
+        // Initialize selector index (adjust for nested mode where "Back" is at index 0)
+        navigation_.currentSelectorIndex = deviceList_.isNested ? currentDeviceIndex + 1 : currentDeviceIndex;
+        view_controller_.handleDeviceSelectorSetIndex(navigation_.currentSelectorIndex);
     }
 
     void DeviceInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType,
@@ -97,7 +106,12 @@ namespace Bitwig
             Serial.printf("  [%d] itemType=%d (%s)\n", i, itemTypes[i], typeStr);
         }
 
-        api_.setEncoderPosition(EncoderID::NAV, 1.0f);
+        // Set encoder to Relative mode for children navigation (delta-based with wrap)
+        api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+
+        // Initialize selector index (start at "Back" item which is at index 0)
+        navigation_.currentSelectorIndex = 0;
+        view_controller_.handleDeviceSelectorSetIndex(0);
     }
 
     void DeviceInputHandler::setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex,
@@ -167,13 +181,17 @@ namespace Bitwig
         api_.onTurnedWhilePressed(
             EncoderID::NAV,
             ButtonID::LEFT_BOTTOM,
-            [this](float position)
+            [this](float delta)
             {
                 if (pageSelection_.count == 0)
                     return;
 
-                int wrappedIndex = wrapIndex(position, pageSelection_.count);
-                view_controller_.handlePageSelectorSetIndex(wrappedIndex);
+                // In Relative mode, delta is ±1 (or ±N for fast scrolling)
+                // Apply delta and wrap around list boundaries
+                pageSelection_.currentSelectorIndex += static_cast<int>(delta);
+                pageSelection_.currentSelectorIndex = wrapIndex(pageSelection_.currentSelectorIndex, pageSelection_.count);
+
+                view_controller_.handlePageSelectorSetIndex(pageSelection_.currentSelectorIndex);
             },
             scope);
 
@@ -259,7 +277,7 @@ namespace Bitwig
             protocol_.send(Protocol::DevicePageSelectByIndexMessage{uint8_t(selectedIndex)});
         }
 
-        api_.setEncoderPosition(EncoderID::NAV, 0.0f);
+        // Reset state (encoder stays in Relative mode, no need to reset position)
         pageSelection_.requested = false;
     }
 
@@ -272,14 +290,18 @@ namespace Bitwig
         }
     }
 
-    void DeviceInputHandler::handleDeviceSelectorNavigation(float position)
+    void DeviceInputHandler::handleDeviceSelectorNavigation(float delta)
     {
         int itemCount = view_.getDeviceSelectorItemCount();
         if (itemCount == 0)
             return;
 
-        int wrappedIndex = wrapIndex(position, itemCount);
-        view_controller_.handleDeviceSelectorSetIndex(wrappedIndex);
+        // In Relative mode, delta is ±1 (or ±N for fast scrolling)
+        // Apply delta and wrap around list boundaries
+        navigation_.currentSelectorIndex += static_cast<int>(delta);
+        navigation_.currentSelectorIndex = wrapIndex(navigation_.currentSelectorIndex, itemCount);
+
+        view_controller_.handleDeviceSelectorSetIndex(navigation_.currentSelectorIndex);
     }
 
     void DeviceInputHandler::handleDeviceSelectorEnter()
@@ -311,7 +333,6 @@ void DeviceInputHandler::handleDevicesModeEnter(int selectorIndex) {
     // If device has children, request flat list (slots+layers+drums)
     if (hasChildren(deviceIndex)) {
         navigation_.deviceIndex = deviceIndex;
-        api_.setEncoderPosition(EncoderID::NAV, 0.0f);
         // childType=0: Java now returns ALL children (flat list)
         protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
     }
@@ -383,7 +404,7 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
         view_controller_.handleDeviceSelectorConfirm();
     }
 
-    api_.setEncoderPosition(EncoderID::NAV, 0.0f);
+    // Reset state (encoder stays in Relative mode, no need to reset position)
     deviceList_.requested = false;
 }
 

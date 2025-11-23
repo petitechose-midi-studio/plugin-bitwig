@@ -58,7 +58,7 @@ namespace Bitwig
     void DeviceStateBar::createTrackSection()
     {
         track_container_ = lv_obj_create(container_);
-        lv_obj_set_grid_cell(track_container_, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+        lv_obj_set_grid_cell(track_container_, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
         lv_obj_set_style_bg_opa(track_container_, LV_OPA_TRANSP, 0);
         lv_obj_set_style_border_width(track_container_, 0, 0);
         lv_obj_set_style_pad_all(track_container_, 0, 0);
@@ -67,7 +67,7 @@ namespace Bitwig
 
         lv_obj_set_flex_flow(track_container_, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(track_container_,
-                              LV_FLEX_ALIGN_START,
+                              LV_FLEX_ALIGN_CENTER,
                               LV_FLEX_ALIGN_CENTER,
                               LV_FLEX_ALIGN_CENTER);
 
@@ -90,15 +90,16 @@ namespace Bitwig
     void DeviceStateBar::createDeviceSection()
     {
         device_container_ = lv_obj_create(container_);
-        lv_obj_set_grid_cell(device_container_, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+        lv_obj_set_grid_cell(device_container_, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
         lv_obj_set_style_bg_opa(device_container_, LV_OPA_TRANSP, 0);
         lv_obj_set_style_border_width(device_container_, 0, 0);
         lv_obj_set_style_pad_all(device_container_, 0, 0);
+        lv_obj_set_style_pad_left(device_container_, 4, 0);
         lv_obj_set_style_pad_gap(device_container_, 4, 0);
 
         lv_obj_set_flex_flow(device_container_, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(device_container_,
-                              LV_FLEX_ALIGN_CENTER,
+                              LV_FLEX_ALIGN_START,
                               LV_FLEX_ALIGN_CENTER,
                               LV_FLEX_ALIGN_CENTER);
 

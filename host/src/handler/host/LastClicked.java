@@ -14,6 +14,7 @@ import config.BitwigConfig;
  * SINGLE RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
  */
 public class LastClicked {
+    private final ControllerHost host;
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;
 
@@ -21,6 +22,7 @@ public class LastClicked {
         ControllerHost host,
         Protocol protocol
     ) {
+        this.host = host;
         this.protocol = protocol;
         this.lastClicked = host.createLastClickedParameter("last_clicked", "Last Clicked");
     }
@@ -52,11 +54,15 @@ public class LastClicked {
 
     /**
      * Send initial state (called at startup)
+     *
+     * Delay send to ensure Bitwig API values are stabilized
      */
     public void sendInitialState() {
-        if (lastClicked.parameter().exists().get()) {
-            sendLastClickedUpdate();
-        }
+        host.scheduleTask(() -> {
+            if (lastClicked.parameter().exists().get()) {
+                sendLastClickedUpdate();
+            }
+        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
     }
 
     /**

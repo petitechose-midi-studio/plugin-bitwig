@@ -31,11 +31,12 @@ namespace Bitwig
                                           int currentIndex,
                                           const std::vector<bool> &muteStates,
                                           const std::vector<bool> &soloStates,
-                                          const std::vector<bool> &groupStates)
+                                          const std::vector<bool> &groupStates,
+                                          const std::vector<uint32_t> &trackColors)
     {
         items_ = items;
         current_item_index_ = currentIndex;
-        overlay_.setTrackItems(items, currentIndex, muteStates, soloStates, groupStates);
+        overlay_.setTrackItems(items, currentIndex, muteStates, soloStates, groupStates, trackColors);
     }
 
     void TrackListSelector::setCurrentItemIndex(int index)

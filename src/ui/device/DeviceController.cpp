@@ -196,6 +196,7 @@ namespace Bitwig
         std::vector<bool> muteStates;
         std::vector<bool> soloStates;
         std::vector<bool> groupStates;
+        std::vector<uint32_t> trackColors;
 
         if (msg.isNested)
         {
@@ -203,6 +204,7 @@ namespace Bitwig
             muteStates.push_back(false);
             soloStates.push_back(false);
             groupStates.push_back(false);
+            trackColors.push_back(0xFFFFFF);
         }
 
         for (uint8_t i = 0; i < msg.trackCount; i++)
@@ -211,11 +213,12 @@ namespace Bitwig
             muteStates.push_back(msg.tracks[i].isMute);
             soloStates.push_back(msg.tracks[i].isSolo);
             groupStates.push_back(msg.tracks[i].isGroup);
+            trackColors.push_back(msg.tracks[i].color);
         }
 
         is_track_nested_ = msg.isNested;
 
-        view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, groupStates);
+        view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, groupStates, trackColors);
     }
 
     void DeviceController::handleTrackMuteState(uint8_t trackIndex, bool isMuted)

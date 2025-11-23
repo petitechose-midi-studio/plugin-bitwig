@@ -551,11 +551,12 @@ namespace Bitwig
                                    int currentIndex,
                                    const std::vector<bool> &muteStates,
                                    const std::vector<bool> &soloStates,
-                                   const std::vector<bool> &groupStates)
+                                   const std::vector<bool> &groupStates,
+                                   const std::vector<uint32_t> &trackColors)
     {
         if (!track_list_selector_)
             return;
-        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates, groupStates);
+        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates, groupStates, trackColors);
         track_list_selector_->show();
     }
 
