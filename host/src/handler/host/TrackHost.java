@@ -207,11 +207,13 @@ public class TrackHost {
 
         // Select the group track, then select its first child
         cursorTrack.selectChannel(track);
-        host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
 
-        // Send track list AFTER selectFirstChild completes (SINGLE_ELEMENT + LIST_OPERATION)
+        // Send track list AFTER selectFirstChild completes and sibling bank populates
+        // This is a complex nested operation requiring bank context switch
+        // Need extra time for sibling bank to fully populate with children
         host.scheduleTask(() -> sendTrackList(),
-            BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
+            BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
     }
 
     /**

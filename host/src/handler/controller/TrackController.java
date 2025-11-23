@@ -108,14 +108,14 @@ public class TrackController {
             Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
 
             if (track != null && track.exists().get()) {
+                // Toggle
                 track.mute().toggle();
 
-                // Capture API data immediately after toggle
-                final boolean newMuteState = track.mute().get();
-                final String trackName = track.name().get();
-
-                // Send updated state back to controller after toggle completes
+                // Capture actual state AFTER delay to ensure Bitwig API has updated
                 host.scheduleTask(() -> {
+                    final boolean newMuteState = track.mute().get();
+                    final String trackName = track.name().get();
+
                     host.println("\n[TRACK CTRL] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (newMuteState ? "MUTED" : "UNMUTED") + "\n");
                     protocol.send(new protocol.struct.TrackMuteMessage(
                         trackIndex,
@@ -134,14 +134,14 @@ public class TrackController {
             Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
 
             if (track != null && track.exists().get()) {
+                // Toggle
                 track.solo().toggle();
 
-                // Capture API data immediately after toggle
-                final boolean newSoloState = track.solo().get();
-                final String trackName = track.name().get();
-
-                // Send updated state back to controller after toggle completes
+                // Capture actual state AFTER delay to ensure Bitwig API has updated
                 host.scheduleTask(() -> {
+                    final boolean newSoloState = track.solo().get();
+                    final String trackName = track.name().get();
+
                     host.println("\n[TRACK CTRL] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (newSoloState ? "SOLOED" : "UNSOLOED") + "\n");
                     protocol.send(new protocol.struct.TrackSoloMessage(
                         trackIndex,

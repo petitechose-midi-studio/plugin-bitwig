@@ -1,6 +1,7 @@
 #include "DeviceListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
 #include "font/binary_font_buffer.hpp"
+#include "../../LVGLSymbol.hpp"
 #include <algorithm>
 
 using namespace Theme;
@@ -47,7 +48,30 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
 
     list_.setItems(items);
 
-    // Add icon labels (same approach as TrackListOverlay)
+    // Apply lvgl_symbols font to the Back button (index 0)
+    if (!items.empty() && items[0] == LVGLSymbol::BACK)
+    {
+        lv_obj_t *backBtn = list_.getButton(0);
+        if (backBtn)
+        {
+            // Find the text label (first label child)
+            uint32_t childCount = lv_obj_get_child_cnt(backBtn);
+            for (uint32_t j = 0; j < childCount; j++)
+            {
+                lv_obj_t *child = lv_obj_get_child(backBtn, j);
+                if (child && lv_obj_check_type(child, &lv_label_class))
+                {
+                    if (fonts.lvgl_symbols)
+                    {
+                        lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Add icon labels for device children (same approach as TrackListOverlay)
     for (size_t i = 0; i < items.size(); i++)
     {
         if (i == 0 || i >= itemTypes.size())
@@ -188,7 +212,7 @@ bool DeviceListOverlay::isNonDeviceItem(size_t index) const
         return false;
 
     const std::string &name = item_names_[index];
-    return name == "Back to parent" || (!name.empty() && name[0] == '[');
+    return name == LVGLSymbol::BACK || (!name.empty() && name[0] == '[');
 }
 
 bool DeviceListOverlay::hasChildren(size_t index) const
@@ -253,9 +277,31 @@ void DeviceListOverlay::createIndicators()
         if (!button)
             continue;
 
+        // Check if this is the "Back" item (first item with the Back LVGLSymbol)
+        bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == LVGLSymbol::BACK);
+
+        // Apply lvgl_symbols font to text label if this is the Back item
+        if (isBackItem)
+        {
+            // Find the text label (first label child)
+            uint32_t childCount = lv_obj_get_child_cnt(button);
+            for (uint32_t j = 0; j < childCount; j++)
+            {
+                lv_obj_t *child = lv_obj_get_child(button, j);
+                if (child && lv_obj_check_type(child, &lv_label_class))
+                {
+                    if (fonts.lvgl_symbols)
+                    {
+                        lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                    }
+                    break;
+                }
+            }
+        }
+
         bool isDevice = !isNonDeviceItem(i);
 
-        // Always create bullet at index 0 for devices
+        // Always create bullet at index 0 for devices (not for Back item)
         if (isDevice)
         {
             bool isEnabled = (i < device_states_.size()) && device_states_[i];

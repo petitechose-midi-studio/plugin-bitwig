@@ -623,4 +623,18 @@ namespace Bitwig
         track_list_selector_->setTrackSoloStateAtIndex(displayIndex, isSoloed);
     }
 
+    bool DeviceView::getTrackMuteState(int displayIndex) const
+    {
+        if (!track_list_selector_)
+            return false;
+        return track_list_selector_->getTrackMuteStateAtIndex(displayIndex);
+    }
+
+    bool DeviceView::getTrackSoloState(int displayIndex) const
+    {
+        if (!track_list_selector_)
+            return false;
+        return track_list_selector_->getTrackSoloStateAtIndex(displayIndex);
+    }
+
 } // namespace Bitwig

@@ -191,7 +191,8 @@ namespace Bitwig
 
         if (trackIndex >= 0 && trackIndex < trackList_.count)
         {
-            // Send toggle request (isMute=true means toggle, Bitwig will respond with actual state)
+            // Send toggle request - value ignored by host, host will toggle and respond with actual state
+            // UI will update only when receiving the response from host
             protocol_.send(Protocol::TrackMuteMessage{static_cast<uint8_t>(trackIndex), true});
         }
     }
@@ -208,7 +209,8 @@ namespace Bitwig
 
         if (trackIndex >= 0 && trackIndex < trackList_.count)
         {
-            // Send toggle request (isSolo=true means toggle, Bitwig will respond with actual state)
+            // Send toggle request - value ignored by host, host will toggle and respond with actual state
+            // UI will update only when receiving the response from host
             protocol_.send(Protocol::TrackSoloMessage{static_cast<uint8_t>(trackIndex), true});
         }
     }

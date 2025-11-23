@@ -102,6 +102,8 @@ namespace Bitwig
         bool isTrackSelectorVisible() const;
         void updateTrackMuteState(int displayIndex, bool isMuted);
         void updateTrackSoloState(int displayIndex, bool isSoloed);
+        bool getTrackMuteState(int displayIndex) const;
+        bool getTrackSoloState(int displayIndex) const;
 
         /**
          * @brief Set parameter type and metadata (called ONCE per device/page change)

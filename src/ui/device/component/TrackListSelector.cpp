@@ -161,4 +161,14 @@ namespace Bitwig
         overlay_.setTrackSoloStateAtIndex(trackIndex, isSoloed);
     }
 
+    bool TrackListSelector::getTrackMuteStateAtIndex(uint8_t trackIndex) const
+    {
+        return overlay_.getTrackMuteStateAtIndex(trackIndex);
+    }
+
+    bool TrackListSelector::getTrackSoloStateAtIndex(uint8_t trackIndex) const
+    {
+        return overlay_.getTrackSoloStateAtIndex(trackIndex);
+    }
+
 } // namespace Bitwig

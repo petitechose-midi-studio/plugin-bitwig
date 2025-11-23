@@ -124,6 +124,20 @@ namespace Bitwig
          */
         void setTrackSoloStateAtIndex(uint8_t trackIndex, bool isSoloed);
 
+        /**
+         * @brief Get current mute state at specific index
+         * @param trackIndex Track index
+         * @return Current mute state
+         */
+        bool getTrackMuteStateAtIndex(uint8_t trackIndex) const;
+
+        /**
+         * @brief Get current solo state at specific index
+         * @param trackIndex Track index
+         * @return Current solo state
+         */
+        bool getTrackSoloStateAtIndex(uint8_t trackIndex) const;
+
     private:
         void createFooter();
         void destroyFooter();

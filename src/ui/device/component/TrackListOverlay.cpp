@@ -1,6 +1,7 @@
 #include "TrackListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
 #include "font/binary_font_buffer.hpp"
+#include "../../LVGLSymbol.hpp"
 #include <algorithm>
 
 using namespace Theme;
@@ -122,6 +123,28 @@ namespace Bitwig
             if (!btn)
                 continue;
 
+            // Check if this is the "Back" item (first item with the Back LVGLSymbol)
+            bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == LVGLSymbol::BACK);
+
+            // Apply lvgl_symbols font to text label if this is the Back item
+            if (isBackItem)
+            {
+                // Find the text label (first label child)
+                uint32_t childCount = lv_obj_get_child_cnt(btn);
+                for (uint32_t j = 0; j < childCount; j++)
+                {
+                    lv_obj_t *child = lv_obj_get_child(btn, j);
+                    if (child && lv_obj_check_type(child, &lv_label_class))
+                    {
+                        if (fonts.lvgl_symbols)
+                        {
+                            lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                        }
+                        break;
+                    }
+                }
+            }
+
             // Create vertical bar at the left edge with track color
             uint32_t barColor = (i < track_colors_.size()) ? track_colors_[i] : 0xFFFFFF;
             lv_obj_t *vertical_bar = createVerticalBar(btn, barColor);
@@ -130,27 +153,31 @@ namespace Bitwig
 
             std::array<lv_obj_t *, 2> labels = {nullptr, nullptr};
 
-            // Create "M" label for mute
-            lv_obj_t *mute_label = lv_label_create(btn);
-            lv_label_set_text(mute_label, "M");
-            if (fonts.parameter_label)
+            // Don't create mute/solo indicators for Back item
+            if (!isBackItem)
             {
-                lv_obj_set_style_text_font(mute_label, fonts.parameter_label, 0);
-            }
-            lv_obj_set_style_text_color(mute_label, lv_color_hex(Color::TRACK_MUTE), 0);
-            lv_obj_move_to_index(mute_label, 0);
-            labels[0] = mute_label;
+                // Create "M" label for mute
+                lv_obj_t *mute_label = lv_label_create(btn);
+                lv_label_set_text(mute_label, "M");
+                if (fonts.parameter_label)
+                {
+                    lv_obj_set_style_text_font(mute_label, fonts.parameter_label, 0);
+                }
+                lv_obj_set_style_text_color(mute_label, lv_color_hex(Color::TRACK_MUTE), 0);
+                lv_obj_move_to_index(mute_label, 0);
+                labels[0] = mute_label;
 
-            // Create "S" label for solo
-            lv_obj_t *solo_label = lv_label_create(btn);
-            lv_label_set_text(solo_label, "S");
-            if (fonts.parameter_label)
-            {
-                lv_obj_set_style_text_font(solo_label, fonts.parameter_label, 0);
+                // Create "S" label for solo
+                lv_obj_t *solo_label = lv_label_create(btn);
+                lv_label_set_text(solo_label, "S");
+                if (fonts.parameter_label)
+                {
+                    lv_obj_set_style_text_font(solo_label, fonts.parameter_label, 0);
+                }
+                lv_obj_set_style_text_color(solo_label, lv_color_hex(Color::TRACK_SOLO), 0);
+                lv_obj_move_to_index(solo_label, 1);
+                labels[1] = solo_label;
             }
-            lv_obj_set_style_text_color(solo_label, lv_color_hex(Color::TRACK_SOLO), 0);
-            lv_obj_move_to_index(solo_label, 1);
-            labels[1] = solo_label;
 
             // Create folder icon if this is a group
             bool isGroup = (i < group_states_.size()) ? group_states_[i] : false;
@@ -189,13 +216,13 @@ namespace Bitwig
             if (!mute_label || !solo_label)
                 continue;
 
-            // Check if this is a special item (like "Back to parent")
+            // Check if this is a special item (Back or device children like "[S] Slots")
             bool isSpecialItem = false;
             if (i < static_cast<int>(item_names_.size()))
             {
                 const std::string &itemName = item_names_[i];
-                isSpecialItem = (!itemName.empty() && itemName[0] == '[') ||
-                                (itemName == "Back to parent");
+                isSpecialItem = (itemName == LVGLSymbol::BACK) ||
+                                (!itemName.empty() && itemName[0] == '[');
             }
 
             bool isHighlighted = (i == selectedIndex);
@@ -269,6 +296,24 @@ namespace Bitwig
             solo_states_[trackIndex] = isSoloed;
             updateIndicatorStates();
         }
+    }
+
+    bool TrackListOverlay::getTrackMuteStateAtIndex(uint8_t trackIndex) const
+    {
+        if (trackIndex >= 0 && trackIndex < static_cast<int>(mute_states_.size()))
+        {
+            return mute_states_[trackIndex];
+        }
+        return false;
+    }
+
+    bool TrackListOverlay::getTrackSoloStateAtIndex(uint8_t trackIndex) const
+    {
+        if (trackIndex >= 0 && trackIndex < static_cast<int>(solo_states_.size()))
+        {
+            return solo_states_[trackIndex];
+        }
+        return false;
     }
 
 } // namespace Bitwig

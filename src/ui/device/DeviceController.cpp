@@ -8,6 +8,7 @@
 #include "../../protocol/struct/TrackListMessage.hpp"
 #include "../../protocol/struct/DeviceListMessage.hpp"
 #include "../../handler/device/DeviceConstants.hpp"
+#include "../../handler/device/TrackConstants.hpp"
 #include "DeviceView.hpp"
 #include "component/DeviceSelector.hpp"
 #include "component/PageSelector.hpp"
@@ -200,7 +201,7 @@ namespace Bitwig
 
         if (msg.isNested)
         {
-            trackNames.push_back("Back to parent");
+            trackNames.push_back(Track::BACK_TO_PARENT_TEXT);
             muteStates.push_back(false);
             soloStates.push_back(false);
             groupStates.push_back(false);
