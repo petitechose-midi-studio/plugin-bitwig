@@ -218,9 +218,6 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            // Note: childType is now unused - children are flat with individual itemTypes
-            input_handler_.setDeviceChildrenState(msg.deviceIndex, 0, msg.childrenCount);
-
             std::vector<std::string> formattedItems;
             std::vector<uint8_t> itemTypes;
 
@@ -233,6 +230,10 @@ namespace Bitwig
                 formattedItems.push_back(formatted);
                 itemTypes.push_back(msg.children[i].itemType);
             }
+
+            // Pass itemTypes to input handler (excluding BACK button at index 0)
+            std::vector<uint8_t> childItemTypes(itemTypes.begin() + 1, itemTypes.end());
+            input_handler_.setDeviceChildrenState(msg.deviceIndex, 0, msg.childrenCount, childItemTypes);
 
             view_controller_.handleShowDeviceChildren(formattedItems, itemTypes);
         };

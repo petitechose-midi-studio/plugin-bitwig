@@ -78,12 +78,24 @@ namespace Bitwig
     }
 
     void DeviceInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType,
-                                                    uint8_t childrenCount)
+                                                    uint8_t childrenCount,
+                                                    const std::vector<uint8_t> &itemTypes)
     {
         navigation_.deviceIndex = deviceIndex;
         navigation_.childType = childType;
         navigation_.childrenCount = childrenCount;
         navigation_.mode = SelectorMode::CHILDREN;
+
+        // Store itemTypes for each child
+        Serial.printf("[C++ INPUT] setDeviceChildrenState: deviceIndex=%d, childrenCount=%d, itemTypes.size()=%d\n",
+                      deviceIndex, childrenCount, itemTypes.size());
+
+        for (size_t i = 0; i < itemTypes.size() && i < navigation_.itemTypes.size(); i++)
+        {
+            navigation_.itemTypes[i] = itemTypes[i];
+            const char* typeStr = (itemTypes[i] == 0) ? "SLOT" : (itemTypes[i] == 1) ? "LAYER" : (itemTypes[i] == 2) ? "DRUM" : "UNKNOWN";
+            Serial.printf("  [%d] itemType=%d (%s)\n", i, itemTypes[i], typeStr);
+        }
 
         api_.setEncoderPosition(EncoderID::NAV, 1.0f);
     }
@@ -311,8 +323,16 @@ void DeviceInputHandler::handleChildrenModeEnter(int selectorIndex) {
     } else {
         int childIndex = selectorIndex - 1;
 
+        // Get itemType for this child (0=slot, 1=layer, 2=drum)
+        uint8_t itemType = (childIndex < static_cast<int>(navigation_.itemTypes.size()))
+                            ? navigation_.itemTypes[childIndex] : 0;
+
+        const char* itemTypeStr = (itemType == 0) ? "SLOT" : (itemType == 1) ? "LAYER" : (itemType == 2) ? "DRUM" : "UNKNOWN";
+        Serial.printf("[C++ INPUT] Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d\n",
+                      navigation_.deviceIndex, itemType, itemTypeStr, childIndex);
+
         protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex,
-                                                         navigation_.childType,
+                                                         itemType,
                                                          static_cast<uint8_t>(childIndex)});
     }
 }
@@ -343,8 +363,17 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
                     handleBackNavigation();
                 } else {
                     int childIndex = selectorIndex - 1;
+
+                    // Get itemType for this child (0=slot, 1=layer, 2=drum)
+                    uint8_t itemType = (childIndex < static_cast<int>(navigation_.itemTypes.size()))
+                                        ? navigation_.itemTypes[childIndex] : 0;
+
+                    const char* itemTypeStr = (itemType == 0) ? "SLOT" : (itemType == 1) ? "LAYER" : (itemType == 2) ? "DRUM" : "UNKNOWN";
+                    Serial.printf("[C++ INPUT] (Release) Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d\n",
+                                  navigation_.deviceIndex, itemType, itemTypeStr, childIndex);
+
                     protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex,
-                                                                     navigation_.childType,
+                                                                     itemType,
                                                                      static_cast<uint8_t>(childIndex)});
                 }
                 break;

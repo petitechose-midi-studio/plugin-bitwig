@@ -53,7 +53,8 @@ namespace Bitwig
          * @brief Update device children state from host
          * Called by DeviceHostHandler when DEVICE_CHILDREN is received
          */
-        void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount);
+        void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
+                                    const std::vector<uint8_t> &itemTypes);
 
         /**
          * @brief Update track list state from host
@@ -135,8 +136,9 @@ namespace Bitwig
         {
             SelectorMode mode = SelectorMode::DEVICES;
             uint8_t deviceIndex = 0; // Device being navigated (for children request)
-            uint8_t childType = 0;
+            uint8_t childType = 0;  // Deprecated - kept for compatibility
             uint8_t childrenCount = 0;
+            etl::array<uint8_t, 16> itemTypes = {};  // Store itemType for each child
         } navigation_;
     };
 

@@ -8,20 +8,31 @@ package config;
  */
 public class BitwigConfig {
     /**
-     * Delay in milliseconds to wait after cursor navigation before sending device list.
-     *
-     * This delay is necessary because Bitwig needs time to update its internal
-     * cursor state after navigation operations (selectParent, selectFirstInSlot, etc.)
-     * before we can reliably query the new device list.
-     *
-     * Adjust this value based on stability:
-     * - Lower values (5-10ms): Maximum UI response, may miss updates on slower systems
-     * - Higher values (20-50ms): More reliable, slightly slower UI
-     *
-     * Default: 10ms (optimized for maximum speed)
-     * Previous values: 20ms, 50ms
+     * Delay for single element operations.
+     * Lightweight operations on individual items.
+     * Used for: selectDevice, selectParent, selectFirstChild, selectFirstInSlot
      */
-    public static final int CURSOR_UPDATE_DELAY_MS = 20;
+    public static final int SINGLE_ELEMENT_DELAY_MS = 12;
+
+    /**
+     * Delay for list/bulk operations.
+     * Heavier operations that query multiple items and build lists.
+     * Used for: sendDeviceList, sendTrackList, sendDeviceChildren
+     */
+    public static final int LIST_OPERATION_DELAY_MS = 15;
+
+    /**
+     * Delay for complex nested operations.
+     * Operations requiring multiple sequential API calls.
+     * Used for: selectInEditor + selectFirstInChannel (layers)
+     */
+    public static final int COMPLEX_OPERATION_DELAY_MS = 20;
+
+    /**
+     * Stagger factor for bulk message sending
+     * Used to spread out messages in loops to avoid bandwidth saturation.
+     */
+    public static final int BULK_MESSAGE_STAGGER_MS = 7;
 
     /**
      * Delay in milliseconds before writing automation after touch press.
@@ -33,7 +44,7 @@ public class BitwigConfig {
      * Grace period in milliseconds after touch release.
      * Blocks parameter value updates to prevent automation playback re-trigger.
      */
-    public static final int TOUCH_RELEASE_GRACE_MS = 20;
+    public static final int TOUCH_RELEASE_GRACE_MS = TOUCH_PRESS_DELAY_MS;
 
     private BitwigConfig() {
         // Prevent instantiation

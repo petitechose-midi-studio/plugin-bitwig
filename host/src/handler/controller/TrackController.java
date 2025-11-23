@@ -76,7 +76,7 @@ public class TrackController {
                     if (firstDevice.exists().get()) {
                         cursorDevice.selectDevice(firstDevice);}
 
-                }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
 
                 // NOTE: DeviceHost observers will send device updates automatically
                 // Full sendDeviceList() only called when track selector is released
@@ -119,7 +119,7 @@ public class TrackController {
                         trackIndex,
                         newMuteState
                     ));
-                }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         };
 
@@ -143,7 +143,7 @@ public class TrackController {
                         trackIndex,
                         newSoloState
                     ));
-                }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         };
 

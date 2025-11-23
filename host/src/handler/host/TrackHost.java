@@ -214,12 +214,12 @@ public class TrackHost {
         // Select the group track, then select its first child
         cursorTrack.selectChannel(track);
 
-        // Wait for Bitwig to update, then select first child
-        host.scheduleTask(() -> {
-            cursorTrack.selectFirstChild();
-            // Wait again before sending track list
-            host.scheduleTask(() -> sendTrackList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
-        }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        // Single element operation: select first child
+        host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+
+        // List operation: refresh track list
+        host.scheduleTask(() -> sendTrackList(),
+                BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     /**
@@ -242,8 +242,8 @@ public class TrackHost {
         // Select the parent track
         cursorTrack.selectParent();
 
-        // Wait for Bitwig to update context, then send list
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        // List operation: refresh track list
+        host.scheduleTask(() -> sendTrackList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     /**

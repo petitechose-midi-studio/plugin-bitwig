@@ -63,15 +63,8 @@ public class DeviceHost {
         drumPadBank.canScrollForwards().markInterested();
 
         for (int i = 0; i < 16; i++) {
-            DeviceLayer layer = layerBank.getItemAt(i);
-            layer.exists().markInterested();
-            layer.name().markInterested();
-        }
-
-        for (int i = 0; i < 16; i++) {
-            DrumPad pad = drumPadBank.getItemAt(i);
-            pad.exists().markInterested();
-            pad.name().markInterested();
+            markLayerInterested(layerBank.getItemAt(i));
+            markDrumPadInterested(drumPadBank.getItemAt(i));
         }
 
         cursorDevice.exists().markInterested();
@@ -99,33 +92,17 @@ public class DeviceHost {
         deviceBank.canScrollForwards().markInterested();
 
         for (int i = 0; i < 32; i++) {
-            Device device = deviceBank.getItemAt(i);
-            device.exists().markInterested();
-            device.name().markInterested();
-            device.position().markInterested();
-            device.isEnabled().markInterested();
-            device.hasSlots().markInterested();
-            device.hasLayers().markInterested();
-            device.hasDrumPads().markInterested();
-            device.slotNames().markInterested();
+            markDeviceInterested(deviceBank.getItemAt(i));
         }
 
         for (int i = 0; i < 8; i++) {
-            RemoteControl param = remoteControls.getParameter(i);
-            param.exists().markInterested();
-            param.value().markInterested();
-            param.name().markInterested();
-            param.value().getOrigin().markInterested();
-            param.hasAutomation().markInterested();
-            param.value().discreteValueCount().markInterested();
-            param.value().displayedValue().markInterested();
-            param.value().discreteValueNames().markInterested();
+            markParameterInterested(remoteControls.getParameter(i));
         }
 
         cursorDevice.exists().addValueObserver(exists -> {
             lastDeviceName = "";
             if (exists) {
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.LIST_OPERATION_DELAY_MS);
             } else {
                 sendDeviceCleared();
             }
@@ -134,7 +111,7 @@ public class DeviceHost {
         cursorDevice.name().addValueObserver(deviceName -> {
             if (cursorDevice.exists().get() && !deviceName.equals(lastDeviceName)) {
                 lastDeviceName = deviceName;
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.LIST_OPERATION_DELAY_MS);
             }
         });
 
@@ -142,8 +119,8 @@ public class DeviceHost {
             if (!trackName.equals(lastTrackName)) {
                 lastTrackName = trackName;
                 lastDeviceName = "";
-                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.CURSOR_UPDATE_DELAY_MS + 60);
+                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
             }
         });
 
@@ -151,7 +128,7 @@ public class DeviceHost {
             long trackColor = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
             if (trackColor != lastTrackColor) {
                 lastTrackColor = trackColor;
-                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
             }
         });
 
@@ -260,7 +237,7 @@ public class DeviceHost {
     public void sendDeviceChildren(int deviceIndex, int childType) {
         Device device = deviceBank.getItemAt(deviceIndex);
         if (!device.exists().get()) {
-            protocol.send(new DeviceChildrenMessage(deviceIndex, childType, 0, new ArrayList<>()));
+            protocol.send(new DeviceChildrenMessage(deviceIndex, 0, 0, new ArrayList<>()));
             return;
         }
 
@@ -285,41 +262,64 @@ public class DeviceHost {
             allChildren.add(drum);
         }
 
-        protocol.send(new DeviceChildrenMessage(deviceIndex, childType, allChildren.size(), allChildren));
+        host.println("\n[DEVICE HOST] Sending DeviceChildren: deviceIndex=" + deviceIndex + ", childrenCount="
+                + allChildren.size());
+        for (int i = 0; i < allChildren.size(); i++) {
+            DeviceChildrenMessage.Children child = allChildren.get(i);
+            host.println("  [" + i + "] " + child.getChildName() + " (itemType=" + child.getItemType() + "/"
+                    + getItemTypeString(child.getItemType()) + ", childIndex=" + child.getChildIndex() + ")");
+        }
+
+        protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
     }
 
-    public void enterDeviceChild(int deviceIndex, int childType, int childIndex) {
+    public void enterDeviceChild(int deviceIndex, int itemType, int childIndex) {
         Device device = deviceBank.getItemAt(deviceIndex);
-        if (!device.exists().get()) return;
+        if (!device.exists().get()) {
+            host.println("[DEVICE HOST] ⚠ enterDeviceChild: device " + deviceIndex + " doesn't exist");
+            return;
+        }
+
+        String deviceName = device.name().get();
+        host.println("\n[DEVICE HOST] ▶ Entering device child: device=" + deviceName + " (" + deviceIndex
+                + "), itemType=" + itemType + " (" + getItemTypeString(itemType) + "), childIndex=" + childIndex + "\n");
 
         cursorDevice.selectDevice(device);
 
         host.scheduleTask(() -> {
-            switch (childType) {
-                case 1:
+            // itemType: 0=slot, 1=layer, 2=drum
+            switch (itemType) {
+                case 0: // Slot
                     String[] slotNames = device.slotNames().get();
                     if (childIndex >= 0 && childIndex < slotNames.length) {
                         cursorDevice.selectFirstInSlot(slotNames[childIndex]);
                     }
                     break;
-                case 2:
+                case 1: // Layer
                     DeviceLayer layer = layerBank.getItemAt(childIndex);
                     if (layer.exists().get()) {
                         layer.selectInEditor();
-                        host.scheduleTask(() -> cursorDevice.selectFirstInChannel(layer), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+                        // Complex operation: selectInEditor + selectFirstInChannel
+                        host.scheduleTask(() -> cursorDevice.selectFirstInChannel(layer),
+                                BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
                     }
                     break;
-                case 3:
+                case 2: // Drum pad
                     cursorDevice.selectFirstInKeyPad(childIndex);
                     break;
             }
-            host.scheduleTask(() -> sendDeviceList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
-        }, BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+
+        // List operation: refresh device list after navigation
+        int sendDelay = (itemType == 1)
+                ? BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS
+                : BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS;
+        host.scheduleTask(() -> sendDeviceList(), sendDelay);
     }
 
     public void exitToParent() {
         cursorDevice.selectParent();
-        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.CURSOR_UPDATE_DELAY_MS);
+        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
     }
 
     private List<DeviceChildrenMessage.Children> getSlots(Device device) {
@@ -352,14 +352,15 @@ public class DeviceHost {
     private List<DeviceChildrenMessage.Children> getAllDrumPads(Device device) {
         List<DeviceChildrenMessage.Children> allPads = new ArrayList<>();
 
+        // Scroll to beginning
         while (drumPadBank.canScrollBackwards().get()) {
             drumPadBank.scrollBackwards();
         }
 
-        do {
+        // Scan all drum pads (max 16)
+        while (allPads.size() < 16 && drumPadBank.canScrollForwards().get()) {
             int scrollPos = drumPadBank.scrollPosition().get();
-            for (int i = 0; i < 16; i++) {
-                if (allPads.size() >= 16) break; // Limit to 16 drum pads max
+            for (int i = 0; i < 16 && allPads.size() < 16; i++) {
                 DrumPad pad = drumPadBank.getItemAt(i);
                 if (pad.exists().get()) {
                     int midiNote = scrollPos + i;
@@ -367,9 +368,8 @@ public class DeviceHost {
                     allPads.add(new DeviceChildrenMessage.Children(midiNote, padName, 2)); // itemType=2 for DrumPad
                 }
             }
-            if (allPads.size() >= 16 || !drumPadBank.canScrollForwards().get()) break;
             drumPadBank.scrollForwards();
-        } while (true);
+        }
 
         return allPads;
     }
@@ -394,9 +394,10 @@ public class DeviceHost {
 
         sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName);
 
+        // Stagger macro updates to avoid bandwidth saturation
         for (int i = 0; i < 8; i++) {
             final int index = i;
-            host.scheduleTask(() -> sendMacroUpdate(index), i * 5);
+            host.scheduleTask(() -> sendMacroUpdate(index), i * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
         }
     }
 
@@ -415,13 +416,14 @@ public class DeviceHost {
     private void sendDeviceCleared() {
         protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
 
+        // Stagger macro clear messages to avoid bandwidth saturation
         for (int i = 0; i < 8; i++) {
             final int index = i;
             host.scheduleTask(() -> {
                 protocol.send(new DeviceMacroUpdateMessage(
                     (byte) index, "", 0.0f, "", 0.0f, false, (byte) 0, (short) 0, (byte) 0
                 ));
-            }, index * 5);
+            }, index * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
         }
     }
 
@@ -538,5 +540,46 @@ public class DeviceHost {
         }
 
         return new ParameterTypeInfo(parameterType, discreteNames, currentIndex);
+    }
+
+    private void markLayerInterested(DeviceLayer layer) {
+        layer.exists().markInterested();
+        layer.name().markInterested();
+    }
+
+    private void markDrumPadInterested(DrumPad pad) {
+        pad.exists().markInterested();
+        pad.name().markInterested();
+    }
+
+    private void markDeviceInterested(Device device) {
+        device.exists().markInterested();
+        device.name().markInterested();
+        device.position().markInterested();
+        device.isEnabled().markInterested();
+        device.hasSlots().markInterested();
+        device.hasLayers().markInterested();
+        device.hasDrumPads().markInterested();
+        device.slotNames().markInterested();
+    }
+
+    private void markParameterInterested(RemoteControl param) {
+        param.exists().markInterested();
+        param.value().markInterested();
+        param.name().markInterested();
+        param.value().getOrigin().markInterested();
+        param.hasAutomation().markInterested();
+        param.value().discreteValueCount().markInterested();
+        param.value().displayedValue().markInterested();
+        param.value().discreteValueNames().markInterested();
+    }
+
+    private String getItemTypeString(int itemType) {
+        switch (itemType) {
+            case 0: return "SLOT";
+            case 1: return "LAYER";
+            case 2: return "DRUM";
+            default: return "UNKNOWN";
+        }
     }
 }
