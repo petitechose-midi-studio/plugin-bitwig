@@ -54,15 +54,11 @@ public class LastClicked {
 
     /**
      * Send initial state (called at startup)
-     *
-     * Delay send to ensure Bitwig API values are stabilized
      */
     public void sendInitialState() {
-        host.scheduleTask(() -> {
-            if (lastClicked.parameter().exists().get()) {
-                sendLastClickedUpdate();
-            }
-        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
+        if (lastClicked.parameter().exists().get()) {
+            sendLastClickedUpdate();
+        }
     }
 
     /**
@@ -77,23 +73,19 @@ public class LastClicked {
         final boolean exists = lastClicked.parameter().exists().get();
         final int discreteCount = lastClicked.parameter().value().discreteValueCount().get(); // -1=continuous (default)
 
-        // Perform calculations immediately (outside scheduleTask)
         final int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1: 0; // 0=Knob (default)
         final int currentValueIndex = (int)(value * (double)discreteCount);
 
-        // Only protocol.send in scheduleTask
-        host.scheduleTask(() -> {
-            protocol.send(new LastClickedUpdateMessage(
-                name,
-                (float) value,
-                displayValue,
-                (float) origin,
-                exists,
-                (byte) paramType,
-                (short) discreteCount,
-                (byte) currentValueIndex
-            ));
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        protocol.send(new LastClickedUpdateMessage(
+            name,
+            (float) value,
+            displayValue,
+            (float) origin,
+            exists,
+            (byte) paramType,
+            (short) discreteCount,
+            (byte) currentValueIndex
+        ));
     }
 
     /**

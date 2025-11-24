@@ -5,16 +5,20 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
+import handler.util.ObserverBasedRequestHandler;
 import java.util.List;
 import java.util.ArrayList;
 
 /**
  * DeviceHost - Observes Bitwig Device and sends updates TO controller
  *
- * Monitors device state changes (name, enabled, parameters) and sends
- * protocol messages to hardware controller.
+ * RESPONSIBILITIES:
+ * 1. Observe device changes (name, enabled, parameters) → send protocol messages
+ * 2. Execute device navigation (layers/slots/drums require DeviceLayerBank/DrumPadBank)
+ * 3. Send device lists/children on request
  *
- * SINGLE RESPONSIBILITY: Bitwig → Controller (Device)
+ * NOTE: Navigation logic is here because it needs access to layerBank/drumPadBank
+ * which can't be shared with DeviceController (Bitwig API limitation)
  */
 public class DeviceHost {
     private final ControllerHost host;
@@ -23,6 +27,7 @@ public class DeviceHost {
     private final CursorDevice cursorDevice;
     private final CursorRemoteControlsPage remoteControls;
     private final DeviceBank deviceBank;
+    private final ObserverBasedRequestHandler requestHandler;
 
     private DeviceLayerBank layerBank;
     private DrumPadBank drumPadBank;
@@ -32,9 +37,6 @@ public class DeviceHost {
     private int lastPageIndex = -1;
     private String lastTrackName = "";
     private long lastTrackColor = 0;
-
-    private long lastDeviceChangeTime = 0;
-    private static final long DEVICE_CHANGE_THROTTLE_MS = 50;
 
     public DeviceHost(
         ControllerHost host,
@@ -50,12 +52,138 @@ public class DeviceHost {
         this.cursorDevice = cursorDevice;
         this.remoteControls = remoteControls;
         this.deviceBank = deviceBank;
+        this.requestHandler = new ObserverBasedRequestHandler(host);
+
+        // Register context for device navigation operations
+        requestHandler.registerContext("deviceList", deviceBank.itemCount());
     }
 
     public void setup() {
+        // Create banks
         layerBank = cursorDevice.createLayerBank(16);
         drumPadBank = cursorDevice.createDrumPadBank(16);
 
+        // Mark interested + add observers by domain
+        setupCursorTrackObservables();
+        setupCursorDeviceObservables();
+        setupRemoteControlsObservables();
+        setupDeviceBankObservables();
+        setupLayerAndDrumBanksObservables();
+    }
+
+    private void setupCursorTrackObservables() {
+        cursorTrack.name().markInterested();
+        cursorTrack.color().markInterested();
+        cursorTrack.position().markInterested();
+
+        cursorTrack.name().addValueObserver(trackName -> {
+            if (!trackName.equals(lastTrackName)) {
+                lastTrackName = trackName;
+                lastDeviceName = "";
+                sendTrackChange();
+                // Schedule device change after brief delay to let Bitwig update remote controls
+                host.scheduleTask(this::sendDeviceChange, 10);
+            }
+        });
+
+        cursorTrack.color().addValueObserver((r, g, b) -> {
+            long trackColor = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
+            if (trackColor != lastTrackColor) {
+                lastTrackColor = trackColor;
+                sendTrackChange();
+            }
+        });
+    }
+
+    private void setupCursorDeviceObservables() {
+        cursorDevice.exists().markInterested();
+        cursorDevice.name().markInterested();
+        cursorDevice.isEnabled().markInterested();
+        cursorDevice.position().markInterested();
+        cursorDevice.deviceChain().name().markInterested();
+        cursorDevice.isNested().markInterested();
+        cursorDevice.hasSlots().markInterested();
+        cursorDevice.slotNames().markInterested();
+        cursorDevice.hasLayers().markInterested();
+        cursorDevice.hasDrumPads().markInterested();
+
+        cursorDevice.exists().addValueObserver(exists -> {
+            lastDeviceName = "";
+            if (exists) {
+                // Schedule device change after brief delay to let Bitwig update remote controls
+                host.scheduleTask(this::sendDeviceChange, 10);
+            } else {
+                sendDeviceCleared();
+            }
+        });
+
+        cursorDevice.name().addValueObserver(deviceName -> {
+            if (cursorDevice.exists().get() && !deviceName.equals(lastDeviceName)) {
+                lastDeviceName = deviceName;
+                // Schedule device change after brief delay to let Bitwig update remote controls
+                host.scheduleTask(this::sendDeviceChange, 10);
+            }
+        });
+    }
+
+    private void setupRemoteControlsObservables() {
+        remoteControls.selectedPageIndex().markInterested();
+        remoteControls.pageCount().markInterested();
+        remoteControls.getName().markInterested();
+        remoteControls.pageNames().markInterested();
+
+        // Parameters
+        for (int i = 0; i < 8; i++) {
+            markParameterInterested(remoteControls.getParameter(i));
+        }
+
+        // Page change observer
+        remoteControls.selectedPageIndex().addValueObserver(pageIndex -> {
+            if (pageIndex != lastPageIndex) {
+                lastPageIndex = pageIndex;
+                sendPageChange();
+            }
+        });
+
+        // Parameter observers
+        for (int i = 0; i < 8; i++) {
+            final int paramIndex = i;
+            RemoteControl param = remoteControls.getParameter(i);
+
+            param.value().displayedValue().addValueObserver(displayValue -> {
+                double value = param.value().get();
+                boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
+                protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
+            });
+
+            param.name().addValueObserver(name -> {
+                protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name));
+            });
+        }
+    }
+
+    private void setupDeviceBankObservables() {
+        deviceBank.itemCount().markInterested();
+        deviceBank.scrollPosition().markInterested();
+        deviceBank.canScrollBackwards().markInterested();
+        deviceBank.canScrollForwards().markInterested();
+
+        // All devices in bank
+        for (int i = 0; i < 32; i++) {
+            final int deviceIndex = i;
+            Device device = deviceBank.getItemAt(i);
+            markDeviceInterested(device);
+
+            // Device enabled state observer
+            device.isEnabled().addValueObserver(isEnabled -> {
+                if (device.exists().get()) {
+                    protocol.send(new DeviceStateChangeMessage(deviceIndex, isEnabled));
+                }
+            });
+        }
+    }
+
+    private void setupLayerAndDrumBanksObservables() {
         layerBank.itemCount().markInterested();
         layerBank.scrollPosition().markInterested();
         drumPadBank.scrollPosition().markInterested();
@@ -66,117 +194,23 @@ public class DeviceHost {
             markLayerInterested(layerBank.getItemAt(i));
             markDrumPadInterested(drumPadBank.getItemAt(i));
         }
-
-        cursorDevice.exists().markInterested();
-        cursorDevice.name().markInterested();
-        cursorDevice.isEnabled().markInterested();
-
-        cursorTrack.name().markInterested();
-        cursorTrack.color().markInterested();
-        cursorTrack.position().markInterested();
-        cursorDevice.position().markInterested();
-        cursorDevice.deviceChain().name().markInterested();
-        cursorDevice.isNested().markInterested();
-        cursorDevice.hasSlots().markInterested();
-        cursorDevice.slotNames().markInterested();
-        cursorDevice.hasLayers().markInterested();
-        cursorDevice.hasDrumPads().markInterested();
-        remoteControls.selectedPageIndex().markInterested();
-        remoteControls.pageCount().markInterested();
-        remoteControls.getName().markInterested();
-        remoteControls.pageNames().markInterested();
-
-        deviceBank.itemCount().markInterested();
-        deviceBank.scrollPosition().markInterested();
-        deviceBank.canScrollBackwards().markInterested();
-        deviceBank.canScrollForwards().markInterested();
-
-        for (int i = 0; i < 32; i++) {
-            markDeviceInterested(deviceBank.getItemAt(i));
-        }
-
-        for (int i = 0; i < 8; i++) {
-            markParameterInterested(remoteControls.getParameter(i));
-        }
-
-        cursorDevice.exists().addValueObserver(exists -> {
-            lastDeviceName = "";
-            if (exists) {
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.LIST_OPERATION_DELAY_MS);
-            } else {
-                host.scheduleTask(() -> sendDeviceCleared(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-            }
-        });
-
-        cursorDevice.name().addValueObserver(deviceName -> {
-            if (cursorDevice.exists().get() && !deviceName.equals(lastDeviceName)) {
-                lastDeviceName = deviceName;
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.LIST_OPERATION_DELAY_MS);
-            }
-        });
-
-        cursorTrack.name().addValueObserver(trackName -> {
-            if (!trackName.equals(lastTrackName)) {
-                lastTrackName = trackName;
-                lastDeviceName = "";
-                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-                host.scheduleTask(() -> sendDeviceChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS);
-            }
-        });
-
-        cursorTrack.color().addValueObserver((r, g, b) -> {
-            long trackColor = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
-            if (trackColor != lastTrackColor) {
-                lastTrackColor = trackColor;
-                host.scheduleTask(() -> sendTrackChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-            }
-        });
-
-        cursorDevice.isEnabled().addValueObserver(isEnabled -> {
-            int deviceIndex = cursorDevice.position().get();
-            host.scheduleTask(() -> protocol.send(new DeviceStateChangeMessage(deviceIndex, isEnabled)),
-                BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-        });
-
-        remoteControls.selectedPageIndex().addValueObserver(pageIndex -> {
-            if (pageIndex != lastPageIndex) {
-                lastPageIndex = pageIndex;
-                host.scheduleTask(() -> sendPageChange(), BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-            }
-        });
-
-        for (int i = 0; i < 8; i++) {
-            final int paramIndex = i;
-            RemoteControl param = remoteControls.getParameter(i);
-
-            param.value().displayedValue().addValueObserver(displayValue -> {
-                double value = param.value().get();
-                boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
-                host.scheduleTask(() -> protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho)),
-                    BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-            });
-
-            param.name().addValueObserver(name -> {
-                host.scheduleTask(() -> protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name)),
-                    BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-            });
-        }
     }
 
     /**
      * Send current device state (called at startup)
-     *
-     * Delay send to ensure Bitwig API values are stabilized
      */
     public void sendInitialState() {
-        host.scheduleTask(() -> {
-            sendTrackChange();
-            sendDeviceChange();
-        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
+        sendTrackChange();
+        // Schedule device change after brief delay to let Bitwig update remote controls
+        host.scheduleTask(this::sendDeviceChange, 10);
     }
 
     public void setDeviceController(handler.controller.DeviceController deviceController) {
         this.deviceController = deviceController;
+    }
+
+    public ObserverBasedRequestHandler getRequestHandler() {
+        return requestHandler;
     }
 
     public void sendPageNames() {
@@ -193,55 +227,18 @@ public class DeviceHost {
             }
         }
 
-        // Only protocol.send in scheduleTask
-        host.scheduleTask(() -> {
-            protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
-        }, BitwigConfig.LIST_OPERATION_DELAY_MS);
+        protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
     }
 
     public void sendDeviceList() {
-        // Capture all API data NOW (at the moment of call, which should be properly delayed by caller)
         int totalDeviceCount = deviceBank.itemCount().get();
         int currentDevicePosition = cursorDevice.position().get();
         boolean isNested = cursorDevice.isNested().get();
         String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
 
-        List<DeviceListMessage.Devices> devicesList = new ArrayList<>();
-        int bankSize = deviceBank.getSizeOfBank();
+        List<DeviceListMessage.Devices> devicesList = buildDevicesList();
+        int currentDeviceIndex = findCurrentDeviceIndex(devicesList, currentDevicePosition);
 
-        for (int i = 0; i < bankSize; i++) {
-            Device device = deviceBank.getItemAt(i);
-
-            if (device.exists().get()) {
-                String name = device.name().get();
-                int position = device.position().get();
-                boolean enabled = device.isEnabled().get();
-
-                int[] childrenTypes = new int[4];
-                int index = 0;
-                if (device.hasSlots().get() && index < 4) childrenTypes[index++] = 1;
-                if (device.hasLayers().get() && index < 4) childrenTypes[index++] = 2;
-                if (device.hasDrumPads().get() && index < 4) childrenTypes[index++] = 4;
-
-                devicesList.add(new DeviceListMessage.Devices(
-                    position,
-                    name,
-                    enabled,
-                    childrenTypes
-                ));
-            }
-        }
-
-        // Find current device index
-        int currentDeviceIndex = 0;
-        for (int i = 0; i < devicesList.size(); i++) {
-            if (devicesList.get(i).getDeviceIndex() == currentDevicePosition) {
-                currentDeviceIndex = i;
-                break;
-            }
-        }
-
-        // Send immediately (caller handles delay)
         protocol.send(new DeviceListMessage(
             totalDeviceCount,
             currentDeviceIndex,
@@ -249,6 +246,43 @@ public class DeviceHost {
             parentName,
             devicesList
         ));
+    }
+
+    private List<DeviceListMessage.Devices> buildDevicesList() {
+        List<DeviceListMessage.Devices> list = new ArrayList<>();
+        int bankSize = deviceBank.getSizeOfBank();
+
+        for (int i = 0; i < bankSize; i++) {
+            Device device = deviceBank.getItemAt(i);
+            if (!device.exists().get()) continue;
+
+            list.add(new DeviceListMessage.Devices(
+                device.position().get(),
+                device.name().get(),
+                device.isEnabled().get(),
+                getDeviceChildrenTypes(device)
+            ));
+        }
+
+        return list;
+    }
+
+    private int[] getDeviceChildrenTypes(Device device) {
+        int[] types = new int[4];
+        int index = 0;
+        if (device.hasSlots().get() && index < 4) types[index++] = 1;
+        if (device.hasLayers().get() && index < 4) types[index++] = 2;
+        if (device.hasDrumPads().get() && index < 4) types[index++] = 4;
+        return types;
+    }
+
+    private int findCurrentDeviceIndex(List<DeviceListMessage.Devices> devicesList, int currentDevicePosition) {
+        for (int i = 0; i < devicesList.size(); i++) {
+            if (devicesList.get(i).getDeviceIndex() == currentDevicePosition) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     public void sendDeviceChildren(int deviceIndex, int childType) {
@@ -292,6 +326,14 @@ public class DeviceHost {
         protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
     }
 
+    /**
+     * Execute device navigation: enter child (slot/layer/drum)
+     * Called FROM DeviceController when controller sends navigation command
+     *
+     * Navigation logic is HERE (not in Controller) because:
+     * - Needs layerBank/drumPadBank access (can't be shared with Controller)
+     * - Bitwig API limitation: these banks must be created in Host
+     */
     public void enterDeviceChild(int deviceIndex, int itemType, int childIndex) {
         Device device = deviceBank.getItemAt(deviceIndex);
         if (!device.exists().get()) {
@@ -303,43 +345,51 @@ public class DeviceHost {
         host.println("\n[DEVICE HOST] ▶ Entering device child: device=" + deviceName + " (" + deviceIndex
                 + "), itemType=" + itemType + " (" + getItemTypeString(itemType) + "), childIndex=" + childIndex + "\n");
 
+        // Notify that deviceList will change
+        requestHandler.notifyChangePending("deviceList");
+
+        // Execute Bitwig API navigation
         cursorDevice.selectDevice(device);
 
-        host.scheduleTask(() -> {
-            // itemType: 0=slot, 1=layer, 2=drum
-            switch (itemType) {
-                case 0: // Slot
-                    String[] slotNames = device.slotNames().get();
-                    if (childIndex >= 0 && childIndex < slotNames.length) {
-                        cursorDevice.selectFirstInSlot(slotNames[childIndex]);
-                    }
-                    break;
-                case 1: // Layer
-                    DeviceLayer layer = layerBank.getItemAt(childIndex);
-                    if (layer.exists().get()) {
-                        layer.selectInEditor();
-                        // Complex operation: selectInEditor + selectFirstInChannel
-                        host.scheduleTask(() -> cursorDevice.selectFirstInChannel(layer),
-                                BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
-                    }
-                    break;
-                case 2: // Drum pad
-                    cursorDevice.selectFirstInKeyPad(childIndex);
-                    break;
-            }
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        // itemType: 0=slot, 1=layer, 2=drum
+        switch (itemType) {
+            case 0: // Slot
+                String[] slotNames = device.slotNames().get();
+                if (childIndex >= 0 && childIndex < slotNames.length) {
+                    cursorDevice.selectFirstInSlot(slotNames[childIndex]);
+                }
+                break;
+            case 1: // Layer
+                DeviceLayer layer = layerBank.getItemAt(childIndex);
+                if (layer.exists().get()) {
+                    layer.selectInEditor();
+                    cursorDevice.selectFirstInChannel(layer);
+                }
+                break;
+            case 2: // Drum pad
+                cursorDevice.selectFirstInKeyPad(childIndex);
+                break;
+        }
 
-        // List operation: refresh device list after navigation
-        // All navigation types (slot/layer/drum) are complex operations that change deviceChain context
-        int sendDelay = (itemType == 1)
-                ? BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS
-                : BitwigConfig.SINGLE_ELEMENT_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS;
-        host.scheduleTask(() -> sendDeviceList(), sendDelay);
+        // Send device list when deviceBank is ready (using observer)
+        requestHandler.requestSend("deviceList", () -> sendDeviceList());
     }
 
+    /**
+     * Execute device navigation: exit to parent
+     * Called FROM DeviceController when controller sends navigation command
+     */
     public void exitToParent() {
+        host.println("\n[DEVICE HOST] ◀ Exit to parent\n");
+
+        // Notify that deviceList will change
+        requestHandler.notifyChangePending("deviceList");
+
+        // Execute Bitwig API navigation
         cursorDevice.selectParent();
-        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
+
+        // Send device list when deviceBank is ready (using observer)
+        requestHandler.requestSend("deviceList", () -> sendDeviceList());
     }
 
     private List<DeviceChildrenMessage.Children> getSlots(Device device) {
@@ -402,10 +452,6 @@ public class DeviceHost {
     }
 
     private void sendDeviceChange() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastDeviceChangeTime < DEVICE_CHANGE_THROTTLE_MS) return;
-        lastDeviceChangeTime = currentTime;
-
         String deviceName = cursorDevice.name().get();
         boolean isEnabled = cursorDevice.isEnabled().get();
         int pageIndex = remoteControls.selectedPageIndex().get();
@@ -414,104 +460,70 @@ public class DeviceHost {
 
         sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName);
 
-        // Stagger macro updates to avoid bandwidth saturation
+        // Send all macro updates immediately
         for (int i = 0; i < 8; i++) {
-            final int index = i;
-            host.scheduleTask(() -> sendMacroUpdate(index), i * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
+            sendMacroUpdate(i);
         }
     }
 
     private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int pageIndex, int pageCount, String pageName) {
-        // Data already captured by caller, only wrap protocol.send
-        host.scheduleTask(() -> {
-            protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName)));
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName)));
     }
 
     private void sendTrackChange() {
-        // Capture all API data immediately
         final String trackName = cursorTrack.name().get();
         final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
         final int trackPosition = cursorTrack.position().get();
 
-        // Only protocol.send in scheduleTask
-        host.scheduleTask(() -> {
-            protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition));
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition));
     }
 
     private void sendDeviceCleared() {
-        // Send header clear message
-        host.scheduleTask(() -> {
-            protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
 
-        // Stagger macro clear messages to avoid bandwidth saturation
+        // Send all macro clear messages immediately
         for (int i = 0; i < 8; i++) {
-            final int index = i;
-            host.scheduleTask(() -> {
-                protocol.send(new DeviceMacroUpdateMessage(
-                    (byte) index, "", 0.0f, "", 0.0f, false, (byte) 0, (short) 0, (byte) 0
-                ));
-            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS + index * BitwigConfig.BULK_MESSAGE_STAGGER_MS);
+            protocol.send(new DeviceMacroUpdateMessage(
+                (byte) i, "", 0.0f, "", 0.0f, false, (byte) 0, (short) 0, (byte) 0
+            ));
         }
     }
 
     private void sendMacroUpdate(int paramIndex) {
-        // Capture all API data immediately
         RemoteControl param = remoteControls.getParameter(paramIndex);
-        final int discreteCount = param.value().discreteValueCount().get();
-        final String name = param.name().get();
-        final float value = (float) param.value().get();
-        final String displayedValue = param.value().displayedValue().get();
-        final float origin = (float) param.value().getOrigin().get();
-        final boolean exists = param.exists().get();
+        ParameterData data = captureParameterData(param, paramIndex);
 
-        // Perform calculations immediately
-        if (deviceController != null) {
-            deviceController.updateParameterMetadata(paramIndex, discreteCount);
-        }
+        protocol.send(new DeviceMacroUpdateMessage(
+            (byte) paramIndex,
+            data.name,
+            data.value,
+            data.displayedValue,
+            data.origin,
+            data.exists,
+            (byte) data.typeInfo.parameterType,
+            (short) data.discreteCount,
+            (byte) data.typeInfo.currentValueIndex
+        ));
 
-        final ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
-
-        // Only protocol.send in scheduleTask
-        host.scheduleTask(() -> {
-            protocol.send(new DeviceMacroUpdateMessage(
+        if (data.typeInfo.parameterType == 2 && data.typeInfo.discreteValueNames.length > 0) {
+            protocol.send(new DeviceMacroDiscreteValuesMessage(
                 (byte) paramIndex,
-                name,
-                value,
-                displayedValue,
-                origin,
-                exists,
-                (byte) typeInfo.parameterType,
-                (short) discreteCount,
-                (byte) typeInfo.currentValueIndex
+                java.util.Arrays.asList(data.typeInfo.discreteValueNames),
+                (byte) data.typeInfo.currentValueIndex
             ));
-
-            if (typeInfo.parameterType == 2 && typeInfo.discreteValueNames.length > 0) {
-                sendMacroDiscreteValues(paramIndex, typeInfo.discreteValueNames, typeInfo.currentValueIndex);
-            }
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
-    }
-
-    private void sendMacroDiscreteValues(int paramIndex, String[] discreteNames, int currentIndex) {
-        protocol.send(new DeviceMacroDiscreteValuesMessage((byte) paramIndex, java.util.Arrays.asList(discreteNames), (byte) currentIndex));
+        }
     }
 
     private void sendPageChange() {
-        // Capture all API data immediately
         final int pageIndex = remoteControls.selectedPageIndex().get();
         final int pageCount = remoteControls.pageCount().get();
         final String pageName = remoteControls.getName().get();
         final List<DevicePageChangeMessage.Macros> macrosList = buildMacrosListForPageChange();
 
-        // Only protocol.send in scheduleTask
-        host.scheduleTask(() -> {
-            protocol.send(new DevicePageChangeMessage(
-                new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
-                macrosList
-            ));
-        }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+        protocol.send(new DevicePageChangeMessage(
+            new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
+            macrosList
+        ));
     }
 
     private String getPageName(int pageIndex, int pageCount) {
@@ -527,25 +539,19 @@ public class DeviceHost {
         List<DevicePageChangeMessage.Macros> macrosList = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
             RemoteControl param = remoteControls.getParameter(i);
-            int discreteCount = param.value().discreteValueCount().get();
-
-            if (deviceController != null) {
-                deviceController.updateParameterMetadata(i, discreteCount);
-            }
-
-            ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
+            ParameterData data = captureParameterData(param, i);
 
             macrosList.add(new DevicePageChangeMessage.Macros(
                 i,
-                (float) param.value().get(),
-                param.name().get(),
-                (float) param.value().getOrigin().get(),
-                param.exists().get(),
-                (short) discreteCount,
-                param.value().displayedValue().get(),
-                typeInfo.parameterType,
-                typeInfo.discreteValueNames,
-                typeInfo.currentValueIndex
+                data.value,
+                data.name,
+                data.origin,
+                data.exists,
+                (short) data.discreteCount,
+                data.displayedValue,
+                data.typeInfo.parameterType,
+                data.typeInfo.discreteValueNames,
+                data.typeInfo.currentValueIndex
             ));
         }
         return macrosList;
@@ -561,6 +567,44 @@ public class DeviceHost {
             this.discreteValueNames = discreteValueNames;
             this.currentValueIndex = currentValueIndex;
         }
+    }
+
+    private static class ParameterData {
+        final String name;
+        final float value;
+        final String displayedValue;
+        final float origin;
+        final boolean exists;
+        final int discreteCount;
+        final ParameterTypeInfo typeInfo;
+
+        ParameterData(String name, float value, String displayedValue, float origin,
+                     boolean exists, int discreteCount, ParameterTypeInfo typeInfo) {
+            this.name = name;
+            this.value = value;
+            this.displayedValue = displayedValue;
+            this.origin = origin;
+            this.exists = exists;
+            this.discreteCount = discreteCount;
+            this.typeInfo = typeInfo;
+        }
+    }
+
+    private ParameterData captureParameterData(RemoteControl param, int paramIndex) {
+        int discreteCount = param.value().discreteValueCount().get();
+        String name = param.name().get();
+        float value = (float) param.value().get();
+        String displayedValue = param.value().displayedValue().get();
+        float origin = (float) param.value().getOrigin().get();
+        boolean exists = param.exists().get();
+
+        if (deviceController != null) {
+            deviceController.updateParameterMetadata(paramIndex, discreteCount);
+        }
+
+        ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
+
+        return new ParameterData(name, value, displayedValue, origin, exists, discreteCount, typeInfo);
     }
 
     private ParameterTypeInfo detectParameterType(RemoteControl param, int discreteCount) {

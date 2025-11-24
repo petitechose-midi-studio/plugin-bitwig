@@ -5,6 +5,7 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
+import handler.util.ObserverBasedRequestHandler;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
@@ -12,10 +13,14 @@ import java.util.stream.IntStream;
 /**
  * TrackHost - Observes Bitwig Tracks and sends updates TO controller
  *
- * Monitors track state changes (name, mute, solo, activated) and sends
- * protocol messages to hardware controller.
+ * RESPONSIBILITIES:
+ * 1. Observe track changes (name, mute, solo, activated) → send protocol messages
+ * 2. Execute track navigation (enter/exit groups, requires siblingTrackBank)
+ * 3. Execute mute/solo toggles with observer-based confirmation
+ * 4. Send track lists on request
  *
- * SINGLE RESPONSIBILITY: Bitwig → Controller (Tracks)
+ * NOTE: Navigation logic is here because it needs access to siblingTrackBank
+ * which can't be shared with TrackController (Bitwig API limitation)
  */
 public class TrackHost {
     private final ControllerHost host;
@@ -24,12 +29,17 @@ public class TrackHost {
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
     private final Track parentTrack;  // Parent track for navigation
+    private final ObserverBasedRequestHandler requestHandler;
 
     // Navigation depth tracking
     private int navigationDepth = 0;  // 0 = root level, >0 = inside group(s)
 
     // Cache for change detection
     private String lastTrackName = "";
+
+    // Pending toggle tracking for reliable mute/solo confirmation
+    private int pendingMuteTrackIndex = -1;
+    private int pendingSoloTrackIndex = -1;
 
     public TrackHost(
         ControllerHost host,
@@ -41,12 +51,16 @@ public class TrackHost {
         this.protocol = protocol;
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
+        this.requestHandler = new ObserverBasedRequestHandler(host);
 
         // Create a TrackBank for sibling tracks (same level as cursor track)
         this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(32, 0, 0, true, false);
 
         // Create parent track object to detect if cursor track has a parent
         this.parentTrack = cursorTrack.createParentTrack(0, 0);
+
+        // Register context for track navigation operations
+        requestHandler.registerContext("trackList", siblingTrackBank.itemCount());
     }
 
     /**
@@ -67,19 +81,25 @@ public class TrackHost {
         mainTrackBank.canScrollBackwards().markInterested();
         mainTrackBank.canScrollForwards().markInterested();
 
-        // Mark all tracks in bank as interested (32 slots)
+        // Mark all tracks in bank as interested (32 slots) + add observers
         for (int i = 0; i < 32; i++) {
-            markTrackInterested(mainTrackBank.getItemAt(i));
+            final int trackIndex = i;
+            Track track = mainTrackBank.getItemAt(i);
+            markTrackInterested(track);
+            addTrackObservers(track, trackIndex);
         }
 
         // Mark parent track observables as interested
         parentTrack.exists().markInterested();
         parentTrack.name().markInterested();
 
-        // Mark sibling track bank observables as interested
+        // Mark sibling track bank observables as interested + add observers
         siblingTrackBank.itemCount().markInterested();
         for (int i = 0; i < 32; i++) {
-            markTrackInterested(siblingTrackBank.getItemAt(i));
+            final int trackIndex = i;
+            Track track = siblingTrackBank.getItemAt(i);
+            markTrackInterested(track);
+            addTrackObservers(track, trackIndex);
         }
 
         // Observer on cursor track name change
@@ -114,6 +134,33 @@ public class TrackHost {
         track.mute().markInterested();
         track.solo().markInterested();
         track.isGroup().markInterested();
+    }
+
+    /**
+     * Add mute/solo observers to track for reliable toggle confirmation
+     * @param track Track to add observers to
+     * @param trackIndex Index of track in current bank
+     */
+    private void addTrackObservers(Track track, int trackIndex) {
+        // Mute observer - sends confirmation when mute state changes
+        track.mute().addValueObserver(isMuted -> {
+            if (pendingMuteTrackIndex == trackIndex && track.exists().get()) {
+                pendingMuteTrackIndex = -1;
+                String trackName = track.name().get();
+                host.println("\n[TRACK HOST] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (isMuted ? "MUTED" : "UNMUTED") + "\n");
+                protocol.send(new protocol.struct.TrackMuteMessage(trackIndex, isMuted));
+            }
+        });
+
+        // Solo observer - sends confirmation when solo state changes
+        track.solo().addValueObserver(isSoloed -> {
+            if (pendingSoloTrackIndex == trackIndex && track.exists().get()) {
+                pendingSoloTrackIndex = -1;
+                String trackName = track.name().get();
+                host.println("\n[TRACK HOST] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (isSoloed ? "SOLOED" : "UNSOLOED") + "\n");
+                protocol.send(new protocol.struct.TrackSoloMessage(trackIndex, isSoloed));
+            }
+        });
     }
 
     /**
@@ -185,10 +232,12 @@ public class TrackHost {
     }
 
     /**
-     * Enter a track group (navigate into group's children)
-     * Called by TrackController when ENTER_TRACK_GROUP received
+     * Execute track navigation: enter group
+     * Called FROM TrackController when controller sends navigation command
      *
-     * @param trackIndex Index in current bank
+     * Navigation logic is HERE (not in Controller) because:
+     * - Needs siblingTrackBank access (can't be shared with Controller)
+     * - Bitwig API limitation: siblingTrackBank must be created in Host
      */
     public void enterTrackGroup(int trackIndex) {
         TrackBank currentBank = getCurrentBank();
@@ -202,23 +251,23 @@ public class TrackHost {
 
         host.println("[TRACK HOST] ▶ Enter: " + track.name().get());
 
-        // Increment navigation depth
+        // Track navigation depth
         navigationDepth++;
 
-        // Select the group track, then select its first child
-        cursorTrack.selectChannel(track);
-        host.scheduleTask(() -> cursorTrack.selectFirstChild(), BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
+        // Notify that trackList will change
+        requestHandler.notifyChangePending("trackList");
 
-        // Send track list AFTER selectFirstChild completes and sibling bank populates
-        // This is a complex nested operation requiring bank context switch
-        // Need extra time for sibling bank to fully populate with children
-        host.scheduleTask(() -> sendTrackList(),
-            BitwigConfig.COMPLEX_OPERATION_DELAY_MS + BitwigConfig.LIST_OPERATION_DELAY_MS + BitwigConfig.COMPLEX_OPERATION_DELAY_MS);
+        // Execute Bitwig API navigation
+        cursorTrack.selectChannel(track);
+        cursorTrack.selectFirstChild();
+
+        // Send track list when siblingTrackBank is ready (using observer)
+        requestHandler.requestSend("trackList", () -> sendTrackList());
     }
 
     /**
-     * Exit track group (navigate back to parent)
-     * Called by TrackController when EXIT_TRACK_GROUP received
+     * Execute track navigation: exit group
+     * Called FROM TrackController when controller sends navigation command
      */
     public void exitTrackGroup() {
         if (!hasParentGroup()) {
@@ -230,14 +279,17 @@ public class TrackHost {
         String parentName = parentTrack.name().get();
         host.println("[TRACK HOST] ◀ Exit: " + parentName);
 
-        // Decrement navigation depth
+        // Track navigation depth
         navigationDepth--;
 
-        // Select the parent track
+        // Notify that trackList will change
+        requestHandler.notifyChangePending("trackList");
+
+        // Execute Bitwig API navigation
         cursorTrack.selectParent();
 
-        // List operation: refresh track list AFTER selectParent completes
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.LIST_OPERATION_DELAY_MS);
+        // Send track list when siblingTrackBank is ready (using observer)
+        requestHandler.requestSend("trackList", () -> sendTrackList());
     }
 
     /**
@@ -249,5 +301,38 @@ public class TrackHost {
      */
     public Track getTrackAtIndex(int trackIndex) {
         return getCurrentBank().getItemAt(trackIndex);
+    }
+
+    /**
+     * Execute mute toggle with observer-based confirmation
+     * Called FROM TrackController when controller sends mute toggle command
+     *
+     * Uses observer pattern for confirmation:
+     * 1. Set pending flag
+     * 2. Toggle Bitwig state
+     * 3. Observer fires when Bitwig updates → sends confirmation
+     */
+    public void toggleMute(int trackIndex) {
+        Track track = getTrackAtIndex(trackIndex);
+        if (track != null && track.exists().get()) {
+            pendingMuteTrackIndex = trackIndex;
+            boolean currentState = track.mute().get();
+            track.mute().set(!currentState);
+            // Observer (addTrackObservers) will send TrackMuteMessage confirmation
+        }
+    }
+
+    /**
+     * Execute solo toggle with observer-based confirmation
+     * Called FROM TrackController when controller sends solo toggle command
+     */
+    public void toggleSolo(int trackIndex) {
+        Track track = getTrackAtIndex(trackIndex);
+        if (track != null && track.exists().get()) {
+            pendingSoloTrackIndex = trackIndex;
+            boolean currentState = track.solo().get();
+            track.solo().set(!currentState);
+            // Observer (addTrackObservers) will send TrackSoloMessage confirmation
+        }
     }
 }

@@ -4,13 +4,18 @@ import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import config.BitwigConfig;
 import handler.host.TrackHost;
+import handler.util.ObserverBasedRequestHandler;
 
 /**
  * TrackController - Handles Track commands FROM controller
  *
- * Listens to protocol callbacks and executes actions on Bitwig Tracks.
- *
- * SINGLE RESPONSIBILITY: Controller → Bitwig (Tracks)
+ * RESPONSIBILITY: Controller → Bitwig (Tracks)
+ * - Receives protocol callbacks (protocol.onXXX)
+ * - Checks fromHost flag (returns early if true)
+ * - Executes Bitwig API actions (select, toggle, etc.)
+ * - Delegates navigation to TrackHost (needs siblingTrackBank)
+ * - NEVER observes Bitwig API directly
+ * - NEVER sends protocol messages (except via Host delegates)
  */
 public class TrackController {
     private final ControllerHost host;
@@ -19,8 +24,10 @@ public class TrackController {
     private final CursorDevice cursorDevice;
     private final DeviceBank deviceBank;
     private final Protocol protocol;
+    private final ObserverBasedRequestHandler requestHandler;
     private TrackHost trackHost;
     private handler.host.DeviceHost deviceHost;
+    private DeviceController deviceController;
 
     public TrackController(
         ControllerHost host,
@@ -36,6 +43,10 @@ public class TrackController {
         this.cursorDevice = cursorDevice;
         this.deviceBank = deviceBank;
         this.protocol = protocol;
+        this.requestHandler = new ObserverBasedRequestHandler(host);
+
+        // Register contexts for observer-based requests
+        requestHandler.registerContext("trackList", trackBank.itemCount());
 
         setupCallbacks();
     }
@@ -48,13 +59,17 @@ public class TrackController {
         this.deviceHost = deviceHost;
     }
 
+    public void setDeviceController(DeviceController deviceController) {
+        this.deviceController = deviceController;
+    }
+
     private void setupCallbacks() {
         // Request track list FROM controller
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;
             host.println("\n[TRACK CTRL] → Requesting track list\n");
             if (trackHost != null) {
-                trackHost.sendTrackList();
+                requestHandler.requestSend("trackList", () -> trackHost.sendTrackList());
             }
         };
 
@@ -70,13 +85,22 @@ public class TrackController {
                 String trackName = track.name().get();
                 host.println("\n[TRACK CTRL] SELECT → \"" + trackName + "\" [" + trackIndex + "]\n");
 
+                // Notify DeviceController that deviceBank will be updating
+                if (deviceController != null) {
+                    deviceController.notifyTrackChangePending();
+                }
+
                 cursorTrack.selectChannel(track);
-                host.scheduleTask(() -> {
-                    com.bitwig.extension.controller.api.Device firstDevice = deviceBank.getItemAt(0);
-                    if (firstDevice.exists().get()) {
-                        cursorDevice.selectDevice(firstDevice);
-                    }
-                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+
+                // Select first device when deviceBank is ready (using DeviceHost's observer)
+                if (deviceHost != null) {
+                    deviceHost.getRequestHandler().requestSend("deviceList", () -> {
+                        com.bitwig.extension.controller.api.Device firstDevice = deviceBank.getItemAt(0);
+                        if (firstDevice.exists().get()) {
+                            cursorDevice.selectDevice(firstDevice);
+                        }
+                    });
+                }
 
                 // NOTE: DeviceHost observers will send device updates automatically
                 // Full sendDeviceList() only called when track selector is released
@@ -87,6 +111,7 @@ public class TrackController {
         protocol.onEnterTrackGroup = msg -> {
             if (msg.fromHost) return;
             if (trackHost != null) {
+                requestHandler.notifyChangePending("trackList");
                 trackHost.enterTrackGroup(msg.getTrackIndex());
             }
         };
@@ -95,6 +120,7 @@ public class TrackController {
         protocol.onExitTrackGroup = msg -> {
             if (msg.fromHost) return;
             if (trackHost != null) {
+                requestHandler.notifyChangePending("trackList");
                 trackHost.exitTrackGroup();
             }
         };
@@ -102,52 +128,18 @@ public class TrackController {
         // Toggle track mute FROM controller
         protocol.onTrackMute = msg -> {
             if (msg.fromHost) return;
-            final int trackIndex = msg.getTrackIndex();
-
-            // Use TrackHost to get track from correct bank (siblings or main)
-            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
-
-            if (track != null && track.exists().get()) {
-                // Toggle
-                track.mute().toggle();
-
-                // Capture actual state AFTER delay to ensure Bitwig API has updated
-                host.scheduleTask(() -> {
-                    final boolean newMuteState = track.mute().get();
-                    final String trackName = track.name().get();
-
-                    host.println("\n[TRACK CTRL] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (newMuteState ? "MUTED" : "UNMUTED") + "\n");
-                    protocol.send(new protocol.struct.TrackMuteMessage(
-                        trackIndex,
-                        newMuteState
-                    ));
-                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+            if (trackHost != null) {
+                trackHost.toggleMute(msg.getTrackIndex());
+                // Confirmation will be sent by observer in TrackHost
             }
         };
 
         // Toggle track solo FROM controller
         protocol.onTrackSolo = msg -> {
             if (msg.fromHost) return;
-            final int trackIndex = msg.getTrackIndex();
-
-            // Use TrackHost to get track from correct bank (siblings or main)
-            Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
-
-            if (track != null && track.exists().get()) {
-                // Toggle
-                track.solo().toggle();
-
-                // Capture actual state AFTER delay to ensure Bitwig API has updated
-                host.scheduleTask(() -> {
-                    final boolean newSoloState = track.solo().get();
-                    final String trackName = track.name().get();
-
-                    host.println("\n[TRACK CTRL] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (newSoloState ? "SOLOED" : "UNSOLOED") + "\n");
-                    protocol.send(new protocol.struct.TrackSoloMessage(
-                        trackIndex,
-                        newSoloState
-                    ));
-                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+            if (trackHost != null) {
+                trackHost.toggleSolo(msg.getTrackIndex());
+                // Confirmation will be sent by observer in TrackHost
             }
         };
 

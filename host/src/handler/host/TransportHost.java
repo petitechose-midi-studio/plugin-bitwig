@@ -9,10 +9,11 @@ import config.BitwigConfig;
 /**
  * TransportHost - Observes Bitwig Transport and sends updates TO controller
  *
- * Monitors transport state changes (play/stop/record) and sends
- * protocol messages to hardware controller.
- *
- * SINGLE RESPONSIBILITY: Bitwig → Controller (Transport)
+ * RESPONSIBILITY: Bitwig → Controller (Transport)
+ * - Observes transport changes (play, stop, record, tempo)
+ * - Sends protocol messages when changes occur
+ * - NEVER receives protocol callbacks (that's TransportController's job)
+ * - NEVER executes Bitwig actions (that's TransportController's job)
  */
 public class TransportHost {
     private final ControllerHost host;
@@ -38,24 +39,15 @@ public class TransportHost {
         transport.tempo().markInterested();
 
         transport.isPlaying().addValueObserver(isPlaying -> {
-            final boolean state = isPlaying;
-            host.scheduleTask(() -> {
-                protocol.send(new TransportPlayMessage(state));
-            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+            protocol.send(new TransportPlayMessage(isPlaying));
         });
 
         transport.isArrangerRecordEnabled().addValueObserver(isRecording -> {
-            final boolean state = isRecording;
-            host.scheduleTask(() -> {
-                protocol.send(new TransportRecordMessage(state));
-            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+            protocol.send(new TransportRecordMessage(isRecording));
         });
 
         transport.tempo().value().addRawValueObserver(tempo -> {
-            final float tempoValue = (float) tempo;
-            host.scheduleTask(() -> {
-                protocol.send(new TransportTempoMessage(tempoValue));
-            }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+            protocol.send(new TransportTempoMessage((float) tempo));
         });
     }
 
@@ -63,17 +55,15 @@ public class TransportHost {
      * Send current transport state (called at startup)
      */
     public void sendInitialState() {
-        host.scheduleTask(() -> {
-            boolean isPlaying = transport.isPlaying().get();
-            boolean isRecording = transport.isArrangerRecordEnabled().get();
-            double tempo = transport.tempo().getRaw();
+        boolean isPlaying = transport.isPlaying().get();
+        boolean isRecording = transport.isArrangerRecordEnabled().get();
+        double tempo = transport.tempo().getRaw();
 
-            String state = (isPlaying ? "▶" : "⏸") + (isRecording ? " ●" : "");
-            host.println("[TRANSPORT HOST] Init: " + state + " | " + tempo + " BPM");
+        String state = (isPlaying ? "▶" : "⏸") + (isRecording ? " ●" : "");
+        host.println("[TRANSPORT HOST] Init: " + state + " | " + tempo + " BPM");
 
-            protocol.send(new TransportPlayMessage(isPlaying));
-            protocol.send(new TransportRecordMessage(isRecording));
-            protocol.send(new TransportTempoMessage((float) tempo));
-        }, BitwigConfig.INITIAL_STATE_SEND_DELAY_MS);
+        protocol.send(new TransportPlayMessage(isPlaying));
+        protocol.send(new TransportRecordMessage(isRecording));
+        protocol.send(new TransportTempoMessage((float) tempo));
     }
 }

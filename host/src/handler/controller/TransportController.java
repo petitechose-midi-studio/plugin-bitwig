@@ -7,9 +7,11 @@ import protocol.Protocol;
 /**
  * TransportController - Handles Transport commands FROM controller
  *
- * Listens to protocol callbacks and executes actions on Bitwig Transport.
- *
- * SINGLE RESPONSIBILITY: Controller → Bitwig (Transport)
+ * RESPONSIBILITY: Controller → Bitwig (Transport)
+ * - Receives protocol callbacks (protocol.onXXX)
+ * - Executes Bitwig API actions (play, stop, record, tempo changes)
+ * - NEVER observes Bitwig API directly
+ * - NEVER sends protocol messages (confirmations come from TransportHost observers)
  */
 public class TransportController {
     private final ControllerHost host;

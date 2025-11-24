@@ -1,7 +1,7 @@
 #include <Arduino.h>
+#include "log/Macros.hpp"
 
 #include "app/MidiStudioApp.hpp"
-#include "log/Macros.hpp"
 #include "Plugin.hpp"
 
 // Plugin registration callback

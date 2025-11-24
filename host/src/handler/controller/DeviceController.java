@@ -4,15 +4,20 @@ import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import protocol.struct.DeviceStateChangeMessage;
 import handler.host.DeviceHost;
+import handler.util.ObserverBasedRequestHandler;
 import config.BitwigConfig;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * DeviceController - Handles Device commands FROM controller
  *
- * Listens to protocol callbacks and executes actions on Bitwig CursorDevice.
- *
- * SINGLE RESPONSIBILITY: Controller → Bitwig (Device)
+ * RESPONSIBILITY: Controller → Bitwig (Device)
+ * - Receives protocol callbacks (protocol.onXXX)
+ * - Checks fromHost flag (returns early if true)
+ * - Executes Bitwig API actions (parameter changes, page selection, device selection)
+ * - Delegates navigation to DeviceHost (needs layerBank/drumPadBank)
+ * - NEVER observes Bitwig API directly
+ * - NEVER sends protocol messages (confirmations come from Host observers)
  */
 public class DeviceController {
     private final ControllerHost host;
@@ -21,6 +26,7 @@ public class DeviceController {
     private final Protocol protocol;
     private final DeviceBank deviceBank;
     private final Transport transport;
+    private final ObserverBasedRequestHandler requestHandler;
     private DeviceHost deviceHost;
 
     private final boolean[] touchState = new boolean[8];
@@ -47,10 +53,14 @@ public class DeviceController {
         this.protocol = protocol;
         this.deviceBank = deviceBank;
         this.transport = transport;
+        this.requestHandler = new ObserverBasedRequestHandler(host);
 
         for (int i = 0; i < 8; i++) {
             parameterDiscreteCount[i] = -1;  // Default: continuous (safest for echo suppression)
         }
+
+        // Register contexts for observer-based requests
+        requestHandler.registerContext("deviceList", deviceBank.itemCount());
 
         setupCallbacks();
     }
@@ -92,6 +102,14 @@ public class DeviceController {
         return false;
     }
 
+    /**
+     * Notify that a track selection is in progress and deviceBank will be updated.
+     * Call this before selecting a track to indicate that device list requests should wait.
+     */
+    public void notifyTrackChangePending() {
+        requestHandler.notifyChangePending("deviceList");
+    }
+
     private void setupCallbacks() {
         protocol.onDeviceMacroValueChange = msg -> {
             if (msg.fromHost) {
@@ -126,27 +144,18 @@ public class DeviceController {
             param.set(msg.getParameterValue());
         };
 
-        // Receive device state toggle FROM controller
+        // Toggle device state FROM controller
         protocol.onDeviceStateChange = msg -> {
             if (msg.fromHost) return;
 
-            // Toggle device at specified index
             int deviceIndex = msg.getDeviceIndex();
             Device device = deviceBank.getItemAt(deviceIndex);
 
             if (device.exists().get()) {
+                // Toggle device enabled state
                 boolean currentState = device.isEnabled().get();
-                boolean newState = !currentState;
-                device.isEnabled().set(newState);
-
-                // Capture data before scheduling
-                final int finalDeviceIndex = deviceIndex;
-                final boolean finalNewState = newState;
-
-                // Send confirmation back to controller with correct index
-                host.scheduleTask(() -> {
-                    protocol.send(new DeviceStateChangeMessage(finalDeviceIndex, finalNewState));
-                }, BitwigConfig.SINGLE_ELEMENT_DELAY_MS);
+                device.isEnabled().set(!currentState);
+                // Confirmation will be sent by observer in DeviceHost
             }
         };
 
@@ -203,8 +212,7 @@ public class DeviceController {
         protocol.onRequestDeviceList = msg -> {
             if (msg.fromHost) return;
             if (deviceHost != null) {
-                // Send immediately - deviceBank should already be up-to-date
-                deviceHost.sendDeviceList();
+                requestHandler.requestSend("deviceList", () -> deviceHost.sendDeviceList());
             }
         };
 
