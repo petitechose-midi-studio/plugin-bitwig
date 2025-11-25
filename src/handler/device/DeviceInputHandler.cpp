@@ -88,30 +88,32 @@ namespace Bitwig
 
     void DeviceInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType,
                                                     uint8_t childrenCount,
-                                                    const std::vector<uint8_t> &itemTypes)
+                                                    const std::vector<uint8_t> &itemTypes,
+                                                    const std::vector<uint8_t> &childIndices)
     {
         navigation_.deviceIndex = deviceIndex;
         navigation_.childType = childType;
         navigation_.childrenCount = childrenCount;
         navigation_.mode = SelectorMode::CHILDREN;
 
-        // Store itemTypes for each child
+        // Store itemTypes and childIndices for each child
         Serial.printf("[C++ INPUT] setDeviceChildrenState: deviceIndex=%d, childrenCount=%d, itemTypes.size()=%d\n",
                       deviceIndex, childrenCount, itemTypes.size());
 
         for (size_t i = 0; i < itemTypes.size() && i < navigation_.itemTypes.size(); i++)
         {
             navigation_.itemTypes[i] = itemTypes[i];
+            navigation_.childIndices[i] = (i < childIndices.size()) ? childIndices[i] : i;
             const char* typeStr = (itemTypes[i] == 0) ? "SLOT" : (itemTypes[i] == 1) ? "LAYER" : (itemTypes[i] == 2) ? "DRUM" : "UNKNOWN";
-            Serial.printf("  [%d] itemType=%d (%s)\n", i, itemTypes[i], typeStr);
+            Serial.printf("  [%d] itemType=%d (%s), childIndex=%d\n", i, itemTypes[i], typeStr, navigation_.childIndices[i]);
         }
 
         // Set encoder to Relative mode for children navigation (delta-based with wrap)
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
 
-        // Initialize selector index (start at "Back" item which is at index 0)
-        navigation_.currentSelectorIndex = 0;
-        view_controller_.handleDeviceSelectorSetIndex(0);
+        // Initialize selector index (start at first child, index 1 - UI skips "Back" at index 0)
+        navigation_.currentSelectorIndex = 1;
+        view_controller_.handleDeviceSelectorSetIndex(1);
     }
 
     void DeviceInputHandler::setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex,
@@ -341,19 +343,21 @@ void DeviceInputHandler::handleChildrenModeEnter(int selectorIndex) {
     if (selectorIndex == 0) {
         handleBackNavigation();
     } else {
-        int childIndex = selectorIndex - 1;
+        int listIndex = selectorIndex - 1;  // Index in the children list (0-based)
 
-        // Get itemType for this child (0=slot, 1=layer, 2=drum)
-        uint8_t itemType = (childIndex < static_cast<int>(navigation_.itemTypes.size()))
-                            ? navigation_.itemTypes[childIndex] : 0;
+        // Get itemType and real childIndex for this child
+        uint8_t itemType = (listIndex < static_cast<int>(navigation_.itemTypes.size()))
+                            ? navigation_.itemTypes[listIndex] : 0;
+        uint8_t realChildIndex = (listIndex < static_cast<int>(navigation_.childIndices.size()))
+                            ? navigation_.childIndices[listIndex] : listIndex;
 
         const char* itemTypeStr = (itemType == 0) ? "SLOT" : (itemType == 1) ? "LAYER" : (itemType == 2) ? "DRUM" : "UNKNOWN";
-        Serial.printf("[C++ INPUT] Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d\n",
-                      navigation_.deviceIndex, itemType, itemTypeStr, childIndex);
+        Serial.printf("[C++ INPUT] Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d (listIndex=%d)\n",
+                      navigation_.deviceIndex, itemType, itemTypeStr, realChildIndex, listIndex);
 
         protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex,
                                                          itemType,
-                                                         static_cast<uint8_t>(childIndex)});
+                                                         realChildIndex});
     }
 }
 
@@ -382,19 +386,21 @@ void DeviceInputHandler::handleDeviceSelectorRelease() {
                 if (selectorIndex == 0) {
                     handleBackNavigation();
                 } else {
-                    int childIndex = selectorIndex - 1;
+                    int listIndex = selectorIndex - 1;  // Index in the children list (0-based)
 
-                    // Get itemType for this child (0=slot, 1=layer, 2=drum)
-                    uint8_t itemType = (childIndex < static_cast<int>(navigation_.itemTypes.size()))
-                                        ? navigation_.itemTypes[childIndex] : 0;
+                    // Get itemType and real childIndex for this child
+                    uint8_t itemType = (listIndex < static_cast<int>(navigation_.itemTypes.size()))
+                                        ? navigation_.itemTypes[listIndex] : 0;
+                    uint8_t realChildIndex = (listIndex < static_cast<int>(navigation_.childIndices.size()))
+                                        ? navigation_.childIndices[listIndex] : listIndex;
 
                     const char* itemTypeStr = (itemType == 0) ? "SLOT" : (itemType == 1) ? "LAYER" : (itemType == 2) ? "DRUM" : "UNKNOWN";
-                    Serial.printf("[C++ INPUT] (Release) Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d\n",
-                                  navigation_.deviceIndex, itemType, itemTypeStr, childIndex);
+                    Serial.printf("[C++ INPUT] (Release) Sending EnterDeviceChild: deviceIndex=%d, itemType=%d (%s), childIndex=%d (listIndex=%d)\n",
+                                  navigation_.deviceIndex, itemType, itemTypeStr, realChildIndex, listIndex);
 
                     protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex,
                                                                      itemType,
-                                                                     static_cast<uint8_t>(childIndex)});
+                                                                     realChildIndex});
                 }
                 break;
         }

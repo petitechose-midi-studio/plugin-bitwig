@@ -421,24 +421,16 @@ public class DeviceHost {
 
     private List<DeviceChildrenMessage.Children> getAllDrumPads(Device device) {
         List<DeviceChildrenMessage.Children> allPads = new ArrayList<>();
+        int scrollPos = drumPadBank.scrollPosition().get();
 
-        // Scroll to beginning
-        while (drumPadBank.canScrollBackwards().get()) {
-            drumPadBank.scrollBackwards();
-        }
-
-        // Scan all drum pads (max 16)
-        while (allPads.size() < 16 && drumPadBank.canScrollForwards().get()) {
-            int scrollPos = drumPadBank.scrollPosition().get();
-            for (int i = 0; i < 16 && allPads.size() < 16; i++) {
-                DrumPad pad = drumPadBank.getItemAt(i);
-                if (pad.exists().get()) {
-                    int midiNote = scrollPos + i;
-                    String padName = pad.name().get() + " (" + getMidiNoteName(midiNote) + ")";
-                    allPads.add(new DeviceChildrenMessage.Children(midiNote, padName, 2)); // itemType=2 for DrumPad
-                }
+        // Simple iteration like layers - no async scroll operations
+        for (int i = 0; i < 16; i++) {
+            DrumPad pad = drumPadBank.getItemAt(i);
+            if (pad.exists().get()) {
+                int midiNote = scrollPos + i;
+                String padName = pad.name().get() + " (" + getMidiNoteName(midiNote) + ")";
+                allPads.add(new DeviceChildrenMessage.Children(midiNote, padName, 2)); // itemType=2 for DrumPad
             }
-            drumPadBank.scrollForwards();
         }
 
         return allPads;

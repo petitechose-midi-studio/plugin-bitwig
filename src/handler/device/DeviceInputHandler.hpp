@@ -54,7 +54,8 @@ namespace Bitwig
          * Called by DeviceHostHandler when DEVICE_CHILDREN is received
          */
         void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
-                                    const std::vector<uint8_t> &itemTypes);
+                                    const std::vector<uint8_t> &itemTypes,
+                                    const std::vector<uint8_t> &childIndices);
 
         /**
          * @brief Update track list state from host
@@ -140,6 +141,7 @@ namespace Bitwig
             uint8_t childType = 0;  // Deprecated - kept for compatibility
             uint8_t childrenCount = 0;
             etl::array<uint8_t, 16> itemTypes = {};  // Store itemType for each child
+            etl::array<uint8_t, 16> childIndices = {};  // Store real childIndex for each child (midiNote for drums)
             int currentSelectorIndex = 0; // Current position in device/children selector
         } navigation_;
     };

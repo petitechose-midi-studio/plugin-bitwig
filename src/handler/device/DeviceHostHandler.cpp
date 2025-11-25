@@ -220,6 +220,7 @@ namespace Bitwig
 
             std::vector<std::string> formattedItems;
             std::vector<uint8_t> itemTypes;
+            std::vector<uint8_t> childIndices;
 
             formattedItems.push_back(Device::BACK_TO_PARENT_TEXT);
             itemTypes.push_back(0); // BACK button has type 0
@@ -229,11 +230,12 @@ namespace Bitwig
                 std::string formatted = std::string(msg.children[i].childName.data());
                 formattedItems.push_back(formatted);
                 itemTypes.push_back(msg.children[i].itemType);
+                childIndices.push_back(msg.children[i].childIndex);  // Store real childIndex (midiNote for drums)
             }
 
-            // Pass itemTypes to input handler (excluding BACK button at index 0)
+            // Pass itemTypes and childIndices to input handler (excluding BACK button at index 0)
             std::vector<uint8_t> childItemTypes(itemTypes.begin() + 1, itemTypes.end());
-            input_handler_.setDeviceChildrenState(msg.deviceIndex, 0, msg.childrenCount, childItemTypes);
+            input_handler_.setDeviceChildrenState(msg.deviceIndex, 0, msg.childrenCount, childItemTypes, childIndices);
 
             view_controller_.handleShowDeviceChildren(formattedItems, itemTypes);
         };
