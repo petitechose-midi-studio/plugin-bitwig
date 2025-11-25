@@ -1,9 +1,11 @@
 #pragma once
 
 #include "DeviceListOverlay.hpp"
+#include "ButtonHintBar.hpp"
 #include "interface/IComponent.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Bitwig
 {
@@ -146,9 +148,7 @@ namespace Bitwig
         std::vector<std::string> items_;
         int current_item_index_ = 0;
 
-        lv_obj_t *footer_container_ = nullptr;
-        lv_obj_t *footer_left_label_ = nullptr;   // "Track"
-        lv_obj_t *footer_center_label_ = nullptr; // "State"
+        std::unique_ptr<ButtonHintBar> footer_;
     };
 
 } // namespace Bitwig

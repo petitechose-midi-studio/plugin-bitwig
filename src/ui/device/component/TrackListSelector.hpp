@@ -1,9 +1,11 @@
 #pragma once
 
 #include "TrackListOverlay.hpp"
+#include "ButtonHintBar.hpp"
 #include "interface/IComponent.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace Bitwig
 {
@@ -142,15 +144,12 @@ namespace Bitwig
         void createFooter();
         void destroyFooter();
 
-        lv_obj_t *parent_; // Parent screen for footer
+        lv_obj_t *parent_;
         TrackListOverlay overlay_;
         std::vector<std::string> items_;
         int current_item_index_ = 0;
 
-        // Footer labels (shown at parent screen level)
-        lv_obj_t *footer_container_ = nullptr;
-        lv_obj_t *footer_left_label_ = nullptr;   // "Track"
-        lv_obj_t *footer_center_label_ = nullptr; // "State"
+        std::unique_ptr<ButtonHintBar> footer_;
     };
 
 } // namespace Bitwig
