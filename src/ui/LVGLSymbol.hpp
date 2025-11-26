@@ -5,13 +5,13 @@
 namespace LVGLSymbol
 {
     // Navigation
-    constexpr const char *BACK = BitwigIcon::ARROW_LEFT;
+    constexpr const char *BACK = Icon::ARROW_LEFT;
 
     // Device types
-    constexpr const char *LAYER = BitwigIcon::MULTI_LAYER;
-    constexpr const char *DRUM_PAD = BitwigIcon::DRUM_PADS;
+    constexpr const char *LAYER = Icon::MULTI_LAYER;
+    constexpr const char *DRUM_PAD = Icon::DRUM_PADS;
 
     // Track types
-    constexpr const char *FOLDER = BitwigIcon::GROUP_TRACK;
+    constexpr const char *FOLDER = Icon::DIRECTORY;
 
 } // namespace LVGLSymbol

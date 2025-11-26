@@ -291,3 +291,33 @@ export MAVEN_OPTS="--sun-misc-unsafe-memory-access=allow"
 **Status**: Active development for Bitwig 6
 **Version**: 0.1.0 (Alpha)
 **Author**: Petitechose Audio
+
+## Icon Font System
+
+Custom icons are generated as a font for efficient rendering with LVGL.
+
+### Workflow
+
+```
+asset/icon/*.svg → asset/font/bitwig_icons.ttf → src/ui/font/data/bitwig_icons_14.*
+```
+
+### Generate Icons
+
+```bash
+# 1. Generate TTF font from SVGs
+bash script/font/generate_bitwig_icons.sh
+
+# 2. Convert to LVGL binary format
+bash script/lvgl/font/convert_font.sh
+```
+
+### Use in Code
+
+```cpp
+#include "ui/font/bitwig_icons.hpp"
+
+lv_label_set_text(label, BitwigIcon::TRANSPORT_PLAY);
+```
+
+See [script/font/README.md](script/font/README.md) for details.
