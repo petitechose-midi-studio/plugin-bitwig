@@ -4,18 +4,20 @@ version = "0.1.0"
 description = "Bitwig Studio MIDI Controller Plugin"
 requires-python = ">=3.13"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.uv]
-# Protocol code generation dependency
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "protocol-codegen @ git+https://github.com/petitechose-audio/protocol-codegen.git",
+    "fonttools>=4.47.0",
+    "svgpathtools>=1.6.0",
 ]
 
 [tool.pyright]
-# Type checking configuration for protocol definitions
-include = ["sysex_protocol"]
+include = ["sysex_protocol", "tools"]
 pythonVersion = "3.13"
-typeCheckingMode = "basic"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false

@@ -26,6 +26,9 @@ namespace Bitwig
     class Plugin : public IPlugin
     {
     public:
+        // Called by PluginManager before construction
+        static void loadResources();
+
         explicit Plugin(ControllerAPI &api);
         ~Plugin() override;
 
@@ -38,45 +41,49 @@ namespace Bitwig
         void update() override {}
 
     private:
+        // Module structs - group related components
+        struct TransportModule {
+            TransportBar bar;
+            TransportBarController controller;
+            TransportInputHandler inputHandler;
+            TransportHostHandler hostHandler;
+        };
+
+        struct DeviceModule {
+            DeviceView view;
+            DeviceController controller;
+            DeviceInputHandler inputHandler;
+            DeviceHostHandler hostHandler;
+        };
+
+        struct SplashModule {
+            SplashView view;
+        };
+
+        struct LastClickedModule {
+            LastClickedHandler handler;
+        };
+
+        struct LifecycleModule {
+            PluginLifecycleHandler handler;
+        };
+
+        // Members
         ControllerAPI &api_;
         bool enabled_;
 
         Protocol::Protocol protocol_;
         ViewContainer viewContainer_;
 
-        struct
-        {
-            TransportBar bar;
-            TransportBarController controller;
-            TransportInputHandler inputHandler;
-            TransportHostHandler hostHandler;
-        } transport_;
-
-        struct
-        {
-            DeviceView view;
-            DeviceController controller;
-            DeviceInputHandler inputHandler;
-            DeviceHostHandler hostHandler;
-        } device_;
-
-        struct
-        {
-            SplashView view;
-        } splash_;
-
-        struct
-        {
-            LastClickedHandler handler;
-        } lastClicked_;
+        TransportModule transport_;
+        DeviceModule device_;
+        SplashModule splash_;
+        LastClickedModule lastClicked_;
 
         ViewRegistry viewRegistry_;
         ViewManager viewManager_;
 
-        struct
-        {
-            PluginLifecycleHandler handler;
-        } lifecycle_;
+        LifecycleModule lifecycle_;
     };
 
 } // namespace Bitwig

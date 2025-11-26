@@ -1,9 +1,14 @@
 #include "Plugin.hpp"
 
 #include "log/Macros.hpp"
+#include "ui/font/FontLoader.hpp"
 
 namespace Bitwig
 {
+
+    void Plugin::loadResources() {
+        load_bitwig_fonts();
+    }
 
     Plugin::Plugin(ControllerAPI &api)
         : api_(api),

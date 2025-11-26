@@ -1,6 +1,6 @@
 #include "DeviceListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "font/binary_font_buffer.hpp"
+#include "ui/font/FontLoader.hpp"
 #include "../../LVGLSymbol.hpp"
 #include <algorithm>
 
@@ -61,9 +61,9 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
                 lv_obj_t *child = lv_obj_get_child(backBtn, j);
                 if (child && lv_obj_check_type(child, &lv_label_class))
                 {
-                    if (fonts.lvgl_symbols)
+                    if (bitwig_fonts.icons)
                     {
-                        lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                        lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
                     }
                     break;
                 }
@@ -82,27 +82,28 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
             continue;
 
         const char *iconSymbol = nullptr;
+        const lv_font_t *iconFont = nullptr;
         switch (itemTypes[i])
         {
-        case 0:
+        case 0: // Slot - use LVGL symbol
             iconSymbol = LV_SYMBOL_LIST;
-            break; // Slot
-        case 1:
-            iconSymbol = LV_SYMBOL_COPY;
-            break; // Layer
-        case 2:
-            iconSymbol = LV_SYMBOL_KEYBOARD;
-            break; // Drum pad
+            iconFont = bitwig_fonts.lvgl_symbols;
+            break;
+        case 1: // Layer
+            iconSymbol = LVGLSymbol::LAYER;
+            iconFont = bitwig_fonts.icons;
+            break;
+        case 2: // Drum pad
+            iconSymbol = LVGLSymbol::DRUM_PAD;
+            iconFont = bitwig_fonts.icons;
+            break;
         }
 
-        if (iconSymbol)
+        if (iconSymbol && iconFont)
         {
             lv_obj_t *icon_label = lv_label_create(btn);
             lv_label_set_text(icon_label, iconSymbol);
-            if (fonts.lvgl_symbols)
-            {
-                lv_obj_set_style_text_font(icon_label, fonts.lvgl_symbols, 0);
-            }
+            lv_obj_set_style_text_font(icon_label, iconFont, 0);
 
             // Apply state-based colors to icons (same as labels)
             lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
@@ -234,7 +235,7 @@ lv_obj_t *DeviceListOverlay::createDot(lv_obj_t *parent, uint32_t color)
     return dot;
 }
 
-lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent)
+lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent, bool isSlot)
 {
     lv_obj_t *container = lv_obj_create(parent);
     lv_obj_set_size(container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -244,10 +245,21 @@ lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent)
     lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *icon = lv_label_create(container);
-    lv_label_set_text(icon, LV_SYMBOL_DIRECTORY);
-    if (fonts.lvgl_symbols)
+    if (isSlot)
     {
-        lv_obj_set_style_text_font(icon, fonts.lvgl_symbols, 0);
+        lv_label_set_text(icon, LV_SYMBOL_LIST);
+        if (bitwig_fonts.lvgl_symbols)
+        {
+            lv_obj_set_style_text_font(icon, bitwig_fonts.lvgl_symbols, 0);
+        }
+    }
+    else
+    {
+        lv_label_set_text(icon, LVGLSymbol::FOLDER);
+        if (bitwig_fonts.icons)
+        {
+            lv_obj_set_style_text_font(icon, bitwig_fonts.icons, 0);
+        }
     }
 
     // Apply state-based colors with reduced opacity for folder icon
@@ -290,9 +302,9 @@ void DeviceListOverlay::createIndicators()
                 lv_obj_t *child = lv_obj_get_child(button, j);
                 if (child && lv_obj_check_type(child, &lv_label_class))
                 {
-                    if (fonts.lvgl_symbols)
+                    if (bitwig_fonts.icons)
                     {
-                        lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                        lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
                     }
                     break;
                 }
@@ -313,7 +325,8 @@ void DeviceListOverlay::createIndicators()
 
         // Always create folder icon container at index 1 (2nd position)
         bool isFolder = hasChildren(i);
-        lv_obj_t *folderIcon = createFolderIcon(button);
+        bool isSlot = (i < has_slots_.size()) && has_slots_[i];
+        lv_obj_t *folderIcon = createFolderIcon(button, isSlot);
         lv_obj_move_to_index(folderIcon, 1);
         folder_icons_[i] = folderIcon;
 

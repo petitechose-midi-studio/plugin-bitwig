@@ -1,6 +1,7 @@
 ﻿#include "DeviceStateBar.hpp"
 
-#include "font/binary_font_buffer.hpp"
+#include "font/FontLoader.hpp"
+#include "ui/font/FontLoader.hpp"
 #include "../../theme/BitwigTheme.hpp"
 #include "util/TextUtils.hpp"
 
@@ -112,7 +113,7 @@ namespace Bitwig
 
         device_label_ = lv_label_create(device_container_);
         lv_obj_set_style_text_color(device_label_, COLOR_TEXT, 0);
-        lv_obj_set_style_text_font(device_label_, fonts.device_label, 0);
+        lv_obj_set_style_text_font(device_label_, bitwig_fonts.device_label, 0);
 
         String clean_name = TextUtils::sanitizeText(device_name_);
         lv_label_set_text(device_label_, clean_name.c_str());
@@ -125,7 +126,7 @@ namespace Bitwig
 
         lv_label_set_text(page_label_, "Page");
         lv_obj_set_style_text_color(page_label_, COLOR_TEXT, 0);
-        lv_obj_set_style_text_font(page_label_, fonts.page_label, 0);
+        lv_obj_set_style_text_font(page_label_, bitwig_fonts.page_label, 0);
     }
 
     void DeviceStateBar::setTrackName(const String &track_name)

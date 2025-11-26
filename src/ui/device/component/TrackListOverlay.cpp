@@ -1,6 +1,7 @@
 #include "TrackListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "font/binary_font_buffer.hpp"
+#include "font/FontLoader.hpp"
+#include "ui/font/FontLoader.hpp"
 #include "../../LVGLSymbol.hpp"
 #include <algorithm>
 
@@ -136,9 +137,9 @@ namespace Bitwig
                     lv_obj_t *child = lv_obj_get_child(btn, j);
                     if (child && lv_obj_check_type(child, &lv_label_class))
                     {
-                        if (fonts.lvgl_symbols)
+                        if (bitwig_fonts.icons)
                         {
-                            lv_obj_set_style_text_font(child, fonts.lvgl_symbols, 0);
+                            lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
                         }
                         break;
                     }
@@ -184,10 +185,10 @@ namespace Bitwig
             if (isGroup)
             {
                 lv_obj_t *folder_icon = lv_label_create(btn);
-                lv_label_set_text(folder_icon, LV_SYMBOL_DIRECTORY);
-                if (fonts.lvgl_symbols)
+                lv_label_set_text(folder_icon, LVGLSymbol::FOLDER);
+                if (bitwig_fonts.icons)
                 {
-                    lv_obj_set_style_text_font(folder_icon, fonts.lvgl_symbols, 0);
+                    lv_obj_set_style_text_font(folder_icon, bitwig_fonts.icons, 0);
                 }
                 lv_obj_set_style_text_color(folder_icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
                 lv_obj_set_style_text_opa(folder_icon, LV_OPA_70, 0);

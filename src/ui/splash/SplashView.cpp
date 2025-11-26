@@ -1,6 +1,6 @@
 #include "SplashView.hpp"
 #include "../theme/BitwigTheme.hpp"
-#include "font/binary_font_buffer.hpp"
+#include "ui/font/FontLoader.hpp"
 #include "log/Macros.hpp"
 
 LV_IMG_DECLARE(Bitwig_Logo);
@@ -76,9 +76,9 @@ namespace Bitwig
         label_ = lv_label_create(container_);
         lv_obj_set_style_text_color(label_, lv_color_hex(Theme::Color::TEXT_PRIMARY), 0);
 
-        if (fonts.device_label)
+        if (bitwig_fonts.device_label)
         {
-            lv_obj_set_style_text_font(label_, fonts.device_label, 0);
+            lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
         }
 
         lv_obj_set_style_text_align(label_, LV_TEXT_ALIGN_CENTER, 0);

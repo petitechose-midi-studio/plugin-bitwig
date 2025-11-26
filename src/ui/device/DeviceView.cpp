@@ -1,6 +1,6 @@
 #include "DeviceView.hpp"
 
-#include "font/binary_font_buffer.hpp"
+#include "font/FontLoader.hpp"
 #include "widget/ParameterButtonWidget.hpp"
 #include "widget/ParameterKnobWidget.hpp"
 #include "widget/ParameterListWidget.hpp"

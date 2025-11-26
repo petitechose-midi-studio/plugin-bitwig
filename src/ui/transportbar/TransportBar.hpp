@@ -23,13 +23,12 @@ private:
     void createContainer(lv_obj_t* parent);
     void createTransportControls();
     void createTempoDisplay();
-    void drawPlayTriangle();  // Draw triangle once at init
 
     lv_obj_t* container_ = nullptr;
     std::unique_ptr<ButtonIndicator> midi_in_indicator_;
     std::unique_ptr<ButtonIndicator> midi_out_indicator_;
-    lv_obj_t* play_btn_ = nullptr;
-    lv_obj_t* stop_btn_ = nullptr;
-    lv_obj_t* record_btn_ = nullptr;
+    lv_obj_t* play_icon_ = nullptr;
+    lv_obj_t* stop_icon_ = nullptr;
+    lv_obj_t* record_icon_ = nullptr;
     lv_obj_t* bpm_label_ = nullptr;
 };

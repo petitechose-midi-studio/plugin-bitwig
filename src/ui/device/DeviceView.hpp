@@ -12,7 +12,7 @@
 #include "../theme/BitwigTheme.hpp"
 #include "../transportbar/TransportBar.hpp"
 #include "interface/IView.hpp"
-#include "font/binary_font_buffer.hpp"
+#include "font/FontLoader.hpp"
 #include "widget/ButtonIndicator.hpp"
 #include "widget/IParameterWidget.hpp"
 #include "component/DeviceStateBar.hpp"

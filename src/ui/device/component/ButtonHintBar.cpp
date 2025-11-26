@@ -1,6 +1,6 @@
 #include "ButtonHintBar.hpp"
 #include "ui/theme/BitwigTheme.hpp"
-#include "ui/shared/font/binary_font_buffer.hpp"
+#include "font/FontLoader.hpp"
 
 namespace Bitwig
 {
