@@ -1,6 +1,5 @@
-// Auto-generated | 20 icons | U+E000-U+E013 | 2025-11-27 07:06
+// Auto-generated | 20 icons | 2025-11-27
 #pragma once
-
 #include <lvgl.h>
 #include "FontLoader.hpp"
 
@@ -30,8 +29,8 @@ namespace Icon {
 
     inline void set(lv_obj_t* label, const char* icon, Size size = S14) {
         lv_font_t* font = (size == S12) ? bitwig_fonts.icons_12
-                        : (size == S18) ? bitwig_fonts.icons_18
-                        : bitwig_fonts.icons_14;
+                        : (size == S14) ? bitwig_fonts.icons_14
+                        : bitwig_fonts.icons_18;
         lv_obj_set_style_text_font(label, font, 0);
         lv_label_set_text(label, icon);
     }

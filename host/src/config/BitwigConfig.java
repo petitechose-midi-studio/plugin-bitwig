@@ -22,12 +22,12 @@ public final class BitwigConfig {
      * Delay after entering a track group (select + selectFirstChild).
      * Source: DrivenByMoss TrackImpl.java:166
      */
-    public static final int TRACK_ENTER_GROUP_MS = 100;
+    public static final int TRACK_ENTER_GROUP_MS = 70;
 
     /**
      * Delay after exiting a track group (selectParent).
      */
-    public static final int TRACK_EXIT_GROUP_MS = 100;
+    public static final int TRACK_EXIT_GROUP_MS = 70;
 
     // ═══════════════════════════════════════════════════════════════════
     // DEVICE NAVIGATION
@@ -37,19 +37,19 @@ public final class BitwigConfig {
      * Delay after entering device child (slot/layer/drum).
      * Also used for device change macro send.
      */
-    public static final int DEVICE_ENTER_CHILD_MS = 50;
+    public static final int DEVICE_ENTER_CHILD_MS = 30;
 
     /**
      * Delay after selectParent on nested device.
      * Source: DrivenByMoss DeviceParamsMode.java:226
      * Kept higher because nested navigation is more complex.
      */
-    public static final int DEVICE_EXIT_NESTED_MS = 150;
+    public static final int DEVICE_EXIT_NESTED_MS = 70;
 
     /**
      * Delay after changing remote controls page.
      */
-    public static final int PAGE_CHANGE_MS = 50;
+    public static final int PAGE_CHANGE_MS = 30;
 
     // ═══════════════════════════════════════════════════════════════════
     // TOUCH / AUTOMATION

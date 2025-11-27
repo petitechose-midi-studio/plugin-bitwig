@@ -4,24 +4,19 @@
 #include "app/MidiStudioApp.hpp"
 #include "Plugin.hpp"
 
-// Plugin registration callback
 void setupPlugins(PluginManager& manager) {
     manager.registerPlugin<Bitwig::Plugin>("bitwig");
 }
 
-// Instantiate app with Bitwig plugin
 MidiStudioApp app(setupPlugins);
 
-void setup()
-{
-    LOGLN("=======================================");
-    LOGLN("=== MIDI Studio - Bitwig Plugin Dev ===");
-    LOGLN("=======================================");
-    LOG("Core Version : ");
+void setup() {
+    LOGLN("=== MIDI Studio - Bitwig ===");
+    LOGLN("===   Bitwig Plugin Dev  ===");
+    LOG("Version: ");
     LOGLN(Core::VERSION);
-    LOGLN("=======================================");
-    LOGLN("============= System Boot =============");
-    LOGLN("=======================================");
+
+    app.setup();
 }
 
 void loop() {

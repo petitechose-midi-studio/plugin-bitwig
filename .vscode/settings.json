@@ -60,7 +60,8 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "*.inc": "cpp"
     },
     "claudeCode.allowDangerouslySkipPermissions": true,
     "claudeCode.initialPermissionMode": "bypassPermissions",
@@ -78,5 +79,6 @@
     },
     "taskexplorer.taskButtons.clickAction": "Execute",
     "taskexplorer.usage.enabled": false,
-    "claudeCode.useCtrlEnterToSend": true
+    "claudeCode.useCtrlEnterToSend": true,
+    "workbench.editor.enablePreview": false
 }
