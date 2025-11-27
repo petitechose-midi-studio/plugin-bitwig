@@ -78,6 +78,5 @@
     },
     "taskexplorer.taskButtons.clickAction": "Execute",
     "taskexplorer.usage.enabled": false,
-    "claudeCode.useCtrlEnterToSend": true,
-    "claudeCode.useTerminal": true
+    "claudeCode.useCtrlEnterToSend": true
 }

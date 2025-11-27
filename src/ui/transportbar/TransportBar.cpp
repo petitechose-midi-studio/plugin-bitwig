@@ -1,8 +1,7 @@
 #include "TransportBar.hpp"
 #include "../theme/BitwigTheme.hpp"
 #include "font/FontLoader.hpp"
-#include "ui/font/FontLoader.hpp"
-#include "ui/font/bitwig_icons.hpp"
+#include "ui/font/icon.hpp"
 #include "log/Macros.hpp"
 
 namespace {
@@ -129,20 +128,17 @@ void TransportBar::createTransportControls() {
 
     // Play icon
     play_icon_ = lv_label_create(transport_container);
-    lv_label_set_text(play_icon_, Icon::TRANSPORT_PLAY);
-    lv_obj_set_style_text_font(play_icon_, bitwig_fonts.icons, 0);
+    Icon::set(play_icon_, Icon::TRANSPORT_PLAY);
     lv_obj_set_style_text_color(play_icon_, COLOR_INACTIVE, 0);
 
     // Stop icon
     stop_icon_ = lv_label_create(transport_container);
-    lv_label_set_text(stop_icon_, Icon::TRANSPORT_STOP);
-    lv_obj_set_style_text_font(stop_icon_, bitwig_fonts.icons, 0);
+    Icon::set(stop_icon_, Icon::TRANSPORT_STOP);
     lv_obj_set_style_text_color(stop_icon_, COLOR_INACTIVE, 0);
 
     // Record icon
     record_icon_ = lv_label_create(transport_container);
-    lv_label_set_text(record_icon_, Icon::TRANSPORT_RECORD);
-    lv_obj_set_style_text_font(record_icon_, bitwig_fonts.icons, 0);
+    Icon::set(record_icon_, Icon::TRANSPORT_RECORD);
     lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, 0);
 }
 

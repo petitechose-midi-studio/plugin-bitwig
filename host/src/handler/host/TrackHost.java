@@ -5,7 +5,6 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
-import handler.util.ObserverBasedRequestHandler;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
@@ -29,7 +28,6 @@ public class TrackHost {
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
     private final Track parentTrack;  // Parent track for navigation
-    private final ObserverBasedRequestHandler requestHandler;
 
     // Navigation depth tracking
     private int navigationDepth = 0;  // 0 = root level, >0 = inside group(s)
@@ -51,16 +49,12 @@ public class TrackHost {
         this.protocol = protocol;
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
-        this.requestHandler = new ObserverBasedRequestHandler(host);
 
         // Create a TrackBank for sibling tracks (same level as cursor track)
         this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(32, 0, 0, true, false);
 
         // Create parent track object to detect if cursor track has a parent
         this.parentTrack = cursorTrack.createParentTrack(0, 0);
-
-        // Register context for track navigation operations
-        requestHandler.registerContext("trackList", siblingTrackBank.itemCount());
     }
 
     /**
@@ -254,15 +248,12 @@ public class TrackHost {
         // Track navigation depth
         navigationDepth++;
 
-        // Notify that trackList will change
-        requestHandler.notifyChangePending("trackList");
-
         // Execute Bitwig API navigation
         cursorTrack.selectChannel(track);
         cursorTrack.selectFirstChild();
 
-        // Send track list when siblingTrackBank is ready (using observer)
-        requestHandler.requestSend("trackList", () -> sendTrackList());
+        // Send track list after delay for Bitwig to update (industry standard: 100ms)
+        host.scheduleTask(() -> sendTrackList(), BitwigConfig.TRACK_ENTER_GROUP_MS);
     }
 
     /**
@@ -282,14 +273,11 @@ public class TrackHost {
         // Track navigation depth
         navigationDepth--;
 
-        // Notify that trackList will change
-        requestHandler.notifyChangePending("trackList");
-
         // Execute Bitwig API navigation
         cursorTrack.selectParent();
 
-        // Send track list when siblingTrackBank is ready (using observer)
-        requestHandler.requestSend("trackList", () -> sendTrackList());
+        // Send track list after delay for Bitwig to update (industry standard: 100ms)
+        host.scheduleTask(() -> sendTrackList(), BitwigConfig.TRACK_EXIT_GROUP_MS);
     }
 
     /**

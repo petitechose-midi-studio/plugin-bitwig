@@ -6,7 +6,7 @@ namespace Bitwig
     TrackListSelector::TrackListSelector(lv_obj_t *parent)
         : parent_(parent), overlay_(parent)
     {
-        overlay_.setTitle("Select Track");
+        overlay_.setTitle("Tracks");
     }
 
     TrackListSelector::~TrackListSelector()

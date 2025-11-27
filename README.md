@@ -315,9 +315,10 @@ bash script/lvgl/font/convert_font.sh
 ### Use in Code
 
 ```cpp
-#include "ui/font/bitwig_icons.hpp"
+#include "ui/font/icon.hpp"
 
-lv_label_set_text(label, BitwigIcon::TRANSPORT_PLAY);
+Icon::set(label, Icon::TRANSPORT_PLAY);
+Icon::set(label, Icon::TRANSPORT_PLAY, Icon::S18);  // with size
 ```
 
 See [script/font/README.md](script/font/README.md) for details.

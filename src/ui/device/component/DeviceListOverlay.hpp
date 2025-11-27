@@ -135,7 +135,7 @@ namespace Bitwig
 
         bool isNonDeviceItem(size_t index) const;
         bool hasChildren(size_t index) const;
-        lv_obj_t* createDot(lv_obj_t* parent, uint32_t color);
+        lv_obj_t* createDeviceStateIcon(lv_obj_t* parent, bool enabled);
         lv_obj_t* createFolderIcon(lv_obj_t* parent, bool isSlot);
 
         ListOverlay list_;

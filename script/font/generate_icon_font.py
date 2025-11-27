@@ -189,10 +189,23 @@ def generate_header(icons: dict[str, int]) -> None:
         f'// Auto-generated | {len(icons)} icons | U+{UNICODE_START:04X}-U+{max_cp:04X} | {datetime.now().strftime("%Y-%m-%d %H:%M")}',
         '#pragma once',
         '',
+        '#include <lvgl.h>',
+        '#include "FontLoader.hpp"',
+        '',
         'namespace Icon {',
+        '    enum Size { S12 = 12, S14 = 14, S18 = 18 };',
+        '',
     ]
     for name, cp in sorted(icons.items(), key=lambda x: x[1]):
         lines.append(f'    constexpr const char* {name} = "{to_utf8(cp)}";')
+    lines.append('')
+    lines.append('    inline void set(lv_obj_t* label, const char* icon, Size size = S14) {')
+    lines.append('        lv_font_t* font = (size == S12) ? bitwig_fonts.icons_12')
+    lines.append('                        : (size == S18) ? bitwig_fonts.icons_18')
+    lines.append('                        : bitwig_fonts.icons_14;')
+    lines.append('        lv_obj_set_style_text_font(label, font, 0);')
+    lines.append('        lv_label_set_text(label, icon);')
+    lines.append('    }')
     lines.append('}  // namespace Icon')
 
     HEADER_OUTPUT.parent.mkdir(parents=True, exist_ok=True)

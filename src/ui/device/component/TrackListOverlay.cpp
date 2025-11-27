@@ -1,8 +1,7 @@
 #include "TrackListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
+#include "ui/font/icon.hpp"
 #include "font/FontLoader.hpp"
-#include "ui/font/FontLoader.hpp"
-#include "../../LVGLSymbol.hpp"
 #include <algorithm>
 
 using namespace Theme;
@@ -124,8 +123,8 @@ namespace Bitwig
             if (!btn)
                 continue;
 
-            // Check if this is the "Back" item (first item with the Back LVGLSymbol)
-            bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == LVGLSymbol::BACK);
+            // Check if this is the "Back" item (first item with Icon::ARROW_LEFT)
+            bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == Icon::ARROW_LEFT);
 
             // Apply lvgl_symbols font to text label if this is the Back item
             if (isBackItem)
@@ -137,9 +136,9 @@ namespace Bitwig
                     lv_obj_t *child = lv_obj_get_child(btn, j);
                     if (child && lv_obj_check_type(child, &lv_label_class))
                     {
-                        if (bitwig_fonts.icons)
+                        if (bitwig_fonts.icons_14)
                         {
-                            lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
+                            lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
                         }
                         break;
                     }
@@ -157,24 +156,16 @@ namespace Bitwig
             // Don't create mute/solo indicators for Back item
             if (!isBackItem)
             {
-                // Create "M" label for mute
+                // Create mute icon
                 lv_obj_t *mute_label = lv_label_create(btn);
-                lv_label_set_text(mute_label, "M");
-                if (fonts.parameter_label)
-                {
-                    lv_obj_set_style_text_font(mute_label, fonts.parameter_label, 0);
-                }
+                Icon::set(mute_label, Icon::MUTE);
                 lv_obj_set_style_text_color(mute_label, lv_color_hex(Color::TRACK_MUTE), 0);
                 lv_obj_move_to_index(mute_label, 0);
                 labels[0] = mute_label;
 
-                // Create "S" label for solo
+                // Create solo icon
                 lv_obj_t *solo_label = lv_label_create(btn);
-                lv_label_set_text(solo_label, "S");
-                if (fonts.parameter_label)
-                {
-                    lv_obj_set_style_text_font(solo_label, fonts.parameter_label, 0);
-                }
+                Icon::set(solo_label, Icon::SOLO);
                 lv_obj_set_style_text_color(solo_label, lv_color_hex(Color::TRACK_SOLO), 0);
                 lv_obj_move_to_index(solo_label, 1);
                 labels[1] = solo_label;
@@ -185,11 +176,7 @@ namespace Bitwig
             if (isGroup)
             {
                 lv_obj_t *folder_icon = lv_label_create(btn);
-                lv_label_set_text(folder_icon, LVGLSymbol::FOLDER);
-                if (bitwig_fonts.icons)
-                {
-                    lv_obj_set_style_text_font(folder_icon, bitwig_fonts.icons, 0);
-                }
+                Icon::set(folder_icon, Icon::DIRECTORY);
                 lv_obj_set_style_text_color(folder_icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
                 lv_obj_set_style_text_opa(folder_icon, LV_OPA_70, 0);
                 lv_obj_clear_flag(folder_icon, LV_OBJ_FLAG_SCROLLABLE);
@@ -222,7 +209,7 @@ namespace Bitwig
             if (i < static_cast<int>(item_names_.size()))
             {
                 const std::string &itemName = item_names_[i];
-                isSpecialItem = (itemName == LVGLSymbol::BACK) ||
+                isSpecialItem = (itemName == Icon::ARROW_LEFT) ||
                                 (!itemName.empty() && itemName[0] == '[');
             }
 

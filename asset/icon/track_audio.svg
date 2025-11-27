@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <rect id="audio_track" x="0" y="0" width="15" height="15" style="fill:none;"/>
+    <path d="M2.5,12.276L2.5,2.724C3.005,5.988 3.817,8.774 5.045,10.908L5.045,4.085C5.65,6.628 6.47,8.551 7.602,9.577L7.602,5.476C8.152,7.234 9.044,8.211 10.211,8.565L10.105,6.115C11.22,7.809 11.76,8.164 12.874,7.5" style="fill:none;stroke:black;stroke-width:1;"/>
+</svg>

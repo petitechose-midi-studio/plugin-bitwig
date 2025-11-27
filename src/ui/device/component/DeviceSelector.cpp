@@ -6,7 +6,7 @@ namespace Bitwig
     DeviceSelector::DeviceSelector(lv_obj_t *parent)
         : parent_(parent), overlay_(parent)
     {
-        overlay_.setTitle("Select Device");
+        overlay_.setTitle("Devices");
     }
 
     DeviceSelector::~DeviceSelector()

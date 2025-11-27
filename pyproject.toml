@@ -3,6 +3,10 @@ name = "bitwig-midi-studio"
 version = "0.1.0"
 description = "Bitwig Studio MIDI Controller Plugin"
 requires-python = ">=3.13"
+dependencies = [
+    "nanoemoji>=0.15.9",
+    "picosvg>=0.22.3",
+]
 
 [dependency-groups]
 dev = [

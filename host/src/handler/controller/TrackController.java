@@ -4,7 +4,6 @@ import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import config.BitwigConfig;
 import handler.host.TrackHost;
-import handler.util.ObserverBasedRequestHandler;
 
 /**
  * TrackController - Handles Track commands FROM controller
@@ -24,10 +23,8 @@ public class TrackController {
     private final CursorDevice cursorDevice;
     private final DeviceBank deviceBank;
     private final Protocol protocol;
-    private final ObserverBasedRequestHandler requestHandler;
     private TrackHost trackHost;
     private handler.host.DeviceHost deviceHost;
-    private DeviceController deviceController;
 
     public TrackController(
         ControllerHost host,
@@ -43,10 +40,6 @@ public class TrackController {
         this.cursorDevice = cursorDevice;
         this.deviceBank = deviceBank;
         this.protocol = protocol;
-        this.requestHandler = new ObserverBasedRequestHandler(host);
-
-        // Register contexts for observer-based requests
-        requestHandler.registerContext("trackList", trackBank.itemCount());
 
         setupCallbacks();
     }
@@ -59,17 +52,13 @@ public class TrackController {
         this.deviceHost = deviceHost;
     }
 
-    public void setDeviceController(DeviceController deviceController) {
-        this.deviceController = deviceController;
-    }
-
     private void setupCallbacks() {
         // Request track list FROM controller
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;
             host.println("\n[TRACK CTRL] → Requesting track list\n");
             if (trackHost != null) {
-                requestHandler.requestSend("trackList", () -> trackHost.sendTrackList());
+                trackHost.sendTrackList();
             }
         };
 
@@ -85,25 +74,19 @@ public class TrackController {
                 String trackName = track.name().get();
                 host.println("\n[TRACK CTRL] SELECT → \"" + trackName + "\" [" + trackIndex + "]\n");
 
-                // Notify DeviceController that deviceBank will be updating
-                if (deviceController != null) {
-                    deviceController.notifyTrackChangePending();
-                }
-
                 cursorTrack.selectChannel(track);
 
-                // Select first device when deviceBank is ready (using DeviceHost's observer)
+                // Select first device when deviceBank is ready, then send device list
                 if (deviceHost != null) {
-                    deviceHost.getRequestHandler().requestSend("deviceList", () -> {
+                    deviceHost.scheduleAfterDeviceBankUpdate(() -> {
                         com.bitwig.extension.controller.api.Device firstDevice = deviceBank.getItemAt(0);
                         if (firstDevice.exists().get()) {
                             cursorDevice.selectDevice(firstDevice);
                         }
+                        // Send device list after another delay for device selection to complete
+                        host.scheduleTask(() -> deviceHost.sendDeviceList(), BitwigConfig.DEVICE_ENTER_CHILD_MS);
                     });
                 }
-
-                // NOTE: DeviceHost observers will send device updates automatically
-                // Full sendDeviceList() only called when track selector is released
             }
         };
 
@@ -111,7 +94,6 @@ public class TrackController {
         protocol.onEnterTrackGroup = msg -> {
             if (msg.fromHost) return;
             if (trackHost != null) {
-                requestHandler.notifyChangePending("trackList");
                 trackHost.enterTrackGroup(msg.getTrackIndex());
             }
         };
@@ -120,7 +102,6 @@ public class TrackController {
         protocol.onExitTrackGroup = msg -> {
             if (msg.fromHost) return;
             if (trackHost != null) {
-                requestHandler.notifyChangePending("trackList");
                 trackHost.exitTrackGroup();
             }
         };

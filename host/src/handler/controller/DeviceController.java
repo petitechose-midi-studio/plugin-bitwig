@@ -4,7 +4,6 @@ import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import protocol.struct.DeviceStateChangeMessage;
 import handler.host.DeviceHost;
-import handler.util.ObserverBasedRequestHandler;
 import config.BitwigConfig;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -26,7 +25,6 @@ public class DeviceController {
     private final Protocol protocol;
     private final DeviceBank deviceBank;
     private final Transport transport;
-    private final ObserverBasedRequestHandler requestHandler;
     private DeviceHost deviceHost;
 
     private final boolean[] touchState = new boolean[8];
@@ -35,9 +33,8 @@ public class DeviceController {
     private final int[] parameterDiscreteCount = new int[8];  // -1=continuous, 2=button, >2=list
 
     // Echo tracking with timeout: timestamp of last controller change
-    // All callbacks within ECHO_TIMEOUT_MS are considered echoes
+    // All callbacks within BitwigConfig.ECHO_TIMEOUT_MS are considered echoes
     private final long[] lastControllerChangeTime = new long[8];
-    private static final long ECHO_TIMEOUT_MS = 100;  // 200ms window for echoes
 
     public DeviceController(
         ControllerHost host,
@@ -53,14 +50,10 @@ public class DeviceController {
         this.protocol = protocol;
         this.deviceBank = deviceBank;
         this.transport = transport;
-        this.requestHandler = new ObserverBasedRequestHandler(host);
 
         for (int i = 0; i < 8; i++) {
             parameterDiscreteCount[i] = -1;  // Default: continuous (safest for echo suppression)
         }
-
-        // Register contexts for observer-based requests
-        requestHandler.registerContext("deviceList", deviceBank.itemCount());
 
         setupCallbacks();
     }
@@ -97,17 +90,9 @@ public class DeviceController {
         if (paramIndex >= 0 && paramIndex < 8) {
             long now = System.currentTimeMillis();
             long timeSinceChange = now - lastControllerChangeTime[paramIndex];
-            return timeSinceChange < ECHO_TIMEOUT_MS;
+            return timeSinceChange < BitwigConfig.ECHO_TIMEOUT_MS;
         }
         return false;
-    }
-
-    /**
-     * Notify that a track selection is in progress and deviceBank will be updated.
-     * Call this before selecting a track to indicate that device list requests should wait.
-     */
-    public void notifyTrackChangePending() {
-        requestHandler.notifyChangePending("deviceList");
     }
 
     private void setupCallbacks() {
@@ -212,7 +197,7 @@ public class DeviceController {
         protocol.onRequestDeviceList = msg -> {
             if (msg.fromHost) return;
             if (deviceHost != null) {
-                requestHandler.requestSend("deviceList", () -> deviceHost.sendDeviceList());
+                deviceHost.sendDeviceList();
             }
         };
 

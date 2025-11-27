@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <rect id="instrument_track" x="0" y="0" width="15" height="15" style="fill:none;"/>
+    <path d="M13,2L13,13L9.669,13L9.669,8.609L10.184,8.609C10.406,8.609 10.585,8.429 10.585,8.207L10.585,2L13,2ZM8.342,2L8.342,8.207C8.342,8.429 8.522,8.609 8.743,8.609L9.258,8.609L9.258,13L5.742,13L5.742,8.609L6.257,8.609C6.478,8.609 6.658,8.429 6.658,8.207L6.658,2L8.342,2ZM4.415,2L4.415,8.207C4.415,8.429 4.594,8.609 4.816,8.609L5.331,8.609L5.331,13L2,13L2,2L4.415,2Z"/>
+</svg>

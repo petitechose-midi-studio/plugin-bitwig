@@ -1,7 +1,6 @@
 #include "DeviceListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "ui/font/FontLoader.hpp"
-#include "../../LVGLSymbol.hpp"
+#include "ui/font/icon.hpp"
 #include <algorithm>
 
 using namespace Theme;
@@ -49,7 +48,7 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
     list_.setItems(items);
 
     // Apply lvgl_symbols font to the Back button (index 0)
-    if (!items.empty() && items[0] == LVGLSymbol::BACK)
+    if (!items.empty() && items[0] == Icon::ARROW_LEFT)
     {
         lv_obj_t *backBtn = list_.getButton(0);
         if (backBtn)
@@ -61,9 +60,9 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
                 lv_obj_t *child = lv_obj_get_child(backBtn, j);
                 if (child && lv_obj_check_type(child, &lv_label_class))
                 {
-                    if (bitwig_fonts.icons)
+                    if (bitwig_fonts.icons_14)
                     {
-                        lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
+                        lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
                     }
                     break;
                 }
@@ -82,28 +81,23 @@ void DeviceListOverlay::setChildrenItems(const std::vector<std::string> &items, 
             continue;
 
         const char *iconSymbol = nullptr;
-        const lv_font_t *iconFont = nullptr;
         switch (itemTypes[i])
         {
-        case 0: // Slot - use LVGL symbol
-            iconSymbol = LV_SYMBOL_LIST;
-            iconFont = bitwig_fonts.lvgl_symbols;
+        case 0: // Slot
+            iconSymbol = Icon::SLIDER;
             break;
         case 1: // Layer
-            iconSymbol = LVGLSymbol::LAYER;
-            iconFont = bitwig_fonts.icons;
+            iconSymbol = Icon::LAYER;
             break;
         case 2: // Drum pad
-            iconSymbol = LVGLSymbol::DRUM_PAD;
-            iconFont = bitwig_fonts.icons;
+            iconSymbol = Icon::DRUM_PAD_MATRIX;
             break;
         }
 
-        if (iconSymbol && iconFont)
+        if (iconSymbol)
         {
             lv_obj_t *icon_label = lv_label_create(btn);
-            lv_label_set_text(icon_label, iconSymbol);
-            lv_obj_set_style_text_font(icon_label, iconFont, 0);
+            Icon::set(icon_label, iconSymbol);
 
             // Apply state-based colors to icons (same as labels)
             lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
@@ -191,14 +185,16 @@ void DeviceListOverlay::setDeviceStateAtIndex(int displayIndex, bool enabled)
     if (!isDevice)
         return;
 
-    // Bullet is always at index 0 for devices
+    // Device state icon is always at index 0 for devices
     uint32_t childCount = lv_obj_get_child_cnt(button);
     if (childCount > 0)
     {
-        lv_obj_t *bullet = lv_obj_get_child(button, 0);
-        lv_color_t color = enabled ? lv_color_hex(Color::DEVICE_STATE_ENABLED)
-                                   : lv_color_hex(Color::DEVICE_STATE_DISABLED);
-        lv_obj_set_style_bg_color(bullet, color, 0);
+        lv_obj_t *stateIcon = lv_obj_get_child(button, 0);
+        if (stateIcon && lv_obj_check_type(stateIcon, &lv_label_class))
+        {
+            lv_label_set_text(stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+            lv_obj_set_style_text_color(stateIcon, lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+        }
     }
 }
 
@@ -213,7 +209,7 @@ bool DeviceListOverlay::isNonDeviceItem(size_t index) const
         return false;
 
     const std::string &name = item_names_[index];
-    return name == LVGLSymbol::BACK || (!name.empty() && name[0] == '[');
+    return name == Icon::ARROW_LEFT || (!name.empty() && name[0] == '[');
 }
 
 bool DeviceListOverlay::hasChildren(size_t index) const
@@ -222,17 +218,12 @@ bool DeviceListOverlay::hasChildren(size_t index) const
            (has_slots_[index] || has_layers_[index] || has_drums_[index]);
 }
 
-lv_obj_t *DeviceListOverlay::createDot(lv_obj_t *parent, uint32_t color)
+lv_obj_t *DeviceListOverlay::createDeviceStateIcon(lv_obj_t *parent, bool enabled)
 {
-    lv_obj_t *dot = lv_obj_create(parent);
-    lv_obj_set_size(dot, 10, 10);
-    lv_obj_set_style_bg_color(dot, lv_color_hex(color), 0);
-    lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_border_width(dot, 0, 0);
-    lv_obj_set_style_pad_all(dot, 0, 0);
-    lv_obj_clear_flag(dot, LV_OBJ_FLAG_SCROLLABLE);
-    return dot;
+    lv_obj_t *icon = lv_label_create(parent);
+    Icon::set(icon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+    lv_obj_set_style_text_color(icon, lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+    return icon;
 }
 
 lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent, bool isSlot)
@@ -245,22 +236,7 @@ lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent, bool isSlot)
     lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *icon = lv_label_create(container);
-    if (isSlot)
-    {
-        lv_label_set_text(icon, LV_SYMBOL_LIST);
-        if (bitwig_fonts.lvgl_symbols)
-        {
-            lv_obj_set_style_text_font(icon, bitwig_fonts.lvgl_symbols, 0);
-        }
-    }
-    else
-    {
-        lv_label_set_text(icon, LVGLSymbol::FOLDER);
-        if (bitwig_fonts.icons)
-        {
-            lv_obj_set_style_text_font(icon, bitwig_fonts.icons, 0);
-        }
-    }
+    Icon::set(icon, isSlot ? Icon::SLIDER : Icon::DIRECTORY);
 
     // Apply state-based colors with reduced opacity for folder icon
     lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
@@ -289,8 +265,8 @@ void DeviceListOverlay::createIndicators()
         if (!button)
             continue;
 
-        // Check if this is the "Back" item (first item with the Back LVGLSymbol)
-        bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == LVGLSymbol::BACK);
+        // Check if this is the "Back" item (first item with Icon::ARROW_LEFT)
+        bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == Icon::ARROW_LEFT);
 
         // Apply lvgl_symbols font to text label if this is the Back item
         if (isBackItem)
@@ -302,9 +278,9 @@ void DeviceListOverlay::createIndicators()
                 lv_obj_t *child = lv_obj_get_child(button, j);
                 if (child && lv_obj_check_type(child, &lv_label_class))
                 {
-                    if (bitwig_fonts.icons)
+                    if (bitwig_fonts.icons_14)
                     {
-                        lv_obj_set_style_text_font(child, bitwig_fonts.icons, 0);
+                        lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
                     }
                     break;
                 }
@@ -313,14 +289,12 @@ void DeviceListOverlay::createIndicators()
 
         bool isDevice = !isNonDeviceItem(i);
 
-        // Always create bullet at index 0 for devices (not for Back item)
+        // Always create device state icon at index 0 for devices (not for Back item)
         if (isDevice)
         {
             bool isEnabled = (i < device_states_.size()) && device_states_[i];
-            uint32_t color = isEnabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED;
-
-            lv_obj_t *stateBullet = createDot(button, color);
-            lv_obj_move_to_index(stateBullet, 0);
+            lv_obj_t *stateIcon = createDeviceStateIcon(button, isEnabled);
+            lv_obj_move_to_index(stateIcon, 0);
         }
 
         // Always create folder icon container at index 1 (2nd position)

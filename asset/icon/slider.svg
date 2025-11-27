@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 21 21" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <rect id="slider" x="0" y="0" width="21" height="21" style="fill:none;"/>
+    <path d="M14,9C14,8.448 13.552,8 13,8L8,8C7.448,8 7,8.448 7,9L7,12C7,12.552 7.448,13 8,13L13,13C13.552,13 14,12.552 14,12L14,9Z"/>
+    <path d="M11.5,4C11.5,3.448 11.052,3 10.5,3C9.948,3 9.5,3.448 9.5,4L9.5,6C9.5,6.552 9.948,7 10.5,7C11.052,7 11.5,6.552 11.5,6L11.5,4Z" style="fill-opacity:0.67;"/>
+    <path d="M11.5,15C11.5,14.448 11.052,14 10.5,14C9.948,14 9.5,14.448 9.5,15L9.5,17C9.5,17.552 9.948,18 10.5,18C11.052,18 11.5,17.552 11.5,17L11.5,15Z" style="fill-opacity:0.67;"/>
+</svg>

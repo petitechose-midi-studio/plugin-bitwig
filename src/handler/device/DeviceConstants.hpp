@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "../../ui/LVGLSymbol.hpp"
+#include "ui/font/icon.hpp"
 
 namespace Bitwig::Device
 {
@@ -75,6 +75,6 @@ namespace Bitwig::Device
     // UI TEXT CONSTANTS
     // ============================================================================
 
-    constexpr const char *BACK_TO_PARENT_TEXT = LVGLSymbol::BACK;
+    constexpr const char *BACK_TO_PARENT_TEXT = Icon::ARROW_LEFT;
 
 } // namespace Bitwig::Device
