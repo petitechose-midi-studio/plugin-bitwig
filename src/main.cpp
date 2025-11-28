@@ -11,11 +11,10 @@ void setupPlugins(PluginManager& manager) {
 MidiStudioApp app(setupPlugins);
 
 void setup() {
+    waitForSerial();
     LOGLN("=== MIDI Studio - Bitwig ===");
-    LOGLN("===   Bitwig Plugin Dev  ===");
     LOG("Version: ");
     LOGLN(Core::VERSION);
-
     app.setup();
 }
 

@@ -128,6 +128,24 @@ public class TrackHost {
         track.mute().markInterested();
         track.solo().markInterested();
         track.isGroup().markInterested();
+        track.trackType().markInterested();
+    }
+
+    /**
+     * Convert Bitwig track type string to uint8
+     * @param trackType Track type string from Bitwig API
+     * @return 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
+     */
+    private int trackTypeToInt(String trackType) {
+        switch (trackType) {
+            case "Audio": return 0;
+            case "Instrument": return 1;
+            case "Hybrid": return 2;
+            case "Group": return 3;
+            case "Effect": return 4;
+            case "Master": return 5;
+            default: return 0;
+        }
     }
 
     /**
@@ -209,7 +227,8 @@ public class TrackHost {
                     track.isActivated().get(),
                     track.mute().get(),
                     track.solo().get(),
-                    track.isGroup().get()
+                    track.isGroup().get(),
+                    trackTypeToInt(track.trackType().get())
                 ));
             }
         }

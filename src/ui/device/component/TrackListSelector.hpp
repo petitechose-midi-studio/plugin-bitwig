@@ -56,14 +56,14 @@ namespace Bitwig
          * @param currentIndex Current track index (0-based)
          * @param muteStates Mute state per track
          * @param soloStates Solo state per track
-         * @param groupStates Group state per track (shows folder icon if true)
+         * @param trackTypes Track type per track (0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master)
          * @param trackColors Track colors (RGB hex values)
          */
         void setTrackItems(const std::vector<std::string> &items,
                            int currentIndex,
                            const std::vector<bool> &muteStates,
                            const std::vector<bool> &soloStates,
-                           const std::vector<bool> &groupStates = {},
+                           const std::vector<uint8_t> &trackTypes = {},
                            const std::vector<uint32_t> &trackColors = {});
 
         /**
@@ -143,6 +143,7 @@ namespace Bitwig
     private:
         void createFooter();
         void destroyFooter();
+        void updateFooterStates();
 
         lv_obj_t *parent_;
         TrackListOverlay overlay_;

@@ -9,7 +9,6 @@ namespace Bitwig
         : viewManager_(viewManager), protocol_(protocol)
     {
         setupProtocolCallbacks();
-        // Demander le statut de l'host
         protocol_.send(Protocol::RequestHostStatusMessage());
     }
 
@@ -28,9 +27,10 @@ namespace Bitwig
 
     void PluginLifecycleHandler::handleHostInitialized(const Protocol::HostInitializedMessage &msg)
     {
+        if (isHostActive_) return;  // Already initialized, ignore duplicate
         LOGLN("[PluginLifecycle] Host initialized - showing splash");
-        viewManager_.showSplash(1500, "Bitwig is starting");
         isHostActive_ = msg.isHostActive;
+        viewManager_.showSplash(1500, "Bitwig is starting");
     }
 
     void PluginLifecycleHandler::handleHostDeactivated(const Protocol::HostDeactivatedMessage &)

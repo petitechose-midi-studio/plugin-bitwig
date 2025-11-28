@@ -1,4 +1,5 @@
 #include "TrackListSelector.hpp"
+#include "ui/theme/BitwigTheme.hpp"
 
 namespace Bitwig
 {
@@ -29,12 +30,12 @@ namespace Bitwig
                                           int currentIndex,
                                           const std::vector<bool> &muteStates,
                                           const std::vector<bool> &soloStates,
-                                          const std::vector<bool> &groupStates,
+                                          const std::vector<uint8_t> &trackTypes,
                                           const std::vector<uint32_t> &trackColors)
     {
         items_ = items;
         current_item_index_ = currentIndex;
-        overlay_.setTrackItems(items, currentIndex, muteStates, soloStates, groupStates, trackColors);
+        overlay_.setTrackItems(items, currentIndex, muteStates, soloStates, trackTypes, trackColors);
     }
 
     void TrackListSelector::setCurrentItemIndex(int index)
@@ -46,6 +47,7 @@ namespace Bitwig
     void TrackListSelector::setSelectedIndex(int index)
     {
         overlay_.setSelectedIndex(index);
+        updateFooterStates();
     }
 
     void TrackListSelector::show()
@@ -58,6 +60,7 @@ namespace Bitwig
             createFooter();
         }
         footer_->show();
+        updateFooterStates();
     }
 
     void TrackListSelector::hide()
@@ -91,8 +94,8 @@ namespace Bitwig
             return;
 
         footer_ = std::make_unique<ButtonHintBar>(parent_);
-        footer_->setCenterLabel("Mute");
-        footer_->setRightLabel("Solo");
+        footer_->setCenterIcon(Icon::MUTE, Theme::Color::TRACK_MUTE);
+        footer_->setRightIcon(Icon::SOLO, Theme::Color::TRACK_SOLO);
     }
 
     void TrackListSelector::destroyFooter()
@@ -100,14 +103,29 @@ namespace Bitwig
         footer_.reset();
     }
 
+    void TrackListSelector::updateFooterStates()
+    {
+        if (!footer_)
+            return;
+
+        int selectedIndex = overlay_.getSelectedIndex();
+        bool isMuted = overlay_.getTrackMuteStateAtIndex(selectedIndex);
+        bool isSoloed = overlay_.getTrackSoloStateAtIndex(selectedIndex);
+
+        footer_->setCenterIconActive(isMuted);
+        footer_->setRightIconActive(isSoloed);
+    }
+
     void TrackListSelector::setTrackMuteStateAtIndex(uint8_t trackIndex, bool isMuted)
     {
         overlay_.setTrackMuteStateAtIndex(trackIndex, isMuted);
+        updateFooterStates();
     }
 
     void TrackListSelector::setTrackSoloStateAtIndex(uint8_t trackIndex, bool isSoloed)
     {
         overlay_.setTrackSoloStateAtIndex(trackIndex, isSoloed);
+        updateFooterStates();
     }
 
     bool TrackListSelector::getTrackMuteStateAtIndex(uint8_t trackIndex) const

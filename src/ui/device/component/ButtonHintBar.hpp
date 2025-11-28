@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lvgl.h>
+#include "ui/font/icon.hpp"
 
 namespace Bitwig
 {
@@ -21,6 +22,13 @@ public:
     void setLeftLabel(const char *text);
     void setCenterLabel(const char *text);
     void setRightLabel(const char *text);
+
+    void setLeftIcon(const char *icon, uint32_t color = 0xFFFFFF);
+    void setCenterIcon(const char *icon, uint32_t color = 0xFFFFFF);
+    void setRightIcon(const char *icon, uint32_t color = 0xFFFFFF);
+
+    void setCenterIconActive(bool active);
+    void setRightIconActive(bool active);
 
     void show();
     void hide();

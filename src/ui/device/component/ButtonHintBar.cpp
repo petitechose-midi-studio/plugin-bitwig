@@ -91,6 +91,48 @@ void ButtonHintBar::setRightLabel(const char *text)
         lv_label_set_text(right_label_, text ? text : "");
 }
 
+void ButtonHintBar::setLeftIcon(const char *icon, uint32_t color)
+{
+    if (left_label_ && icon)
+    {
+        Icon::set(left_label_, icon, Icon::S16);
+        lv_obj_set_style_text_color(left_label_, lv_color_hex(color), 0);
+        lv_obj_set_grid_cell(left_label_, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+    }
+}
+
+void ButtonHintBar::setCenterIcon(const char *icon, uint32_t color)
+{
+    if (center_label_ && icon)
+    {
+        Icon::set(center_label_, icon, Icon::S16);
+        lv_obj_set_style_text_color(center_label_, lv_color_hex(color), 0);
+        lv_obj_set_grid_cell(center_label_, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+    }
+}
+
+void ButtonHintBar::setRightIcon(const char *icon, uint32_t color)
+{
+    if (right_label_ && icon)
+    {
+        Icon::set(right_label_, icon, Icon::S16);
+        lv_obj_set_style_text_color(right_label_, lv_color_hex(color), 0);
+        lv_obj_set_grid_cell(right_label_, LV_GRID_ALIGN_CENTER, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+    }
+}
+
+void ButtonHintBar::setCenterIconActive(bool active)
+{
+    if (center_label_)
+        lv_obj_set_style_text_opa(center_label_, active ? LV_OPA_COVER : LV_OPA_40, 0);
+}
+
+void ButtonHintBar::setRightIconActive(bool active)
+{
+    if (right_label_)
+        lv_obj_set_style_text_opa(right_label_, active ? LV_OPA_COVER : LV_OPA_40, 0);
+}
+
 void ButtonHintBar::show()
 {
     if (container_)

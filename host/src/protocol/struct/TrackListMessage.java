@@ -39,8 +39,9 @@ public final class TrackListMessage {
         private final boolean isMute;
         private final boolean isSolo;
         private final boolean isGroup;
+        private final int trackType;
 
-        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isGroup) {
+        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isGroup, int trackType) {
             this.trackIndex = trackIndex;
             this.trackName = trackName;
             this.color = color;
@@ -48,6 +49,7 @@ public final class TrackListMessage {
             this.isMute = isMute;
             this.isSolo = isSolo;
             this.isGroup = isGroup;
+            this.trackType = trackType;
         }
 
         public int getTrackIndex() {
@@ -76,6 +78,10 @@ public final class TrackListMessage {
 
         public boolean isGroup() {
             return isGroup;
+        }
+
+        public int getTrackType() {
+            return trackType;
         }
 
     }
@@ -170,7 +176,7 @@ public final class TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 885;
+    public static final int MAX_PAYLOAD_SIZE = 917;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -219,6 +225,9 @@ public final class TrackListMessage {
     byte[] item_isGroup_encoded = Encoder.encodeBool(item.isGroup());
             System.arraycopy(item_isGroup_encoded, 0, buffer, offset, item_isGroup_encoded.length);
             offset += item_isGroup_encoded.length;
+    byte[] item_trackType_encoded = Encoder.encodeUint8(item.getTrackType());
+            System.arraycopy(item_trackType_encoded, 0, buffer, offset, item_trackType_encoded.length);
+            offset += item_trackType_encoded.length;
         }
 
 
@@ -232,7 +241,7 @@ public final class TrackListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 357;
+    private static final int MIN_PAYLOAD_SIZE = 389;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -275,7 +284,9 @@ public final class TrackListMessage {
             offset += 1;
     boolean item_isGroup = Decoder.decodeBool(data, offset);
             offset += 1;
-            tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isGroup));
+    int item_trackType = Decoder.decodeUint8(data, offset);
+            offset += 1;
+            tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isGroup, item_trackType));
         }
 
 
@@ -309,6 +320,7 @@ public final class TrackListMessage {
             sb.append("      isMute: ").append(item.isMute() ? "true" : "false").append("\n");
             sb.append("      isSolo: ").append(item.isSolo() ? "true" : "false").append("\n");
             sb.append("      isGroup: ").append(item.isGroup() ? "true" : "false").append("\n");
+            sb.append("      trackType: ").append(item.getTrackType()).append("\n");
         }
         return sb.toString();
     }

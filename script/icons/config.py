@@ -30,5 +30,5 @@ UNICODE_START = 0xE000
 PADDING_PERCENT = 0.10
 
 # LVGL font generation
-LVGL_FONT_SIZES = [12, 14, 18]
+LVGL_FONT_SIZES = [12, 14, 16]
 LVGL_BPP = 4  # Bits per pixel (1, 2, 4, or 8)

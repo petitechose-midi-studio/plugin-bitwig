@@ -16,7 +16,7 @@ struct BitwigFonts {
     // Icon fonts (Bitwig-specific)
     lv_font_t* icons_12 = nullptr;
     lv_font_t* icons_14 = nullptr;
-    lv_font_t* icons_18 = nullptr;
+    lv_font_t *icons_16 = nullptr;
 
     // Text fonts (Inter Display 14px from core)
     lv_font_t* track_label = nullptr;   // Bold

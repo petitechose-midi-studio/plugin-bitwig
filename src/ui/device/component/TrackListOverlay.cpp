@@ -35,23 +35,52 @@ namespace Bitwig
         clearIndicators();
     }
 
+    namespace
+    {
+        /**
+         * @brief Get icon for track type
+         * @param trackType 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
+         * @return Icon string pointer
+         */
+        const char *getTrackTypeIcon(uint8_t trackType)
+        {
+            switch (trackType)
+            {
+            case 0:
+                return Icon::TRACK_AUDIO;
+            case 1:
+                return Icon::TRACK_INSTRUMENT;
+            case 2:
+                return Icon::TRACK_HYBRID;
+            case 3:
+                return Icon::DIRECTORY;
+            case 4:
+                return Icon::RETURN_TRACK;
+            case 5:
+                return Icon::MASTER_TRACK;
+            default:
+                return Icon::TRACK_AUDIO;
+            }
+        }
+    }
+
     void TrackListOverlay::setTrackItems(const std::vector<std::string> &names,
                                          int currentIndex,
                                          const std::vector<bool> &muteStates,
                                          const std::vector<bool> &soloStates,
-                                         const std::vector<bool> &groupStates,
+                                         const std::vector<uint8_t> &trackTypes,
                                          const std::vector<uint32_t> &trackColors)
     {
         item_names_ = names;
         current_track_index_ = currentIndex;
         mute_states_ = muteStates;
         solo_states_ = soloStates;
-        group_states_ = groupStates;
+        track_types_ = trackTypes;
         track_colors_ = trackColors;
 
         mute_states_.resize(names.size(), false);
         solo_states_.resize(names.size(), false);
-        group_states_.resize(names.size(), false);
+        track_types_.resize(names.size(), 0);
         track_colors_.resize(names.size(), 0xFFFFFF);
 
         list_.setItems(names);
@@ -112,8 +141,8 @@ namespace Bitwig
     {
         indicator_circles_.clear();
         indicator_circles_.resize(item_names_.size());
-        folder_icons_.clear();
-        folder_icons_.resize(item_names_.size(), nullptr);
+        track_icons_.clear();
+        track_icons_.resize(item_names_.size(), nullptr);
         vertical_bars_.clear();
         vertical_bars_.resize(item_names_.size(), nullptr);
 
@@ -171,17 +200,17 @@ namespace Bitwig
                 labels[1] = solo_label;
             }
 
-            // Create folder icon if this is a group
-            bool isGroup = (i < group_states_.size()) ? group_states_[i] : false;
-            if (isGroup)
+            // Create track type icon for all tracks (not just groups)
+            if (!isBackItem)
             {
-                lv_obj_t *folder_icon = lv_label_create(btn);
-                Icon::set(folder_icon, Icon::DIRECTORY);
-                lv_obj_set_style_text_color(folder_icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
-                lv_obj_set_style_text_opa(folder_icon, LV_OPA_70, 0);
-                lv_obj_clear_flag(folder_icon, LV_OBJ_FLAG_SCROLLABLE);
-                lv_obj_move_to_index(folder_icon, 2);
-                folder_icons_[i] = folder_icon;
+                uint8_t trackType = (i < track_types_.size()) ? track_types_[i] : 0;
+                lv_obj_t *type_icon = lv_label_create(btn);
+                Icon::set(type_icon, getTrackTypeIcon(trackType));
+                lv_obj_set_style_text_color(type_icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
+                lv_obj_set_style_text_opa(type_icon, LV_OPA_70, 0);
+                lv_obj_clear_flag(type_icon, LV_OBJ_FLAG_SCROLLABLE);
+                lv_obj_move_to_index(type_icon, 2);
+                track_icons_[i] = type_icon;
             }
 
             indicator_circles_[i] = labels;
@@ -243,8 +272,8 @@ namespace Bitwig
             lv_obj_t *btn = list_.getButton(i);
             if (btn)
             {
-                bool hasFolder = (i < static_cast<int>(folder_icons_.size())) && folder_icons_[i];
-                uint32_t labelIndex = 2 + (hasFolder ? 1 : 0);
+                bool hasTrackIcon = (i < static_cast<int>(track_icons_.size())) && track_icons_[i];
+                uint32_t labelIndex = 2 + (hasTrackIcon ? 1 : 0);
                 uint32_t childCount = lv_obj_get_child_cnt(btn);
 
                 if (labelIndex < childCount)
@@ -262,7 +291,7 @@ namespace Bitwig
     void TrackListOverlay::clearIndicators()
     {
         indicator_circles_.clear();
-        folder_icons_.clear();
+        track_icons_.clear();
         vertical_bars_.clear();
     }
 

@@ -16,6 +16,8 @@ track_is_activated = PrimitiveField('isActivated', type_name=Type.BOOL)
 track_is_mute = PrimitiveField('isMute', type_name=Type.BOOL)
 track_is_solo = PrimitiveField('isSolo', type_name=Type.BOOL)
 track_is_group = PrimitiveField('isGroup', type_name=Type.BOOL)
+# Track type: 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
+track_type = PrimitiveField('trackType', type_name=Type.UINT8)
 
 # Navigation context
 track_is_nested = PrimitiveField('isNested', type_name=Type.BOOL)
@@ -33,7 +35,8 @@ track_info = [
     track_is_activated,    # Track activated/deactivated (bool)
     track_is_mute,         # Mute state (bool)
     track_is_solo,         # Solo state (bool)
-    track_is_group         # Is this track a group? (bool)
+    track_is_group,        # Is this track a group? (bool)
+    track_type             # Track type: 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
 ]
 
 # Array of tracks (max 32 in bank window)

@@ -36,6 +36,7 @@ struct Tracks {
     bool isMute;
     bool isSolo;
     bool isGroup;
+    uint8_t trackType;
 };
 
 #endif // PROTOCOL_TRACKS_STRUCT
@@ -56,12 +57,12 @@ struct TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 885;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 917;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 357;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 389;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -88,6 +89,7 @@ struct TrackListMessage {
             encodeBool(ptr, item.isMute);
             encodeBool(ptr, item.isSolo);
             encodeBool(ptr, item.isGroup);
+            encodeUint8(ptr, item.trackType);
         }
 
         return ptr - buffer;
@@ -129,6 +131,7 @@ struct TrackListMessage {
             if (!decodeBool(ptr, remaining, item.isMute)) return etl::nullopt;
             if (!decodeBool(ptr, remaining, item.isSolo)) return etl::nullopt;
             if (!decodeBool(ptr, remaining, item.isGroup)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.trackType)) return etl::nullopt;
             tracks_data[i] = item;
         }
 
@@ -168,6 +171,7 @@ struct TrackListMessage {
         ptr += snprintf(ptr, end - ptr, "      isMute: %s\n", tracks[i].isMute ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isSolo: %s\n", tracks[i].isSolo ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isGroup: %s\n", tracks[i].isGroup ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "      trackType: %lu\n", (unsigned long)tracks[i].trackType);
         }
         
         *ptr = '\0';

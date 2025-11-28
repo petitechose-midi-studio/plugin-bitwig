@@ -106,9 +106,39 @@ def xml_cleanup(src: Path, dst: Path):
 
     tree.write(dst, encoding='unicode', xml_declaration=True)
 
-def add_padding(src: Path, dst: Path):
+def get_original_viewbox(svg_path: Path) -> tuple[float, float, float, float] | None:
+    """Get original viewBox if present."""
+    try:
+        tree = ET.parse(svg_path)
+        root = tree.getroot()
+        vb = root.get('viewBox', '').split()
+        if len(vb) == 4:
+            return tuple(map(float, vb))
+        return None
+    except:
+        return None
+
+def square_and_center(src: Path, dst: Path, original_viewbox: tuple[float, float, float, float] | None):
+    """
+    If original viewBox is square: keep it (author did the centering).
+    Otherwise: compute bbox, add 10% height padding, center in square.
+
+    IMPORTANT: FontForge ignores viewBox, so we must physically transform the paths
+    to center them, not just adjust viewBox.
+    """
     tree = ET.parse(src)
     root = tree.getroot()
+
+    # Check if original was already square
+    if original_viewbox:
+        _, _, ow, oh = original_viewbox
+        if abs(ow - oh) < 0.01:  # Square (with tolerance)
+            # Keep original viewBox
+            root.set('viewBox', f'{original_viewbox[0]} {original_viewbox[1]} {ow} {oh}')
+            tree.write(dst, encoding='unicode', xml_declaration=True)
+            return
+
+    # Get bbox from inkscape fit
     vb = root.get('viewBox', '').split()
     if len(vb) == 4:
         vx, vy, vw, vh = map(float, vb)
@@ -116,26 +146,84 @@ def add_padding(src: Path, dst: Path):
         vx, vy = 0, 0
         vw = float(root.get('width', '100').replace('px', ''))
         vh = float(root.get('height', '100').replace('px', ''))
+
+    # 1. Padding = 10% of bbox height
     pad = vh * PADDING_PERCENT
-    vx, vy, vw, vh = vx - pad, vy - pad, vw + 2*pad, vh + 2*pad
-    root.set('viewBox', f'{vx:.4f} {vy:.4f} {vw:.4f} {vh:.4f}')
+
+    # 2. Square = max dimension + padding on both sides
+    size = max(vw, vh) + 2 * pad
+
+    # 3. Calculate translation to center content in square starting at (0,0)
+    # Content currently at (vx, vy) with size (vw, vh)
+    # We want it centered in a square of size `size` starting at (0, 0)
+    # Center of square = (size/2, size/2)
+    # Center of content should be at square center
+    # So content top-left should be at: (size/2 - vw/2, size/2 - vh/2)
+    # Translation needed: new_pos - current_pos
+    tx = (size / 2 - vw / 2) - vx
+    ty = (size / 2 - vh / 2) - vy
+
+    # 4. Wrap all content in a group with transform
+    ns = '{http://www.w3.org/2000/svg}'
+    g = ET.Element(f'{ns}g')
+    g.set('transform', f'translate({tx:.4f}, {ty:.4f})')
+
+    # Move all children into the group
+    for child in list(root):
+        root.remove(child)
+        g.append(child)
+    root.append(g)
+
+    # 5. Set viewBox to square starting at origin
+    root.set('viewBox', f'0 0 {size:.4f} {size:.4f}')
+    root.set('width', f'{size:.4f}')
+    root.set('height', f'{size:.4f}')
+
     tree.write(dst, encoding='unicode', xml_declaration=True)
 
 def clean_svg(src: Path, dst: Path, temp_dir: Path) -> bool:
-    t1, t2, t3 = temp_dir / "1.svg", temp_dir / "2.svg", temp_dir / "3.svg"
+    t1, t2 = temp_dir / "1.svg", temp_dir / "2.svg"
+
+    # Check if original has viewBox
+    original_viewbox = get_original_viewbox(src)
+
+    # Convert strokes to paths
     if not inkscape_run(src, t1, ["select-all", "object-to-path", "select-all", "object-stroke-to-path", "export-plain-svg", "export-do"]):
         return False
+
+    # Clean up XML
     try:
         xml_cleanup(t1, t2)
     except:
         return False
-    if not inkscape_run(t2, t3, fit=True):
-        return False
-    try:
-        add_padding(t3, dst)
-    except:
-        return False
-    for f in [t1, t2, t3]:
+
+    if original_viewbox:
+        # Has viewBox → keep as-is (author defined proportions and centering)
+        import shutil
+        shutil.copy(t2, dst)
+    else:
+        # No viewBox → fit to content, then add padding and center
+        t3 = temp_dir / "3.svg"
+        if not inkscape_run(t2, t3, fit=True):
+            return False
+
+        tree = ET.parse(t3)
+        root = tree.getroot()
+        vb = root.get('viewBox', '').split()
+        vx, vy, vw, vh = map(float, vb) if len(vb) == 4 else (0, 0, 100, 100)
+
+        # Padding = 10% of height, square based on height, center
+        pad = vh * PADDING_PERCENT
+        size = vh + 2 * pad
+        new_x = vx - (size - vw) / 2
+        new_y = vy - pad
+        root.set('viewBox', f'{new_x:.4f} {new_y:.4f} {size:.4f} {size:.4f}')
+        root.set('width', f'{size:.4f}')
+        root.set('height', f'{size:.4f}')
+        tree.write(dst, encoding='unicode', xml_declaration=True)
+        t3.unlink(missing_ok=True)
+
+    for f in [t1, t2]:
         f.unlink(missing_ok=True)
     return True
 
@@ -397,9 +485,9 @@ def main():
     ttf_path = ttf_dir / f"{FONT_NAME}.ttf"
     header_path = header_dir / "Icon.hpp"
 
-    # Check if LVGL fonts need rebuild
+    # Check if LVGL fonts need rebuild (in header_dir/data/)
     lvgl_files_exist = all(
-        (ttf_dir / "data" / f"{FONT_NAME}_{s}.c.inc").exists()
+        (header_dir / "data" / f"{FONT_NAME}_{s}.c.inc").exists()
         for s in LVGL_FONT_SIZES
     )
 
@@ -417,9 +505,9 @@ def main():
         generate_header(glyphs, header_path, LVGL_FONT_SIZES)
         success(header_path.name)
 
-        # Generate LVGL fonts
+        # Generate LVGL fonts (output to header_dir for C++ includes)
         log(f"Generating LVGL fonts ({', '.join(map(str, LVGL_FONT_SIZES))}px)")
-        generate_lvgl_fonts(ttf_path, ttf_dir, glyphs, LVGL_FONT_SIZES, LVGL_BPP)
+        generate_lvgl_fonts(ttf_path, header_dir, glyphs, LVGL_FONT_SIZES, LVGL_BPP)
 
     # Cleanup temp
     for f in temp_dir.iterdir():

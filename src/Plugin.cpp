@@ -7,7 +7,7 @@
 // Bitwig-specific icon fonts only (text fonts come from core)
 #include "ui/font/data/bitwig_icons_12.c.inc"
 #include "ui/font/data/bitwig_icons_14.c.inc"
-#include "ui/font/data/bitwig_icons_18.c.inc"
+#include "ui/font/data/bitwig_icons_16.c.inc"
 
 BitwigFonts bitwig_fonts;
 
@@ -15,19 +15,16 @@ namespace Bitwig
 {
 
     void Plugin::loadResources() {
-        // Register Bitwig-specific icon fonts
+        // Register all icon font sizes
         register_font(&bitwig_fonts.icons_12, bitwig_icons_12_bin, bitwig_icons_12_bin_len);
         register_font(&bitwig_fonts.icons_14, bitwig_icons_14_bin, bitwig_icons_14_bin_len);
-        register_font(&bitwig_fonts.icons_18, bitwig_icons_18_bin, bitwig_icons_18_bin_len);
+        register_font(&bitwig_fonts.icons_16, bitwig_icons_16_bin, bitwig_icons_16_bin_len);
 
         // Map core's generic fonts to plugin-specific uses
-        // Text fonts are loaded by core, plugin just references them
         bitwig_fonts.track_label = fonts.inter_14_bold;
         bitwig_fonts.device_label = fonts.inter_14_semibold;
         bitwig_fonts.page_label = fonts.inter_14_regular;
         bitwig_fonts.param_label = fonts.inter_14_regular;
-
-        // Built-in LVGL font
         bitwig_fonts.lvgl_symbols = &lv_font_montserrat_12;
     }
 

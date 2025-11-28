@@ -1,15 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
-    xmlns:serif="http://www.serif.com/"
-    style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
-    <g transform="matrix(1,0,0,1,-626,-91)">
-        <g id="device_off" transform="matrix(0.714286,0,0,0.714286,626,91)">
-            <rect x="0" y="0" width="21" height="21" style="fill:none;"/>
-            <g transform="matrix(1.46956,0,0,1.47128,-0.521693,-0.534563)">
-                <ellipse cx="7.5" cy="7.5" rx="4.287" ry="4.282" style="fill:none;stroke:black;stroke-width:1px;"/>
-            </g>
-        </g>
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 28.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Calque_1" xmlns:serif="http://www.serif.com/"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 64 64"
+	 style="enable-background:new 0 0 64 64;" xml:space="preserve">
+<path d="M32,15c9.4,0,17,7.6,17,17s-7.6,17-17,17s-17-7.6-17-17S22.6,15,32,15 M32,10.5c-11.9,0-21.5,9.6-21.5,21.5
+	S20.1,53.5,32,53.5c11.9,0,21.5-9.6,21.5-21.5S43.9,10.5,32,10.5L32,10.5z"/>
 </svg>

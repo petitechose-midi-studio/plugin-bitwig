@@ -236,7 +236,7 @@ lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent, bool isSlot)
     lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *icon = lv_label_create(container);
-    Icon::set(icon, isSlot ? Icon::SLIDER : Icon::DIRECTORY);
+    Icon::set(icon, Icon::DIRECTORY);
 
     // Apply state-based colors with reduced opacity for folder icon
     lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);

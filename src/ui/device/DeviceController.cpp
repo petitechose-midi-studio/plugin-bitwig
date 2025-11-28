@@ -196,7 +196,7 @@ namespace Bitwig
         std::vector<std::string> trackNames;
         std::vector<bool> muteStates;
         std::vector<bool> soloStates;
-        std::vector<bool> groupStates;
+        std::vector<uint8_t> trackTypes;
         std::vector<uint32_t> trackColors;
 
         if (msg.isNested)
@@ -204,7 +204,7 @@ namespace Bitwig
             trackNames.push_back(Track::BACK_TO_PARENT_TEXT);
             muteStates.push_back(false);
             soloStates.push_back(false);
-            groupStates.push_back(false);
+            trackTypes.push_back(0); // Default to Audio type for back button
             trackColors.push_back(0xFFFFFF);
         }
 
@@ -213,7 +213,7 @@ namespace Bitwig
             trackNames.push_back(std::string(msg.tracks[i].trackName.data()));
             muteStates.push_back(msg.tracks[i].isMute);
             soloStates.push_back(msg.tracks[i].isSolo);
-            groupStates.push_back(msg.tracks[i].isGroup);
+            trackTypes.push_back(msg.tracks[i].trackType);
             trackColors.push_back(msg.tracks[i].color);
         }
 
@@ -221,7 +221,7 @@ namespace Bitwig
 
         // Hide device selector just before showing track selector - no visual gap
         view_.hideDeviceSelector();
-        view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, groupStates, trackColors);
+        view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, trackTypes, trackColors);
     }
 
     void DeviceController::handleTrackMuteState(uint8_t trackIndex, bool isMuted)
