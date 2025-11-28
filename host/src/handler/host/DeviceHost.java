@@ -36,6 +36,9 @@ public class DeviceHost {
     private String lastTrackName = "";
     private long lastTrackColor = 0;
 
+    // Prevent duplicate calls during transitions
+    private boolean deviceChangePending = false;  // Ignores individual param messages during device change
+
     public DeviceHost(
         ControllerHost host,
         Protocol protocol,
@@ -69,13 +72,15 @@ public class DeviceHost {
         cursorTrack.name().markInterested();
         cursorTrack.color().markInterested();
         cursorTrack.position().markInterested();
+        cursorTrack.trackType().markInterested();
 
         cursorTrack.name().addValueObserver(trackName -> {
             if (!trackName.equals(lastTrackName)) {
                 lastTrackName = trackName;
-                lastDeviceName = "";
+                lastDeviceName = "";  // Reset so device observer will trigger sendDeviceChange
                 sendTrackChange();
-                sendDeviceChange();  // Send immediately - param observers will update values
+                // Note: sendDeviceChange() is NOT called here - it will be triggered
+                // by cursorDevice.exists() or cursorDevice.name() observers when the device changes
             }
         });
 
@@ -100,19 +105,18 @@ public class DeviceHost {
         cursorDevice.hasLayers().markInterested();
         cursorDevice.hasDrumPads().markInterested();
 
-        cursorDevice.exists().addValueObserver(exists -> {
-            lastDeviceName = "";
-            if (exists) {
-                sendDeviceChange();  // Send immediately - param observers will update values
-            } else {
-                sendDeviceCleared();
-            }
-        });
-
+        // Single observer for device changes - name() is triggered for both new devices and device switches
         cursorDevice.name().addValueObserver(deviceName -> {
-            if (cursorDevice.exists().get() && !deviceName.equals(lastDeviceName)) {
+            boolean exists = cursorDevice.exists().get();
+
+            if (!exists) {
+                // Device cleared
+                lastDeviceName = "";
+                sendDeviceCleared();
+            } else if (!deviceName.equals(lastDeviceName)) {
+                // New or different device
                 lastDeviceName = deviceName;
-                sendDeviceChange();  // Send immediately - param observers will update values
+                sendDeviceChange();
             }
         });
     }
@@ -128,26 +132,30 @@ public class DeviceHost {
             markParameterInterested(remoteControls.getParameter(i));
         }
 
-        // Page change observer - delay to let API update parameter values
+        // Page change observer - skip if device change will handle it
         remoteControls.selectedPageIndex().addValueObserver(pageIndex -> {
             if (pageIndex != lastPageIndex) {
                 lastPageIndex = pageIndex;
-                host.scheduleTask(() -> sendPageChange(), BitwigConfig.PAGE_CHANGE_MS);
+                if (!deviceChangePending) {
+                    host.scheduleTask(() -> sendPageChange(), BitwigConfig.PAGE_CHANGE_MS);
+                }
             }
         });
 
-        // Parameter observers
+        // Parameter observers - skip during device transitions (batch message handles it)
         for (int i = 0; i < 8; i++) {
             final int paramIndex = i;
             RemoteControl param = remoteControls.getParameter(i);
 
             param.value().displayedValue().addValueObserver(displayValue -> {
+                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all values
                 double value = param.value().get();
                 boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
                 protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
             });
 
             param.name().addValueObserver(name -> {
+                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all names
                 protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name));
             });
         }
@@ -432,13 +440,16 @@ public class DeviceHost {
     }
 
     private void sendDeviceChange() {
+        // Block individual observers - batch message will contain everything
+        deviceChangePending = true;
+
         String deviceName = cursorDevice.name().get();
         boolean isEnabled = cursorDevice.isEnabled().get();
         int pageIndex = remoteControls.selectedPageIndex().get();
         int pageCount = remoteControls.pageCount().get();
         String pageName = getPageName(pageIndex, pageCount);
 
-        // Send header immediately (device name, enabled, page info)
+        // Send header immediately
         sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName);
 
         // Delay macro send to let API update parameter values
@@ -453,8 +464,26 @@ public class DeviceHost {
         final String trackName = cursorTrack.name().get();
         final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
         final int trackPosition = cursorTrack.position().get();
+        final int trackType = trackTypeToInt(cursorTrack.trackType().get());
 
-        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition));
+        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition, trackType));
+    }
+
+    /**
+     * Convert Bitwig track type string to uint8
+     * @param trackType Track type string from Bitwig API
+     * @return 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
+     */
+    private int trackTypeToInt(String trackType) {
+        switch (trackType) {
+            case "Audio": return 0;
+            case "Instrument": return 1;
+            case "Hybrid": return 2;
+            case "Group": return 3;
+            case "Effect": return 4;
+            case "Master": return 5;
+            default: return 0;
+        }
     }
 
     private void sendDeviceCleared() {
@@ -484,6 +513,9 @@ public class DeviceHost {
             new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
             macrosList
         ));
+
+        // Resume individual observers
+        deviceChangePending = false;
     }
 
     private String getPageName(int pageIndex, int pageCount) {

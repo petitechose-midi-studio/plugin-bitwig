@@ -6,7 +6,7 @@
 # using the standalone protocol-codegen package via uvx.
 #
 # Usage:
-#   ./scripts/generate_protocol.sh
+#   ./script/protocol/generate_protocol.sh
 #
 # Requirements:
 #   - uv/uvx installed (https://docs.astral.sh/uv/)
@@ -14,8 +14,23 @@
 
 set -e  # Exit on error
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# --- Find project root (looks for platformio.ini) ---
+find_root() {
+    local dir="$(pwd)"
+    while [[ "$dir" != "/" ]]; do
+        [[ -f "$dir/platformio.ini" ]] && echo "$dir" && return
+        dir="$(dirname "$dir")"
+    done
+    echo "$(pwd)"
+}
+
+PROJECT_ROOT="$(find_root)"
+
+# --- Colors ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+NC='\033[0m'
 
 echo "==================================="
 echo "Protocol Code Generator"
@@ -24,14 +39,20 @@ echo "Project: Bitwig MIDI Studio Plugin"
 echo "Root: $PROJECT_ROOT"
 echo "==================================="
 
-cd "$PROJECT_ROOT"
+# Verify we found a valid project
+if [[ ! -f "$PROJECT_ROOT/platformio.ini" ]]; then
+    echo -e "${RED}Error: platformio.ini not found. Run from project directory.${NC}"
+    exit 1
+fi
 
 # Check if uvx is available
 if ! command -v uvx &> /dev/null; then
-    echo "Error: uvx not found. Please install uv:"
+    echo -e "${RED}Error: uvx not found. Please install uv:${NC}"
     echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
     exit 1
 fi
+
+cd "$PROJECT_ROOT"
 
 echo "Running protocol-codegen..."
 echo ""
@@ -41,17 +62,17 @@ echo ""
 uvx --python python3.13 --from git+https://github.com/petitechose-audio/protocol-codegen \
     protocol-codegen generate \
     --method sysex \
-    --messages "$PROJECT_ROOT/protocol/message" \
-    --config "$PROJECT_ROOT/protocol/sysex_protocol_config.py" \
-    --plugin-paths "$PROJECT_ROOT/protocol/plugin_paths.py" \
-    --output-base "$PROJECT_ROOT" \
+    --messages "protocol/message" \
+    --config "protocol/sysex_protocol_config.py" \
+    --plugin-paths "protocol/plugin_paths.py" \
+    --output-base "." \
     --verbose
 
 echo ""
-echo "==================================="
-echo "Protocol generation complete!"
-echo "==================================="
+echo -e "${GREEN}===================================${NC}"
+echo -e "${GREEN}Protocol generation complete!${NC}"
+echo -e "${GREEN}===================================${NC}"
 echo "Generated files:"
-echo "  C++:  embedded/protocol/"
-echo "  Java: host/src/main/java/com/midi_studio/protocol/"
+echo "  C++:  src/protocol/"
+echo "  Java: host/src/protocol/"
 echo "==================================="

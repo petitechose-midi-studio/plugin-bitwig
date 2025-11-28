@@ -212,6 +212,12 @@ namespace Bitwig
          */
         void setTrackColor(uint32_t color);
 
+        /**
+         * @brief Update track type
+         * @param trackType Track type (0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master)
+         */
+        void setTrackType(uint8_t trackType);
+
     private:
         Config viewConfig_;
         bool initialized_;

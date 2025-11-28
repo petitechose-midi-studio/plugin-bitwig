@@ -49,9 +49,10 @@ namespace Bitwig
 
         /**
          * @brief Handle device enabled/bypassed state change
+         * @param deviceIndex Device index in the device bank
          * @param enabled True if device is active, false if bypassed
          */
-        void handleDeviceState(bool enabled);
+        void handleDeviceState(uint8_t deviceIndex, bool enabled);
 
         /**
          * @brief Handle device state change for specific device in list
@@ -189,6 +190,7 @@ namespace Bitwig
         DeviceView &view_;
         bool is_device_nested_ = false;
         bool is_track_nested_ = false;
+        int current_device_index_ = -1;  // Currently selected device index
     };
 
 } // namespace Bitwig

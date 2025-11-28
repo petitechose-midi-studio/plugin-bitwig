@@ -11,7 +11,8 @@ TRACK_CHANGE = Message(
     fields=[
         track_name,            # STRING (max 16 chars)
         track_color,           # UINT32 (0xRRGGBB)
-        track_index            # UINT8 (current track position)
+        track_index,           # UINT8 (current track position)
+        track_type             # UINT8 (0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master)
     ]
 )
 

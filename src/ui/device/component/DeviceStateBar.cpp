@@ -1,225 +1,161 @@
-﻿#include "DeviceStateBar.hpp"
-
-#include "font/FontLoader.hpp"
-#include "ui/font/FontLoader.hpp"
+#include "DeviceStateBar.hpp"
 #include "../../theme/BitwigTheme.hpp"
-#include "util/TextUtils.hpp"
 
 namespace Bitwig
 {
 
-    const lv_color_t COLOR_BACKGROUND = lv_color_hex(Theme::Color::BACKGROUND_FILL);
-    const lv_color_t COLOR_TEXT = lv_color_hex(Theme::Color::TEXT_LIGHT);
-    const lv_color_t COLOR_STATE_ENABLED = lv_color_hex(Theme::Color::DEVICE_STATE_ENABLED);
-    const lv_color_t COLOR_STATE_DISABLED = lv_color_hex(Theme::Color::DEVICE_STATE_DISABLED);
-
     DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
-        : track_name_("No Track"), device_name_("No Device"), device_status_(DeviceStatus::DISABLED)
     {
         container_ = lv_obj_create(parent);
         lv_obj_set_size(container_, LV_PCT(100), 20);
         lv_obj_set_pos(container_, 0, 0);
-        lv_obj_set_style_bg_color(container_, COLOR_BACKGROUND, 0);
+        lv_obj_set_style_bg_color(container_, lv_color_hex(Theme::Color::BACKGROUND_FILL), 0);
         lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
         lv_obj_set_style_border_width(container_, 0, 0);
-        lv_obj_set_style_pad_left(container_, 0, 0);
+        lv_obj_set_style_pad_left(container_, 4, 0);
         lv_obj_set_style_pad_right(container_, 4, 0);
         lv_obj_set_style_pad_top(container_, 0, 0);
         lv_obj_set_style_pad_bottom(container_, 0, 0);
-
         lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
 
-        static const lv_coord_t col_dsc[] = {LV_GRID_FR(1),
-                                             LV_GRID_FR(1),
-                                             LV_GRID_FR(1),
-                                             LV_GRID_TEMPLATE_LAST};
+        // Grid layout: [Track] [Device] [Page]
+        static const lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
         static const lv_coord_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
-
         lv_obj_set_layout(container_, LV_LAYOUT_GRID);
         lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
+        lv_obj_set_style_pad_column(container_, 6, 0);  // 6px gap between columns
 
-        createTrackSection();
-        createDeviceSection();
-        createPageSection();
+        // Track cell (left) - content left-aligned, clips on right
+        track_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_START);
+        lv_obj_set_grid_cell(track_cell_, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+        track_item_ = std::make_unique<TrackTitleItem>(track_cell_);
 
-        setTrackName("No Track");
-        setDeviceName("No Device");
-        setDeviceState(0);
-        setPageName("");
+        // Device cell (center) - centered when fits, left-aligned when overflow
+        device_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_grid_cell(device_cell_, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+        device_item_ = std::make_unique<DeviceTitleItem>(device_cell_, DeviceTitleItem::IconSize::Small);
+
+        // Page cell (right) - content right-aligned, clips on left
+        page_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_END);
+        lv_obj_set_grid_cell(page_cell_, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+        page_item_ = std::make_unique<PageTitleItem>(page_cell_);
+
+        // Set defaults (without triggering alignment update during construction)
+        if (track_item_)
+        {
+            track_item_->setName("No Track");
+            track_item_->setColor(0xFFFFFF);
+            track_item_->setType(0);
+        }
+        if (device_item_)
+        {
+            device_item_->setName("No Device");
+            device_item_->setState(false);
+        }
+        if (page_item_)
+        {
+            page_item_->setName("");
+        }
     }
 
     DeviceStateBar::~DeviceStateBar()
     {
+        // unique_ptr handles cleanup of items
         if (container_)
         {
             lv_obj_delete(container_);
         }
     }
 
-    void DeviceStateBar::createTrackSection()
-    {
-        track_container_ = lv_obj_create(container_);
-        lv_obj_set_grid_cell(track_container_, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-        lv_obj_set_style_bg_opa(track_container_, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(track_container_, 0, 0);
-        lv_obj_set_style_pad_all(track_container_, 0, 0);
-        lv_obj_set_style_pad_gap(track_container_, 4, 0);
-        lv_obj_set_scrollbar_mode(track_container_, LV_SCROLLBAR_MODE_OFF);
-
-        lv_obj_set_flex_flow(track_container_, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(track_container_,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER);
-
-        track_color_indicator_ = lv_obj_create(track_container_);
-        lv_obj_set_size(track_color_indicator_, 4, LV_PCT(100));
-        lv_obj_set_style_radius(track_color_indicator_, 0, 0);
-        lv_obj_set_style_border_width(track_color_indicator_, 0, 0);
-        lv_obj_set_style_pad_all(track_color_indicator_, 0, 0);
-        lv_obj_set_style_bg_color(track_color_indicator_, lv_color_hex(track_color_), 0);
-        lv_obj_set_style_bg_opa(track_color_indicator_, LV_OPA_COVER, 0);
-
-        track_label_ = lv_label_create(track_container_);
-        lv_obj_set_style_text_color(track_label_, COLOR_TEXT, 0);
-        lv_obj_set_style_text_font(track_label_, fonts.tempo_label, 0);
-
-        String clean_name = TextUtils::sanitizeText(track_name_);
-        lv_label_set_text(track_label_, clean_name.c_str());
-    }
-
-    void DeviceStateBar::createDeviceSection()
-    {
-        device_container_ = lv_obj_create(container_);
-        lv_obj_set_grid_cell(device_container_, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
-        lv_obj_set_style_bg_opa(device_container_, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(device_container_, 0, 0);
-        lv_obj_set_style_pad_all(device_container_, 0, 0);
-        lv_obj_set_style_pad_left(device_container_, 4, 0);
-        lv_obj_set_style_pad_gap(device_container_, 4, 0);
-
-        lv_obj_set_flex_flow(device_container_, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(device_container_,
-                              LV_FLEX_ALIGN_START,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER);
-
-        device_icon_ = lv_obj_create(device_container_);
-        lv_obj_set_size(device_icon_, 10, 10);
-        lv_obj_set_style_radius(device_icon_, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_border_width(device_icon_, 0, 0);
-        lv_obj_set_style_bg_color(device_icon_, COLOR_STATE_ENABLED, 0);
-        lv_obj_set_style_bg_opa(device_icon_, LV_OPA_COVER, 0);
-
-        device_label_ = lv_label_create(device_container_);
-        lv_obj_set_style_text_color(device_label_, COLOR_TEXT, 0);
-        lv_obj_set_style_text_font(device_label_, bitwig_fonts.device_label, 0);
-
-        String clean_name = TextUtils::sanitizeText(device_name_);
-        lv_label_set_text(device_label_, clean_name.c_str());
-    }
-
-    void DeviceStateBar::createPageSection()
-    {
-        page_label_ = lv_label_create(container_);
-        lv_obj_set_grid_cell(page_label_, LV_GRID_ALIGN_END, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
-
-        lv_label_set_text(page_label_, "Page");
-        lv_obj_set_style_text_color(page_label_, COLOR_TEXT, 0);
-        lv_obj_set_style_text_font(page_label_, bitwig_fonts.page_label, 0);
-    }
-
     void DeviceStateBar::setTrackName(const String &track_name)
     {
-        track_name_ = track_name;
-        if (track_label_)
+        if (track_item_)
         {
-            const lv_font_t *font = lv_obj_get_style_text_font(track_label_, LV_PART_MAIN);
-            lv_coord_t available_width = getTrackAvailableWidth();
-
-            String clean_name = TextUtils::sanitizeText(track_name);
-            String truncated_text = TextUtils::truncateWithEllipsis(clean_name, available_width, font);
-            lv_label_set_text(track_label_, truncated_text.c_str());
+            track_item_->setName(track_name.c_str());
         }
     }
 
     void DeviceStateBar::setTrackColor(uint32_t color)
     {
-        track_color_ = color;
-        if (track_color_indicator_)
+        if (track_item_)
         {
-            lv_obj_set_style_bg_color(track_color_indicator_, lv_color_hex(color), 0);
+            track_item_->setColor(color);
+        }
+    }
+
+    void DeviceStateBar::setTrackType(uint8_t trackType)
+    {
+        if (track_item_)
+        {
+            track_item_->setType(trackType);
         }
     }
 
     void DeviceStateBar::setDeviceName(const String &device_name)
     {
-        device_name_ = device_name;
-        if (device_label_)
+        if (device_item_)
         {
-            const lv_font_t *font = lv_obj_get_style_text_font(device_label_, LV_PART_MAIN);
-            lv_coord_t available_width = getDeviceAvailableWidth();
-
-            String clean_name = TextUtils::sanitizeText(device_name);
-            String truncated_text = TextUtils::truncateWithEllipsis(clean_name, available_width, font);
-            lv_label_set_text(device_label_, truncated_text.c_str());
+            device_item_->setName(device_name.c_str());
+            updateDeviceCellAlignment();
         }
     }
 
-    void DeviceStateBar::setDeviceState(uint8_t state)
+    void DeviceStateBar::updateDeviceCellAlignment()
     {
-        device_status_ = (state == 1) ? DeviceStatus::ENABLED : DeviceStatus::DISABLED;
+        if (!device_cell_ || !device_item_)
+            return;
 
-        if (device_icon_)
-        {
-            lv_color_t indicator_color =
-                (device_status_ == DeviceStatus::ENABLED) ? COLOR_STATE_ENABLED : COLOR_STATE_DISABLED;
-            lv_obj_set_style_bg_color(device_icon_, indicator_color, 0);
-        }
+        // Defer to next frame when layout is calculated
+        lv_timer_t *timer = lv_timer_create(
+            [](lv_timer_t *t)
+            {
+                auto *self = static_cast<DeviceStateBar *>(lv_timer_get_user_data(t));
+                if (self && self->device_cell_ && self->device_item_)
+                {
+                    lv_obj_update_layout(self->device_cell_);
+                    lv_coord_t content_w = lv_obj_get_width(self->device_item_->getContainer());
+                    lv_coord_t cell_w = lv_obj_get_width(self->device_cell_);
 
-        if (device_label_)
+                    // Center if fits, left-align if overflows
+                    lv_flex_align_t align = (content_w > cell_w) ? LV_FLEX_ALIGN_START : LV_FLEX_ALIGN_CENTER;
+                    lv_obj_set_flex_align(self->device_cell_, align, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+                }
+            },
+            50, this);
+        lv_timer_set_repeat_count(timer, 1);
+    }
+
+    void DeviceStateBar::setDeviceState(bool enabled)
+    {
+        if (device_item_)
         {
-            if (device_status_ == DeviceStatus::ENABLED)
-            {
-                lv_obj_set_style_text_color(device_label_, COLOR_TEXT, 0);
-                lv_obj_set_style_text_opa(device_label_, LV_OPA_COVER, 0);
-            }
-            else
-            {
-                lv_obj_set_style_text_color(device_label_, COLOR_TEXT, 0);
-                lv_obj_set_style_text_opa(device_label_, LV_OPA_50, 0);
-            }
+            device_item_->setState(enabled);
         }
     }
 
     void DeviceStateBar::setPageName(const String &page_name)
     {
-        if (page_label_)
+        if (page_item_)
         {
-            if (page_name.length() > 0)
-            {
-                String clean_name = TextUtils::sanitizeText(page_name);
-                lv_label_set_text(page_label_, clean_name.c_str());
-            }
-            else
-            {
-                lv_label_set_text(page_label_, "Page");
-            }
+            page_item_->setName(page_name.c_str());
         }
     }
 
-    lv_coord_t DeviceStateBar::getTrackAvailableWidth() const
+    lv_obj_t* DeviceStateBar::createCellWrapper(lv_obj_t* parent, lv_flex_align_t hAlign)
     {
-        if (!container_ || !track_color_indicator_)
-            return 0;
-        return (lv_obj_get_width(container_) / 3) - lv_obj_get_width(track_color_indicator_) - 4;
-    }
+        lv_obj_t* cell = lv_obj_create(parent);
+        lv_obj_set_size(cell, LV_PCT(100), LV_PCT(100));
+        lv_obj_set_style_bg_opa(cell, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(cell, 0, 0);
+        lv_obj_set_style_pad_all(cell, 0, 0);
+        lv_obj_clear_flag(cell, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(cell, LV_OBJ_FLAG_OVERFLOW_VISIBLE);  // Clip content overflow
 
-    lv_coord_t DeviceStateBar::getDeviceAvailableWidth() const
-    {
-        if (!container_ || !device_icon_)
-            return 0;
-        return (lv_obj_get_width(container_) / 3) - lv_obj_get_width(device_icon_) - 4;
+        // Flex layout for internal alignment
+        lv_obj_set_flex_flow(cell, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(cell, hAlign, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+        return cell;
     }
 
 } // namespace Bitwig

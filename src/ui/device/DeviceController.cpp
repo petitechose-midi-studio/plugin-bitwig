@@ -33,9 +33,13 @@ namespace Bitwig
         view_.setParameterName(paramIndex, name);
     }
 
-    void DeviceController::handleDeviceState(bool enabled)
+    void DeviceController::handleDeviceState(uint8_t deviceIndex, bool enabled)
     {
-        view_.setDeviceEnabled(enabled);
+        // Only update top bar if this is the currently selected device
+        if (static_cast<int>(deviceIndex) == current_device_index_)
+        {
+            view_.setDeviceEnabled(enabled);
+        }
     }
 
     void DeviceController::handleDeviceStateAtIndex(uint8_t deviceIndex, bool enabled)
@@ -47,6 +51,7 @@ namespace Bitwig
     {
         view_.setTrackName(msg.trackName.c_str());
         view_.setTrackColor(msg.color);
+        view_.setTrackType(msg.trackType);
     }
 
     void DeviceController::handleDeviceChangeHeader(const Protocol::DeviceChangeHeaderMessage &msg)
@@ -158,6 +163,7 @@ namespace Bitwig
         }
 
         is_device_nested_ = msg.isNested;
+        current_device_index_ = msg.deviceIndex;
 
         view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), states, hasSlots, hasLayers, hasDrums);
     }

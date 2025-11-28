@@ -33,6 +33,7 @@ struct TrackChangeMessage {
     etl::string<STRING_MAX_LENGTH> trackName;
     uint32_t color;
     uint8_t trackIndex;
+    uint8_t trackType;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -40,12 +41,12 @@ struct TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 23;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 24;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 7;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 8;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -62,6 +63,7 @@ struct TrackChangeMessage {
         encodeString(ptr, trackName);
         encodeUint32(ptr, color);
         encodeUint8(ptr, trackIndex);
+        encodeUint8(ptr, trackType);
 
         return ptr - buffer;
     }
@@ -88,8 +90,10 @@ struct TrackChangeMessage {
         if (!decodeUint32(ptr, remaining, color)) return etl::nullopt;
         uint8_t trackIndex;
         if (!decodeUint8(ptr, remaining, trackIndex)) return etl::nullopt;
+        uint8_t trackType;
+        if (!decodeUint8(ptr, remaining, trackType)) return etl::nullopt;
 
-        return TrackChangeMessage{trackName, color, trackIndex};
+        return TrackChangeMessage{trackName, color, trackIndex, trackType};
     }
 
 
@@ -115,6 +119,7 @@ struct TrackChangeMessage {
         ptr += snprintf(ptr, end - ptr, "  trackName: \"%s\"\n", trackName.c_str());
         ptr += snprintf(ptr, end - ptr, "  color: %lu\n", (unsigned long)color);
         ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
+        ptr += snprintf(ptr, end - ptr, "  trackType: %lu\n", (unsigned long)trackType);
         
         *ptr = '\0';
         return buffer;

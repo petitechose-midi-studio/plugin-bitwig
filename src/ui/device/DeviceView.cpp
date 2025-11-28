@@ -310,7 +310,7 @@ namespace Bitwig
 
         if (top_bar_component_)
         {
-            top_bar_component_->setDeviceState(enabled ? 1 : 0);
+            top_bar_component_->setDeviceState(enabled);
         }
     }
 
@@ -350,6 +350,17 @@ namespace Bitwig
         if (top_bar_component_)
         {
             top_bar_component_->setTrackColor(color);
+        }
+    }
+
+    void DeviceView::setTrackType(uint8_t trackType)
+    {
+        if (!initialized_)
+            return;
+
+        if (top_bar_component_)
+        {
+            top_bar_component_->setTrackType(trackType);
         }
     }
 
@@ -422,7 +433,7 @@ namespace Bitwig
 
         top_bar_component_->setTrackName("Track 1");
         top_bar_component_->setDeviceName("Device 1");
-        top_bar_component_->setDeviceState(1);
+        top_bar_component_->setDeviceState(true);
         top_bar_component_->setPageName("Page");
 
         page_selector_ = std::make_unique<PageSelector>(zone_);

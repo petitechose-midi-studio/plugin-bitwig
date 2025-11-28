@@ -164,8 +164,8 @@ namespace Bitwig
 
         protocol_.onDeviceStateChange = [this](const Protocol::DeviceStateChangeMessage &msg)
         {
-            // Update main device view state indicator
-            view_controller_.handleDeviceState(msg.isEnabled);
+            // Update main device view state indicator (only if it's the current device)
+            view_controller_.handleDeviceState(msg.deviceIndex, msg.isEnabled);
 
             // Update device list overlay if visible
             view_controller_.handleDeviceStateAtIndex(msg.deviceIndex, msg.isEnabled);

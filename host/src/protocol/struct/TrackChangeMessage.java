@@ -36,6 +36,7 @@ public final class TrackChangeMessage {
     private final String trackName;
     private final long color;
     private final int trackIndex;
+    private final int trackType;
 
     // ============================================================================
     // Constructor
@@ -47,11 +48,13 @@ public final class TrackChangeMessage {
      * @param trackName The trackName value
      * @param color The color value
      * @param trackIndex The trackIndex value
+     * @param trackType The trackType value
      */
-    public TrackChangeMessage(String trackName, long color, int trackIndex) {
+    public TrackChangeMessage(String trackName, long color, int trackIndex, int trackType) {
         this.trackName = trackName;
         this.color = color;
         this.trackIndex = trackIndex;
+        this.trackType = trackType;
     }
 
     // ============================================================================
@@ -85,6 +88,15 @@ public final class TrackChangeMessage {
         return trackIndex;
     }
 
+    /**
+     * Get the trackType value
+     *
+     * @return trackType
+     */
+    public int getTrackType() {
+        return trackType;
+    }
+
     // ============================================================================
     // Encoding
     // ============================================================================
@@ -92,7 +104,7 @@ public final class TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 23;
+    public static final int MAX_PAYLOAD_SIZE = 24;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -112,6 +124,9 @@ public final class TrackChangeMessage {
         byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
         System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
         offset += trackIndex_encoded.length;
+        byte[] trackType_encoded = Encoder.encodeUint8(trackType);
+        System.arraycopy(trackType_encoded, 0, buffer, offset, trackType_encoded.length);
+        offset += trackType_encoded.length;
 
         return buffer;
     }
@@ -123,7 +138,7 @@ public final class TrackChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 7;
+    private static final int MIN_PAYLOAD_SIZE = 8;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -145,8 +160,10 @@ public final class TrackChangeMessage {
         offset += 5;
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
+        int trackType = Decoder.decodeUint8(data, offset);
+        offset += 1;
 
-        return new TrackChangeMessage(trackName, color, trackIndex);
+        return new TrackChangeMessage(trackName, color, trackIndex, trackType);
     }
 
     // ============================================================================
@@ -166,6 +183,7 @@ public final class TrackChangeMessage {
         sb.append("  trackName: \"").append(getTrackName()).append("\"\n");
         sb.append("  color: ").append(getColor()).append("\n");
         sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
+        sb.append("  trackType: ").append(getTrackType()).append("\n");
         return sb.toString();
     }
 }  // class Message
