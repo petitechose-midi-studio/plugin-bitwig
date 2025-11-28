@@ -33,7 +33,7 @@ namespace Bitwig
         // Device cell (center) - centered when fits, left-aligned when overflow
         device_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_grid_cell(device_cell_, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-        device_item_ = std::make_unique<DeviceTitleItem>(device_cell_, DeviceTitleItem::IconSize::Small);
+        device_item_ = std::make_unique<DeviceTitleItem>(device_cell_, DeviceTitleItem::IconSize::Medium);
 
         // Page cell (right) - content right-aligned, clips on left
         page_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_END);
@@ -113,7 +113,7 @@ namespace Bitwig
                 if (self && self->device_cell_ && self->device_item_)
                 {
                     lv_obj_update_layout(self->device_cell_);
-                    lv_coord_t content_w = lv_obj_get_width(self->device_item_->getContainer());
+                    lv_coord_t content_w = self->device_item_->getContentWidth();
                     lv_coord_t cell_w = lv_obj_get_width(self->device_cell_);
 
                     // Center if fits, left-align if overflows
@@ -130,6 +130,14 @@ namespace Bitwig
         if (device_item_)
         {
             device_item_->setState(enabled);
+        }
+    }
+
+    void DeviceStateBar::setDeviceHasChildren(bool hasChildren)
+    {
+        if (device_item_)
+        {
+            device_item_->setHasChildren(hasChildren);
         }
     }
 
@@ -154,6 +162,7 @@ namespace Bitwig
         // Flex layout for internal alignment
         lv_obj_set_flex_flow(cell, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(cell, hAlign, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_gap(cell, 6, 0);  // 6px gap between children
 
         return cell;
     }

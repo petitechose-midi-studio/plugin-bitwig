@@ -3,8 +3,6 @@
 #include <lvgl.h>
 #include <string>
 #include <cstdint>
-#include <memory>
-#include "ui/shared/widget/Label.hpp"
 
 namespace Bitwig
 {
@@ -12,7 +10,8 @@ namespace Bitwig
     /**
      * @brief Reusable device title component with state icon
      *
-     * Displays: [state icon] [device name]
+     * Displays: [state icon] [folder icon] [device name]
+     * Creates children directly in parent (no intermediate container).
      * Used in DeviceStateBar (top bar) and DeviceListOverlay items.
      */
     class DeviceTitleItem
@@ -29,18 +28,28 @@ namespace Bitwig
 
         void setName(const std::string &name);
         void setState(bool enabled);
+        void setHasChildren(bool hasChildren);
 
         bool isEnabled() const { return enabled_; }
-        lv_obj_t *getContainer() const { return container_; }
+        bool hasChildren() const { return has_children_; }
+
+        /**
+         * @brief Get approximate content width (sum of children widths + gaps)
+         * Call after layout update for accurate results.
+         */
+        lv_coord_t getContentWidth() const;
 
     private:
         void updateIcon();
+        void updateFolderIcon();
 
-        lv_obj_t *container_ = nullptr;
+        lv_obj_t *parent_ = nullptr;
         lv_obj_t *icon_ = nullptr;
-        std::unique_ptr<Label> label_;
+        lv_obj_t *folder_icon_ = nullptr;
+        lv_obj_t *label_ = nullptr;  // Raw lv_label, owned by LVGL parent
         IconSize icon_size_;
         bool enabled_ = false;
+        bool has_children_ = false;
     };
 
 } // namespace Bitwig

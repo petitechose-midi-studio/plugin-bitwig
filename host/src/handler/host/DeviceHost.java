@@ -443,21 +443,31 @@ public class DeviceHost {
         // Block individual observers - batch message will contain everything
         deviceChangePending = true;
 
-        String deviceName = cursorDevice.name().get();
-        boolean isEnabled = cursorDevice.isEnabled().get();
-        int pageIndex = remoteControls.selectedPageIndex().get();
-        int pageCount = remoteControls.pageCount().get();
-        String pageName = getPageName(pageIndex, pageCount);
+        // Delay all reads to let Bitwig API update hasSlots/hasLayers/hasDrumPads
+        // Uses longer delay (100ms) because child type properties populate slower than name/state
+        host.scheduleTask(() -> {
+            String deviceName = cursorDevice.name().get();
+            boolean isEnabled = cursorDevice.isEnabled().get();
+            int pageIndex = remoteControls.selectedPageIndex().get();
+            int pageCount = remoteControls.pageCount().get();
+            String pageName = getPageName(pageIndex, pageCount);
+            List<Integer> childrenTypes = intArrayToList(getDeviceChildrenTypes(cursorDevice));
 
-        // Send header immediately
-        sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName);
-
-        // Delay macro send to let API update parameter values
-        host.scheduleTask(() -> sendPageChange(), BitwigConfig.DEVICE_ENTER_CHILD_MS);
+            sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName, childrenTypes);
+            sendPageChange();
+        }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
-    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int pageIndex, int pageCount, String pageName) {
-        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName)));
+    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int pageIndex, int pageCount, String pageName, List<Integer> childrenTypes) {
+        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes));
+    }
+
+    private List<Integer> intArrayToList(int[] array) {
+        List<Integer> list = new ArrayList<>();
+        for (int value : array) {
+            list.add(value);
+        }
+        return list;
     }
 
     private void sendTrackChange() {
@@ -488,7 +498,7 @@ public class DeviceHost {
 
     private void sendDeviceCleared() {
         // Send header with empty values
-        protocol.send(new DeviceChangeHeaderMessage("", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, "")));
+        protocol.send(new DeviceChangeHeaderMessage("No Device", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, ""), new ArrayList<>()));
 
         // Send all 8 empty macros bundled in one message
         List<DevicePageChangeMessage.Macros> emptyMacros = new ArrayList<>();

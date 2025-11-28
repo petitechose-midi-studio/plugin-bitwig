@@ -136,7 +136,7 @@ namespace Bitwig
         bool isNonDeviceItem(size_t index) const;
         bool hasChildren(size_t index) const;
         lv_obj_t* createDeviceStateIcon(lv_obj_t* parent, bool enabled);
-        lv_obj_t* createFolderIcon(lv_obj_t* parent, bool isSlot);
+        lv_obj_t* createFolderIcon(lv_obj_t* parent);
 
         ListOverlay list_;
 
@@ -148,7 +148,7 @@ namespace Bitwig
         std::vector<bool> has_layers_;
         std::vector<bool> has_drums_;
 
-        // Store folder icons: [device_index]
+        // Store folder icons for visibility toggle
         std::vector<lv_obj_t *> folder_icons_;
     };
 

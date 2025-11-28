@@ -314,6 +314,17 @@ namespace Bitwig
         }
     }
 
+    void DeviceView::setDeviceHasChildren(bool hasChildren)
+    {
+        if (!initialized_)
+            return;
+
+        if (top_bar_component_)
+        {
+            top_bar_component_->setDeviceHasChildren(hasChildren);
+        }
+    }
+
     void DeviceView::setDevicePageInfo(uint8_t currentPage, uint8_t totalPages)
     {
         if (!initialized_)

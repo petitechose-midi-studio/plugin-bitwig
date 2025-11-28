@@ -43,6 +43,7 @@ struct DeviceChangeHeaderMessage {
     etl::string<STRING_MAX_LENGTH> deviceName;
     bool isEnabled;
     PageInfo pageInfo;
+    etl::array<uint8_t, 4> childrenTypes;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -50,12 +51,12 @@ struct DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 37;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 41;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 5;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 9;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -74,6 +75,10 @@ struct DeviceChangeHeaderMessage {
         encodeUint8(ptr, pageInfo.devicePageIndex);
         encodeUint8(ptr, pageInfo.devicePageCount);
         encodeString(ptr, pageInfo.devicePageName);
+        encodeUint8(ptr, childrenTypes.size());
+        for (const auto& item : childrenTypes) {
+            encodeUint8(ptr, item);
+        }
 
         return ptr - buffer;
     }
@@ -102,8 +107,14 @@ struct DeviceChangeHeaderMessage {
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return etl::nullopt;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return etl::nullopt;
         if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, pageInfo_data.devicePageName)) return etl::nullopt;
+        uint8_t count_childrenTypes;
+        if (!decodeUint8(ptr, remaining, count_childrenTypes)) return etl::nullopt;
+        etl::array<uint8_t, 4> childrenTypes_data;
+        for (uint8_t i = 0; i < count_childrenTypes && i < 4; ++i) {
+            if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return etl::nullopt;
+        }
 
-        return DeviceChangeHeaderMessage{deviceName, isEnabled, pageInfo_data};
+        return DeviceChangeHeaderMessage{deviceName, isEnabled, pageInfo_data, childrenTypes_data};
     }
 
 
@@ -132,6 +143,15 @@ struct DeviceChangeHeaderMessage {
         ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
         ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);
         ptr += snprintf(ptr, end - ptr, "    devicePageName: \"%s\"\n", pageInfo.devicePageName.c_str());
+        ptr += snprintf(ptr, end - ptr, "  childrenTypes:");
+        if (childrenTypes.size() == 0) {
+            ptr += snprintf(ptr, end - ptr, " []\n");
+        } else {
+            ptr += snprintf(ptr, end - ptr, "\n");
+            for (size_t i = 0; i < childrenTypes.size(); ++i) {
+                ptr += snprintf(ptr, end - ptr, "    - %lu\n", (unsigned long)childrenTypes[i]);
+            }
+        }
         
         *ptr = '\0';
         return buffer;

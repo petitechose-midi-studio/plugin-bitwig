@@ -9,40 +9,31 @@ namespace Bitwig
 {
 
     DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
-        : icon_size_(iconSize)
+        : parent_(parent), icon_size_(iconSize)
     {
-        // Container - content-sized for flexible positioning by parent
-        container_ = lv_obj_create(parent);
-        lv_obj_set_size(container_, LV_SIZE_CONTENT, LV_PCT(100));
-        lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(container_, 0, 0);
-        lv_obj_set_style_pad_all(container_, 0, 0);
-        lv_obj_set_style_pad_gap(container_, 4, 0);
-        lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
-
-        lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(container_,
-                              LV_FLEX_ALIGN_START,
-                              LV_FLEX_ALIGN_CENTER,
-                              LV_FLEX_ALIGN_CENTER);
+        // Create children directly in parent (no intermediate container)
+        // Parent should be a flex row container
 
         // State icon
-        icon_ = lv_label_create(container_);
+        icon_ = lv_label_create(parent_);
         updateIcon();
 
-        // Device name label - no flex-grow, content-sized
-        label_ = std::make_unique<Label>(container_);
-        label_->setFlexGrow(false);
-        label_->setColor(lv_color_hex(Theme::Color::TEXT_LIGHT));
-        label_->setFont(bitwig_fonts.device_label);
+        // Folder icon (hidden by default)
+        folder_icon_ = lv_label_create(parent_);
+        lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
+        updateFolderIcon();
+
+        // Device name label - raw lv_label, owned by LVGL parent
+        label_ = lv_label_create(parent_);
+        lv_obj_set_style_text_color(label_, lv_color_hex(Theme::Color::TEXT_LIGHT), 0);
+        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
+        lv_label_set_text(label_, "");
     }
 
     DeviceTitleItem::~DeviceTitleItem()
     {
-        if (container_)
-        {
-            lv_obj_delete(container_);
-        }
+        // Don't delete anything - all LVGL objects are owned by parent hierarchy
+        // When parent is deleted, LVGL recursively deletes all children
     }
 
     void DeviceTitleItem::setName(const std::string &name)
@@ -50,7 +41,7 @@ namespace Bitwig
         if (label_)
         {
             std::string clean = TextUtils::sanitizeText(name.c_str()).c_str();
-            label_->setText(clean);
+            lv_label_set_text(label_, clean.c_str());
         }
     }
 
@@ -64,7 +55,26 @@ namespace Bitwig
             // Update label opacity based on state
             if (label_)
             {
-                lv_obj_set_style_text_opa(label_->getLabel(), enabled ? LV_OPA_COVER : LV_OPA_50, 0);
+                lv_obj_set_style_text_opa(label_, enabled ? LV_OPA_COVER : LV_OPA_50, 0);
+            }
+        }
+    }
+
+    void DeviceTitleItem::setHasChildren(bool hasChildren)
+    {
+        if (has_children_ != hasChildren)
+        {
+            has_children_ = hasChildren;
+            if (folder_icon_)
+            {
+                if (hasChildren)
+                {
+                    lv_obj_clear_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
+                }
+                else
+                {
+                    lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
+                }
             }
         }
     }
@@ -82,6 +92,42 @@ namespace Bitwig
             ? Theme::Color::DEVICE_STATE_ENABLED
             : Theme::Color::DEVICE_STATE_DISABLED);
         lv_obj_set_style_text_color(icon_, color, 0);
+    }
+
+    void DeviceTitleItem::updateFolderIcon()
+    {
+        if (!folder_icon_)
+            return;
+
+        Icon::Size size = (icon_size_ == IconSize::Small) ? Icon::S12 : Icon::S14;
+        Icon::set(folder_icon_, Icon::DIRECTORY, size);
+
+        // Folder icon with reduced opacity
+        lv_obj_set_style_text_color(folder_icon_, lv_color_hex(Theme::Color::INACTIVE_LIGHTER), 0);
+        lv_obj_set_style_text_opa(folder_icon_, LV_OPA_70, 0);
+    }
+
+    lv_coord_t DeviceTitleItem::getContentWidth() const
+    {
+        lv_coord_t width = 0;
+        constexpr lv_coord_t gap = 6;  // Same as parent's flex gap
+
+        if (icon_)
+        {
+            width += lv_obj_get_width(icon_);
+        }
+
+        if (folder_icon_ && !lv_obj_has_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN))
+        {
+            width += gap + lv_obj_get_width(folder_icon_);
+        }
+
+        if (label_)
+        {
+            width += gap + lv_obj_get_width(label_);
+        }
+
+        return width;
     }
 
 } // namespace Bitwig

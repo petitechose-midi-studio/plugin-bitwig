@@ -61,6 +61,19 @@ namespace Bitwig
         view_.setDevicePageName(msg.pageInfo.devicePageName.c_str());
         view_.setDevicePageInfo(msg.pageInfo.devicePageIndex, msg.pageInfo.devicePageCount);
         view_.setAllWidgetsLoading(true);
+
+        // Update hasChildren: true if any childrenTypes element is non-zero
+        bool hasChildren = (msg.childrenTypes[0] | msg.childrenTypes[1] |
+                           msg.childrenTypes[2] | msg.childrenTypes[3]) != 0;
+        current_device_has_children_ = hasChildren;
+        view_.setDeviceHasChildren(hasChildren);
+    }
+
+    void DeviceController::handleCurrentDeviceInfo(uint8_t deviceIndex, bool hasChildren)
+    {
+        current_device_index_ = deviceIndex;
+        current_device_has_children_ = hasChildren;
+        view_.setDeviceHasChildren(hasChildren);
     }
 
     void DeviceController::handleMacroUpdate(const Protocol::DeviceMacroUpdateMessage &msg)
@@ -164,6 +177,14 @@ namespace Bitwig
 
         is_device_nested_ = msg.isNested;
         current_device_index_ = msg.deviceIndex;
+
+        // Update current device's hasChildren state for top bar folder icon
+        if (msg.deviceIndex < msg.deviceCount)
+        {
+            uint8_t flags = Device::getChildTypeFlags(msg.devices[msg.deviceIndex].childrenTypes);
+            current_device_has_children_ = (flags & (Device::Slots | Device::Layers | Device::Drums)) != 0;
+            view_.setDeviceHasChildren(current_device_has_children_);
+        }
 
         view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), states, hasSlots, hasLayers, hasDrums);
     }

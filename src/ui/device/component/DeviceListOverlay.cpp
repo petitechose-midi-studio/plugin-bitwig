@@ -226,52 +226,35 @@ lv_obj_t *DeviceListOverlay::createDeviceStateIcon(lv_obj_t *parent, bool enable
     return icon;
 }
 
-lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent, bool isSlot)
+lv_obj_t *DeviceListOverlay::createFolderIcon(lv_obj_t *parent)
 {
-    lv_obj_t *container = lv_obj_create(parent);
-    lv_obj_set_size(container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(container, 0, 0);
-    lv_obj_set_style_pad_all(container, 0, 0);
-    lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_t *icon = lv_label_create(container);
+    lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, Icon::DIRECTORY);
 
-    // Apply state-based colors with reduced opacity for folder icon
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_DEFAULT);
+    // Same styling as DeviceTitleItem::updateFolderIcon()
+    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), 0);
+    lv_obj_set_style_text_opa(icon, LV_OPA_70, 0);
 
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_FOCUSED);
-
-    lv_obj_set_style_text_color(icon, lv_color_white(), LV_STATE_PRESSED);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_PRESSED);
-
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
-    lv_obj_set_style_text_opa(icon, LV_OPA_30, LV_STATE_DISABLED);
-
-    return container;
+    return icon;
 }
 
 void DeviceListOverlay::createIndicators()
 {
     folder_icons_.clear();
-    folder_icons_.resize(has_slots_.size(), nullptr);
+    folder_icons_.resize(item_names_.size(), nullptr);
 
-    for (size_t i = 0; i < has_slots_.size(); i++)
+    for (size_t i = 0; i < item_names_.size(); i++)
     {
         lv_obj_t *button = list_.getButton(i);
         if (!button)
             continue;
 
         // Check if this is the "Back" item (first item with Icon::ARROW_LEFT)
-        bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == Icon::ARROW_LEFT);
+        bool isBackItem = (i == 0) && (item_names_[i] == Icon::ARROW_LEFT);
 
         // Apply lvgl_symbols font to text label if this is the Back item
         if (isBackItem)
         {
-            // Find the text label (first label child)
             uint32_t childCount = lv_obj_get_child_cnt(button);
             for (uint32_t j = 0; j < childCount; j++)
             {
@@ -285,11 +268,12 @@ void DeviceListOverlay::createIndicators()
                     break;
                 }
             }
+            continue;
         }
 
         bool isDevice = !isNonDeviceItem(i);
 
-        // Always create device state icon at index 0 for devices (not for Back item)
+        // Create device state icon at index 0 for devices
         if (isDevice)
         {
             bool isEnabled = (i < device_states_.size()) && device_states_[i];
@@ -297,14 +281,12 @@ void DeviceListOverlay::createIndicators()
             lv_obj_move_to_index(stateIcon, 0);
         }
 
-        // Always create folder icon container at index 1 (2nd position)
+        // Create folder icon at index 1 (hidden if no children)
         bool isFolder = hasChildren(i);
-        bool isSlot = (i < has_slots_.size()) && has_slots_[i];
-        lv_obj_t *folderIcon = createFolderIcon(button, isSlot);
+        lv_obj_t *folderIcon = createFolderIcon(button);
         lv_obj_move_to_index(folderIcon, 1);
         folder_icons_[i] = folderIcon;
 
-        // Hide if not a folder
         if (!isFolder)
         {
             lv_obj_add_flag(folderIcon, LV_OBJ_FLAG_HIDDEN);

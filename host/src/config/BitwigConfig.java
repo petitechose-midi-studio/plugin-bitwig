@@ -40,6 +40,13 @@ public final class BitwigConfig {
     public static final int DEVICE_ENTER_CHILD_MS = 30;
 
     /**
+     * Delay after device change before reading all properties.
+     * Longer than DEVICE_ENTER_CHILD_MS because hasSlots/hasLayers/hasDrumPads
+     * take longer to populate via Bitwig's observer system.
+     */
+    public static final int DEVICE_CHANGE_HEADER_MS = 300;
+
+    /**
      * Delay after selectParent on nested device.
      * Source: DrivenByMoss DeviceParamsMode.java:226
      * Kept higher because nested navigation is more complex.

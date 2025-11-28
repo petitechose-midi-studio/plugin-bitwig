@@ -205,6 +205,14 @@ namespace Bitwig
                                               allChildrenTypes.data(),
                                               msg.deviceCount);
 
+            // Always update current device index and hasChildren state for top bar
+            if (msg.deviceIndex < msg.deviceCount)
+            {
+                uint8_t flags = Device::getChildTypeFlags(msg.devices[msg.deviceIndex].childrenTypes);
+                bool hasChildren = (flags & (Device::Slots | Device::Layers | Device::Drums)) != 0;
+                view_controller_.handleCurrentDeviceInfo(msg.deviceIndex, hasChildren);
+            }
+
             if (!input_handler_.isDeviceListRequested())
             {
                 return;

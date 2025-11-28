@@ -188,6 +188,12 @@ namespace Bitwig
         void setDeviceEnabled(bool enabled);
 
         /**
+         * @brief Update device has children state (shows folder icon)
+         * @param hasChildren True if device has slots/layers/drums
+         */
+        void setDeviceHasChildren(bool hasChildren);
+
+        /**
          * @brief Update device page info
          * @param currentPage Current page index (0-based)
          * @param totalPages Total number of pages

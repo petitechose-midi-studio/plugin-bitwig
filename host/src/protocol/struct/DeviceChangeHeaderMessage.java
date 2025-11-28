@@ -4,6 +4,8 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * DeviceChangeHeaderMessage - Auto-generated Protocol Message
@@ -64,6 +66,7 @@ public final class DeviceChangeHeaderMessage {
     private final String deviceName;
     private final boolean isEnabled;
     private final PageInfo pageInfo;
+    private final List<Integer> childrenTypes;
 
     // ============================================================================
     // Constructor
@@ -75,11 +78,13 @@ public final class DeviceChangeHeaderMessage {
      * @param deviceName The deviceName value
      * @param isEnabled The isEnabled value
      * @param pageInfo The pageInfo value
+     * @param childrenTypes The childrenTypes value
      */
-    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, PageInfo pageInfo) {
+    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, PageInfo pageInfo, List<Integer> childrenTypes) {
         this.deviceName = deviceName;
         this.isEnabled = isEnabled;
         this.pageInfo = pageInfo;
+        this.childrenTypes = childrenTypes;
     }
 
     // ============================================================================
@@ -113,6 +118,15 @@ public final class DeviceChangeHeaderMessage {
         return pageInfo;
     }
 
+    /**
+     * Get the childrenTypes value
+     *
+     * @return childrenTypes
+     */
+    public List<Integer> getChildrenTypes() {
+        return childrenTypes;
+    }
+
     // ============================================================================
     // Encoding
     // ============================================================================
@@ -120,7 +134,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 37;
+    public static final int MAX_PAYLOAD_SIZE = 41;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -146,6 +160,16 @@ public final class DeviceChangeHeaderMessage {
         byte[] pageInfo_devicePageName_encoded = Encoder.encodeString(pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
         System.arraycopy(pageInfo_devicePageName_encoded, 0, buffer, offset, pageInfo_devicePageName_encoded.length);
         offset += pageInfo_devicePageName_encoded.length;
+        byte[] childrenTypes_count = Encoder.encodeUint8(childrenTypes.size());
+        System.arraycopy(childrenTypes_count, 0, buffer, offset, 1);
+        offset += 1;
+
+        for (int item : childrenTypes) {
+    byte[] item_encoded = Encoder.encodeUint8(item);
+            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
+            offset += item_encoded.length;
+        }
+
 
         return buffer;
     }
@@ -157,7 +181,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 5;
+    private static final int MIN_PAYLOAD_SIZE = 9;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -185,8 +209,18 @@ public final class DeviceChangeHeaderMessage {
         offset += 1 + pageInfo_devicePageName.length();
         PageInfo pageInfo = new PageInfo(pageInfo_devicePageIndex, pageInfo_devicePageCount, pageInfo_devicePageName);
 
+        int count_childrenTypes = Decoder.decodeUint8(data, offset);
+        offset += 1;
 
-        return new DeviceChangeHeaderMessage(deviceName, isEnabled, pageInfo);
+        List<Integer> childrenTypes_list = new ArrayList<>();
+        for (int i = 0; i < count_childrenTypes; i++) {
+    int item_childrenTypes = Decoder.decodeUint8(data, offset);
+            offset += 1;
+            childrenTypes_list.add(item_childrenTypes);
+        }
+
+
+        return new DeviceChangeHeaderMessage(deviceName, isEnabled, pageInfo, childrenTypes_list);
     }
 
     // ============================================================================
@@ -209,6 +243,15 @@ public final class DeviceChangeHeaderMessage {
         sb.append("    devicePageIndex: ").append(getPageInfo().getDevicePageIndex()).append("\n");
         sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");
         sb.append("    devicePageName: \"").append(getPageInfo().getDevicePageName()).append("\"\n");
+        sb.append("  childrenTypes:");
+        if (getChildrenTypes().isEmpty()) {
+            sb.append(" []\n");
+        } else {
+            sb.append("\n");
+            for (int item : getChildrenTypes()) {
+                sb.append("    - ").append(item).append("\n");
+            }
+        }
         return sb.toString();
     }
 }  // class Message

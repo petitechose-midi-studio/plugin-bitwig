@@ -76,6 +76,15 @@ namespace Bitwig
         void handleDeviceChangeHeader(const Protocol::DeviceChangeHeaderMessage &msg);
 
         /**
+         * @brief Update current device index and hasChildren state for top bar
+         * @param deviceIndex Current device index
+         * @param hasChildren Whether device has slots/layers/drums
+         *
+         * Called from DeviceHostHandler when device list is received.
+         */
+        void handleCurrentDeviceInfo(uint8_t deviceIndex, bool hasChildren);
+
+        /**
          * @brief Handle individual macro update (NEW - optimized)
          * Updates single parameter with type, name, value
          * @param msg DeviceMacroUpdateMessage from protocol
@@ -191,6 +200,7 @@ namespace Bitwig
         bool is_device_nested_ = false;
         bool is_track_nested_ = false;
         int current_device_index_ = -1;  // Currently selected device index
+        bool current_device_has_children_ = false;  // Current device has slots/layers/drums
     };
 
 } // namespace Bitwig

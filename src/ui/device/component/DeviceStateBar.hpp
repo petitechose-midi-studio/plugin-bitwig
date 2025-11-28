@@ -27,6 +27,7 @@ namespace Bitwig
         void setTrackType(uint8_t trackType);
         void setDeviceName(const String &device_name);
         void setDeviceState(bool enabled);
+        void setDeviceHasChildren(bool hasChildren);
         void setPageName(const String &page_name);
 
     private:
