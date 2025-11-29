@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <rect id="device_view" x="0" y="0" width="19" height="19" style="fill:none;"/>
+    <path d="M16,6L16,13C16,14.104 15.104,15 14,15L5,15C3.896,15 3,14.104 3,13L3,6C3,4.896 3.896,4 5,4L14,4C15.104,4 16,4.896 16,6ZM15,6C15,5.448 14.552,5 14,5L5,5C4.448,5 4,5.448 4,6L4,13C4,13.552 4.448,14 5,14L14,14C14.552,14 15,13.552 15,13L15,6Z"/>
+    <path d="M16,6C16,4.896 15.104,4 14,4L5,4C3.896,4 3,4.896 3,6L3,13C3,14.104 3.896,15 5,15L14,15C15.104,15 16,14.104 16,13L16,6Z" style="fill-opacity:0.4;"/>
+    <clipPath id="_clip1">
+        <path d="M16,6C16,4.896 15.104,4 14,4L5,4C3.896,4 3,4.896 3,6L3,13C3,14.104 3.896,15 5,15L14,15C15.104,15 16,14.104 16,13L16,6Z"/>
+    </clipPath>
+    <g clip-path="url(#_clip1)">
+        <rect x="3" y="4" width="4" height="11"/>
+    </g>
+</svg>

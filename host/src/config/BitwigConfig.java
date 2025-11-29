@@ -38,6 +38,15 @@ public final class BitwigConfig {
     private BitwigConfig() {} // Prevent instantiation
 
     // ═══════════════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Delay at startup sync
+     */
+    public static final int INIT_MS = 200;
+
+    // ═══════════════════════════════════════════════════════════════════
     // TRACK NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
 
@@ -45,18 +54,18 @@ public final class BitwigConfig {
      * Delay after entering a track group (select + selectFirstChild).
      * Source: DrivenByMoss TrackImpl.java:166
      */
-    public static final int TRACK_ENTER_GROUP_MS = 70;
+    public static final int TRACK_ENTER_GROUP_MS = 100;
 
     /**
      * Delay after exiting a track group (selectParent).
      */
-    public static final int TRACK_EXIT_GROUP_MS = 70;
+    public static final int TRACK_EXIT_GROUP_MS = 100;
 
     /**
      * Delay after track selection before sending track list.
      * Allows cursorTrack.position() to update after selectChannel().
      */
-    public static final int TRACK_SELECT_DELAY_MS = 50;
+    public static final int TRACK_SELECT_DELAY_MS = 100;
 
     // ═══════════════════════════════════════════════════════════════════
     // DEVICE NAVIGATION
@@ -66,26 +75,26 @@ public final class BitwigConfig {
      * Delay after entering device child (slot/layer/drum).
      * Also used for device change macro send.
      */
-    public static final int DEVICE_ENTER_CHILD_MS = 30;
+    public static final int DEVICE_ENTER_CHILD_MS = 100;
 
     /**
      * Delay after device change before reading all properties.
      * Longer than DEVICE_ENTER_CHILD_MS because hasSlots/hasLayers/hasDrumPads
      * take longer to populate via Bitwig's observer system.
      */
-    public static final int DEVICE_CHANGE_HEADER_MS = 300;
+    public static final int DEVICE_CHANGE_HEADER_MS = 100;
 
     /**
      * Delay after selectParent on nested device.
      * Source: DrivenByMoss DeviceParamsMode.java:226
      * Kept higher because nested navigation is more complex.
      */
-    public static final int DEVICE_EXIT_NESTED_MS = 70;
+    public static final int DEVICE_EXIT_NESTED_MS = 100;
 
     /**
      * Delay after changing remote controls page.
      */
-    public static final int PAGE_CHANGE_MS = 30;
+    public static final int PAGE_CHANGE_MS = 100;
 
     // ═══════════════════════════════════════════════════════════════════
     // TOUCH / AUTOMATION

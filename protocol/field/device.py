@@ -13,6 +13,7 @@ macro_index = PrimitiveField('parameterIndex', type_name=Type.UINT8)
 # Device context fields
 device_state = PrimitiveField('isEnabled', type_name=Type.BOOL)
 device_name = PrimitiveField('deviceName', type_name=Type.STRING)
+device_type = PrimitiveField('deviceType', type_name=Type.UINT8)
 device_track_name = PrimitiveField('deviceTrackName', type_name=Type.STRING)
 device_track_color = color_rgb  # Track color as uint32 RGB hex (0xRRGGBB)
 device_page_index = PrimitiveField('devicePageIndex', type_name=Type.UINT8)
@@ -112,6 +113,7 @@ device_info = [
     device_index,          # Position in bank (uint8)
     device_name,           # Device name (string) - already defined above
     device_state,          # Enabled/disabled state (bool)
+    device_type,           # Device Type (FX, Instrument, VST)
     children_types         # Array of child types (uint8[4])
 ]
 

@@ -5,6 +5,7 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
+import util.DeviceTypeUtils;
 import util.TrackTypeUtils;
 import java.util.List;
 import java.util.ArrayList;
@@ -105,6 +106,7 @@ public class DeviceHost {
         cursorDevice.slotNames().markInterested();
         cursorDevice.hasLayers().markInterested();
         cursorDevice.hasDrumPads().markInterested();
+        cursorDevice.deviceType().markInterested();
 
         // Single observer for device changes - name() is triggered for both new devices and device switches
         cursorDevice.name().addValueObserver(deviceName -> {
@@ -200,8 +202,11 @@ public class DeviceHost {
      * Send current device state (called at startup)
      */
     public void sendInitialState() {
-        sendTrackChange();
-        sendDeviceChange();  // Send immediately - param observers will update values
+        // Delay to let Bitwig API initialize values
+        host.scheduleTask(() -> {
+            sendTrackChange();
+            sendDeviceChange();
+        }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
     public void setDeviceController(handler.controller.DeviceController deviceController) {
@@ -263,10 +268,14 @@ public class DeviceHost {
             Device device = deviceBank.getItemAt(i);
             if (!device.exists().get()) continue;
 
+            String deviceTypeRaw = device.deviceType().get();
+            host.println("[DEVICE LIST] " + device.name().get() + " -> deviceType raw=\"" + deviceTypeRaw + "\"");
+
             list.add(new DeviceListMessage.Devices(
                 device.position().get(),
                 device.name().get(),
                 device.isEnabled().get(),
+                DeviceTypeUtils.toInt(deviceTypeRaw),
                 getDeviceChildrenTypes(device)
             ));
         }
@@ -460,18 +469,22 @@ public class DeviceHost {
         host.scheduleTask(() -> {
             String deviceName = cursorDevice.name().get();
             boolean isEnabled = cursorDevice.isEnabled().get();
+            String deviceTypeRaw = cursorDevice.deviceType().get();
+            int deviceType = DeviceTypeUtils.toInt(deviceTypeRaw);
             int pageIndex = remoteControls.selectedPageIndex().get();
             int pageCount = remoteControls.pageCount().get();
             String pageName = getPageName(pageIndex, pageCount);
             List<Integer> childrenTypes = intArrayToList(getDeviceChildrenTypes(cursorDevice));
 
-            sendDeviceChangeHeader(deviceName, isEnabled, pageIndex, pageCount, pageName, childrenTypes);
+            host.println("[DEVICE] deviceType raw=\"" + deviceTypeRaw + "\" -> " + deviceType);
+
+            sendDeviceChangeHeader(deviceName, isEnabled, deviceType, pageIndex, pageCount, pageName, childrenTypes);
             sendPageChange();
         }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
-    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int pageIndex, int pageCount, String pageName, List<Integer> childrenTypes) {
-        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes));
+    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, int pageIndex, int pageCount, String pageName, List<Integer> childrenTypes) {
+        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes));
     }
 
     private List<Integer> intArrayToList(int[] array) {
@@ -494,7 +507,7 @@ public class DeviceHost {
 
     private void sendDeviceCleared() {
         // Send header with empty values
-        protocol.send(new DeviceChangeHeaderMessage("No Device", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, ""), new ArrayList<>()));
+        protocol.send(new DeviceChangeHeaderMessage("No Device", false, DeviceTypeUtils.UNKNOWN, new DeviceChangeHeaderMessage.PageInfo(0, 0, ""), new ArrayList<>()));
 
         // Send empty macros bundled in one message
         List<DevicePageChangeMessage.Macros> emptyMacros = new ArrayList<>();
@@ -646,6 +659,7 @@ public class DeviceHost {
         device.name().markInterested();
         device.position().markInterested();
         device.isEnabled().markInterested();
+        device.deviceType().markInterested();
         device.hasSlots().markInterested();
         device.hasLayers().markInterested();
         device.hasDrumPads().markInterested();

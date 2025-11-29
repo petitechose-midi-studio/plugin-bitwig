@@ -14,6 +14,7 @@ import config.BitwigConfig;
  * SINGLE RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
  */
 public class LastClicked {
+    @SuppressWarnings("unused")
     private final ControllerHost host;
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;

@@ -65,6 +65,7 @@ public final class DeviceChangeHeaderMessage {
 
     private final String deviceName;
     private final boolean isEnabled;
+    private final int deviceType;
     private final PageInfo pageInfo;
     private final List<Integer> childrenTypes;
 
@@ -77,12 +78,14 @@ public final class DeviceChangeHeaderMessage {
      *
      * @param deviceName The deviceName value
      * @param isEnabled The isEnabled value
+     * @param deviceType The deviceType value
      * @param pageInfo The pageInfo value
      * @param childrenTypes The childrenTypes value
      */
-    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, PageInfo pageInfo, List<Integer> childrenTypes) {
+    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, int deviceType, PageInfo pageInfo, List<Integer> childrenTypes) {
         this.deviceName = deviceName;
         this.isEnabled = isEnabled;
+        this.deviceType = deviceType;
         this.pageInfo = pageInfo;
         this.childrenTypes = childrenTypes;
     }
@@ -110,6 +113,15 @@ public final class DeviceChangeHeaderMessage {
     }
 
     /**
+     * Get the deviceType value
+     *
+     * @return deviceType
+     */
+    public int getDeviceType() {
+        return deviceType;
+    }
+
+    /**
      * Get the pageInfo value
      *
      * @return pageInfo
@@ -134,7 +146,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 41;
+    public static final int MAX_PAYLOAD_SIZE = 42;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -151,6 +163,9 @@ public final class DeviceChangeHeaderMessage {
         byte[] isEnabled_encoded = Encoder.encodeBool(isEnabled);
         System.arraycopy(isEnabled_encoded, 0, buffer, offset, isEnabled_encoded.length);
         offset += isEnabled_encoded.length;
+        byte[] deviceType_encoded = Encoder.encodeUint8(deviceType);
+        System.arraycopy(deviceType_encoded, 0, buffer, offset, deviceType_encoded.length);
+        offset += deviceType_encoded.length;
         byte[] pageInfo_devicePageIndex_encoded = Encoder.encodeUint8(pageInfo.getDevicePageIndex());
         System.arraycopy(pageInfo_devicePageIndex_encoded, 0, buffer, offset, pageInfo_devicePageIndex_encoded.length);
         offset += pageInfo_devicePageIndex_encoded.length;
@@ -181,7 +196,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 9;
+    private static final int MIN_PAYLOAD_SIZE = 10;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -200,6 +215,8 @@ public final class DeviceChangeHeaderMessage {
         String deviceName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + deviceName.length();
         boolean isEnabled = Decoder.decodeBool(data, offset);
+        offset += 1;
+        int deviceType = Decoder.decodeUint8(data, offset);
         offset += 1;
         int pageInfo_devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -220,7 +237,7 @@ public final class DeviceChangeHeaderMessage {
         }
 
 
-        return new DeviceChangeHeaderMessage(deviceName, isEnabled, pageInfo, childrenTypes_list);
+        return new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, pageInfo, childrenTypes_list);
     }
 
     // ============================================================================
@@ -239,6 +256,7 @@ public final class DeviceChangeHeaderMessage {
         sb.append("deviceChangeHeader:\n");
         sb.append("  deviceName: \"").append(getDeviceName()).append("\"\n");
         sb.append("  isEnabled: ").append(isEnabled() ? "true" : "false").append("\n");
+        sb.append("  deviceType: ").append(getDeviceType()).append("\n");
         sb.append("  pageInfo:\n");
         sb.append("    devicePageIndex: ").append(getPageInfo().getDevicePageIndex()).append("\n");
         sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");

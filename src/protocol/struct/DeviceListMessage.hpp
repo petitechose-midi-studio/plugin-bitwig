@@ -32,6 +32,7 @@ struct Devices {
     uint8_t deviceIndex;
     etl::string<STRING_MAX_LENGTH> deviceName;
     bool isEnabled;
+    uint8_t deviceType;
     etl::array<uint8_t, 4> childrenTypes;
 };
 
@@ -53,12 +54,12 @@ struct DeviceListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 757;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 789;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 229;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 261;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -81,6 +82,7 @@ struct DeviceListMessage {
             encodeUint8(ptr, item.deviceIndex);
             encodeString(ptr, item.deviceName);
             encodeBool(ptr, item.isEnabled);
+            encodeUint8(ptr, item.deviceType);
             encodeUint8(ptr, item.childrenTypes.size());
             for (const auto& type : item.childrenTypes) {
                 encodeUint8(ptr, type);
@@ -122,6 +124,7 @@ struct DeviceListMessage {
             if (!decodeUint8(ptr, remaining, item.deviceIndex)) return etl::nullopt;
             if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.deviceName)) return etl::nullopt;
             if (!decodeBool(ptr, remaining, item.isEnabled)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.deviceType)) return etl::nullopt;
             uint8_t count_childrenTypes;
             if (!decodeUint8(ptr, remaining, count_childrenTypes)) return etl::nullopt;
             for (uint8_t j = 0; j < count_childrenTypes && j < 4; ++j) {
@@ -162,6 +165,7 @@ struct DeviceListMessage {
             ptr += snprintf(ptr, end - ptr, "    - deviceIndex: %lu\n", (unsigned long)devices[i].deviceIndex);
         ptr += snprintf(ptr, end - ptr, "      deviceName: \"%s\"\n", devices[i].deviceName.c_str());
         ptr += snprintf(ptr, end - ptr, "      isEnabled: %s\n", devices[i].isEnabled ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "      deviceType: %lu\n", (unsigned long)devices[i].deviceType);
         ptr += snprintf(ptr, end - ptr, "      childrenTypes:");
         if (devices[i].childrenTypes.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");

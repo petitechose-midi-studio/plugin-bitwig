@@ -16,6 +16,7 @@
 #include "handler/transport/TransportInputHandler.hpp"
 #include "handler/transport/TransportHostHandler.hpp"
 #include "handler/lastclicked/LastClickedHandler.hpp"
+#include "handler/midi/MidiInputHandler.hpp"
 #include "handler/plugin/PluginLifecycleHandler.hpp"
 
 namespace Bitwig
@@ -64,6 +65,10 @@ namespace Bitwig
             LastClickedHandler handler;
         };
 
+        struct MidiModule {
+            MidiInputHandler handler;
+        };
+
         struct LifecycleModule {
             PluginLifecycleHandler handler;
         };
@@ -79,6 +84,7 @@ namespace Bitwig
         DeviceModule device_;
         SplashModule splash_;
         LastClickedModule lastClicked_;
+        MidiModule midi_;
 
         ViewRegistry viewRegistry_;
         ViewManager viewManager_;

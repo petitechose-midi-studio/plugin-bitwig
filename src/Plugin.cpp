@@ -45,6 +45,7 @@ namespace Bitwig
                                                    device_.inputHandler)},
           splash_{.view = SplashView(api_.getParentContainer())},
           lastClicked_{.handler = LastClickedHandler(api_, protocol_, api_.getParentContainer())},
+          midi_{.handler = MidiInputHandler(api_, transport_.controller)},
           viewRegistry_({{ViewID::DEVICE, device_.view}, {ViewID::SPLASH, splash_.view}}),
           viewManager_(api, viewRegistry_, viewContainer_),
           lifecycle_{.handler = PluginLifecycleHandler(viewManager_, protocol_)} {}

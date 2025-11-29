@@ -35,12 +35,14 @@ public final class DeviceListMessage {
         private final int deviceIndex;
         private final String deviceName;
         private final boolean isEnabled;
+        private final int deviceType;
         private final int[] childrenTypes;
 
-        public Devices(int deviceIndex, String deviceName, boolean isEnabled, int[] childrenTypes) {
+        public Devices(int deviceIndex, String deviceName, boolean isEnabled, int deviceType, int[] childrenTypes) {
             this.deviceIndex = deviceIndex;
             this.deviceName = deviceName;
             this.isEnabled = isEnabled;
+            this.deviceType = deviceType;
             this.childrenTypes = childrenTypes;
         }
 
@@ -54,6 +56,10 @@ public final class DeviceListMessage {
 
         public boolean isEnabled() {
             return isEnabled;
+        }
+
+        public int getDeviceType() {
+            return deviceType;
         }
 
         public int[] getChildrenTypes() {
@@ -152,7 +158,7 @@ public final class DeviceListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 757;
+    public static final int MAX_PAYLOAD_SIZE = 789;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -189,6 +195,9 @@ public final class DeviceListMessage {
     byte[] item_isEnabled_encoded = Encoder.encodeBool(item.isEnabled());
             System.arraycopy(item_isEnabled_encoded, 0, buffer, offset, item_isEnabled_encoded.length);
             offset += item_isEnabled_encoded.length;
+    byte[] item_deviceType_encoded = Encoder.encodeUint8(item.getDeviceType());
+            System.arraycopy(item_deviceType_encoded, 0, buffer, offset, item_deviceType_encoded.length);
+            offset += item_deviceType_encoded.length;
             byte[] count_childrenTypes = Encoder.encodeUint8((byte) item.getChildrenTypes().length);
             System.arraycopy(count_childrenTypes, 0, buffer, offset, 1);
             offset += 1;
@@ -210,7 +219,7 @@ public final class DeviceListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 229;
+    private static final int MIN_PAYLOAD_SIZE = 261;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -245,6 +254,8 @@ public final class DeviceListMessage {
             offset += 1 + item_deviceName.length();
     boolean item_isEnabled = Decoder.decodeBool(data, offset);
             offset += 1;
+    int item_deviceType = Decoder.decodeUint8(data, offset);
+            offset += 1;
             byte count_childrenTypes = (byte) Decoder.decodeUint8(data, offset);
             offset += 1;
             int[] item_childrenTypes = new int[count_childrenTypes];
@@ -253,7 +264,7 @@ public final class DeviceListMessage {
                 offset += 1;
                 item_childrenTypes[j] = item_childrenTypes_j;
             }
-            devices_list.add(new Devices(item_deviceIndex, item_deviceName, item_isEnabled, item_childrenTypes));
+            devices_list.add(new Devices(item_deviceIndex, item_deviceName, item_isEnabled, item_deviceType, item_childrenTypes));
         }
 
 
@@ -283,6 +294,7 @@ public final class DeviceListMessage {
             sb.append("    - deviceIndex: ").append(item.getDeviceIndex()).append("\n");
             sb.append("      deviceName: \"").append(item.getDeviceName()).append("\"\n");
             sb.append("      isEnabled: ").append(item.isEnabled() ? "true" : "false").append("\n");
+            sb.append("      deviceType: ").append(item.getDeviceType()).append("\n");
         }
         return sb.toString();
     }

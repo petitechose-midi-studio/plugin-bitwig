@@ -31,6 +31,7 @@ DEVICE_CHANGE_HEADER = Message(
     fields=[
         device_name,           # STRING (max 16 chars)
         device_state,          # BOOL
+        device_type,          # BOOL
         page_info,             # PageInfo struct { uint8, uint8, string16 }
         children_types         # UINT8[4] - Child types (1=Slot, 2=Layer, 3=DrumPad)
     ]

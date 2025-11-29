@@ -42,6 +42,7 @@ struct DeviceChangeHeaderMessage {
 
     etl::string<STRING_MAX_LENGTH> deviceName;
     bool isEnabled;
+    uint8_t deviceType;
     PageInfo pageInfo;
     etl::array<uint8_t, 4> childrenTypes;
 
@@ -51,12 +52,12 @@ struct DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 41;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 42;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 9;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 10;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -72,6 +73,7 @@ struct DeviceChangeHeaderMessage {
 
         encodeString(ptr, deviceName);
         encodeBool(ptr, isEnabled);
+        encodeUint8(ptr, deviceType);
         encodeUint8(ptr, pageInfo.devicePageIndex);
         encodeUint8(ptr, pageInfo.devicePageCount);
         encodeString(ptr, pageInfo.devicePageName);
@@ -103,6 +105,8 @@ struct DeviceChangeHeaderMessage {
         if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, deviceName)) return etl::nullopt;
         bool isEnabled;
         if (!decodeBool(ptr, remaining, isEnabled)) return etl::nullopt;
+        uint8_t deviceType;
+        if (!decodeUint8(ptr, remaining, deviceType)) return etl::nullopt;
         PageInfo pageInfo_data;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return etl::nullopt;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return etl::nullopt;
@@ -114,7 +118,7 @@ struct DeviceChangeHeaderMessage {
             if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return etl::nullopt;
         }
 
-        return DeviceChangeHeaderMessage{deviceName, isEnabled, pageInfo_data, childrenTypes_data};
+        return DeviceChangeHeaderMessage{deviceName, isEnabled, deviceType, pageInfo_data, childrenTypes_data};
     }
 
 
@@ -139,6 +143,7 @@ struct DeviceChangeHeaderMessage {
         
         ptr += snprintf(ptr, end - ptr, "  deviceName: \"%s\"\n", deviceName.c_str());
         ptr += snprintf(ptr, end - ptr, "  isEnabled: %s\n", isEnabled ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  deviceType: %lu\n", (unsigned long)deviceType);
         ptr += snprintf(ptr, end - ptr, "  pageInfo:\n");
         ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
         ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);

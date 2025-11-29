@@ -39,6 +39,11 @@ constexpr uint32_t DEVICE_DRUM_PAD = 0xD97634;  // Orange for drum pads
 constexpr uint32_t DEVICE_STATE_ENABLED = 0x5FDB80;   // Green-cyan (more saturated, less blue than MACRO_5)
 constexpr uint32_t DEVICE_STATE_DISABLED = STATUS_INACTIVE; // Gray (disabled device)
 
+// Device type colors (Bitwig palette)
+constexpr uint32_t DEVICE_TYPE_AUDIO = 0xDD5B33;      // Orange-red for audio effects
+constexpr uint32_t DEVICE_TYPE_INSTRUMENT = 0xF9C91D; // Yellow for instruments
+constexpr uint32_t DEVICE_TYPE_NOTE = 0x32B1DC;       // Blue for note effects
+
 constexpr uint32_t TRACK_MUTE = 0xFF8800;  // Orange for mute indicator
 constexpr uint32_t TRACK_SOLO = 0xFFDD00;  // Yellow for solo indicator
 }  // namespace Color
