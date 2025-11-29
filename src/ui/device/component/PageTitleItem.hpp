@@ -11,7 +11,7 @@ namespace Bitwig
      *
      * Displays page name with appropriate styling.
      * Creates label directly in parent (no intermediate container).
-     * Used in DeviceStateBar (top bar) and potentially PageSelector.
+     * Uses lazy initialization - LVGL widget created on first use.
      */
     class PageTitleItem
     {
@@ -22,7 +22,11 @@ namespace Bitwig
         void setName(const std::string &name);
 
     private:
-        lv_obj_t *label_ = nullptr;  // Raw lv_label, owned by LVGL parent
+        void ensureCreated();
+
+        lv_obj_t *parent_ = nullptr;
+        lv_obj_t *label_ = nullptr;
+        std::string pending_name_;
     };
 
 } // namespace Bitwig

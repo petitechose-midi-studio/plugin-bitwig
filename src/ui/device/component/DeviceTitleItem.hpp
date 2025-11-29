@@ -12,7 +12,7 @@ namespace Bitwig
      *
      * Displays: [state icon] [folder icon] [device name]
      * Creates children directly in parent (no intermediate container).
-     * Used in DeviceStateBar (top bar) and DeviceListOverlay items.
+     * Uses lazy initialization - LVGL widgets created on first use.
      */
     class DeviceTitleItem
     {
@@ -40,16 +40,18 @@ namespace Bitwig
         lv_coord_t getContentWidth() const;
 
     private:
+        void ensureCreated();
         void updateIcon();
         void updateFolderIcon();
 
         lv_obj_t *parent_ = nullptr;
         lv_obj_t *icon_ = nullptr;
         lv_obj_t *folder_icon_ = nullptr;
-        lv_obj_t *label_ = nullptr;  // Raw lv_label, owned by LVGL parent
+        lv_obj_t *label_ = nullptr;
         IconSize icon_size_;
         bool enabled_ = false;
         bool has_children_ = false;
+        std::string pending_name_;
     };
 
 } // namespace Bitwig

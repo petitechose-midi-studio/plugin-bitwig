@@ -8,6 +8,7 @@
 #include "../../protocol/struct/EnterDeviceChildMessage.hpp"
 #include "../../protocol/struct/ExitToParentMessage.hpp"
 #include "../../protocol/struct/DeviceStateChangeMessage.hpp"
+#include "../../protocol/struct/DeviceSelectByIndexMessage.hpp"
 #include "../../protocol/struct/RequestTrackListMessage.hpp"
 
 namespace Bitwig {
@@ -140,6 +141,9 @@ void DeviceSelectorInputHandler::enterDeviceAtIndex(int selectorIndex) {
     if (hasChildren(deviceIndex)) {
         navigation_.deviceIndex = deviceIndex;
         protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
+    } else {
+        // No children - select/focus this device directly
+        protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
     }
 }
 

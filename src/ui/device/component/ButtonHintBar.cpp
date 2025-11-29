@@ -8,7 +8,7 @@ namespace Bitwig
 ButtonHintBar::ButtonHintBar(lv_obj_t *parent)
     : parent_(parent)
 {
-    createLayout();
+    // Lazy init - don't create LVGL widgets here
 }
 
 ButtonHintBar::~ButtonHintBar()
@@ -20,13 +20,14 @@ ButtonHintBar::~ButtonHintBar()
     }
 }
 
-void ButtonHintBar::createLayout()
+void ButtonHintBar::ensureCreated()
 {
-    if (!parent_)
-        return;
+    if (container_ || !parent_) return;
 
     // Create container anchored at bottom-center of parent
     container_ = lv_obj_create(parent_);
+    if (!container_) return;
+
     lv_obj_add_flag(container_, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_size(container_, LV_PCT(100), 30);
     lv_obj_align(container_, LV_ALIGN_BOTTOM_MID, 0, 0);
@@ -47,21 +48,27 @@ void ButtonHintBar::createLayout()
 
     // Left label (cell 0, 0) - aligned start
     left_label_ = lv_label_create(container_);
-    lv_label_set_text(left_label_, "");
+    lv_label_set_text(left_label_, pending_left_text_);
     applyStyle(left_label_);
     lv_obj_set_grid_cell(left_label_, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
 
     // Center label (cell 1, 0) - centered
     center_label_ = lv_label_create(container_);
-    lv_label_set_text(center_label_, "");
+    lv_label_set_text(center_label_, pending_center_text_);
     applyStyle(center_label_);
     lv_obj_set_grid_cell(center_label_, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_CENTER, 0, 1);
 
     // Right label (cell 2, 0) - aligned end
     right_label_ = lv_label_create(container_);
-    lv_label_set_text(right_label_, "");
+    lv_label_set_text(right_label_, pending_right_text_);
     applyStyle(right_label_);
     lv_obj_set_grid_cell(right_label_, LV_GRID_ALIGN_END, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+
+    // Apply pending visibility
+    if (pending_hidden_)
+    {
+        lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void ButtonHintBar::applyStyle(lv_obj_t *label)
@@ -75,24 +82,31 @@ void ButtonHintBar::applyStyle(lv_obj_t *label)
 
 void ButtonHintBar::setLeftLabel(const char *text)
 {
+    pending_left_text_ = text ? text : "";
+    ensureCreated();
     if (left_label_)
-        lv_label_set_text(left_label_, text ? text : "");
+        lv_label_set_text(left_label_, pending_left_text_);
 }
 
 void ButtonHintBar::setCenterLabel(const char *text)
 {
+    pending_center_text_ = text ? text : "";
+    ensureCreated();
     if (center_label_)
-        lv_label_set_text(center_label_, text ? text : "");
+        lv_label_set_text(center_label_, pending_center_text_);
 }
 
 void ButtonHintBar::setRightLabel(const char *text)
 {
+    pending_right_text_ = text ? text : "";
+    ensureCreated();
     if (right_label_)
-        lv_label_set_text(right_label_, text ? text : "");
+        lv_label_set_text(right_label_, pending_right_text_);
 }
 
 void ButtonHintBar::setLeftIcon(const char *icon, uint32_t color)
 {
+    ensureCreated();
     if (left_label_ && icon)
     {
         Icon::set(left_label_, icon, Icon::S16);
@@ -103,6 +117,7 @@ void ButtonHintBar::setLeftIcon(const char *icon, uint32_t color)
 
 void ButtonHintBar::setCenterIcon(const char *icon, uint32_t color)
 {
+    ensureCreated();
     if (center_label_ && icon)
     {
         Icon::set(center_label_, icon, Icon::S16);
@@ -113,6 +128,7 @@ void ButtonHintBar::setCenterIcon(const char *icon, uint32_t color)
 
 void ButtonHintBar::setRightIcon(const char *icon, uint32_t color)
 {
+    ensureCreated();
     if (right_label_ && icon)
     {
         Icon::set(right_label_, icon, Icon::S16);
@@ -123,24 +139,28 @@ void ButtonHintBar::setRightIcon(const char *icon, uint32_t color)
 
 void ButtonHintBar::setCenterIconActive(bool active)
 {
+    ensureCreated();
     if (center_label_)
         lv_obj_set_style_text_opa(center_label_, active ? LV_OPA_COVER : LV_OPA_40, 0);
 }
 
 void ButtonHintBar::setRightIconActive(bool active)
 {
+    ensureCreated();
     if (right_label_)
         lv_obj_set_style_text_opa(right_label_, active ? LV_OPA_COVER : LV_OPA_40, 0);
 }
 
 void ButtonHintBar::show()
 {
+    pending_hidden_ = false;
     if (container_)
         lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }
 
 void ButtonHintBar::hide()
 {
+    pending_hidden_ = true;
     if (container_)
         lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }

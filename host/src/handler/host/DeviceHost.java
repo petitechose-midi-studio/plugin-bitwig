@@ -301,7 +301,7 @@ public class DeviceHost {
                 return;
             }
 
-            // Build flat list of ALL children (slots + layers + drums)
+            // Build flat list of ALL children (slots + layers OR drums)
             final List<DeviceChildrenMessage.Children> allChildren = new ArrayList<>();
 
             // Add slots first (itemType=0)
@@ -310,14 +310,20 @@ public class DeviceHost {
                 allChildren.add(slot);
             }
 
-            // Add layers (itemType=1)
-            for (DeviceChildrenMessage.Children layer : getLayers(device)) {
-                if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
-                allChildren.add(layer);
+            // Get drum pads first to check if this is a drum device
+            List<DeviceChildrenMessage.Children> drumPads = getAllDrumPads(device);
+            boolean hasDrumPads = !drumPads.isEmpty();
+
+            // Add layers only if NOT a drum device (layers duplicate drum pads)
+            if (!hasDrumPads) {
+                for (DeviceChildrenMessage.Children layer : getLayers(device)) {
+                    if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
+                    allChildren.add(layer);
+                }
             }
 
             // Add drum pads (itemType=2)
-            for (DeviceChildrenMessage.Children drum : getAllDrumPads(device)) {
+            for (DeviceChildrenMessage.Children drum : drumPads) {
                 if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
                 allChildren.add(drum);
             }

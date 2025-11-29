@@ -49,9 +49,7 @@ namespace Bitwig
 
     void DeviceController::handleTrackChange(const Protocol::TrackChangeMessage &msg)
     {
-        view_.setTrackName(msg.trackName.c_str());
-        view_.setTrackColor(msg.color);
-        view_.setTrackType(msg.trackType);
+        // Track info not displayed in device topbar
     }
 
     void DeviceController::handleDeviceChangeHeader(const Protocol::DeviceChangeHeaderMessage &msg)

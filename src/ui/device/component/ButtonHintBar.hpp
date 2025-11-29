@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lvgl.h>
+#include <cstdint>
 #include "ui/font/icon.hpp"
 
 namespace Bitwig
@@ -12,6 +13,7 @@ namespace Bitwig
  * Displays labels aligned with physical buttons below the screen.
  * Each cell corresponds to a button position (left, center, right).
  * Anchored at bottom-center of parent by default.
+ * Uses lazy initialization - LVGL widgets created on first use.
  */
 class ButtonHintBar
 {
@@ -36,7 +38,7 @@ public:
     lv_obj_t *getElement() const { return container_; }
 
 private:
-    void createLayout();
+    void ensureCreated();
     void applyStyle(lv_obj_t *label);
 
     lv_obj_t *parent_ = nullptr;
@@ -44,6 +46,12 @@ private:
     lv_obj_t *left_label_ = nullptr;
     lv_obj_t *center_label_ = nullptr;
     lv_obj_t *right_label_ = nullptr;
+
+    // Pending state
+    const char *pending_left_text_ = "";
+    const char *pending_center_text_ = "";
+    const char *pending_right_text_ = "";
+    bool pending_hidden_ = false;
 };
 
 } // namespace Bitwig

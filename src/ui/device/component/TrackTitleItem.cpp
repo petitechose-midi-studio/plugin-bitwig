@@ -10,49 +10,9 @@ namespace Bitwig
 {
 
     TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t barHeight)
-        : has_mute_solo_(withMuteSolo)
+        : parent_(parent), bar_height_(barHeight), has_mute_solo_(withMuteSolo)
     {
-        // Create children directly in parent (no intermediate container)
-        // Parent should be a flex row container with gap set
-
-        // Color bar
-        color_bar_ = lv_obj_create(parent);
-        lv_obj_set_size(color_bar_, 4, barHeight);
-        lv_obj_set_style_radius(color_bar_, 0, 0);
-        lv_obj_set_style_border_width(color_bar_, 0, 0);
-        lv_obj_set_style_pad_all(color_bar_, 0, 0);
-        lv_obj_set_style_bg_color(color_bar_, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_bg_opa(color_bar_, LV_OPA_COVER, 0);
-        lv_obj_clear_flag(color_bar_, LV_OBJ_FLAG_SCROLLABLE);
-
-        // Track type icon
-        type_icon_ = lv_label_create(parent);
-        Icon::set(type_icon_, Icon::TRACK_AUDIO, Icon::S14);
-        lv_obj_set_style_text_color(type_icon_, lv_color_hex(Color::TEXT_PRIMARY), 0);
-        lv_obj_set_style_text_opa(type_icon_, LV_OPA_70, 0);
-
-        // Track name label
-        label_ = lv_label_create(parent);
-        lv_obj_set_style_text_color(label_, lv_color_hex(Color::TEXT_LIGHT), 0);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, 0);
-        lv_label_set_text(label_, "");
-
-        // Mute/solo icons (optional, at the end for right alignment)
-        if (withMuteSolo)
-        {
-            // Label takes remaining space, pushing mute/solo to the right
-            lv_obj_set_flex_grow(label_, 1);
-
-            mute_icon_ = lv_label_create(parent);
-            Icon::set(mute_icon_, Icon::MUTE);
-            lv_obj_set_style_text_color(mute_icon_, lv_color_hex(Color::TRACK_MUTE), 0);
-            lv_obj_set_style_text_opa(mute_icon_, LV_OPA_20, 0);
-
-            solo_icon_ = lv_label_create(parent);
-            Icon::set(solo_icon_, Icon::SOLO);
-            lv_obj_set_style_text_color(solo_icon_, lv_color_hex(Color::TRACK_SOLO), 0);
-            lv_obj_set_style_text_opa(solo_icon_, LV_OPA_20, 0);
-        }
+        // Lazy init - don't create LVGL widgets here
     }
 
     TrackTitleItem::~TrackTitleItem()
@@ -60,25 +20,104 @@ namespace Bitwig
         // Don't delete anything - LVGL parent handles cleanup
     }
 
-    void TrackTitleItem::setName(const std::string &name)
+    void TrackTitleItem::ensureCreated()
     {
+        if (color_bar_ || !parent_) return;
+
+        // Color bar
+        color_bar_ = lv_obj_create(parent_);
+        if (!color_bar_) return;
+
+        lv_obj_set_size(color_bar_, 4, bar_height_);
+        lv_obj_set_style_radius(color_bar_, 0, 0);
+        lv_obj_set_style_border_width(color_bar_, 0, 0);
+        lv_obj_set_style_pad_all(color_bar_, 0, 0);
+        lv_obj_set_style_bg_color(color_bar_, lv_color_hex(track_color_), 0);
+        lv_obj_set_style_bg_opa(color_bar_, LV_OPA_COVER, 0);
+        lv_obj_clear_flag(color_bar_, LV_OBJ_FLAG_SCROLLABLE);
+
+        // Track type icon
+        type_icon_ = lv_label_create(parent_);
+        if (type_icon_)
+        {
+            Icon::set(type_icon_, getTrackTypeIcon(track_type_), Icon::S14);
+            lv_obj_set_style_text_color(type_icon_, lv_color_hex(Color::TEXT_PRIMARY), 0);
+            lv_obj_set_style_text_opa(type_icon_, LV_OPA_70, 0);
+        }
+
+        // Track name label
+        label_ = lv_label_create(parent_);
         if (label_)
         {
-            std::string clean = TextUtils::sanitizeText(name.c_str()).c_str();
-            lv_label_set_text(label_, clean.c_str());
+            lv_obj_set_style_text_color(label_, lv_color_hex(Color::TEXT_LIGHT), 0);
+            lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, 0);
+            lv_label_set_text(label_, pending_name_.c_str());
+        }
+
+        // Mute/solo icons and level bar (optional)
+        if (has_mute_solo_ && label_)
+        {
+            lv_obj_set_flex_grow(label_, 1);
+
+            mute_icon_ = lv_label_create(parent_);
+            if (mute_icon_)
+            {
+                Icon::set(mute_icon_, Icon::MUTE);
+                lv_obj_set_style_text_color(mute_icon_, lv_color_hex(Color::TRACK_MUTE), 0);
+                lv_obj_set_style_text_opa(mute_icon_, LV_OPA_20, 0);
+            }
+
+            solo_icon_ = lv_label_create(parent_);
+            if (solo_icon_)
+            {
+                Icon::set(solo_icon_, Icon::SOLO);
+                lv_obj_set_style_text_color(solo_icon_, lv_color_hex(Color::TRACK_SOLO), 0);
+                lv_obj_set_style_text_opa(solo_icon_, LV_OPA_20, 0);
+            }
+
+            // Level bar - already lazy init internally
+            level_bar_ = std::make_unique<LevelBar>(parent_, 60, bar_height_);
+            level_bar_->setColor(track_color_);
+            level_bar_->setOpacity(LV_OPA_50);
+            level_bar_->setValue(pending_level_);
+        }
+
+        // Apply pending states
+        if (indicators_hidden_) hideIndicators();
+        updateIndicatorOpacity();
+    }
+
+    void TrackTitleItem::setName(const std::string &name)
+    {
+        pending_name_ = TextUtils::sanitizeText(name.c_str()).c_str();
+
+        ensureCreated();
+        if (label_)
+        {
+            lv_label_set_text(label_, pending_name_.c_str());
         }
     }
 
     void TrackTitleItem::setColor(uint32_t color)
     {
+        track_color_ = color;
+
+        ensureCreated();
         if (color_bar_)
         {
             lv_obj_set_style_bg_color(color_bar_, lv_color_hex(color), 0);
+        }
+        if (level_bar_)
+        {
+            level_bar_->setColor(color);
         }
     }
 
     void TrackTitleItem::setType(uint8_t trackType)
     {
+        track_type_ = trackType;
+
+        ensureCreated();
         if (type_icon_)
         {
             Icon::set(type_icon_, getTrackTypeIcon(trackType), Icon::S14);
@@ -88,21 +127,35 @@ namespace Bitwig
     void TrackTitleItem::setMuteState(bool isMuted)
     {
         is_muted_ = isMuted;
+        ensureCreated();
         updateIndicatorOpacity();
     }
 
     void TrackTitleItem::setSoloState(bool isSoloed)
     {
         is_soloed_ = isSoloed;
+        ensureCreated();
         updateIndicatorOpacity();
+    }
+
+    void TrackTitleItem::setLevel(float normalizedValue)
+    {
+        pending_level_ = normalizedValue;
+
+        ensureCreated();
+        if (level_bar_)
+        {
+            level_bar_->setValue(normalizedValue);
+        }
     }
 
     void TrackTitleItem::setHighlighted(bool highlighted)
     {
         is_highlighted_ = highlighted;
+
+        ensureCreated();
         updateIndicatorOpacity();
 
-        // Update label color based on highlight state
         if (label_)
         {
             lv_color_t labelColor = highlighted ? lv_color_hex(Color::TEXT_PRIMARY)
@@ -130,6 +183,10 @@ namespace Bitwig
         if (type_icon_)
         {
             lv_obj_set_style_text_opa(type_icon_, LV_OPA_TRANSP, 0);
+        }
+        if (level_bar_)
+        {
+            level_bar_->setOpacity(LV_OPA_TRANSP);
         }
     }
 

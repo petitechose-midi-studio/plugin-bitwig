@@ -342,39 +342,6 @@ namespace Bitwig
         }
     }
 
-    void DeviceView::setTrackName(const char *name)
-    {
-        if (!initialized_ || !name)
-            return;
-
-        if (top_bar_component_)
-        {
-            top_bar_component_->setTrackName(name);
-        }
-    }
-
-    void DeviceView::setTrackColor(uint32_t color)
-    {
-        if (!initialized_)
-            return;
-
-        if (top_bar_component_)
-        {
-            top_bar_component_->setTrackColor(color);
-        }
-    }
-
-    void DeviceView::setTrackType(uint8_t trackType)
-    {
-        if (!initialized_)
-            return;
-
-        if (top_bar_component_)
-        {
-            top_bar_component_->setTrackType(trackType);
-        }
-    }
-
     void DeviceView::setupLayout()
     {
         if (!body_container_)
@@ -442,7 +409,6 @@ namespace Bitwig
 
         top_bar_component_ = std::make_unique<DeviceStateBar>(top_bar_container_);
 
-        top_bar_component_->setTrackName("Track 1");
         top_bar_component_->setDeviceName("Device 1");
         top_bar_component_->setDeviceState(true);
         top_bar_component_->setPageName("Page");
