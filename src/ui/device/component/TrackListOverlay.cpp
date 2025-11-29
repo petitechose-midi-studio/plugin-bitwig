@@ -1,8 +1,6 @@
 #include "TrackListOverlay.hpp"
 #include "../../theme/BitwigTheme.hpp"
 #include "ui/font/icon.hpp"
-#include "font/FontLoader.hpp"
-#include <algorithm>
 
 using namespace Theme;
 
@@ -16,7 +14,7 @@ namespace Bitwig
 
     TrackListOverlay::~TrackListOverlay()
     {
-        clearIndicators();
+        clearTrackItems();
     }
 
     void TrackListOverlay::setTitle(const std::string &title)
@@ -32,36 +30,7 @@ namespace Bitwig
         solo_states_.clear();
 
         list_.setItems(items);
-        clearIndicators();
-    }
-
-    namespace
-    {
-        /**
-         * @brief Get icon for track type
-         * @param trackType 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
-         * @return Icon string pointer
-         */
-        const char *getTrackTypeIcon(uint8_t trackType)
-        {
-            switch (trackType)
-            {
-            case 0:
-                return Icon::TRACK_AUDIO;
-            case 1:
-                return Icon::TRACK_INSTRUMENT;
-            case 2:
-                return Icon::TRACK_HYBRID;
-            case 3:
-                return Icon::DIRECTORY;
-            case 4:
-                return Icon::RETURN_TRACK;
-            case 5:
-                return Icon::MASTER_TRACK;
-            default:
-                return Icon::TRACK_AUDIO;
-            }
-        }
+        clearTrackItems();
     }
 
     void TrackListOverlay::setTrackItems(const std::vector<std::string> &names,
@@ -86,22 +55,21 @@ namespace Bitwig
         list_.setItems(names);
         list_.setSelectedIndex(currentIndex);
 
-        clearIndicators();
-        createIndicators();
-
-        updateIndicatorStates();
+        clearTrackItems();
+        createTrackItems();
+        updateHighlightStates();
     }
 
     void TrackListOverlay::setSelectedIndex(int index)
     {
         list_.setSelectedIndex(index);
-        updateIndicatorStates();
+        updateHighlightStates();
     }
 
     void TrackListOverlay::show()
     {
         list_.show();
-        updateIndicatorStates();
+        updateHighlightStates();
     }
 
     void TrackListOverlay::hide()
@@ -124,27 +92,9 @@ namespace Bitwig
         return list_.getItemCount();
     }
 
-    lv_obj_t *TrackListOverlay::createVerticalBar(lv_obj_t *parent, uint32_t color)
+    void TrackListOverlay::createTrackItems()
     {
-        lv_obj_t *bar = lv_obj_create(parent);
-        lv_obj_set_size(bar, 4, 12);
-        lv_obj_set_style_bg_color(bar, lv_color_hex(color), 0);
-        lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
-        lv_obj_set_style_radius(bar, 0, 0);
-        lv_obj_set_style_border_width(bar, 0, 0);
-        lv_obj_set_style_pad_all(bar, 0, 0);
-        lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
-        return bar;
-    }
-
-    void TrackListOverlay::createIndicators()
-    {
-        indicator_circles_.clear();
-        indicator_circles_.resize(item_names_.size());
-        track_icons_.clear();
-        track_icons_.resize(item_names_.size(), nullptr);
-        vertical_bars_.clear();
-        vertical_bars_.resize(item_names_.size(), nullptr);
+        track_items_.clear();
 
         for (size_t i = 0; i < item_names_.size(); i++)
         {
@@ -152,172 +102,106 @@ namespace Bitwig
             if (!btn)
                 continue;
 
-            // Check if this is the "Back" item (first item with Icon::ARROW_LEFT)
-            bool isBackItem = (i == 0) && (i < item_names_.size()) && (item_names_[i] == Icon::ARROW_LEFT);
+            // Check if this is the "Back" item
+            bool isBackItem = (i == 0) && !item_names_.empty() && (item_names_[0] == Icon::ARROW_LEFT);
 
-            // Apply lvgl_symbols font to text label if this is the Back item
-            if (isBackItem)
+            // Remove the default label created by ListOverlay
+            uint32_t childCount = lv_obj_get_child_cnt(btn);
+            for (uint32_t j = 0; j < childCount; j++)
             {
-                // Find the text label (first label child)
-                uint32_t childCount = lv_obj_get_child_cnt(btn);
-                for (uint32_t j = 0; j < childCount; j++)
+                lv_obj_t *child = lv_obj_get_child(btn, j);
+                if (child && lv_obj_check_type(child, &lv_label_class))
                 {
-                    lv_obj_t *child = lv_obj_get_child(btn, j);
-                    if (child && lv_obj_check_type(child, &lv_label_class))
+                    // For back item, keep the label but set icon font
+                    if (isBackItem)
                     {
                         if (bitwig_fonts.icons_14)
                         {
                             lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
                         }
-                        break;
+                        // Apply state-based colors like other items
+                        lv_obj_set_style_text_color(child, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+                        lv_obj_set_style_text_color(child, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
                     }
+                    else
+                    {
+                        lv_obj_delete(child);
+                    }
+                    break;
                 }
             }
 
-            // Create vertical bar at the left edge with track color
-            uint32_t barColor = (i < track_colors_.size()) ? track_colors_[i] : 0xFFFFFF;
-            lv_obj_t *vertical_bar = createVerticalBar(btn, barColor);
-            lv_obj_move_to_index(vertical_bar, 0);
-            vertical_bars_[i] = vertical_bar;
-
-            std::array<lv_obj_t *, 2> labels = {nullptr, nullptr};
-
-            // Don't create mute/solo indicators for Back item
+            // Create TrackTitleItem for non-back items
             if (!isBackItem)
             {
-                // Create mute icon
-                lv_obj_t *mute_label = lv_label_create(btn);
-                Icon::set(mute_label, Icon::MUTE);
-                lv_obj_set_style_text_color(mute_label, lv_color_hex(Color::TRACK_MUTE), 0);
-                lv_obj_move_to_index(mute_label, 0);
-                labels[0] = mute_label;
+                bool showMuteSolo = true;  // List items show mute/solo
+                lv_coord_t barHeight = 12; // Fixed height for list items (parent has LV_SIZE_CONTENT)
+                auto item = std::make_unique<TrackTitleItem>(btn, showMuteSolo, barHeight);
 
-                // Create solo icon
-                lv_obj_t *solo_label = lv_label_create(btn);
-                Icon::set(solo_label, Icon::SOLO);
-                lv_obj_set_style_text_color(solo_label, lv_color_hex(Color::TRACK_SOLO), 0);
-                lv_obj_move_to_index(solo_label, 1);
-                labels[1] = solo_label;
-            }
+                item->setName(item_names_[i]);
+                item->setColor(track_colors_[i]);
+                item->setType(track_types_[i]);
+                item->setMuteState(mute_states_[i]);
+                item->setSoloState(solo_states_[i]);
 
-            // Create track type icon for all tracks (not just groups)
-            if (!isBackItem)
-            {
-                uint8_t trackType = (i < track_types_.size()) ? track_types_[i] : 0;
-                lv_obj_t *type_icon = lv_label_create(btn);
-                Icon::set(type_icon, getTrackTypeIcon(trackType));
-                lv_obj_set_style_text_color(type_icon, lv_color_hex(Color::TEXT_PRIMARY), 0);
-                lv_obj_set_style_text_opa(type_icon, LV_OPA_70, 0);
-                lv_obj_clear_flag(type_icon, LV_OBJ_FLAG_SCROLLABLE);
-                lv_obj_move_to_index(type_icon, 2);
-                track_icons_[i] = type_icon;
-            }
-
-            indicator_circles_[i] = labels;
-        }
-    }
-
-    void TrackListOverlay::updateIndicatorStates()
-    {
-        int itemCount = list_.getItemCount();
-        int selectedIndex = list_.getSelectedIndex();
-
-        for (int i = 0; i < itemCount; i++)
-        {
-            if (i >= static_cast<int>(indicator_circles_.size()))
-                continue;
-
-            lv_obj_t *mute_label = indicator_circles_[i][0];
-            lv_obj_t *solo_label = indicator_circles_[i][1];
-
-            if (!mute_label || !solo_label)
-                continue;
-
-            // Check if this is a special item (Back or device children like "[S] Slots")
-            bool isSpecialItem = false;
-            if (i < static_cast<int>(item_names_.size()))
-            {
-                const std::string &itemName = item_names_[i];
-                isSpecialItem = (itemName == Icon::ARROW_LEFT) ||
-                                (!itemName.empty() && itemName[0] == '[');
-            }
-
-            bool isHighlighted = (i == selectedIndex);
-
-            if (isSpecialItem)
-            {
-                // Hide indicators for special items (like "Back to parent")
-                lv_obj_set_style_text_opa(mute_label, LV_OPA_TRANSP, 0);
-                lv_obj_set_style_text_opa(solo_label, LV_OPA_TRANSP, 0);
-                // Don't update mute/solo indicators below, but continue to update label highlighting
+                track_items_.push_back(std::move(item));
             }
             else
             {
-                // Get mute/solo states
-                bool isMuted = (i < static_cast<int>(mute_states_.size())) ? mute_states_[i] : false;
-                bool isSoloed = (i < static_cast<int>(solo_states_.size())) ? solo_states_[i] : false;
-
-                // Update mute label color and opacity
-                lv_obj_set_style_text_color(mute_label, lv_color_hex(Color::TRACK_MUTE), 0);
-                lv_opa_t mute_opa = isMuted ? LV_OPA_COVER : (isHighlighted ? LV_OPA_40 : LV_OPA_20);
-                lv_obj_set_style_text_opa(mute_label, mute_opa, 0);
-
-                // Update solo label color and opacity
-                lv_obj_set_style_text_color(solo_label, lv_color_hex(Color::TRACK_SOLO), 0);
-                lv_opa_t solo_opa = isSoloed ? LV_OPA_COVER : (isHighlighted ? LV_OPA_40 : LV_OPA_20);
-                lv_obj_set_style_text_opa(solo_label, solo_opa, 0);
-            }
-
-            // Update track name label color based on highlight state
-            lv_obj_t *btn = list_.getButton(i);
-            if (btn)
-            {
-                bool hasTrackIcon = (i < static_cast<int>(track_icons_.size())) && track_icons_[i];
-                uint32_t labelIndex = 2 + (hasTrackIcon ? 1 : 0);
-                uint32_t childCount = lv_obj_get_child_cnt(btn);
-
-                if (labelIndex < childCount)
-                {
-                    lv_obj_t *label = lv_obj_get_child(btn, labelIndex);
-                    lv_color_t labelColor = isHighlighted ? lv_color_hex(Color::TEXT_PRIMARY)
-                                                          : lv_color_hex(Color::INACTIVE_LIGHTER);
-                    lv_obj_set_style_text_color(label, labelColor, 0);
-                    lv_obj_set_style_text_opa(label, LV_OPA_COVER, 0);
-                }
+                // Back item has no TrackTitleItem, push nullptr to keep indices aligned
+                track_items_.push_back(nullptr);
             }
         }
     }
 
-    void TrackListOverlay::clearIndicators()
+    void TrackListOverlay::clearTrackItems()
     {
-        indicator_circles_.clear();
-        track_icons_.clear();
-        vertical_bars_.clear();
+        track_items_.clear();
+    }
+
+    void TrackListOverlay::updateHighlightStates()
+    {
+        int selectedIndex = list_.getSelectedIndex();
+
+        for (size_t i = 0; i < track_items_.size(); i++)
+        {
+            if (track_items_[i])
+            {
+                bool isHighlighted = (static_cast<int>(i) == selectedIndex);
+                track_items_[i]->setHighlighted(isHighlighted);
+            }
+        }
     }
 
     void TrackListOverlay::setTrackMuteStateAtIndex(uint8_t trackIndex, bool isMuted)
     {
-        // Update the cached state at the track index
-        if (trackIndex >= 0 && trackIndex < static_cast<int>(mute_states_.size()))
+        if (trackIndex < mute_states_.size())
         {
             mute_states_[trackIndex] = isMuted;
-            updateIndicatorStates();
+
+            if (trackIndex < track_items_.size() && track_items_[trackIndex])
+            {
+                track_items_[trackIndex]->setMuteState(isMuted);
+            }
         }
     }
 
     void TrackListOverlay::setTrackSoloStateAtIndex(uint8_t trackIndex, bool isSoloed)
     {
-        // Update the cached state at the track index
-        if (trackIndex >= 0 && trackIndex < static_cast<int>(solo_states_.size()))
+        if (trackIndex < solo_states_.size())
         {
             solo_states_[trackIndex] = isSoloed;
-            updateIndicatorStates();
+
+            if (trackIndex < track_items_.size() && track_items_[trackIndex])
+            {
+                track_items_[trackIndex]->setSoloState(isSoloed);
+            }
         }
     }
 
     bool TrackListOverlay::getTrackMuteStateAtIndex(uint8_t trackIndex) const
     {
-        if (trackIndex >= 0 && trackIndex < static_cast<int>(mute_states_.size()))
+        if (trackIndex < mute_states_.size())
         {
             return mute_states_[trackIndex];
         }
@@ -326,7 +210,7 @@ namespace Bitwig
 
     bool TrackListOverlay::getTrackSoloStateAtIndex(uint8_t trackIndex) const
     {
-        if (trackIndex >= 0 && trackIndex < static_cast<int>(solo_states_.size()))
+        if (trackIndex < solo_states_.size())
         {
             return solo_states_[trackIndex];
         }

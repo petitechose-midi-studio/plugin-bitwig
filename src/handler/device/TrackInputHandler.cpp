@@ -1,218 +1,185 @@
 #include "TrackInputHandler.hpp"
+#include "InputUtils.hpp"
 #include "../../ui/device/DeviceView.hpp"
 #include "../../ui/device/DeviceController.hpp"
-#include "../../ui/device/component/TrackListSelector.hpp"
-#include "../../protocol/struct/RequestTrackListMessage.hpp"
+#include "../../protocol/struct/RequestDeviceListMessage.hpp"
 #include "../../protocol/struct/TrackSelectByIndexMessage.hpp"
 #include "../../protocol/struct/EnterTrackGroupMessage.hpp"
 #include "../../protocol/struct/ExitTrackGroupMessage.hpp"
 #include "../../protocol/struct/TrackMuteMessage.hpp"
 #include "../../protocol/struct/TrackSoloMessage.hpp"
-#include "log/Macros.hpp"
 
 namespace Bitwig
 {
 
+    // =============================================================================
+    // Construction / Destruction
+    // =============================================================================
+
     TrackInputHandler::TrackInputHandler(ControllerAPI &api, DeviceView &view,
-                                         DeviceController &controller, Protocol::Protocol &protocol,
-                                         lv_obj_t *scope)
-        : api_(api), view_(view), scope_(scope), view_controller_(controller), protocol_(protocol)
+                                         DeviceController &controller, Protocol::Protocol &protocol)
+        : api_(api), view_(view), controller_(controller), protocol_(protocol)
     {
         setupBindings();
     }
 
-    TrackInputHandler::~TrackInputHandler()
-    {
-        // Bindings are automatically cleaned up by ControllerAPI when scope is destroyed
-    }
+    TrackInputHandler::~TrackInputHandler() = default;
 
-    int TrackInputHandler::wrapIndex(int value, int modulo)
-    {
-        return ((value % modulo) + modulo) % modulo;
-    }
+    // =============================================================================
+    // Public API
+    // =============================================================================
 
     void TrackInputHandler::setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex, bool isNested)
     {
-        trackList_.count = trackCount;
-        trackList_.currentIndex = currentTrackIndex;
-        trackList_.isNested = isNested;
+        // Only update cursor if content changed (entered/exited group or first open)
+        bool contentChanged = (state_.count != trackCount) || (state_.isNested != isNested);
 
-        // Set encoder to Relative mode for track navigation (delta-based with wrap)
+        state_.count = trackCount;
+        state_.currentIndex = currentTrackIndex;
+        state_.isNested = isNested;
+
+        if (contentChanged)
+        {
+            state_.currentSelectorIndex = isNested ? currentTrackIndex + 1 : currentTrackIndex;
+            view_.setTrackListSelectorIndex(state_.currentSelectorIndex);
+        }
+
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
-
-        // Initialize selector index (adjust for nested mode where "Back to parent" is at index 0)
-        trackList_.currentSelectorIndex = trackList_.isNested ? currentTrackIndex + 1 : currentTrackIndex;
-        view_.setTrackListSelectorIndex(trackList_.currentSelectorIndex);
     }
+
+    // =============================================================================
+    // Bindings Setup
+    // =============================================================================
 
     void TrackInputHandler::setupBindings()
     {
-        // All bindings scoped to TrackListSelector overlay
-        lv_obj_t *trackSelectorScope = view_.getTrackListSelectorElement();
+        lv_obj_t *overlay = view_.getTrackListSelectorElement();
 
-        // Navigation with encoder while BOTTOM_LEFT is pressed
-        api_.onTurnedWhilePressed(
-            EncoderID::NAV,
-            ButtonID::BOTTOM_LEFT,
-            [this](float position)
-            {
-                handleTrackSelectorNavigation(position);
-            },
-            trackSelectorScope);
+        // Close track list on press (scoped to overlay)
+        api_.onPressed(ButtonID::BOTTOM_LEFT, [this]()
+                       { closeAndSelect(); }, overlay);
 
-        // Release BOTTOM_LEFT: select track and close overlay
-        api_.onReleased(
-            ButtonID::BOTTOM_LEFT,
-            [this]()
-            {
-                handleTrackSelectorRelease();
-            },
-            trackSelectorScope);
+        // Navigate tracks while holding
+        api_.onTurned(EncoderID::NAV, [this](float delta)
+                      { navigate(delta); }, overlay);
 
-        // Encoder NAV press: Enter track group (if it's a group)
-        api_.onCombo(
-            ButtonID::NAV,
-            ButtonID::BOTTOM_LEFT,
-            [this]()
-            {
-                handleTrackSelectorEnter();
-            },
-            trackSelectorScope);
+        // Enter track group
+        api_.onPressed(ButtonID::NAV, [this]()
+                       { enter(); }, overlay);
 
-        // BOTTOM_CENTER: Mute selected track
-        api_.onPressed(
-            ButtonID::BOTTOM_CENTER,
-            [this]()
-            {
-                handleTrackMute();
-            },
-            trackSelectorScope);
-
-        // BOTTOM_RIGHT: Solo selected track
-        api_.onPressed(
-            ButtonID::BOTTOM_RIGHT,
-            [this]()
-            {
-                handleTrackSolo();
-            },
-            trackSelectorScope);
+        // Mute/Solo
+        api_.onPressed(ButtonID::BOTTOM_CENTER, [this]()
+                       { toggleMute(); }, overlay);
+        api_.onPressed(ButtonID::BOTTOM_RIGHT, [this]()
+                       { toggleSolo(); }, overlay);
     }
 
-    void TrackInputHandler::handleTrackSelectorNavigation(float delta)
+    // =============================================================================
+    // Handlers
+    // =============================================================================
+
+    void TrackInputHandler::navigate(float delta)
     {
         int itemCount = view_.getTrackListSelectorItemCount();
         if (itemCount == 0)
             return;
 
-        // In Relative mode, delta is ±1 (or ±N for fast scrolling)
-        // Apply delta and wrap around list boundaries
-        trackList_.currentSelectorIndex += static_cast<int>(delta);
-        trackList_.currentSelectorIndex = wrapIndex(trackList_.currentSelectorIndex, itemCount);
-
-        view_.setTrackListSelectorIndex(trackList_.currentSelectorIndex);
-
-        // NOTE: Track selection only sent on release or NAV button press
-        // This keeps navigation smooth without triggering Bitwig API calls
+        state_.currentSelectorIndex += static_cast<int>(delta);
+        state_.currentSelectorIndex = InputUtils::wrapIndex(state_.currentSelectorIndex, itemCount);
+        view_.setTrackListSelectorIndex(state_.currentSelectorIndex);
     }
 
-    void TrackInputHandler::handleTrackSelectorRelease()
+    void TrackInputHandler::closeAndSelect()
     {
-        // If track selector was already closed (device selector button was released first), do nothing
         if (!view_.isTrackSelectorVisible())
         {
-            trackList_.requested = false;
+            state_.requested = false;
             return;
         }
 
-        const int selectedIndex = view_.getTrackListSelectorIndex();
-
+        int selectedIndex = state_.currentSelectorIndex;
         view_.hideTrackSelector();
         view_.showDeviceSelector();
 
-        // Check if "Back to parent" was selected (index 0 when nested)
-        if (trackList_.isNested && selectedIndex == 0)
+        if (state_.isNested && selectedIndex == 0)
         {
             protocol_.send(Protocol::ExitTrackGroupMessage{});
         }
         else
         {
-            // Adjust index if nested (skip "Back to parent")
-            int trackIndex = trackList_.isNested ? (selectedIndex - 1) : selectedIndex;
-
-            if (trackIndex >= 0 && trackIndex < trackList_.count)
+            int trackIndex = getAdjustedTrackIndex(selectedIndex);
+            if (trackIndex >= 0 && trackIndex < state_.count)
             {
-                // Select track (already done during navigation)
                 protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
             }
         }
 
-        // Request full device list now that navigation is complete
         protocol_.send(Protocol::RequestDeviceListMessage{});
-
-        // Reset state (encoder stays in Relative mode, no need to reset position)
-        trackList_.requested = false;
+        // Don't reset requested here - DeviceSelectorInputHandler checks it to prevent reopen
     }
 
-    void TrackInputHandler::handleTrackSelectorEnter()
+    void TrackInputHandler::enter()
     {
-        const int selectedIndex = view_.getTrackListSelectorIndex();
+        int selectedIndex = state_.currentSelectorIndex;
 
-        if (trackList_.isNested && selectedIndex == 0)
+        if (state_.isNested && selectedIndex == 0)
         {
-            // "Back to parent" - exit group
+            // Exit to parent group
             protocol_.send(Protocol::ExitTrackGroupMessage{});
         }
         else
         {
-            // Adjust index if nested (skip "Back to parent")
-            int trackIndex = trackList_.isNested ? (selectedIndex - 1) : selectedIndex;
-
-            if (trackIndex >= 0 && trackIndex < trackList_.count)
+            int trackIndex = getAdjustedTrackIndex(selectedIndex);
+            if (trackIndex >= 0 && trackIndex < state_.count)
             {
-                // TODO: Check if track is a group before entering
-                // For now, always send enter request (host will handle if not a group)
+                // Select the track
+                protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
+                // If it's a group, also enter inside
                 protocol_.send(Protocol::EnterTrackGroupMessage{static_cast<uint8_t>(trackIndex)});
+
+                // Update current index to match selection
+                state_.currentIndex = static_cast<uint8_t>(trackIndex);
             }
         }
 
-        // Request full device list after entering/exiting group
-        protocol_.send(Protocol::RequestDeviceListMessage{});
+        // Refresh track list (will show children if we entered a group)
+        protocol_.send(Protocol::RequestTrackListMessage{});
     }
 
-    void TrackInputHandler::handleTrackMute()
+    void TrackInputHandler::toggleMute()
     {
-        const int selectedIndex = view_.getTrackListSelectorIndex();
-
-        // Don't mute "Back to parent"
-        if (trackList_.isNested && selectedIndex == 0)
-            return;
-
-        int trackIndex = trackList_.isNested ? (selectedIndex - 1) : selectedIndex;
-
-        if (trackIndex >= 0 && trackIndex < trackList_.count)
+        int trackIndex = getSelectedTrackIndex();
+        if (trackIndex >= 0)
         {
-            // Send toggle request - value ignored by host, host will toggle and respond with actual state
-            // UI will update only when receiving the response from host
             protocol_.send(Protocol::TrackMuteMessage{static_cast<uint8_t>(trackIndex), true});
         }
     }
 
-    void TrackInputHandler::handleTrackSolo()
+    void TrackInputHandler::toggleSolo()
     {
-        const int selectedIndex = view_.getTrackListSelectorIndex();
-
-        // Don't solo "Back to parent"
-        if (trackList_.isNested && selectedIndex == 0)
-            return;
-
-        int trackIndex = trackList_.isNested ? (selectedIndex - 1) : selectedIndex;
-
-        if (trackIndex >= 0 && trackIndex < trackList_.count)
+        int trackIndex = getSelectedTrackIndex();
+        if (trackIndex >= 0)
         {
-            // Send toggle request - value ignored by host, host will toggle and respond with actual state
-            // UI will update only when receiving the response from host
             protocol_.send(Protocol::TrackSoloMessage{static_cast<uint8_t>(trackIndex), true});
         }
+    }
+
+    // =============================================================================
+    // Helpers
+    // =============================================================================
+
+    int TrackInputHandler::getSelectedTrackIndex() const
+    {
+        if (state_.isNested && state_.currentSelectorIndex == 0)
+            return -1;
+
+        int trackIndex = getAdjustedTrackIndex(state_.currentSelectorIndex);
+        return (trackIndex >= 0 && trackIndex < state_.count) ? trackIndex : -1;
+    }
+
+    int TrackInputHandler::getAdjustedTrackIndex(int selectorIndex) const
+    {
+        return state_.isNested ? selectorIndex - 1 : selectorIndex;
     }
 
 } // namespace Bitwig

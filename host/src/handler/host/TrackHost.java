@@ -5,6 +5,7 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
+import util.TrackTypeUtils;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
@@ -36,8 +37,12 @@ public class TrackHost {
     private String lastTrackName = "";
 
     // Pending toggle tracking for reliable mute/solo confirmation
+    // Includes timestamp to auto-expire if observer never fires
     private int pendingMuteTrackIndex = -1;
+    private long pendingMuteTimestamp = 0;
     private int pendingSoloTrackIndex = -1;
+    private long pendingSoloTimestamp = 0;
+    private static final long PENDING_TIMEOUT_MS = 500; // Auto-expire after 500ms
 
     public TrackHost(
         ControllerHost host,
@@ -75,8 +80,8 @@ public class TrackHost {
         mainTrackBank.canScrollBackwards().markInterested();
         mainTrackBank.canScrollForwards().markInterested();
 
-        // Mark all tracks in bank as interested (32 slots) + add observers
-        for (int i = 0; i < 32; i++) {
+        // Mark all tracks in bank as interested + add observers
+        for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int trackIndex = i;
             Track track = mainTrackBank.getItemAt(i);
             markTrackInterested(track);
@@ -89,7 +94,7 @@ public class TrackHost {
 
         // Mark sibling track bank observables as interested + add observers
         siblingTrackBank.itemCount().markInterested();
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int trackIndex = i;
             Track track = siblingTrackBank.getItemAt(i);
             markTrackInterested(track);
@@ -131,22 +136,6 @@ public class TrackHost {
         track.trackType().markInterested();
     }
 
-    /**
-     * Convert Bitwig track type string to uint8
-     * @param trackType Track type string from Bitwig API
-     * @return 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
-     */
-    private int trackTypeToInt(String trackType) {
-        switch (trackType) {
-            case "Audio": return 0;
-            case "Instrument": return 1;
-            case "Hybrid": return 2;
-            case "Group": return 3;
-            case "Effect": return 4;
-            case "Master": return 5;
-            default: return 0;
-        }
-    }
 
     /**
      * Add mute/solo observers to track for reliable toggle confirmation
@@ -156,7 +145,8 @@ public class TrackHost {
     private void addTrackObservers(Track track, int trackIndex) {
         // Mute observer - sends confirmation when mute state changes
         track.mute().addValueObserver(isMuted -> {
-            if (pendingMuteTrackIndex == trackIndex && track.exists().get()) {
+            long elapsed = System.currentTimeMillis() - pendingMuteTimestamp;
+            if (pendingMuteTrackIndex == trackIndex && track.exists().get() && elapsed < PENDING_TIMEOUT_MS) {
                 pendingMuteTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (isMuted ? "MUTED" : "UNMUTED") + "\n");
@@ -166,7 +156,8 @@ public class TrackHost {
 
         // Solo observer - sends confirmation when solo state changes
         track.solo().addValueObserver(isSoloed -> {
-            if (pendingSoloTrackIndex == trackIndex && track.exists().get()) {
+            long elapsed = System.currentTimeMillis() - pendingSoloTimestamp;
+            if (pendingSoloTrackIndex == trackIndex && track.exists().get() && elapsed < PENDING_TIMEOUT_MS) {
                 pendingSoloTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (isSoloed ? "SOLOED" : "UNSOLOED") + "\n");
@@ -196,22 +187,20 @@ public class TrackHost {
      * Send track list to controller
      */
     public void sendTrackList() {
-        TrackBank bank = getCurrentBank();
-        boolean hasParent = hasParentGroup();
-        String parentName = hasParent ? parentTrack.name().get() : "";
+        // Delay to let Bitwig API update values (cursorTrack.position(), etc.)
+        host.scheduleTask(() -> {
+            // Capture API data AFTER delay
+            final TrackBank bank = getCurrentBank();
+            final boolean hasParent = hasParentGroup();
+            final String parentName = hasParent ? parentTrack.name().get() : "";
+            final List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
+            final int selectedIndex = findSelectedTrackIndex(tracks);
 
-        // Build list of tracks
-        List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
-
-        // Find which track is selected
-        int selectedIndex = findSelectedTrackIndex(tracks);
-
-        // Log
-        String context = hasParent ? " ↳ " + parentName : " ⌂ root";
-        host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
-
-        // Send immediately (caller handles delay if needed)
-        protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
+            // Log and send
+            String context = hasParent ? " ↳ " + parentName : " ⌂ root";
+            host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
+            protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
+        }, BitwigConfig.TRACK_SELECT_DELAY_MS);
     }
 
     private List<TrackListMessage.Tracks> buildTrackList(TrackBank bank) {
@@ -228,7 +217,7 @@ public class TrackHost {
                     track.mute().get(),
                     track.solo().get(),
                     track.isGroup().get(),
-                    trackTypeToInt(track.trackType().get())
+                    TrackTypeUtils.toInt(track.trackType().get())
                 ));
             }
         }
@@ -323,6 +312,7 @@ public class TrackHost {
         Track track = getTrackAtIndex(trackIndex);
         if (track != null && track.exists().get()) {
             pendingMuteTrackIndex = trackIndex;
+            pendingMuteTimestamp = System.currentTimeMillis();
             boolean currentState = track.mute().get();
             track.mute().set(!currentState);
             // Observer (addTrackObservers) will send TrackMuteMessage confirmation
@@ -337,6 +327,7 @@ public class TrackHost {
         Track track = getTrackAtIndex(trackIndex);
         if (track != null && track.exists().get()) {
             pendingSoloTrackIndex = trackIndex;
+            pendingSoloTimestamp = System.currentTimeMillis();
             boolean currentState = track.solo().get();
             track.solo().set(!currentState);
             // Observer (addTrackObservers) will send TrackSoloMessage confirmation

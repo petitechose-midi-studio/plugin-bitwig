@@ -2,8 +2,6 @@
 
 #include <lvgl.h>
 #include <string>
-#include <memory>
-#include "ui/shared/widget/Label.hpp"
 
 namespace Bitwig
 {
@@ -12,6 +10,7 @@ namespace Bitwig
      * @brief Reusable page title component
      *
      * Displays page name with appropriate styling.
+     * Creates label directly in parent (no intermediate container).
      * Used in DeviceStateBar (top bar) and potentially PageSelector.
      */
     class PageTitleItem
@@ -23,7 +22,7 @@ namespace Bitwig
         void setName(const std::string &name);
 
     private:
-        std::unique_ptr<Label> label_;
+        lv_obj_t *label_ = nullptr;  // Raw lv_label, owned by LVGL parent
     };
 
 } // namespace Bitwig

@@ -23,7 +23,7 @@
 #include "DeviceConstants.hpp"
 #include "TrackConstants.hpp"
 #include "DeviceInputHandler.hpp"
-#include "log/Macros.hpp"
+#include "MacroInputHandler.hpp"
 
 namespace Bitwig
 {
@@ -48,7 +48,7 @@ namespace Bitwig
                 parameterTypes_[paramIndex] = macros[i].parameterType;
             }
 
-            EncoderID encoderId = DeviceInputHandler::getEncoderIdForParameter(paramIndex);
+            EncoderID encoderId = MacroInputHandler::getEncoderIdForParameter(paramIndex);
             if (encoderId != EncoderID(0))
             {
                 // Configure encoder quantization based on parameter type
@@ -91,7 +91,7 @@ namespace Bitwig
             }
 
             // Configure encoder based on parameter type
-            EncoderID encoderId = DeviceInputHandler::getEncoderIdForParameter(msg.parameterIndex);
+            EncoderID encoderId = MacroInputHandler::getEncoderIdForParameter(msg.parameterIndex);
             if (encoderId != EncoderID(0))
             {
                 if (msg.parameterType == Device::Knob)
@@ -141,7 +141,7 @@ namespace Bitwig
             else
             {
                 // Host-initiated change: apply to encoder and UI
-                EncoderID encoderId = DeviceInputHandler::getEncoderIdForParameter(msg.parameterIndex);
+                EncoderID encoderId = MacroInputHandler::getEncoderIdForParameter(msg.parameterIndex);
                 if (encoderId != EncoderID(0))
                 {
                     api_.setEncoderPosition(encoderId, msg.parameterValue);

@@ -3,39 +3,56 @@
 #include <lvgl.h>
 #include <string>
 #include <cstdint>
-#include <memory>
-#include "ui/shared/widget/Label.hpp"
 
 namespace Bitwig
 {
 
     /**
-     * @brief Reusable track title component with color indicator and type icon
+     * @brief Reusable track title component with color indicator, optional mute/solo, and type icon
      *
-     * Displays: [color bar] [type icon] [track name]
+     * Displays: [color bar] [mute?] [solo?] [type icon] [track name]
+     * Creates children directly in parent (no intermediate container).
      * Used in DeviceStateBar (top bar) and TrackListOverlay items.
+     *
+     * @param withMuteSolo Set to true for list items that need mute/solo indicators
      */
     class TrackTitleItem
     {
     public:
-        explicit TrackTitleItem(lv_obj_t *parent);
+        explicit TrackTitleItem(lv_obj_t *parent, bool withMuteSolo = false, lv_coord_t barHeight = LV_PCT(100));
         ~TrackTitleItem();
 
         void setName(const std::string &name);
         void setColor(uint32_t color);
         void setType(uint8_t trackType);
 
-        lv_obj_t *getContainer() const { return container_; }
-        lv_obj_t *getColorBar() const { return color_bar_; }
-        lv_obj_t *getTypeIcon() const { return type_icon_; }
+        // Mute/solo state (only effective if withMuteSolo=true)
+        void setMuteState(bool isMuted);
+        void setSoloState(bool isSoloed);
 
-    private:
+        // Highlight state (affects ghost opacity and label color for list items)
+        void setHighlighted(bool highlighted);
+
+        // Hide all indicators (for special items like "Back")
+        void hideIndicators();
+
+        // Get icon for track type (public for potential reuse)
         static const char *getTrackTypeIcon(uint8_t trackType);
 
-        lv_obj_t *container_ = nullptr;
+    private:
+        void updateIndicatorOpacity();
+
         lv_obj_t *color_bar_ = nullptr;
+        lv_obj_t *mute_icon_ = nullptr;   // nullptr if withMuteSolo=false
+        lv_obj_t *solo_icon_ = nullptr;   // nullptr if withMuteSolo=false
         lv_obj_t *type_icon_ = nullptr;
-        std::unique_ptr<Label> label_;
+        lv_obj_t *label_ = nullptr;
+
+        bool has_mute_solo_ = false;
+        bool is_muted_ = false;
+        bool is_soloed_ = false;
+        bool is_highlighted_ = false;
+        bool indicators_hidden_ = false;
     };
 
 } // namespace Bitwig

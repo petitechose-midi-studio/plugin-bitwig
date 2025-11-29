@@ -6,6 +6,29 @@ package config;
  * ALL timing constants are here. No observer-based logic.
  * Uses fixed delays like DrivenByMoss (industry standard).
  *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * IMPORTANT: Request → Delay → Read → Send Pattern
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * When responding to controller requests (RequestTrackList, RequestDeviceList, etc.),
+ * the Bitwig API values may not be updated yet after an action (selectChannel, etc.).
+ *
+ * CORRECT PATTERN for sendXXX() methods responding to requests:
+ *
+ *   public void sendTrackList() {
+ *       host.scheduleTask(() -> {
+ *           // 1. AFTER delay: read API values (now updated)
+ *           final int selectedIndex = cursorTrack.position().get();
+ *           final List<...> tracks = buildTrackList();
+ *
+ *           // 2. Send immediately
+ *           protocol.send(new TrackListMessage(...));
+ *       }, TRACK_SELECT_DELAY_MS);
+ *   }
+ *
+ * EXCEPTION: Bitwig observers (addValueObserver) - values are already updated
+ * when the callback fires, so no delay needed for observer-triggered sends.
+ *
  * Sources:
  * - DrivenByMoss (LGPLv3) by Jürgen Moßgraber
  * - bitwig-extensions-main (MIT) by Bitwig
@@ -28,6 +51,12 @@ public final class BitwigConfig {
      * Delay after exiting a track group (selectParent).
      */
     public static final int TRACK_EXIT_GROUP_MS = 70;
+
+    /**
+     * Delay after track selection before sending track list.
+     * Allows cursorTrack.position() to update after selectChannel().
+     */
+    public static final int TRACK_SELECT_DELAY_MS = 50;
 
     // ═══════════════════════════════════════════════════════════════════
     // DEVICE NAVIGATION
@@ -79,4 +108,17 @@ public final class BitwigConfig {
      * Callbacks within this window are considered echoes (not sent to controller).
      */
     public static final int ECHO_TIMEOUT_MS = 100;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // BANK SIZES
+    // ═══════════════════════════════════════════════════════════════════
+
+    /** Number of remote control parameters per page */
+    public static final int MAX_PARAMETERS = 8;
+
+    /** Maximum tracks/devices in a bank */
+    public static final int MAX_BANK_SIZE = 32;
+
+    /** Maximum device children (slots + layers + drums) */
+    public static final int MAX_CHILDREN = 16;
 }

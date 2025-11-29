@@ -2,7 +2,6 @@
 
 #include "api/ControllerAPI.hpp"
 #include "../../protocol/Protocol.hpp"
-#include "TrackConstants.hpp"
 
 namespace Bitwig
 {
@@ -11,63 +10,51 @@ namespace Bitwig
     class DeviceController;
 
     /**
-     * @brief Hardware input handler for TrackListSelector (SCOPED)
+     * @brief Hardware input handler for TrackListSelector overlay
      *
-     * Handles track navigation and actions when TrackListSelector is visible.
-     * DeviceInputHandler triggers the display, TrackInputHandler manages interaction.
+     * Handles track navigation when TrackListSelector overlay is visible:
+     * - Close on BOTTOM_LEFT press
+     * - Navigate with encoder while holding
+     * - Enter/exit track groups
+     * - Mute/Solo toggles
      */
     class TrackInputHandler
     {
     public:
         TrackInputHandler(ControllerAPI &api, DeviceView &view, DeviceController &controller,
-                          Protocol::Protocol &protocol, lv_obj_t *scope);
+                          Protocol::Protocol &protocol);
         ~TrackInputHandler();
 
-        /**
-         * @brief Update track list state from host
-         * Called by DeviceHostHandler when TRACK_LIST is received
-         */
         void setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex, bool isNested);
-
-        /**
-         * @brief Check if track list was explicitly requested by user
-         * @return true if user requested the track list, false otherwise
-         */
-        bool isTrackListRequested() const { return trackList_.requested; }
-
-        /**
-         * @brief Mark track list as requested by user
-         * @param requested True if user requested the track list
-         */
-        void setTrackListRequested(bool requested) { trackList_.requested = requested; }
+        bool isTrackListRequested() const { return state_.requested; }
+        void setTrackListRequested(bool requested) { state_.requested = requested; }
 
     private:
         void setupBindings();
 
-        void handleTrackSelectorNavigation(float position);
-        void handleTrackSelectorRelease();
-        void handleTrackSelectorEnter();
-        void handleTrackMute();
-        void handleTrackSolo();
+        void navigate(float delta);
+        void closeAndSelect();
+        void enter();
+        void toggleMute();
+        void toggleSolo();
 
-        // Helper for circular index wrapping (handles negative values)
-        static int wrapIndex(int value, int modulo);
+        int getSelectedTrackIndex() const;
+        int getAdjustedTrackIndex(int selectorIndex) const;
 
         ControllerAPI &api_;
         DeviceView &view_;
-        lv_obj_t *scope_; // Scope for input bindings (TrackListSelector overlay)
-        DeviceController &view_controller_;
+        DeviceController &controller_;
         Protocol::Protocol &protocol_;
 
-        // Track list state
-        struct
+        struct TrackListState
         {
             uint8_t count = 0;
             uint8_t currentIndex = 0;
             bool isNested = false;
             bool requested = false;
-            int currentSelectorIndex = 0; // Current position in selector (includes "Back to parent" if nested)
-        } trackList_;
+            int currentSelectorIndex = 0;
+        };
+        TrackListState state_;
     };
 
 } // namespace Bitwig

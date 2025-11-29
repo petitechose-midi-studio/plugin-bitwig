@@ -5,6 +5,7 @@ import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
 import util.ColorUtils;
+import util.TrackTypeUtils;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -128,7 +129,7 @@ public class DeviceHost {
         remoteControls.pageNames().markInterested();
 
         // Parameters
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             markParameterInterested(remoteControls.getParameter(i));
         }
 
@@ -143,7 +144,7 @@ public class DeviceHost {
         });
 
         // Parameter observers - skip during device transitions (batch message handles it)
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             final int paramIndex = i;
             RemoteControl param = remoteControls.getParameter(i);
 
@@ -168,7 +169,7 @@ public class DeviceHost {
         deviceBank.canScrollForwards().markInterested();
 
         // All devices in bank
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int deviceIndex = i;
             Device device = deviceBank.getItemAt(i);
             markDeviceInterested(device);
@@ -189,7 +190,7 @@ public class DeviceHost {
         drumPadBank.canScrollBackwards().markInterested();
         drumPadBank.canScrollForwards().markInterested();
 
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_CHILDREN; i++) {
             markLayerInterested(layerBank.getItemAt(i));
             markDrumPadInterested(drumPadBank.getItemAt(i));
         }
@@ -216,38 +217,42 @@ public class DeviceHost {
     }
 
     public void sendPageNames() {
-        // Capture all API data immediately
-        final int pageCount = remoteControls.pageCount().get();
-        final int currentIndex = remoteControls.selectedPageIndex().get();
+        // Delay to let Bitwig API update values
+        host.scheduleTask(() -> {
+            final int pageCount = remoteControls.pageCount().get();
+            final int currentIndex = remoteControls.selectedPageIndex().get();
 
-        final java.util.List<String> names = new java.util.ArrayList<>();
-        for (int i = 0; i < pageCount; i++) {
-            try {
-                names.add(remoteControls.pageNames().get(i));
-            } catch (ArrayIndexOutOfBoundsException e) {
-                names.add("");
+            final java.util.List<String> names = new java.util.ArrayList<>();
+            for (int i = 0; i < pageCount; i++) {
+                try {
+                    names.add(remoteControls.pageNames().get(i));
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    names.add("");
+                }
             }
-        }
 
-        protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
+            protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
     public void sendDeviceList() {
-        int totalDeviceCount = deviceBank.itemCount().get();
-        int currentDevicePosition = cursorDevice.position().get();
-        boolean isNested = cursorDevice.isNested().get();
-        String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
+        // Delay to let Bitwig API update values
+        host.scheduleTask(() -> {
+            final int totalDeviceCount = deviceBank.itemCount().get();
+            final int currentDevicePosition = cursorDevice.position().get();
+            final boolean isNested = cursorDevice.isNested().get();
+            final String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
+            final List<DeviceListMessage.Devices> devicesList = buildDevicesList();
+            final int currentDeviceIndex = findCurrentDeviceIndex(devicesList, currentDevicePosition);
 
-        List<DeviceListMessage.Devices> devicesList = buildDevicesList();
-        int currentDeviceIndex = findCurrentDeviceIndex(devicesList, currentDevicePosition);
-
-        protocol.send(new DeviceListMessage(
-            totalDeviceCount,
-            currentDeviceIndex,
-            isNested,
-            parentName,
-            devicesList
-        ));
+            protocol.send(new DeviceListMessage(
+                totalDeviceCount,
+                currentDeviceIndex,
+                isNested,
+                parentName,
+                devicesList
+            ));
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
     private List<DeviceListMessage.Devices> buildDevicesList() {
@@ -288,44 +293,45 @@ public class DeviceHost {
     }
 
     public void sendDeviceChildren(int deviceIndex, int childType) {
-        Device device = deviceBank.getItemAt(deviceIndex);
-        if (!device.exists().get()) {
-            // Device doesn't exist - send empty list immediately
-            protocol.send(new DeviceChildrenMessage(deviceIndex, 0, 0, new ArrayList<>()));
-            return;
-        }
+        // Delay to let Bitwig API update values
+        host.scheduleTask(() -> {
+            final Device device = deviceBank.getItemAt(deviceIndex);
+            if (!device.exists().get()) {
+                protocol.send(new DeviceChildrenMessage(deviceIndex, 0, 0, new ArrayList<>()));
+                return;
+            }
 
-        // Build flat list of ALL children (slots + layers + drums), max 16
-        List<DeviceChildrenMessage.Children> allChildren = new ArrayList<>();
+            // Build flat list of ALL children (slots + layers + drums)
+            final List<DeviceChildrenMessage.Children> allChildren = new ArrayList<>();
 
-        // Add slots first (itemType=0)
-        for (DeviceChildrenMessage.Children slot : getSlots(device)) {
-            if (allChildren.size() >= 16) break;
-            allChildren.add(slot);
-        }
+            // Add slots first (itemType=0)
+            for (DeviceChildrenMessage.Children slot : getSlots(device)) {
+                if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
+                allChildren.add(slot);
+            }
 
-        // Add layers (itemType=1)
-        for (DeviceChildrenMessage.Children layer : getLayers(device)) {
-            if (allChildren.size() >= 16) break;
-            allChildren.add(layer);
-        }
+            // Add layers (itemType=1)
+            for (DeviceChildrenMessage.Children layer : getLayers(device)) {
+                if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
+                allChildren.add(layer);
+            }
 
-        // Add drum pads (itemType=2)
-        for (DeviceChildrenMessage.Children drum : getAllDrumPads(device)) {
-            if (allChildren.size() >= 16) break;
-            allChildren.add(drum);
-        }
+            // Add drum pads (itemType=2)
+            for (DeviceChildrenMessage.Children drum : getAllDrumPads(device)) {
+                if (allChildren.size() >= BitwigConfig.MAX_CHILDREN) break;
+                allChildren.add(drum);
+            }
 
-        host.println("\n[DEVICE HOST] Sending DeviceChildren: deviceIndex=" + deviceIndex + ", childrenCount="
-                + allChildren.size());
-        for (int i = 0; i < allChildren.size(); i++) {
-            DeviceChildrenMessage.Children child = allChildren.get(i);
-            host.println("  [" + i + "] " + child.getChildName() + " (itemType=" + child.getItemType() + "/"
-                    + getItemTypeString(child.getItemType()) + ", childIndex=" + child.getChildIndex() + ")");
-        }
+            host.println("\n[DEVICE HOST] Sending DeviceChildren: deviceIndex=" + deviceIndex + ", childrenCount="
+                    + allChildren.size());
+            for (int i = 0; i < allChildren.size(); i++) {
+                DeviceChildrenMessage.Children child = allChildren.get(i);
+                host.println("  [" + i + "] " + child.getChildName() + " (itemType=" + child.getItemType() + "/"
+                        + getItemTypeString(child.getItemType()) + ", childIndex=" + child.getChildIndex() + ")");
+            }
 
-        // Send immediately (caller handles delay if needed)
-        protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
+            protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
     /**
@@ -393,7 +399,7 @@ public class DeviceHost {
         String[] slotNames = device.slotNames().get();
 
         if (slotNames != null) {
-            for (int i = 0; i < slotNames.length && i < 16; i++) {
+            for (int i = 0; i < slotNames.length && i < BitwigConfig.MAX_CHILDREN; i++) {
                 slots.add(new DeviceChildrenMessage.Children(i, slotNames[i], 0)); // itemType=0 for Slot
             }
         }
@@ -404,8 +410,8 @@ public class DeviceHost {
     private List<DeviceChildrenMessage.Children> getLayers(Device device) {
         List<DeviceChildrenMessage.Children> layers = new ArrayList<>();
 
-        // Limit to 16 layers max, only active ones
-        for (int i = 0; i < 16; i++) {
+        // Limit layers max, only active ones
+        for (int i = 0; i < BitwigConfig.MAX_CHILDREN; i++) {
             DeviceLayer layer = layerBank.getItemAt(i);
             if (layer.exists().get()) {
                 layers.add(new DeviceChildrenMessage.Children(i, layer.name().get(), 1)); // itemType=1 for Layer
@@ -420,7 +426,7 @@ public class DeviceHost {
         int scrollPos = drumPadBank.scrollPosition().get();
 
         // Simple iteration like layers - no async scroll operations
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_CHILDREN; i++) {
             DrumPad pad = drumPadBank.getItemAt(i);
             if (pad.exists().get()) {
                 int midiNote = scrollPos + i;
@@ -474,35 +480,19 @@ public class DeviceHost {
         final String trackName = cursorTrack.name().get();
         final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
         final int trackPosition = cursorTrack.position().get();
-        final int trackType = trackTypeToInt(cursorTrack.trackType().get());
+        final int trackType = TrackTypeUtils.toInt(cursorTrack.trackType().get());
 
         protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition, trackType));
     }
 
-    /**
-     * Convert Bitwig track type string to uint8
-     * @param trackType Track type string from Bitwig API
-     * @return 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
-     */
-    private int trackTypeToInt(String trackType) {
-        switch (trackType) {
-            case "Audio": return 0;
-            case "Instrument": return 1;
-            case "Hybrid": return 2;
-            case "Group": return 3;
-            case "Effect": return 4;
-            case "Master": return 5;
-            default: return 0;
-        }
-    }
 
     private void sendDeviceCleared() {
         // Send header with empty values
         protocol.send(new DeviceChangeHeaderMessage("No Device", false, new DeviceChangeHeaderMessage.PageInfo(0, 0, ""), new ArrayList<>()));
 
-        // Send all 8 empty macros bundled in one message
+        // Send empty macros bundled in one message
         List<DevicePageChangeMessage.Macros> emptyMacros = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             emptyMacros.add(new DevicePageChangeMessage.Macros(
                 i, 0.0f, "", 0.0f, false, (short) 0, "", 0, new String[0], 0
             ));
@@ -539,7 +529,7 @@ public class DeviceHost {
 
     private List<DevicePageChangeMessage.Macros> buildMacrosListForPageChange() {
         List<DevicePageChangeMessage.Macros> macrosList = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             RemoteControl param = remoteControls.getParameter(i);
             ParameterData data = captureParameterData(param, i);
 

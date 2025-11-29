@@ -1,0 +1,67 @@
+#include "MacroInputHandler.hpp"
+#include "../../ui/device/DeviceController.hpp"
+#include "../../protocol/struct/DeviceMacroValueChangeMessage.hpp"
+#include "../../protocol/struct/DeviceMacroTouchMessage.hpp"
+
+namespace Bitwig {
+
+// =============================================================================
+// Construction / Destruction
+// =============================================================================
+
+MacroInputHandler::MacroInputHandler(ControllerAPI& api, DeviceController& controller,
+                                     Protocol::Protocol& protocol, lv_obj_t* scope)
+    : api_(api), controller_(controller), protocol_(protocol), scope_(scope)
+{
+    setupBindings();
+}
+
+MacroInputHandler::~MacroInputHandler() = default;
+
+// =============================================================================
+// Static API
+// =============================================================================
+
+EncoderID MacroInputHandler::getEncoderIdForParameter(uint8_t paramIndex) {
+    static constexpr EncoderID encoders[] = {
+        EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
+        EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
+    };
+    return (paramIndex < Device::PARAMETER_COUNT) ? encoders[paramIndex] : EncoderID(0);
+}
+
+// =============================================================================
+// Bindings Setup
+// =============================================================================
+
+void MacroInputHandler::setupBindings() {
+    static constexpr EncoderID encoders[] = {
+        EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
+        EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
+    };
+    static constexpr ButtonID buttons[] = {
+        ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
+        ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
+    };
+
+    for (uint8_t i = 0; i < Device::PARAMETER_COUNT; i++) {
+        api_.onTurned(encoders[i], [this, i](float v) { handleValueChange(i, v); }, scope_);
+        api_.onPressed(buttons[i], [this, i]() { sendTouch(i, true); }, scope_);
+        api_.onReleased(buttons[i], [this, i]() { sendTouch(i, false); }, scope_);
+    }
+}
+
+// =============================================================================
+// Handlers
+// =============================================================================
+
+void MacroInputHandler::handleValueChange(uint8_t index, float value) {
+    controller_.handleParameterValue(index, value);
+    protocol_.send(Protocol::DeviceMacroValueChangeMessage{index, value, "", false});
+}
+
+void MacroInputHandler::sendTouch(uint8_t index, bool touched) {
+    protocol_.send(Protocol::DeviceMacroTouchMessage{index, touched});
+}
+
+} // namespace Bitwig

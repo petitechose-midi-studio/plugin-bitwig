@@ -27,14 +27,14 @@ public class DeviceController {
     private final Transport transport;
     private DeviceHost deviceHost;
 
-    private final boolean[] touchState = new boolean[8];
-    private final long[] lastReleaseTime = new long[8];
-    private final long[] lastPressTime = new long[8];
-    private final int[] parameterDiscreteCount = new int[8];  // -1=continuous, 2=button, >2=list
+    private final boolean[] touchState = new boolean[BitwigConfig.MAX_PARAMETERS];
+    private final long[] lastReleaseTime = new long[BitwigConfig.MAX_PARAMETERS];
+    private final long[] lastPressTime = new long[BitwigConfig.MAX_PARAMETERS];
+    private final int[] parameterDiscreteCount = new int[BitwigConfig.MAX_PARAMETERS];  // -1=continuous, 2=button, >2=list
 
     // Echo tracking with timeout: timestamp of last controller change
     // All callbacks within BitwigConfig.ECHO_TIMEOUT_MS are considered echoes
-    private final long[] lastControllerChangeTime = new long[8];
+    private final long[] lastControllerChangeTime = new long[BitwigConfig.MAX_PARAMETERS];
 
     public DeviceController(
         ControllerHost host,
@@ -51,7 +51,7 @@ public class DeviceController {
         this.deviceBank = deviceBank;
         this.transport = transport;
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             parameterDiscreteCount[i] = -1;  // Default: continuous (safest for echo suppression)
         }
 
@@ -63,7 +63,7 @@ public class DeviceController {
     }
 
     public void updateParameterMetadata(int paramIndex, int discreteCount) {
-        if (paramIndex >= 0 && paramIndex < 8) {
+        if (paramIndex >= 0 && paramIndex < BitwigConfig.MAX_PARAMETERS) {
             parameterDiscreteCount[paramIndex] = discreteCount;
         }
     }
@@ -73,7 +73,7 @@ public class DeviceController {
      * Called when controller sends an update to Bitwig.
      */
     private void markControllerChange(int paramIndex) {
-        if (paramIndex >= 0 && paramIndex < 8) {
+        if (paramIndex >= 0 && paramIndex < BitwigConfig.MAX_PARAMETERS) {
             lastControllerChangeTime[paramIndex] = System.currentTimeMillis();
         }
     }
@@ -87,7 +87,7 @@ public class DeviceController {
      * within the timeout window are considered echoes.
      */
     public boolean consumeEcho(int paramIndex) {
-        if (paramIndex >= 0 && paramIndex < 8) {
+        if (paramIndex >= 0 && paramIndex < BitwigConfig.MAX_PARAMETERS) {
             long now = System.currentTimeMillis();
             long timeSinceChange = now - lastControllerChangeTime[paramIndex];
             return timeSinceChange < BitwigConfig.ECHO_TIMEOUT_MS;
@@ -103,7 +103,7 @@ public class DeviceController {
             }
 
             int index = msg.getParameterIndex();
-            if (index < 0 || index >= 8) return;
+            if (index < 0 || index >= BitwigConfig.MAX_PARAMETERS) return;
 
             long now = System.currentTimeMillis();
             long timeSincePress = now - lastPressTime[index];
@@ -148,7 +148,7 @@ public class DeviceController {
             if (msg.fromHost) return;
 
             int paramIndex = msg.getParameterIndex();
-            if (paramIndex < 0 || paramIndex >= 8) return;
+            if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) return;
 
             boolean isTouched = msg.isTouched();
             if (touchState[paramIndex] == isTouched) return;  // Debounce

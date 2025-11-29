@@ -8,16 +8,16 @@ namespace Bitwig
 
     PageTitleItem::PageTitleItem(lv_obj_t *parent)
     {
-        label_ = std::make_unique<Label>(parent);
-        label_->setFlexGrow(false);  // Don't expand, allow right-alignment
-        label_->setAutoScroll(false);  // Page names are usually short
-        label_->setColor(lv_color_hex(Theme::Color::TEXT_LIGHT));
-        label_->setFont(bitwig_fonts.page_label);
+        // Create label directly in parent - owned by LVGL parent hierarchy
+        label_ = lv_label_create(parent);
+        lv_obj_set_style_text_color(label_, lv_color_hex(Theme::Color::TEXT_LIGHT), 0);
+        lv_obj_set_style_text_font(label_, bitwig_fonts.page_label, 0);
+        lv_label_set_text(label_, "");
     }
 
     PageTitleItem::~PageTitleItem()
     {
-        // unique_ptr handles cleanup
+        // Don't delete anything - LVGL parent handles cleanup
     }
 
     void PageTitleItem::setName(const std::string &name)
@@ -26,12 +26,12 @@ namespace Bitwig
         {
             if (name.empty())
             {
-                label_->setText("Page");
+                lv_label_set_text(label_, "Page");
             }
             else
             {
                 std::string clean = TextUtils::sanitizeText(name.c_str()).c_str();
-                label_->setText(clean);
+                lv_label_set_text(label_, clean.c_str());
             }
         }
     }

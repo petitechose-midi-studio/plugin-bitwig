@@ -32,6 +32,7 @@ public class TransportController {
 
     private void setupCallbacks() {
         protocol.onTransportPlay = msg -> {
+            if (msg.fromHost) return;
             if (msg.isPlaying()) {
                 transport.play();
             } else {
@@ -40,23 +41,20 @@ public class TransportController {
         };
 
         protocol.onTransportRecord = msg -> {
+            if (msg.fromHost) return;
             transport.record();
         };
 
         protocol.onTransportStop = msg -> {
+            if (msg.fromHost) return;
             transport.stop();
         };
 
         protocol.onTransportTempo = msg -> {
-            if (msg.fromHost) {
-                // Set absolute tempo from host
-                transport.tempo().setRaw(msg.getTempo());
-                host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM ← host");
-            } else {
-                // Increment tempo from controller
-                transport.tempo().incRaw(msg.getTempo());
-                host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM (Δ" + msg.getTempo() + ")");
-            }
+            if (msg.fromHost) return;
+            // Increment tempo from controller (delta value)
+            transport.tempo().incRaw(msg.getTempo());
+            host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM (Δ" + msg.getTempo() + ")");
         };
     }
 }
