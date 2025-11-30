@@ -56,7 +56,7 @@ namespace Layout {
 // Bar heights
 constexpr int16_t TOP_BAR_HEIGHT = 20;
 constexpr int16_t TRANSPORT_BAR_HEIGHT = 20;
-constexpr int16_t BUTTON_HINT_HEIGHT = 30;
+constexpr int16_t HINT_BAR_HEIGHT = 20;
 
 // Widget dimensions (4x2 grid in body)
 constexpr int16_t WIDGET_WIDTH = 80;

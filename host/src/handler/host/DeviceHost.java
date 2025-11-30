@@ -40,6 +40,7 @@ public class DeviceHost {
 
     // Prevent duplicate calls during transitions
     private boolean deviceChangePending = false;  // Ignores individual param messages during device change
+    private boolean deviceListPending = false;  // Debounce for sendDeviceList
 
     public DeviceHost(
         ControllerHost host,
@@ -59,8 +60,8 @@ public class DeviceHost {
 
     public void setup() {
         // Create banks
-        layerBank = cursorDevice.createLayerBank(16);
-        drumPadBank = cursorDevice.createDrumPadBank(16);
+        layerBank = cursorDevice.createLayerBank(BitwigConfig.MAX_CHILDREN);
+        drumPadBank = cursorDevice.createDrumPadBank(BitwigConfig.MAX_CHILDREN);
 
         // Mark interested + add observers by domain
         setupCursorTrackObservables();
@@ -170,6 +171,12 @@ public class DeviceHost {
         deviceBank.canScrollBackwards().markInterested();
         deviceBank.canScrollForwards().markInterested();
 
+        // Observer for device count changes (add/remove device)
+        deviceBank.itemCount().addValueObserver(count -> {
+            host.println("[DEVICE HOST] Device count changed: " + count);
+            sendDeviceList();
+        });
+
         // All devices in bank
         for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int deviceIndex = i;
@@ -241,8 +248,13 @@ public class DeviceHost {
     }
 
     public void sendDeviceList() {
+        // Debounce: skip if already pending
+        if (deviceListPending) return;
+        deviceListPending = true;
+
         // Delay to let Bitwig API update values
         host.scheduleTask(() -> {
+            deviceListPending = false;
             final int totalDeviceCount = deviceBank.itemCount().get();
             final int currentDevicePosition = cursorDevice.position().get();
             final boolean isNested = cursorDevice.isNested().get();
@@ -390,9 +402,7 @@ public class DeviceHost {
                 cursorDevice.selectFirstInKeyPad(childIndex);
                 break;
         }
-
-        // Wait for deviceBank to be ready, then send (100ms for enter)
-        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.DEVICE_ENTER_CHILD_MS);
+        // itemCount observer will trigger sendDeviceList() with debounce
     }
 
     /**
@@ -404,9 +414,8 @@ public class DeviceHost {
 
         // Execute Bitwig API navigation
         cursorDevice.selectParent();
+        // itemCount observer will trigger sendDeviceList() with debounce
 
-        // Wait for deviceBank to be ready, then send (300ms for exit - industry standard)
-        host.scheduleTask(() -> sendDeviceList(), BitwigConfig.DEVICE_EXIT_NESTED_MS);
     }
 
     private List<DeviceChildrenMessage.Children> getSlots(Device device) {

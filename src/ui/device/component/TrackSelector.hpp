@@ -1,7 +1,7 @@
 #pragma once
 
 #include "widget/BaseSelector.hpp"
-#include "ButtonHintBar.hpp"
+#include "ui/shared/widget/HintBar.hpp"
 #include "TrackTitleItem.hpp"
 #include <string>
 #include <vector>
@@ -44,7 +44,9 @@ private:
     std::vector<std::string> prev_items_;  // Cache for itemsChanged detection
     std::vector<std::unique_ptr<TrackTitleItem>> track_items_;
 
-    std::unique_ptr<ButtonHintBar> footer_;
+    std::unique_ptr<UI::HintBar> footer_;
+    lv_obj_t* footer_mute_ = nullptr;
+    lv_obj_t* footer_solo_ = nullptr;
 };
 
 } // namespace Bitwig

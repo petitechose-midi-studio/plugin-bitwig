@@ -13,6 +13,7 @@ DeviceSelector::DeviceSelector(lv_obj_t *parent)
     : BaseSelector(parent)
 {
     setTitle("Devices");
+    createFooter();  // Create footer once, after list - ensures correct flex order
 }
 
 DeviceSelector::~DeviceSelector()
@@ -26,7 +27,7 @@ void DeviceSelector::render(const DeviceSelectorProps &props)
     {
         hide();
         if (footer_)
-            footer_->render({.visible = false});
+            footer_->hide();
         return;
     }
 
@@ -63,22 +64,22 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props)
     {
         createIndicators(props);
     }
+    else
+    {
+        // Update states for existing indicators (names didn't change but states might have)
+        updateIndicatorStates(props);
+    }
 
     if (!isVisible())
         show();
 
     if (props.showFooter)
     {
-        if (!footer_)
-            createFooter();
-        footer_->render({
-            .left = {.text = "Track"},
-            .center = {.text = "State"},
-            .visible = true});
+        renderFooter(props);
     }
     else if (footer_)
     {
-        footer_->render({.visible = false});
+        footer_->hide();
     }
 }
 
@@ -164,7 +165,7 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props)
         show();
 
     if (footer_)
-        footer_->render({.visible = false});
+        footer_->hide();
 }
 
 void DeviceSelector::updateDeviceState(int displayIndex, bool enabled)
@@ -173,15 +174,77 @@ void DeviceSelector::updateDeviceState(int displayIndex, bool enabled)
     if (index >= state_icons_.size() || !state_icons_[index])
         return;
 
+    // Update state icon in the list
     lv_obj_t *stateIcon = state_icons_[index];
     lv_label_set_text(stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
     lv_obj_set_style_text_color(stateIcon,
         lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+
+    // Update footer if this is the selected device
+    if (footer_state_ && displayIndex == overlay().getSelectedIndex())
+    {
+        Icon::set(footer_state_, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::L);
+        lv_obj_set_style_text_color(footer_state_,
+            lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+    }
+}
+
+void DeviceSelector::updateIndicatorStates(const DeviceSelectorProps &props)
+{
+    if (!props.deviceStates)
+        return;
+
+    const auto &states = *props.deviceStates;
+    for (size_t i = 0; i < state_icons_.size() && i < states.size(); i++)
+    {
+        if (!state_icons_[i])
+            continue;
+
+        bool enabled = states[i];
+        lv_label_set_text(state_icons_[i], enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+        lv_obj_set_style_text_color(state_icons_[i],
+            lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+    }
 }
 
 void DeviceSelector::createFooter()
 {
-    footer_ = std::make_unique<ButtonHintBar>(parent_);
+    // Create footer inside overlay container (participates in flex layout)
+    footer_ = std::make_unique<UI::HintBar>(overlay().getContainer(), UI::HintBarPosition::Bottom);
+    footer_->setSize(Layout::HINT_BAR_HEIGHT);
+
+    // Create track icon (cell 0 = left)
+    footer_track_ = lv_label_create(footer_->getElement());
+    Icon::set(footer_track_, Icon::CHANNEL_LIST, Icon::L);
+    lv_obj_set_style_text_color(footer_track_, lv_color_hex(Color::TEXT_LIGHT), 0);
+    footer_->setCell(0, footer_track_);
+
+    // Create state icon (cell 1 = center) - will be updated in renderFooter
+    footer_state_ = lv_label_create(footer_->getElement());
+    Icon::set(footer_state_, Icon::DEVICE_ON, Icon::L);
+    lv_obj_set_style_text_color(footer_state_, lv_color_hex(Color::DEVICE_STATE_ENABLED), 0);
+    footer_->setCell(1, footer_state_);
+}
+
+void DeviceSelector::renderFooter(const DeviceSelectorProps &props)
+{
+    if (!footer_)
+        return;
+
+    int idx = props.selectedIndex;
+    bool isEnabled = props.deviceStates && idx >= 0 && idx < static_cast<int>(props.deviceStates->size())
+                         ? (*props.deviceStates)[idx]
+                         : true;
+
+    // Update icon and color based on state
+    if (footer_state_)
+    {
+        Icon::set(footer_state_, isEnabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::L);
+        lv_obj_set_style_text_color(footer_state_,
+            lv_color_hex(isEnabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+    }
+
+    footer_->show();
 }
 
 void DeviceSelector::clearIndicators()

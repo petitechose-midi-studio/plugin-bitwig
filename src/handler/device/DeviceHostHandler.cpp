@@ -213,11 +213,13 @@ namespace Bitwig
                 view_controller_.handleCurrentDeviceInfo(msg.deviceIndex, hasChildren);
             }
 
+            // Only display if explicitly requested by user
             if (!input_handler_.isDeviceListRequested())
             {
                 return;
             }
 
+            // Update device list data - UI will sync if selector is visible
             view_controller_.handleDeviceList(msg);
         };
 

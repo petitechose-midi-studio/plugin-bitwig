@@ -76,15 +76,14 @@ public class TrackController {
 
                 cursorTrack.selectChannel(track);
 
-                // Select first device when deviceBank is ready, then send device list
+                // Select first device when deviceBank is ready
                 if (deviceHost != null) {
                     deviceHost.scheduleAfterDeviceBankUpdate(() -> {
                         com.bitwig.extension.controller.api.Device firstDevice = deviceBank.getItemAt(0);
                         if (firstDevice.exists().get()) {
                             cursorDevice.selectDevice(firstDevice);
                         }
-                        // Send device list after another delay for device selection to complete
-                        host.scheduleTask(() -> deviceHost.sendDeviceList(), BitwigConfig.DEVICE_ENTER_CHILD_MS);
+                        // itemCount observer will trigger sendDeviceList() with debounce
                     });
                 }
             }

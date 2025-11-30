@@ -12,6 +12,7 @@ TrackSelector::TrackSelector(lv_obj_t *parent)
     : BaseSelector(parent)
 {
     setTitle("Tracks");
+    createFooter();  // Create footer once, after list - ensures correct flex order
 }
 
 TrackSelector::~TrackSelector()
@@ -25,7 +26,7 @@ void TrackSelector::render(const TrackSelectorProps &props)
     {
         hide();
         if (footer_)
-            footer_->render({.visible = false});
+            footer_->hide();
         return;
     }
 
@@ -56,15 +57,26 @@ void TrackSelector::render(const TrackSelectorProps &props)
     if (!isVisible())
         show();
 
-    if (!footer_)
-        createFooter();
-
     renderFooter(props);
 }
 
 void TrackSelector::createFooter()
 {
-    footer_ = std::make_unique<ButtonHintBar>(parent_);
+    // Create footer inside overlay container (participates in flex layout)
+    footer_ = std::make_unique<UI::HintBar>(overlay().getContainer(), UI::HintBarPosition::Bottom);
+    footer_->setSize(Layout::HINT_BAR_HEIGHT);
+
+    // Create mute icon (cell 1 = center)
+    footer_mute_ = lv_label_create(footer_->getElement());
+    Icon::set(footer_mute_, Icon::MUTE, Icon::L);
+    lv_obj_set_style_text_color(footer_mute_, lv_color_hex(Color::TRACK_MUTE), 0);
+    footer_->setCell(1, footer_mute_);
+
+    // Create solo icon (cell 2 = right)
+    footer_solo_ = lv_label_create(footer_->getElement());
+    Icon::set(footer_solo_, Icon::SOLO, Icon::L);
+    lv_obj_set_style_text_color(footer_solo_, lv_color_hex(Color::TRACK_SOLO), 0);
+    footer_->setCell(2, footer_solo_);
 }
 
 void TrackSelector::createTrackItems(const std::vector<std::string> &names)
@@ -159,10 +171,13 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props)
                         ? (*props.soloStates)[idx]
                         : false;
 
-    footer_->render({
-        .center = {.icon = Icon::MUTE, .color = Color::TRACK_MUTE, .active = isMuted},
-        .right = {.icon = Icon::SOLO, .color = Color::TRACK_SOLO, .active = isSoloed},
-        .visible = true});
+    // Update opacity based on state (active = full, inactive = faded)
+    if (footer_mute_)
+        lv_obj_set_style_text_opa(footer_mute_, isMuted ? LV_OPA_COVER : LV_OPA_40, 0);
+    if (footer_solo_)
+        lv_obj_set_style_text_opa(footer_solo_, isSoloed ? LV_OPA_COVER : LV_OPA_40, 0);
+
+    footer_->show();
 }
 
 } // namespace Bitwig

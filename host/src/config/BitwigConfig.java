@@ -38,11 +38,17 @@ public final class BitwigConfig {
     private BitwigConfig() {} // Prevent instantiation
 
     // ═══════════════════════════════════════════════════════════════════
-    // INITIALIZATION
+    // STANDARD DELAYS
     // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * Delay at startup sync
+     * Standard delay for Bitwig API to update values after an action.
+     * Used for most navigation and state change operations.
+     */
+    public static final int STANDARD_DELAY_MS = 80;
+
+    /**
+     * Delay at startup sync (longer for initial stabilization)
      */
     public static final int INIT_MS = 200;
 
@@ -50,51 +56,30 @@ public final class BitwigConfig {
     // TRACK NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
 
-    /**
-     * Delay after entering a track group (select + selectFirstChild).
-     * Source: DrivenByMoss TrackImpl.java:166
-     */
-    public static final int TRACK_ENTER_GROUP_MS = 100;
+    /** Delay after entering a track group (2x standard - navigation is complex) */
+    public static final int TRACK_ENTER_GROUP_MS = STANDARD_DELAY_MS * 2;
 
-    /**
-     * Delay after exiting a track group (selectParent).
-     */
-    public static final int TRACK_EXIT_GROUP_MS = 100;
+    /** Delay after exiting a track group (2x standard - navigation is complex) */
+    public static final int TRACK_EXIT_GROUP_MS = STANDARD_DELAY_MS * 2;
 
-    /**
-     * Delay after track selection before sending track list.
-     * Allows cursorTrack.position() to update after selectChannel().
-     */
-    public static final int TRACK_SELECT_DELAY_MS = 100;
+    /** Delay after track selection before sending track list */
+    public static final int TRACK_SELECT_DELAY_MS = STANDARD_DELAY_MS;
 
     // ═══════════════════════════════════════════════════════════════════
     // DEVICE NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
 
-    /**
-     * Delay after entering device child (slot/layer/drum).
-     * Also used for device change macro send.
-     */
-    public static final int DEVICE_ENTER_CHILD_MS = 100;
+    /** Delay after entering device child (2x standard - navigation is complex) */
+    public static final int DEVICE_ENTER_CHILD_MS = STANDARD_DELAY_MS * 2;
 
-    /**
-     * Delay after device change before reading all properties.
-     * Longer than DEVICE_ENTER_CHILD_MS because hasSlots/hasLayers/hasDrumPads
-     * take longer to populate via Bitwig's observer system.
-     */
-    public static final int DEVICE_CHANGE_HEADER_MS = 100;
+    /** Delay after device change before reading properties */
+    public static final int DEVICE_CHANGE_HEADER_MS = STANDARD_DELAY_MS;
 
-    /**
-     * Delay after selectParent on nested device.
-     * Source: DrivenByMoss DeviceParamsMode.java:226
-     * Kept higher because nested navigation is more complex.
-     */
-    public static final int DEVICE_EXIT_NESTED_MS = 100;
+    /** Delay after exiting nested device (2x standard - navigation is complex) */
+    public static final int DEVICE_EXIT_NESTED_MS = STANDARD_DELAY_MS * 2;
 
-    /**
-     * Delay after changing remote controls page.
-     */
-    public static final int PAGE_CHANGE_MS = 100;
+    /** Delay after changing remote controls page */
+    public static final int PAGE_CHANGE_MS = STANDARD_DELAY_MS;
 
     // ═══════════════════════════════════════════════════════════════════
     // TOUCH / AUTOMATION
@@ -116,7 +101,13 @@ public final class BitwigConfig {
      * Window for detecting echo callbacks from controller changes.
      * Callbacks within this window are considered echoes (not sent to controller).
      */
-    public static final int ECHO_TIMEOUT_MS = 100;
+    public static final int ECHO_TIMEOUT_MS = STANDARD_DELAY_MS;
+
+    /**
+     * Timeout for mute/solo toggle confirmation.
+     * If observer doesn't fire within this window, pending state expires.
+     */
+    public static final int TOGGLE_CONFIRM_TIMEOUT_MS = 200;
 
     // ═══════════════════════════════════════════════════════════════════
     // BANK SIZES

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "widget/BaseSelector.hpp"
-#include "ButtonHintBar.hpp"
+#include "ui/shared/widget/HintBar.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -48,8 +48,10 @@ private:
     void renderDeviceList(const DeviceSelectorProps &props);
     void renderChildren(const DeviceSelectorProps &props);
     void createFooter();
+    void renderFooter(const DeviceSelectorProps &props);
     void clearIndicators();
     void createIndicators(const DeviceSelectorProps &props);
+    void updateIndicatorStates(const DeviceSelectorProps &props);
 
     static bool isNonDeviceItem(const std::string &name);
     static bool hasChildren(const DeviceSelectorProps &props, size_t index);
@@ -63,7 +65,9 @@ private:
     std::vector<lv_obj_t *> state_icons_;  // LVGL objects for device state
     std::vector<lv_obj_t *> folder_icons_; // LVGL objects for folder indicators
 
-    std::unique_ptr<ButtonHintBar> footer_;
+    std::unique_ptr<UI::HintBar> footer_;
+    lv_obj_t* footer_track_ = nullptr;
+    lv_obj_t* footer_state_ = nullptr;
 };
 
 } // namespace Bitwig

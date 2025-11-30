@@ -42,7 +42,8 @@ public class TrackHost {
     private long pendingMuteTimestamp = 0;
     private int pendingSoloTrackIndex = -1;
     private long pendingSoloTimestamp = 0;
-    private static final long PENDING_TIMEOUT_MS = 500; // Auto-expire after 500ms
+    
+    private boolean trackListPending = false;  // Debounce for sendTrackList
 
     public TrackHost(
         ControllerHost host,
@@ -56,7 +57,7 @@ public class TrackHost {
         this.mainTrackBank = mainTrackBank;
 
         // Create a TrackBank for sibling tracks (same level as cursor track)
-        this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(32, 0, 0, true, false);
+        this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(BitwigConfig.MAX_BANK_SIZE, 0, 0, true, false);
 
         // Create parent track object to detect if cursor track has a parent
         this.parentTrack = cursorTrack.createParentTrack(0, 0);
@@ -80,6 +81,12 @@ public class TrackHost {
         mainTrackBank.canScrollBackwards().markInterested();
         mainTrackBank.canScrollForwards().markInterested();
 
+        // Observer for track count changes (add/remove track)
+        mainTrackBank.itemCount().addValueObserver(count -> {
+            host.println("[TRACK HOST] Main bank track count changed: " + count);
+            sendTrackList();
+        });
+
         // Mark all tracks in bank as interested + add observers
         for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int trackIndex = i;
@@ -94,6 +101,12 @@ public class TrackHost {
 
         // Mark sibling track bank observables as interested + add observers
         siblingTrackBank.itemCount().markInterested();
+
+        // Observer for sibling track count changes (add/remove track in group)
+        siblingTrackBank.itemCount().addValueObserver(count -> {
+            host.println("[TRACK HOST] Sibling bank track count changed: " + count);
+            sendTrackList();
+        });
         for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int trackIndex = i;
             Track track = siblingTrackBank.getItemAt(i);
@@ -146,7 +159,7 @@ public class TrackHost {
         // Mute observer - sends confirmation when mute state changes
         track.mute().addValueObserver(isMuted -> {
             long elapsed = System.currentTimeMillis() - pendingMuteTimestamp;
-            if (pendingMuteTrackIndex == trackIndex && track.exists().get() && elapsed < PENDING_TIMEOUT_MS) {
+            if (pendingMuteTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingMuteTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (isMuted ? "MUTED" : "UNMUTED") + "\n");
@@ -157,7 +170,7 @@ public class TrackHost {
         // Solo observer - sends confirmation when solo state changes
         track.solo().addValueObserver(isSoloed -> {
             long elapsed = System.currentTimeMillis() - pendingSoloTimestamp;
-            if (pendingSoloTrackIndex == trackIndex && track.exists().get() && elapsed < PENDING_TIMEOUT_MS) {
+            if (pendingSoloTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingSoloTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (isSoloed ? "SOLOED" : "UNSOLOED") + "\n");
@@ -187,8 +200,13 @@ public class TrackHost {
      * Send track list to controller
      */
     public void sendTrackList() {
+        // Debounce: skip if already pending
+        if (trackListPending) return;
+        trackListPending = true;
+
         // Delay to let Bitwig API update values (cursorTrack.position(), etc.)
         host.scheduleTask(() -> {
+            trackListPending = false;
             // Capture API data AFTER delay
             final TrackBank bank = getCurrentBank();
             final boolean hasParent = hasParentGroup();
@@ -259,9 +277,7 @@ public class TrackHost {
         // Execute Bitwig API navigation
         cursorTrack.selectChannel(track);
         cursorTrack.selectFirstChild();
-
-        // Send track list after delay for Bitwig to update (industry standard: 100ms)
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.TRACK_ENTER_GROUP_MS);
+        // itemCount observer will trigger sendTrackList() with debounce
     }
 
     /**
@@ -283,9 +299,8 @@ public class TrackHost {
 
         // Execute Bitwig API navigation
         cursorTrack.selectParent();
+        // itemCount observer will trigger sendTrackList() with debounce
 
-        // Send track list after delay for Bitwig to update (industry standard: 100ms)
-        host.scheduleTask(() -> sendTrackList(), BitwigConfig.TRACK_EXIT_GROUP_MS);
     }
 
     /**
