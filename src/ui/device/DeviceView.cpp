@@ -17,7 +17,6 @@ namespace Bitwig {
     DeviceView::DeviceView(lv_obj_t *zone, const Config &viewConfig)
         : viewConfig_(viewConfig),
           initialized_(false),
-          active_(false),
           zone_(zone),
           top_bar_container_(nullptr),
           body_container_(nullptr)
@@ -37,8 +36,6 @@ namespace Bitwig {
 
     DeviceView::~DeviceView()
     {
-        setActive(false);
-
         for (auto &widget : widgets_)
         {
             widget.reset();
@@ -75,10 +72,7 @@ namespace Bitwig {
         // based on parameter type from Bitwig
 
         setupLayout();
-        initializeMappingsFromConfig();
     }
-
-    void DeviceView::render() {}
 
     void DeviceView::sync()
     {
@@ -234,47 +228,20 @@ namespace Bitwig {
             .visible = ts.visible});
     }
 
-    void DeviceView::update() {}
-
-    void DeviceView::setActive(bool active)
-    {
-        if (active_ == active)
-        {
-            return;
-        }
-
-        active_ = active;
-
-        if (top_bar_container_)
-        {
-            if (active)
-            {
-                lv_obj_clear_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
-            }
-            else
-            {
-                lv_obj_add_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
-            }
-        }
-        if (body_container_)
-        {
-            if (active)
-            {
-                lv_obj_clear_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
-            }
-            else
-            {
-                lv_obj_add_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
-            }
-        }
-    }
-
     void DeviceView::onActivate()
     {
+        if (top_bar_container_)
+            lv_obj_clear_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
+        if (body_container_)
+            lv_obj_clear_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
     }
 
     void DeviceView::onDeactivate()
     {
+        if (top_bar_container_)
+            lv_obj_add_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
+        if (body_container_)
+            lv_obj_add_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
     }
 
     void DeviceView::setParameterTypeAndMetadata(uint8_t paramIndex,
@@ -406,8 +373,6 @@ namespace Bitwig {
             }
         }
     }
-
-    void DeviceView::initializeMappingsFromConfig() {}
 
     void DeviceView::createDeviceStateBar()
     {

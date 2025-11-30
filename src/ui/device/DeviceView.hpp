@@ -58,10 +58,7 @@ namespace Bitwig
             return zone_;
         }
 
-        void render();
-        void update();
         void sync();
-        void setActive(bool active);
 
         DeviceState &state() { return state_; }
 
@@ -92,7 +89,6 @@ namespace Bitwig
         DeviceState state_;
         Config viewConfig_;
         bool initialized_;
-        bool active_;
 
         std::array<std::unique_ptr<IParameterWidget>, 8> widgets_;
         std::unique_ptr<DeviceStateBar> top_bar_component_;
@@ -109,8 +105,6 @@ namespace Bitwig
         void createUI();
         void setupLayout();
         void createDeviceStateBar();
-        void updateDeviceStateBarContent();
-        void initializeMappingsFromConfig();
 
         void syncDeviceInfo();
         void syncParameter(uint8_t index);
