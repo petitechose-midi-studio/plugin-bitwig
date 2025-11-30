@@ -5,6 +5,18 @@
 
 namespace Bitwig {
 
+namespace {
+// Shared mapping arrays for macro controls
+constexpr EncoderID MACRO_ENCODERS[] = {
+    EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
+    EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
+};
+constexpr ButtonID MACRO_BUTTONS[] = {
+    ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
+    ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
+};
+} // namespace
+
 // =============================================================================
 // Construction / Destruction
 // =============================================================================
@@ -23,11 +35,7 @@ MacroInputHandler::~MacroInputHandler() = default;
 // =============================================================================
 
 EncoderID MacroInputHandler::getEncoderIdForParameter(uint8_t paramIndex) {
-    static constexpr EncoderID encoders[] = {
-        EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
-        EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
-    };
-    return (paramIndex < Device::PARAMETER_COUNT) ? encoders[paramIndex] : EncoderID(0);
+    return (paramIndex < Device::PARAMETER_COUNT) ? MACRO_ENCODERS[paramIndex] : EncoderID(0);
 }
 
 // =============================================================================
@@ -35,19 +43,10 @@ EncoderID MacroInputHandler::getEncoderIdForParameter(uint8_t paramIndex) {
 // =============================================================================
 
 void MacroInputHandler::setupInputBindings() {
-    static constexpr EncoderID encoders[] = {
-        EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
-        EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
-    };
-    static constexpr ButtonID buttons[] = {
-        ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
-        ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
-    };
-
     for (uint8_t i = 0; i < Device::PARAMETER_COUNT; i++) {
-        api_.onTurned(encoders[i], [this, i](float v) { handleValueChange(i, v); }, scope_);
-        api_.onPressed(buttons[i], [this, i]() { sendTouch(i, true); }, scope_);
-        api_.onReleased(buttons[i], [this, i]() { sendTouch(i, false); }, scope_);
+        api_.onTurned(MACRO_ENCODERS[i], [this, i](float v) { handleValueChange(i, v); }, scope_);
+        api_.onPressed(MACRO_BUTTONS[i], [this, i]() { sendTouch(i, true); }, scope_);
+        api_.onReleased(MACRO_BUTTONS[i], [this, i]() { sendTouch(i, false); }, scope_);
     }
 }
 
