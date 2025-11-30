@@ -35,7 +35,7 @@ namespace Bitwig
         if (currentViewID_ == id)
             return;
 
-        // Désactiver la vue précédente
+        // Deactivate the previous view
         if (currentView_)
         {
             currentView_->onDeactivate();
@@ -57,7 +57,7 @@ namespace Bitwig
 
     void ViewManager::showSplash(uint32_t durationMs, const char *message)
     {
-        // Désactiver la vue précédente
+        // Deactivate the previous view
         if (currentView_ && currentViewID_ != ViewID::SPLASH)
         {
             currentView_->onDeactivate();

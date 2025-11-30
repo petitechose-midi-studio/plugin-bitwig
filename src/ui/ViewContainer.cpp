@@ -17,7 +17,7 @@ namespace Bitwig
         lv_obj_set_style_border_width(container_, 0, 0);
         lv_obj_set_style_bg_color(container_, lv_color_hex(Theme::Color::BACKGROUND_FILL), 0);
 
-        // Cacher au démarrage (splash couvre tout initialement)
+        // Hidden at startup (splash covers everything initially)
         lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
 
         mainZone_ = lv_obj_create(container_);

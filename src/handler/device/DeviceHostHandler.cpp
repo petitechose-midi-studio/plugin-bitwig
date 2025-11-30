@@ -324,7 +324,6 @@ namespace Bitwig
 
             auto &ps = view_.state().pageSelector;
             ps.names = pageNames;
-            ps.currentIndex = msg.devicePageIndex;
             ps.selectedIndex = msg.devicePageIndex;
             ps.visible = true;
             view_.state().dirty.pageSelector = true;

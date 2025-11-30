@@ -53,7 +53,6 @@ namespace Bitwig {
         struct PageSelectorInfo
         {
             std::vector<std::string> names;
-            int currentIndex = 0;
             int selectedIndex = 0;
             bool visible = false;
         };

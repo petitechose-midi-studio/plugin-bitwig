@@ -105,10 +105,6 @@ namespace Bitwig
         lv_obj_t *top_bar_container_;
         lv_obj_t *body_container_;
 
-        lv_obj_t *top_bar_title_label_;
-        lv_obj_t *top_bar_status_label_;
-
-        bool is_active_;
 
         void createUI();
         void setupLayout();

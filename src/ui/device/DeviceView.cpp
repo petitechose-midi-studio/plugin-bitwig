@@ -20,8 +20,7 @@ namespace Bitwig {
           active_(false),
           zone_(zone),
           top_bar_container_(nullptr),
-          body_container_(nullptr),
-          is_active_(false)
+          body_container_(nullptr)
     {
 
         for (auto &widget : widgets_)
@@ -268,8 +267,6 @@ namespace Bitwig {
                 lv_obj_add_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
             }
         }
-
-        is_active_ = active;
     }
 
     void DeviceView::onActivate()

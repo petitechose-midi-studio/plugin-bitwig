@@ -24,7 +24,7 @@ TransportBar::TransportBar(lv_obj_t* parent)
 
 TransportBar::~TransportBar() {
     if (container_) {
-        lv_obj_del(container_);
+        lv_obj_delete(container_);
         container_ = nullptr;
     }
 }

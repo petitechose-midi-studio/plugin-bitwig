@@ -36,7 +36,14 @@ namespace Bitwig
         template <typename T = UI::IView>
         T &getView(ViewID id) const
         {
-            return static_cast<T &>(*views_.find(id)->second);
+            auto it = views_.find(id);
+            if (it == views_.end() || !it->second)
+            {
+                // This should never happen in normal operation.
+                // If it does, we have a programming error.
+                while (true) {} // Halt in debug
+            }
+            return static_cast<T &>(*it->second);
         }
 
     private:
