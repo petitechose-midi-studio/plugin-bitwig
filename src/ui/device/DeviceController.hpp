@@ -112,18 +112,6 @@ namespace Bitwig
          */
         void handleShowPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
 
-        /**
-         * @brief Handle page selector confirmation (button release)
-         * Hides selector (InputHandler will send protocol message)
-         */
-        void handlePageSelectorConfirm();
-
-        /**
-         * @brief Get selected page index from selector
-         * @return Selected index, or -1 if not visible
-         */
-        int getPageSelectorSelectedIndex() const;
-
         void handleDeviceList(const Protocol::DeviceListMessage &msg);
 
         void handleShowDeviceSelectorWithIndicators(
@@ -140,18 +128,6 @@ namespace Bitwig
          * @param itemTypes Vector of item types (0=LIST/slot, 1=COPY/layer, 2=KEYBOARD/drum)
          */
         void handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
-
-        /**
-         * @brief Handle device selector confirmation (hide overlay)
-         * Just hides selector (InputHandler handles protocol messages)
-         */
-        void handleDeviceSelectorConfirm();
-
-        /**
-         * @brief Get selected device index from selector
-         * @return Selected index, or -1 if not visible
-         */
-        int getDeviceSelectorSelectedIndex() const;
 
         /**
          * @brief Handle track list display request

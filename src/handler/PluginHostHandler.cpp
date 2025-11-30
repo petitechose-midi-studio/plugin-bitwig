@@ -25,7 +25,7 @@ namespace Bitwig
         } });
 
         api_.onTurnedWhilePressed(EncoderID::NAV, ButtonID::LEFT_TOP, [this](float delta)
-                                  { LOGLN("[PluginHost] View navigation setup (GLOBAL)"); });
+                                  { navigate(delta); });
     }
 
     void PluginHostHandler::showMenu()
@@ -46,7 +46,10 @@ namespace Bitwig
         if (!menuVisible_)
             return;
 
-        LOGF("[PluginHost] Navigate: %.2f\n", delta);
+        // Update selected index (wrap around between 0 and 1)
+        selectedIndex_ += static_cast<int>(delta);
+        if (selectedIndex_ < 0) selectedIndex_ = 1;
+        if (selectedIndex_ > 1) selectedIndex_ = 0;
     }
 
     void PluginHostHandler::activateView()

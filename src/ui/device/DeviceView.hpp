@@ -70,7 +70,6 @@ namespace Bitwig
         IParameterWidget *getWidgetForButton(uint16_t button_id);
 
         void showPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
-        int getPageSelectorIndex() const;
         lv_obj_t *getPageSelectorElement() const;
 
         void showDeviceList(const std::vector<std::string> &names,
@@ -81,7 +80,6 @@ namespace Bitwig
                            const std::vector<bool> &hasLayers,
                            const std::vector<bool> &hasDrums);
         void showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
-        int getDeviceSelectorIndex() const;
         int getDeviceSelectorItemCount() const;
         lv_obj_t *getDeviceSelectorElement() const;
         bool isDeviceSelectorVisible() const;
@@ -93,7 +91,6 @@ namespace Bitwig
                           const std::vector<bool> &soloStates,
                           const std::vector<uint8_t> &trackTypes,
                           const std::vector<uint32_t> &trackColors);
-        int getTrackSelectorIndex() const;
         int getTrackSelectorItemCount() const;
         lv_obj_t *getTrackSelectorElement() const;
         bool isTrackSelectorVisible() const;

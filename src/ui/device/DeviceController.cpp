@@ -147,18 +147,6 @@ namespace Bitwig
         view_.showPageSelector(pageNames, currentIndex);
     }
 
-    void DeviceController::handlePageSelectorConfirm()
-    {
-        view_.state().pageSelector.visible = false;
-        view_.state().dirty.pageSelector = true;
-        view_.sync();
-    }
-
-    int DeviceController::getPageSelectorSelectedIndex() const
-    {
-        return view_.getPageSelectorIndex();
-    }
-
     void DeviceController::handleDeviceList(const Protocol::DeviceListMessage &msg)
     {
         std::vector<std::string> names;
@@ -217,18 +205,6 @@ namespace Bitwig
     void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
     {
         view_.showDeviceChildren(items, itemTypes);
-    }
-
-    void DeviceController::handleDeviceSelectorConfirm()
-    {
-        view_.state().deviceSelector.visible = false;
-        view_.state().dirty.deviceSelector = true;
-        view_.sync();
-    }
-
-    int DeviceController::getDeviceSelectorSelectedIndex() const
-    {
-        return view_.getDeviceSelectorIndex();
     }
 
     void DeviceController::handleTrackList(const Protocol::TrackListMessage &msg)

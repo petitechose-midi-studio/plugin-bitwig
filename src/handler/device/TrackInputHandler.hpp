@@ -7,7 +7,6 @@ namespace Bitwig
 {
 
     class DeviceView;
-    class DeviceController;
 
     /**
      * @brief Hardware input handler for TrackSelector overlay
@@ -21,7 +20,7 @@ namespace Bitwig
     class TrackInputHandler
     {
     public:
-        TrackInputHandler(ControllerAPI &api, DeviceView &view, DeviceController &controller,
+        TrackInputHandler(ControllerAPI &api, DeviceView &view,
                           Protocol::Protocol &protocol);
         ~TrackInputHandler();
 
@@ -44,7 +43,6 @@ namespace Bitwig
 
         ControllerAPI &api_;
         DeviceView &view_;
-        DeviceController &controller_;
         Protocol::Protocol &protocol_;
 
         struct TrackListState

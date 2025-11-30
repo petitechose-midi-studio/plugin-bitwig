@@ -1,7 +1,6 @@
 #include "TrackInputHandler.hpp"
 #include "InputUtils.hpp"
 #include "../../ui/device/DeviceView.hpp"
-#include "../../ui/device/DeviceController.hpp"
 #include "../../protocol/struct/RequestDeviceListMessage.hpp"
 #include "../../protocol/struct/TrackSelectByIndexMessage.hpp"
 #include "../../protocol/struct/EnterTrackGroupMessage.hpp"
@@ -17,8 +16,8 @@ namespace Bitwig
     // =============================================================================
 
     TrackInputHandler::TrackInputHandler(ControllerAPI &api, DeviceView &view,
-                                         DeviceController &controller, Protocol::Protocol &protocol)
-        : api_(api), view_(view), controller_(controller), protocol_(protocol)
+                                         Protocol::Protocol &protocol)
+        : api_(api), view_(view), protocol_(protocol)
     {
         setupBindings();
     }

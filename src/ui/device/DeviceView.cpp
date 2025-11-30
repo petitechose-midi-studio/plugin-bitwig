@@ -488,13 +488,6 @@ namespace Bitwig {
         sync();
     }
 
-    int DeviceView::getPageSelectorIndex() const
-    {
-        if (!page_selector_)
-            return -1;
-        return page_selector_->getSelectedIndex();
-    }
-
     lv_obj_t *DeviceView::getPageSelectorElement() const
     {
         if (!page_selector_)
@@ -533,13 +526,6 @@ namespace Bitwig {
         state_.deviceSelector.visible = true;
         state_.dirty.deviceSelector = true;
         sync();
-    }
-
-    int DeviceView::getDeviceSelectorIndex() const
-    {
-        if (!device_selector_)
-            return -1;
-        return device_selector_->getSelectedIndex();
     }
 
     int DeviceView::getDeviceSelectorItemCount() const
@@ -593,13 +579,6 @@ namespace Bitwig {
         state_.trackSelector.visible = true;
         state_.dirty.trackSelector = true;
         sync();
-    }
-
-    int DeviceView::getTrackSelectorIndex() const
-    {
-        if (!track_selector_)
-            return -1;
-        return track_selector_->getSelectedIndex();
     }
 
     int DeviceView::getTrackSelectorItemCount() const

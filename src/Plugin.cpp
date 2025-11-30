@@ -35,7 +35,7 @@ namespace Bitwig
           viewContainer_(api.getParentContainer()),
           transport_{.bar = TransportBar(viewContainer_.getBottomZone()),
                      .controller = TransportBarController(transport_.bar),
-                     .inputHandler = TransportInputHandler(api_, transport_.controller, protocol_),
+                     .inputHandler = TransportInputHandler(api_, protocol_),
                      .hostHandler = TransportHostHandler(api_, protocol_, transport_.controller)},
           device_{.view = DeviceView(viewContainer_.getMainZone()),
                   .controller = DeviceController(device_.view),

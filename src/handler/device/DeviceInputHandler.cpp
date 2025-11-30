@@ -18,10 +18,10 @@ DeviceInputHandler::DeviceInputHandler(ControllerAPI& api, DeviceView& view,
     : api_(api), scope_(scope)
 {
     macroHandler_ = std::make_unique<MacroInputHandler>(api, controller, protocol, scope);
-    pageHandler_ = std::make_unique<DevicePageInputHandler>(api, view, controller, protocol, scope);
-    trackHandler_ = std::make_unique<TrackInputHandler>(api, view, controller, protocol);
+    pageHandler_ = std::make_unique<DevicePageInputHandler>(api, view, protocol, scope);
+    trackHandler_ = std::make_unique<TrackInputHandler>(api, view, protocol);
     deviceSelectorHandler_ = std::make_unique<DeviceSelectorInputHandler>(
-        api, view, controller, protocol, *trackHandler_, scope);
+        api, view, protocol, *trackHandler_, scope);
 }
 
 DeviceInputHandler::~DeviceInputHandler() {

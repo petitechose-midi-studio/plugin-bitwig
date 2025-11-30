@@ -1,7 +1,6 @@
 #include "DevicePageInputHandler.hpp"
 #include "InputUtils.hpp"
 #include "../../ui/device/DeviceView.hpp"
-#include "../../ui/device/DeviceController.hpp"
 #include "../../protocol/struct/RequestDevicePageNamesMessage.hpp"
 #include "../../protocol/struct/DevicePageSelectByIndexMessage.hpp"
 
@@ -12,9 +11,8 @@ namespace Bitwig {
 // =============================================================================
 
 DevicePageInputHandler::DevicePageInputHandler(ControllerAPI& api, DeviceView& view,
-                                               DeviceController& controller, Protocol::Protocol& protocol,
-                                               lv_obj_t* scope)
-    : api_(api), view_(view), scope_(scope), controller_(controller), protocol_(protocol)
+                                               Protocol::Protocol& protocol, lv_obj_t* scope)
+    : api_(api), view_(view), scope_(scope), protocol_(protocol)
 {
     setupBindings();
 }
@@ -27,7 +25,6 @@ DevicePageInputHandler::~DevicePageInputHandler() = default;
 
 void DevicePageInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t currentIndex) {
     state_.count = pageCount;
-    state_.cursor = currentIndex;
 
     api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
     view_.state().pageSelector.selectedIndex = currentIndex;
@@ -57,6 +54,15 @@ void DevicePageInputHandler::setupBindings() {
 // =============================================================================
 
 void DevicePageInputHandler::requestPageList() {
+    // Show cached page list immediately if available (cache-first)
+    auto& pageState = view_.state().pageSelector;
+    if (!pageState.names.empty() && !pageState.visible) {
+        pageState.visible = true;
+        view_.state().dirty.pageSelector = true;
+        view_.sync();
+    }
+
+    // Always request fresh data from Bitwig
     if (!state_.requested) {
         protocol_.send(Protocol::RequestDevicePageNamesMessage{});
         state_.requested = true;
@@ -75,15 +81,19 @@ void DevicePageInputHandler::navigate(float delta) {
 }
 
 void DevicePageInputHandler::confirmSelection() {
-    int index = controller_.getPageSelectorSelectedIndex();
+    int index = view_.state().pageSelector.selectedIndex;
     if (index >= 0) {
         protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
     }
 }
 
 void DevicePageInputHandler::closeSelector() {
-    int index = controller_.getPageSelectorSelectedIndex();
-    controller_.handlePageSelectorConfirm();
+    int index = view_.state().pageSelector.selectedIndex;
+
+    // Hide page selector
+    view_.state().pageSelector.visible = false;
+    view_.state().dirty.pageSelector = true;
+    view_.sync();
 
     if (index >= 0) {
         protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});

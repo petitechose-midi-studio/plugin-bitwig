@@ -1,22 +1,18 @@
 #include "TransportInputHandler.hpp"
-#include "../../ui/transportbar/TransportBarController.hpp"
 #include "../../protocol/MessageStructure.hpp"
-#include "log/Macros.hpp"
 
 namespace Bitwig
 {
 
-    TransportInputHandler::TransportInputHandler(ControllerAPI &api,
-                                                 TransportBarController &controller,
-                                                 Protocol::Protocol &protocol)
-        : api_(api), view_controller_(controller), protocol_(protocol)
+    TransportInputHandler::TransportInputHandler(ControllerAPI &api, Protocol::Protocol &protocol)
+        : api_(api), protocol_(protocol)
     {
         setupBindings();
     }
 
     void TransportInputHandler::setupBindings()
     {
-        // Configure tempo encoder for Relative mode (no bounds to avoid initialization event)
+        // Configure tempo encoder for Relative mode
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
 
         api_.onReleased(ButtonID::BOTTOM_LEFT, [this]()
@@ -34,12 +30,14 @@ namespace Bitwig
 
     void TransportInputHandler::togglePlay()
     {
-        protocol_.send(Protocol::TransportPlayMessage{!isPlaying_});
+        // Send toggle - Bitwig will return actual state via TransportHostHandler
+        protocol_.send(Protocol::TransportPlayMessage{true});
     }
 
     void TransportInputHandler::toggleRecord()
     {
-        protocol_.send(Protocol::TransportRecordMessage{!isRecording_});
+        // Send toggle - Bitwig will return actual state via TransportHostHandler
+        protocol_.send(Protocol::TransportRecordMessage{true});
     }
 
     void TransportInputHandler::stop()
@@ -49,7 +47,6 @@ namespace Bitwig
 
     void TransportInputHandler::adjustTempo(float delta)
     {
-        // In Relative mode, encoder sends delta directly (±1)
         protocol_.send(Protocol::TransportTempoMessage{delta});
     }
 

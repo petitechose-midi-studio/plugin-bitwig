@@ -8,7 +8,6 @@
 namespace Bitwig {
 
 class DeviceView;
-class DeviceController;
 class TrackInputHandler;
 
 /**
@@ -23,7 +22,7 @@ class TrackInputHandler;
  */
 class DeviceSelectorInputHandler {
 public:
-    DeviceSelectorInputHandler(ControllerAPI& api, DeviceView& view, DeviceController& controller,
+    DeviceSelectorInputHandler(ControllerAPI& api, DeviceView& view,
                                Protocol::Protocol& protocol, TrackInputHandler& trackHandler,
                                lv_obj_t* scope);
     ~DeviceSelectorInputHandler();
@@ -58,7 +57,6 @@ private:
     // --- Dependencies ---
     ControllerAPI& api_;
     DeviceView& view_;
-    DeviceController& controller_;
     Protocol::Protocol& protocol_;
     TrackInputHandler& trackHandler_;
     lv_obj_t* scope_;

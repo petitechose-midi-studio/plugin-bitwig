@@ -6,21 +6,21 @@
 namespace Bitwig
 {
 
-    class TransportBarController;
-
     /**
      * @brief Hardware input handler for transport controls (GLOBAL)
      *
-     * OPTIMISTIC UPDATES for transport (instant feedback):
-     * - Update UI immediately
-     * - Send to Bitwig
-     * - HostHandler syncs state on confirmation
+     * Sends transport commands to Bitwig:
+     * - Play/Pause toggle
+     * - Record toggle
+     * - Stop
+     * - Tempo adjustment
+     *
+     * State is managed by TransportHostHandler (receives confirmations from Bitwig).
      */
     class TransportInputHandler
     {
     public:
-        TransportInputHandler(ControllerAPI &api, TransportBarController &controller,
-                              Protocol::Protocol &protocol);
+        TransportInputHandler(ControllerAPI &api, Protocol::Protocol &protocol);
         ~TransportInputHandler() = default;
 
     private:
@@ -28,14 +28,10 @@ namespace Bitwig
         void togglePlay();
         void toggleRecord();
         void stop();
-        void adjustTempo(float normalizedValue);
+        void adjustTempo(float delta);
 
         ControllerAPI &api_;
-        TransportBarController &view_controller_;
         Protocol::Protocol &protocol_;
-
-        bool isPlaying_ = false;
-        bool isRecording_ = false;
     };
 
 } // namespace Bitwig

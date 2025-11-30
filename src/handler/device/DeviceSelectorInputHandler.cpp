@@ -2,7 +2,6 @@
 #include "TrackInputHandler.hpp"
 #include "InputUtils.hpp"
 #include "../../ui/device/DeviceView.hpp"
-#include "../../ui/device/DeviceController.hpp"
 #include "../../protocol/struct/RequestDeviceListMessage.hpp"
 #include "../../protocol/struct/RequestDeviceChildrenMessage.hpp"
 #include "../../protocol/struct/EnterDeviceChildMessage.hpp"
@@ -18,11 +17,10 @@ namespace Bitwig {
 // =============================================================================
 
 DeviceSelectorInputHandler::DeviceSelectorInputHandler(ControllerAPI& api, DeviceView& view,
-                                                       DeviceController& controller,
                                                        Protocol::Protocol& protocol,
                                                        TrackInputHandler& trackHandler,
                                                        lv_obj_t* scope)
-    : api_(api), view_(view), controller_(controller), protocol_(protocol),
+    : api_(api), view_(view), protocol_(protocol),
       trackHandler_(trackHandler), scope_(scope)
 {
     setupBindings();
@@ -119,6 +117,15 @@ void DeviceSelectorInputHandler::setupBindings() {
 // =============================================================================
 
 void DeviceSelectorInputHandler::requestDeviceList() {
+    // Show cached list immediately if available (cache-first)
+    auto& state = view_.state().deviceSelector;
+    if (!state.names.empty() && !state.visible) {
+        state.visible = true;
+        view_.state().dirty.deviceSelector = true;
+        view_.sync();
+    }
+
+    // Always request fresh data from Bitwig
     if (!deviceList_.requested) {
         protocol_.send(Protocol::RequestDeviceListMessage{});
         deviceList_.requested = true;
@@ -139,8 +146,7 @@ void DeviceSelectorInputHandler::navigate(float delta) {
 
 void DeviceSelectorInputHandler::selectAndDive()
 {
-    int index = controller_.getDeviceSelectorSelectedIndex();
-    if (index < 0) return;
+    int index = view_.state().deviceSelector.currentIndex;
 
     if (navigation_.mode == SelectorMode::Devices) {
         enterDeviceAtIndex(index);
@@ -151,9 +157,7 @@ void DeviceSelectorInputHandler::selectAndDive()
 
 void DeviceSelectorInputHandler::select()
 {
-    int index = controller_.getDeviceSelectorSelectedIndex();
-    if (index < 0)
-        return;
+    int index = view_.state().deviceSelector.currentIndex;
 
     if (navigation_.mode == SelectorMode::Devices)
     {
@@ -212,7 +216,7 @@ void DeviceSelectorInputHandler::enterChildAtIndex(int selectorIndex) {
 
 void DeviceSelectorInputHandler::toggleState()
 {
-    int selectorIndex = controller_.getDeviceSelectorSelectedIndex();
+    int selectorIndex = view_.state().deviceSelector.currentIndex;
     int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
 
     if (deviceIndex >= 0 && deviceIndex < deviceList_.count) {
@@ -227,6 +231,14 @@ void DeviceSelectorInputHandler::requestTrackList() {
         return;
     }
 
+    // Show cached track list immediately if available (cache-first)
+    auto& state = view_.state().trackSelector;
+    if (!state.names.empty() && !state.visible) {
+        state.visible = true;
+        view_.state().dirty.trackSelector = true;
+        view_.sync();
+    }
+
     protocol_.send(Protocol::RequestTrackListMessage{});
     trackHandler_.setTrackListRequested(true);
 }
@@ -235,10 +247,13 @@ void DeviceSelectorInputHandler::close() {
     if (view_.isTrackSelectorVisible()) {
         view_.state().trackSelector.visible = false;
         view_.state().dirty.trackSelector = true;
-        view_.sync();
         trackHandler_.setTrackListRequested(false);
     }
-    controller_.handleDeviceSelectorConfirm();
+
+    // Hide device selector
+    view_.state().deviceSelector.visible = false;
+    view_.state().dirty.deviceSelector = true;
+    view_.sync();
 
     deviceList_.requested = false;
     api_.setLatch(ButtonID::LEFT_CENTER, false);

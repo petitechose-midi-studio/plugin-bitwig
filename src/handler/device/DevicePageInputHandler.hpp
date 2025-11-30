@@ -6,7 +6,6 @@
 namespace Bitwig {
 
 class DeviceView;
-class DeviceController;
 
 /**
  * @brief Hardware input handler for PageSelector overlay
@@ -18,7 +17,7 @@ class DeviceController;
  */
 class DevicePageInputHandler {
 public:
-    DevicePageInputHandler(ControllerAPI& api, DeviceView& view, DeviceController& controller,
+    DevicePageInputHandler(ControllerAPI& api, DeviceView& view,
                            Protocol::Protocol& protocol, lv_obj_t* scope);
     ~DevicePageInputHandler();
 
@@ -35,14 +34,11 @@ private:
     ControllerAPI& api_;
     DeviceView& view_;
     lv_obj_t* scope_;
-    DeviceController& controller_;
     Protocol::Protocol& protocol_;
 
     struct PageState {
         uint8_t count = 0;
-        uint8_t cursor = 0;
         bool requested = false;
-        // currentSelectorIndex removed - use view_.state().pageSelector.selectedIndex
     };
     PageState state_;
 };
