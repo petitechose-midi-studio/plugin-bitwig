@@ -4,7 +4,6 @@ import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.Protocol;
 import protocol.struct.*;
-import config.BitwigConfig;
 
 /**
  * TransportHost - Observes Bitwig Transport and sends updates TO controller

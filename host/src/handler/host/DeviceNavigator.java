@@ -1,7 +1,6 @@
 package handler.host;
 
 import com.bitwig.extension.controller.api.*;
-import config.BitwigConfig;
 
 /**
  * DeviceNavigator - Handles device hierarchy navigation
