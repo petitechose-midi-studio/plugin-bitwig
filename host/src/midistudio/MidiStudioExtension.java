@@ -45,7 +45,7 @@ public class MidiStudioExtension extends ControllerExtension {
             host.getMidiOutPort(0),
             host.getMidiInPort(0));
 
-      new TransportController(host, transport, protocol);
+      new TransportController(transport, protocol);
       DeviceController deviceController = new DeviceController(host, cursorDevice, remoteControls, protocol, deviceBank,
             transport);
 

@@ -1,7 +1,6 @@
 package handler.controller;
 
 import com.bitwig.extension.controller.api.Transport;
-import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.Protocol;
 
 /**
@@ -14,19 +13,12 @@ import protocol.Protocol;
  * - NEVER sends protocol messages (confirmations come from TransportHost observers)
  */
 public class TransportController {
-    private final ControllerHost host;
     private final Transport transport;
     private final Protocol protocol;
 
-    public TransportController(
-        ControllerHost host,
-        Transport transport,
-        Protocol protocol
-    ) {
-        this.host = host;
+    public TransportController(Transport transport, Protocol protocol) {
         this.transport = transport;
         this.protocol = protocol;
-
         setupProtocolCallbacks();
     }
 
@@ -52,9 +44,7 @@ public class TransportController {
 
         protocol.onTransportTempo = msg -> {
             if (msg.fromHost) return;
-            // Increment tempo from controller (delta value)
             transport.tempo().incRaw(msg.getTempo());
-            host.println("[TRANSPORT] Tempo: " + transport.tempo().getRaw() + " BPM (Δ" + msg.getTempo() + ")");
         };
     }
 }

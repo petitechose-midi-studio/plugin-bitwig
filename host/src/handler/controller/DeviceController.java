@@ -96,7 +96,7 @@ public class DeviceController {
     private void setupProtocolCallbacks() {
         protocol.onDeviceMacroValueChange = msg -> {
             if (msg.fromHost) {
-                host.println("[DeviceController] RECEIVED feedback from HOST param=" + msg.getParameterIndex() + " value=" + msg.getParameterValue());
+                host.println("[DEVICE CTRL] Feedback from host: param=" + msg.getParameterIndex() + " value=" + msg.getParameterValue());
                 return;
             }
 
@@ -110,20 +110,16 @@ public class DeviceController {
             boolean inPressDelay = touchState[index] && timeSincePress < BitwigConfig.TOUCH_PRESS_DELAY_MS;
             boolean inReleaseGrace = !touchState[index] && timeSinceRelease < BitwigConfig.TOUCH_RELEASE_GRACE_MS;
 
-            host.println("[DeviceController] FROM controller param=" + index + " value=" + msg.getParameterValue() +
-                        " touched=" + touchState[index] + " inPressDelay=" + inPressDelay + " inReleaseGrace=" + inReleaseGrace);
+            host.println("[DEVICE CTRL] Param " + index + " = " + msg.getParameterValue() +
+                        " (touched=" + touchState[index] + ", pressDelay=" + inPressDelay + ", releaseGrace=" + inReleaseGrace + ")");
 
             if (inPressDelay || inReleaseGrace) {
-                host.println("[DeviceController] BLOCKED by timing delay");
+                host.println("[DEVICE CTRL] ✗ Blocked by timing delay");
                 return;
             }
 
             RemoteControl param = remoteControls.getParameter(index);
-
-            // Mark controller change timestamp - all callbacks within 100ms are echoes
             markControllerChange(index);
-
-            host.println("[DeviceController] SETTING Bitwig param=" + index + " to value=" + msg.getParameterValue());
             param.set(msg.getParameterValue());
         };
 

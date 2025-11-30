@@ -61,15 +61,25 @@ public class LastClickedHost {
      * Send full parameter info (when new parameter clicked)
      */
     private void sendLastClickedUpdate() {
-        final String name = lastClicked.parameter().name().get();
-        final double value = lastClicked.parameter().value().get();
-        final String displayValue = lastClicked.parameter().displayedValue().get();
-        final double origin = lastClicked.parameter().value().getOrigin().get();
-        final boolean exists = lastClicked.parameter().exists().get();
-        final int discreteCount = lastClicked.parameter().value().discreteValueCount().get();
+        final Parameter param = lastClicked.parameter();
+        final String name = param.name().get();
+        final double value = param.value().get();
+        final String displayValue = param.displayedValue().get();
+        final double origin = param.value().getOrigin().get();
+        final boolean exists = param.exists().get();
+        final int discreteCount = param.value().discreteValueCount().get();
 
-        final int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1 : 0;
-        final int currentValueIndex = discreteCount > 0 ? (int)(value * (double)discreteCount) : 0;
+        // Parameter type: 0=continuous, 1=list (>2 values), -1=unknown
+        final int paramType;
+        if (discreteCount > 2) {
+            paramType = 1;  // List selector
+        } else if (discreteCount < 0) {
+            paramType = -1; // Unknown/continuous
+        } else {
+            paramType = 0;  // Button or continuous
+        }
+
+        final int currentValueIndex = discreteCount > 0 ? (int)(value * discreteCount) : 0;
 
         protocol.send(new LastClickedUpdateMessage(
             name,

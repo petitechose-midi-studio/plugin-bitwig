@@ -220,11 +220,12 @@ public class DeviceHost {
             final int pageCount = remoteControls.pageCount().get();
             final int currentIndex = remoteControls.selectedPageIndex().get();
 
-            final java.util.List<String> names = new java.util.ArrayList<>();
+            final List<String> names = new ArrayList<>();
+            final String[] pageNamesArray = remoteControls.pageNames().get();
             for (int i = 0; i < pageCount; i++) {
-                try {
-                    names.add(remoteControls.pageNames().get(i));
-                } catch (ArrayIndexOutOfBoundsException e) {
+                if (pageNamesArray != null && i < pageNamesArray.length) {
+                    names.add(pageNamesArray[i]);
+                } else {
                     names.add("");
                 }
             }
@@ -267,7 +268,6 @@ public class DeviceHost {
             if (!device.exists().get()) continue;
 
             String deviceTypeRaw = device.deviceType().get();
-            host.println("[DEVICE LIST] " + device.name().get() + " -> deviceType raw=\"" + deviceTypeRaw + "\"");
 
             list.add(new DeviceListMessage.Devices(
                 device.position().get(),
@@ -401,11 +401,12 @@ public class DeviceHost {
         return allPads;
     }
 
+    private static final String[] MIDI_NOTE_NAMES = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+
     private String getMidiNoteName(int midiNote) {
-        String[] noteNames = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
         int octave = (midiNote / 12) - 1;
         int noteIndex = midiNote % 12;
-        return noteNames[noteIndex] + octave;
+        return MIDI_NOTE_NAMES[noteIndex] + octave;
     }
 
     private void sendDeviceChange() {
@@ -423,8 +424,6 @@ public class DeviceHost {
             int pageCount = remoteControls.pageCount().get();
             String pageName = getPageName(pageIndex, pageCount);
             List<Integer> childrenTypes = intArrayToList(getDeviceChildrenTypes(cursorDevice));
-
-            host.println("[DEVICE] deviceType raw=\"" + deviceTypeRaw + "\" -> " + deviceType);
 
             sendDeviceChangeHeader(deviceName, isEnabled, deviceType, pageIndex, pageCount, pageName, childrenTypes);
             sendPageChange();
@@ -477,9 +476,10 @@ public class DeviceHost {
 
     private String getPageName(int pageIndex, int pageCount) {
         if (pageCount > 0 && pageIndex >= 0 && pageIndex < pageCount) {
-            try {
-                return remoteControls.pageNames().get(pageIndex);
-            } catch (ArrayIndexOutOfBoundsException e) {}
+            String[] names = remoteControls.pageNames().get();
+            if (names != null && pageIndex < names.length) {
+                return names[pageIndex];
+            }
         }
         return "";
     }
