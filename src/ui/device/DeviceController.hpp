@@ -113,12 +113,6 @@ namespace Bitwig
         void handleShowPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
 
         /**
-         * @brief Handle page selector navigation (encoder position)
-         * @param index Absolute page index (already wrapped)
-         */
-        void handlePageSelectorSetIndex(int index);
-
-        /**
          * @brief Handle page selector confirmation (button release)
          * Hides selector (InputHandler will send protocol message)
          */
@@ -146,12 +140,6 @@ namespace Bitwig
          * @param itemTypes Vector of item types (0=LIST/slot, 1=COPY/layer, 2=KEYBOARD/drum)
          */
         void handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
-
-        /**
-         * @brief Handle device selector navigation (encoder position)
-         * @param index Absolute item index (already wrapped)
-         */
-        void handleDeviceSelectorSetIndex(int index);
 
         /**
          * @brief Handle device selector confirmation (hide overlay)

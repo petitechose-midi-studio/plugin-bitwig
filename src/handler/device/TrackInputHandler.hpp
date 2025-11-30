@@ -39,7 +39,7 @@ namespace Bitwig
         void toggleMute();
         void toggleSolo();
 
-        int getSelectedTrackIndex() const;
+        int getSelectedTrackIndex();
         int getAdjustedTrackIndex(int selectorIndex) const;
 
         ControllerAPI &api_;
@@ -53,7 +53,7 @@ namespace Bitwig
             uint8_t currentIndex = 0;
             bool isNested = false;
             bool requested = false;
-            int currentSelectorIndex = 0;
+            // currentSelectorIndex removed - use view_.state().trackSelector.currentIndex
         };
         TrackListState state_;
     };

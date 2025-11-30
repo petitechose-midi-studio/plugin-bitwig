@@ -70,7 +70,6 @@ namespace Bitwig
         IParameterWidget *getWidgetForButton(uint16_t button_id);
 
         void showPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
-        void setPageSelectorIndex(int index);
         int getPageSelectorIndex() const;
         lv_obj_t *getPageSelectorElement() const;
 
@@ -82,7 +81,6 @@ namespace Bitwig
                            const std::vector<bool> &hasLayers,
                            const std::vector<bool> &hasDrums);
         void showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
-        void setDeviceSelectorIndex(int index);
         int getDeviceSelectorIndex() const;
         int getDeviceSelectorItemCount() const;
         lv_obj_t *getDeviceSelectorElement() const;
@@ -95,7 +93,6 @@ namespace Bitwig
                           const std::vector<bool> &soloStates,
                           const std::vector<uint8_t> &trackTypes,
                           const std::vector<uint32_t> &trackColors);
-        void setTrackSelectorIndex(int index);
         int getTrackSelectorIndex() const;
         int getTrackSelectorItemCount() const;
         lv_obj_t *getTrackSelectorElement() const;
@@ -104,7 +101,7 @@ namespace Bitwig
         /**
          * @brief Set parameter type and metadata (called ONCE per device/page change)
          * @param paramIndex Parameter index (0-7)
-         * @param parameterType Widget type detected by Bitwig (0=Knob, 1=Button, 2=List)
+         * @param parameterType Widget type (Device::Knob, Device::Button, Device::List)
          * @param discreteCount Discrete value count (-1=continuous, 2=button, N=list)
          * @param discreteValueNames Array of discrete value names (empty for continuous)
          * @param currentValueIndex Current index in discreteValueNames array

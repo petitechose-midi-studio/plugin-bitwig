@@ -1,6 +1,7 @@
 #pragma once
 
 #include "api/ControllerAPI.hpp"
+#include "../device/DeviceConstants.hpp"
 #include "../../protocol/Protocol.hpp"
 #include "../../protocol/struct/LastClickedUpdateMessage.hpp"
 #include "../../protocol/struct/LastClickedValueChangeMessage.hpp"
@@ -53,7 +54,7 @@ namespace Bitwig
             std::string name;
             float value;
             std::string displayValue;
-            uint8_t parameterType; // 0=Knob, 1=Button, 2=List
+            uint8_t parameterType; // Device::Knob, Device::Button, Device::List
             int16_t discreteCount; // -1=continuous, N=steps
             bool exists;
         } currentParameter_;

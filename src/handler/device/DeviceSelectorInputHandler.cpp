@@ -49,8 +49,10 @@ void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t
     }
 
     api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
-    navigation_.currentSelectorIndex = isNested ? currentDeviceIndex + 1 : currentDeviceIndex;
-    controller_.handleDeviceSelectorSetIndex(navigation_.currentSelectorIndex);
+    int selectorIndex = isNested ? currentDeviceIndex + 1 : currentDeviceIndex;
+    view_.state().deviceSelector.currentIndex = selectorIndex;
+    view_.state().dirty.deviceSelector = true;
+    view_.sync();
 }
 
 void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType,
@@ -69,8 +71,9 @@ void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uin
     }
 
     api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
-    navigation_.currentSelectorIndex = 1;
-    controller_.handleDeviceSelectorSetIndex(1);
+    view_.state().deviceSelector.currentIndex = 1;
+    view_.state().dirty.deviceSelector = true;
+    view_.sync();
 }
 
 // =============================================================================
@@ -126,9 +129,12 @@ void DeviceSelectorInputHandler::navigate(float delta) {
     int itemCount = view_.getDeviceSelectorItemCount();
     if (itemCount == 0) return;
 
-    navigation_.currentSelectorIndex += static_cast<int>(delta);
-    navigation_.currentSelectorIndex = InputUtils::wrapIndex(navigation_.currentSelectorIndex, itemCount);
-    controller_.handleDeviceSelectorSetIndex(navigation_.currentSelectorIndex);
+    auto& state = view_.state().deviceSelector;
+    int newIndex = state.currentIndex + static_cast<int>(delta);
+    newIndex = InputUtils::wrapIndex(newIndex, itemCount);
+    state.currentIndex = newIndex;
+    view_.state().dirty.deviceSelector = true;
+    view_.sync();
 }
 
 void DeviceSelectorInputHandler::selectAndDive()

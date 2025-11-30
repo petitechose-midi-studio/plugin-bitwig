@@ -11,7 +11,7 @@ namespace Bitwig
         currentParameter_.name = "";
         currentParameter_.value = 0.0f;
         currentParameter_.displayValue = "";
-        currentParameter_.parameterType = 0;  // Knob
+        currentParameter_.parameterType = Device::Knob;
         currentParameter_.discreteCount = -1; // Continuous
         currentParameter_.exists = false;
 
@@ -58,7 +58,7 @@ namespace Bitwig
         }
 
         // Configure OPT encoder based on parameter type
-        if (currentParameter_.parameterType == 0)
+        if (currentParameter_.parameterType == Device::Knob)
         {
             api_.setEncoderContinuous(EncoderID::OPT);
         }

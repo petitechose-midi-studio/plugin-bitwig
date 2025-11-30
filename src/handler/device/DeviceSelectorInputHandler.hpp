@@ -82,7 +82,7 @@ private:
         uint8_t childrenCount = 0;
         etl::array<uint8_t, 16> itemTypes = {};
         etl::array<uint8_t, 16> childIndices = {};
-        int currentSelectorIndex = 0;
+        // currentSelectorIndex removed - use view_.state().deviceSelector.currentIndex
     };
     NavigationState navigation_;
 };

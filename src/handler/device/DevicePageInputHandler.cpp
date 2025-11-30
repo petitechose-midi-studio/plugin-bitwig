@@ -28,10 +28,11 @@ DevicePageInputHandler::~DevicePageInputHandler() = default;
 void DevicePageInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t currentIndex) {
     state_.count = pageCount;
     state_.cursor = currentIndex;
-    state_.currentSelectorIndex = currentIndex;
 
     api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
-    controller_.handlePageSelectorSetIndex(currentIndex);
+    view_.state().pageSelector.selectedIndex = currentIndex;
+    view_.state().dirty.pageSelector = true;
+    view_.sync();
 }
 
 // =============================================================================
@@ -65,9 +66,12 @@ void DevicePageInputHandler::requestPageList() {
 void DevicePageInputHandler::navigate(float delta) {
     if (state_.count == 0) return;
 
-    state_.currentSelectorIndex += static_cast<int>(delta);
-    state_.currentSelectorIndex = InputUtils::wrapIndex(state_.currentSelectorIndex, state_.count);
-    controller_.handlePageSelectorSetIndex(state_.currentSelectorIndex);
+    auto& state = view_.state().pageSelector;
+    int newIndex = state.selectedIndex + static_cast<int>(delta);
+    newIndex = InputUtils::wrapIndex(newIndex, state_.count);
+    state.selectedIndex = newIndex;
+    view_.state().dirty.pageSelector = true;
+    view_.sync();
 }
 
 void DevicePageInputHandler::confirmSelection() {

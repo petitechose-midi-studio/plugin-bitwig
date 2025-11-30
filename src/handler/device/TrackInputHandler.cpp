@@ -40,8 +40,10 @@ namespace Bitwig
 
         if (contentChanged)
         {
-            state_.currentSelectorIndex = isNested ? currentTrackIndex + 1 : currentTrackIndex;
-            view_.setTrackSelectorIndex(state_.currentSelectorIndex);
+            int selectorIndex = isNested ? currentTrackIndex + 1 : currentTrackIndex;
+            view_.state().trackSelector.currentIndex = selectorIndex;
+            view_.state().dirty.trackSelector = true;
+            view_.sync();
         }
 
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
@@ -88,14 +90,17 @@ namespace Bitwig
         if (itemCount == 0)
             return;
 
-        state_.currentSelectorIndex += static_cast<int>(delta);
-        state_.currentSelectorIndex = InputUtils::wrapIndex(state_.currentSelectorIndex, itemCount);
-        view_.setTrackSelectorIndex(state_.currentSelectorIndex);
+        auto& state = view_.state().trackSelector;
+        int newIndex = state.currentIndex + static_cast<int>(delta);
+        newIndex = InputUtils::wrapIndex(newIndex, itemCount);
+        state.currentIndex = newIndex;
+        view_.state().dirty.trackSelector = true;
+        view_.sync();
     }
 
     void TrackInputHandler::select()
     {
-        int selectedIndex = state_.currentSelectorIndex;
+        int selectedIndex = view_.state().trackSelector.currentIndex;
 
         if (state_.isNested && selectedIndex == 0)
         {
@@ -130,7 +135,7 @@ namespace Bitwig
 
     void TrackInputHandler::selectAndDive()
     {
-        int selectedIndex = state_.currentSelectorIndex;
+        int selectedIndex = view_.state().trackSelector.currentIndex;
 
         if (state_.isNested && selectedIndex == 0)
         {
@@ -178,12 +183,13 @@ namespace Bitwig
     // Helpers
     // =============================================================================
 
-    int TrackInputHandler::getSelectedTrackIndex() const
+    int TrackInputHandler::getSelectedTrackIndex()
     {
-        if (state_.isNested && state_.currentSelectorIndex == 0)
+        int currentIndex = view_.state().trackSelector.currentIndex;
+        if (state_.isNested && currentIndex == 0)
             return -1;
 
-        int trackIndex = getAdjustedTrackIndex(state_.currentSelectorIndex);
+        int trackIndex = getAdjustedTrackIndex(currentIndex);
         return (trackIndex >= 0 && trackIndex < state_.count) ? trackIndex : -1;
     }
 

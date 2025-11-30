@@ -42,7 +42,7 @@ private:
         uint8_t count = 0;
         uint8_t cursor = 0;
         bool requested = false;
-        int currentSelectorIndex = 0;
+        // currentSelectorIndex removed - use view_.state().pageSelector.selectedIndex
     };
     PageState state_;
 };

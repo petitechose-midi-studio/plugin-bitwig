@@ -1,5 +1,6 @@
 #include "DeviceView.hpp"
 
+#include "handler/device/DeviceConstants.hpp"
 #include "font/FontLoader.hpp"
 #include "widget/ParameterButtonWidget.hpp"
 #include "widget/ParameterKnobWidget.hpp"
@@ -130,15 +131,15 @@ namespace Bitwig {
         {
             switch (param.type)
             {
-            case 1:
+            case Device::Button:
                 widgets_[index] = std::make_unique<ParameterButtonWidget>(
                     body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index);
                 break;
-            case 2:
+            case Device::List:
                 widgets_[index] = std::make_unique<ParameterListWidget>(
                     body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index, param.discreteCount);
                 break;
-            case 0:
+            case Device::Knob:
             default:
             {
                 bool isCentered = (param.origin == 0.5f);
@@ -166,7 +167,7 @@ namespace Bitwig {
         widgets_[index]->setName(param.name.c_str());
         widgets_[index]->setValueWithDisplay(param.value, param.displayValue.c_str());
 
-        if (param.type == 1 || param.type == 2)
+        if (param.type == Device::Button || param.type == Device::List)
         {
             widgets_[index]->setDiscreteMetadata(param.discreteCount, param.discreteValueNames, param.currentValueIndex);
         }
@@ -487,13 +488,6 @@ namespace Bitwig {
         sync();
     }
 
-    void DeviceView::setPageSelectorIndex(int index)
-    {
-        state_.pageSelector.selectedIndex = index;
-        state_.dirty.pageSelector = true;
-        sync();
-    }
-
     int DeviceView::getPageSelectorIndex() const
     {
         if (!page_selector_)
@@ -537,13 +531,6 @@ namespace Bitwig {
         state_.deviceSelector.showingChildren = true;
         state_.deviceSelector.showFooter = false;
         state_.deviceSelector.visible = true;
-        state_.dirty.deviceSelector = true;
-        sync();
-    }
-
-    void DeviceView::setDeviceSelectorIndex(int index)
-    {
-        state_.deviceSelector.currentIndex = index;
         state_.dirty.deviceSelector = true;
         sync();
     }
@@ -604,13 +591,6 @@ namespace Bitwig {
         state_.trackSelector.trackTypes = trackTypes;
         state_.trackSelector.trackColors = trackColors;
         state_.trackSelector.visible = true;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    void DeviceView::setTrackSelectorIndex(int index)
-    {
-        state_.trackSelector.currentIndex = index;
         state_.dirty.trackSelector = true;
         sync();
     }

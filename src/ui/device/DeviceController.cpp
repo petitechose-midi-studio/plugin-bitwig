@@ -95,7 +95,7 @@ namespace Bitwig
 
         view_.setParameterTypeAndMetadata(
             i,
-            msg.parameterType,       // Widget type (0=Knob, 1=Button, 2=List)
+            msg.parameterType,       // Widget type (Device::Knob, Device::Button, Device::List)
             msg.discreteValueCount,  // Discrete value count
             {},                      // Empty discrete names (will come via handleMacroDiscreteValues)
             msg.currentValueIndex,   // Current index for encoder navigation
@@ -127,7 +127,7 @@ namespace Bitwig
         {
             view_.setParameterTypeAndMetadata(
                 i,
-                msg.macros[i].parameterType,       // Widget type detected by Bitwig (0=Knob, 1=Button, 2=List)
+                msg.macros[i].parameterType,       // Widget type (Device::Knob, Device::Button, Device::List)
                 msg.macros[i].discreteValueCount,  // Discrete value count
                 msg.macros[i].discreteValueNames,  // Array of discrete value names
                 msg.macros[i].currentValueIndex,   // Current index in discreteValueNames
@@ -145,11 +145,6 @@ namespace Bitwig
     void DeviceController::handleShowPageSelector(const std::vector<std::string> &pageNames, int currentIndex)
     {
         view_.showPageSelector(pageNames, currentIndex);
-    }
-
-    void DeviceController::handlePageSelectorSetIndex(int index)
-    {
-        view_.setPageSelectorIndex(index);
     }
 
     void DeviceController::handlePageSelectorConfirm()
@@ -222,11 +217,6 @@ namespace Bitwig
     void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
     {
         view_.showDeviceChildren(items, itemTypes);
-    }
-
-    void DeviceController::handleDeviceSelectorSetIndex(int index)
-    {
-        view_.setDeviceSelectorIndex(index);
     }
 
     void DeviceController::handleDeviceSelectorConfirm()
