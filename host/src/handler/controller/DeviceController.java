@@ -2,10 +2,8 @@ package handler.controller;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
-import protocol.struct.DeviceStateChangeMessage;
 import handler.host.DeviceHost;
 import config.BitwigConfig;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * DeviceController - Handles Device commands FROM controller

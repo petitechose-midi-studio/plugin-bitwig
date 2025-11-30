@@ -14,13 +14,12 @@ import java.util.stream.IntStream;
  * TrackHost - Observes Bitwig Tracks and sends updates TO controller
  *
  * RESPONSIBILITIES:
- * 1. Observe track changes (name, mute, solo, activated) → send protocol messages
- * 2. Execute track navigation (enter/exit groups, requires siblingTrackBank)
- * 3. Execute mute/solo toggles with observer-based confirmation
- * 4. Send track lists on request
+ * 1. Observe track changes (name, color, mute, solo) → send protocol messages
+ * 2. Execute mute/solo toggles with observer-based confirmation
+ * 3. Send track lists on request
  *
- * NOTE: Navigation logic is here because it needs access to siblingTrackBank
- * which can't be shared with TrackController (Bitwig API limitation)
+ * DELEGATES TO:
+ * - TrackNavigator: Group navigation (enter/exit)
  */
 public class TrackHost {
     private final ControllerHost host;
@@ -29,9 +28,7 @@ public class TrackHost {
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
     private final Track parentTrack;  // Parent track for navigation
-
-    // Navigation depth tracking
-    private int navigationDepth = 0;  // 0 = root level, >0 = inside group(s)
+    private final TrackNavigator navigator;
 
     // Cache for change detection
     private String lastTrackName = "";
@@ -62,6 +59,9 @@ public class TrackHost {
 
         // Create parent track object to detect if cursor track has a parent
         this.parentTrack = cursorTrack.createParentTrack(0, 0);
+
+        // Create navigator (handles group navigation)
+        this.navigator = new TrackNavigator(host, cursorTrack, mainTrackBank, siblingTrackBank, parentTrack);
     }
 
     /**
@@ -158,7 +158,6 @@ public class TrackHost {
         track.trackType().markInterested();
     }
 
-
     /**
      * Add mute/solo observers to track for reliable toggle confirmation
      * @param track Track to add observers to
@@ -172,7 +171,7 @@ public class TrackHost {
                 pendingMuteTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (isMuted ? "MUTED" : "UNMUTED") + "\n");
-                protocol.send(new protocol.struct.TrackMuteMessage(trackIndex, isMuted));
+                protocol.send(new TrackMuteMessage(trackIndex, isMuted));
             }
         });
 
@@ -183,26 +182,25 @@ public class TrackHost {
                 pendingSoloTrackIndex = -1;
                 String trackName = track.name().get();
                 host.println("\n[TRACK HOST] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (isSoloed ? "SOLOED" : "UNSOLOED") + "\n");
-                protocol.send(new protocol.struct.TrackSoloMessage(trackIndex, isSoloed));
+                protocol.send(new TrackSoloMessage(trackIndex, isSoloed));
             }
         });
     }
 
     /**
      * Get current track bank based on navigation depth
-     * @return siblingTrackBank if nested, mainTrackBank otherwise
+     * Delegates to TrackNavigator
      */
     private TrackBank getCurrentBank() {
-        return navigationDepth > 0 ? siblingTrackBank : mainTrackBank;
+        return navigator.getCurrentBank();
     }
 
     /**
-     * Check if cursor track has a parent group (not just master/root)
-     * Uses navigation depth counter instead of parentTrack (which has issues with group master tracks)
-     * @return true if inside a track group
+     * Check if inside a track group
+     * Delegates to TrackNavigator
      */
     private boolean hasParentGroup() {
-        return navigationDepth > 0;
+        return navigator.hasParentGroup();
     }
 
     /**
@@ -275,54 +273,18 @@ public class TrackHost {
 
     /**
      * Execute track navigation: enter group
-     * Called FROM TrackController when controller sends navigation command
-     *
-     * Navigation logic is HERE (not in Controller) because:
-     * - Needs siblingTrackBank access (can't be shared with Controller)
-     * - Bitwig API limitation: siblingTrackBank must be created in Host
+     * Delegates to TrackNavigator
      */
     public void enterTrackGroup(int trackIndex) {
-        TrackBank currentBank = getCurrentBank();
-        Track track = currentBank.getItemAt(trackIndex);
-
-        if (!track.exists().get() || !track.isGroup().get()) {
-            host.println("[TRACK HOST] ✗ Enter failed: track " + trackIndex + " is not a group");
-            sendTrackList();
-            return;
-        }
-
-        host.println("[TRACK HOST] ▶ Enter: " + track.name().get());
-
-        // Track navigation depth
-        navigationDepth++;
-
-        // Execute Bitwig API navigation
-        cursorTrack.selectChannel(track);
-        cursorTrack.selectFirstChild();
-        // itemCount observer will trigger sendTrackList() with debounce
+        navigator.enterTrackGroup(trackIndex, this::sendTrackList);
     }
 
     /**
      * Execute track navigation: exit group
-     * Called FROM TrackController when controller sends navigation command
+     * Delegates to TrackNavigator
      */
     public void exitTrackGroup() {
-        if (!hasParentGroup()) {
-            host.println("[TRACK HOST] ✗ Exit failed: already at root");
-            sendTrackList();
-            return;
-        }
-
-        String parentName = parentTrack.name().get();
-        host.println("[TRACK HOST] ◀ Exit: " + parentName);
-
-        // Track navigation depth
-        navigationDepth--;
-
-        // Execute Bitwig API navigation
-        cursorTrack.selectParent();
-        // itemCount observer will trigger sendTrackList() with debounce
-
+        navigator.exitTrackGroup(this::sendTrackList);
     }
 
     /**

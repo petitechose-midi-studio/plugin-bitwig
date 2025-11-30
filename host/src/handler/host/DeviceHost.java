@@ -14,11 +14,11 @@ import handler.controller.DeviceController;
  *
  * RESPONSIBILITIES:
  * 1. Observe device changes (name, enabled, parameters) → send protocol messages
- * 2. Execute device navigation (layers/slots/drums require DeviceLayerBank/DrumPadBank)
- * 3. Send device lists/children on request
+ * 2. Send device lists/children on request
+ * 3. Manage parameter echo suppression (via DeviceController)
  *
- * NOTE: Navigation logic is here because it needs access to layerBank/drumPadBank
- * which can't be shared with DeviceController (Bitwig API limitation)
+ * DELEGATES TO:
+ * - DeviceNavigator: Hierarchical navigation (slots/layers/drums)
  */
 public class DeviceHost {
     private final ControllerHost host;
