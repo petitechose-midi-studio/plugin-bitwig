@@ -11,11 +11,11 @@ MidiInputHandler::MidiInputHandler(ControllerAPI& api, TransportBarController& t
 
 void MidiInputHandler::setupCallbacks() {
     api_.onNoteOn([this](uint8_t, uint8_t, uint8_t) {
-        transportController_.flashMidiIn();
+        transportController_.setMidiIn(true);
     });
 
     api_.onNoteOff([this](uint8_t, uint8_t, uint8_t) {
-        transportController_.flashMidiIn();
+        transportController_.setMidiIn(false);
     });
 }
 

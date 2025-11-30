@@ -77,6 +77,7 @@ namespace Bitwig
 
         void showDeviceList(const std::vector<std::string> &names,
                            int currentIndex,
+                           const std::vector<uint8_t> &deviceTypes,
                            const std::vector<bool> &deviceStates,
                            const std::vector<bool> &hasSlots,
                            const std::vector<bool> &hasLayers,
@@ -184,6 +185,12 @@ namespace Bitwig
          * @param name Device name (e.g., "Operator", "EQ Eight")
          */
         void setDeviceName(const char *name);
+
+        /**
+         * @brief Update device type (Audio/Instrument/Note)
+         * @param deviceType 0=Unknown, 1=Audio, 2=Instrument, 3=Note
+         */
+        void setDeviceType(uint8_t deviceType);
 
         /**
          * @brief Update device enabled/bypassed state

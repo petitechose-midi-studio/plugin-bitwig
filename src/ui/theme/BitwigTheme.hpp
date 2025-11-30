@@ -47,4 +47,52 @@ constexpr uint32_t DEVICE_TYPE_NOTE = 0x32B1DC;       // Blue for note effects
 constexpr uint32_t TRACK_MUTE = 0xFF8800;  // Orange for mute indicator
 constexpr uint32_t TRACK_SOLO = 0xFFDD00;  // Yellow for solo indicator
 }  // namespace Color
+
+// =============================================================================
+// Layout constants - Screen: 320x240
+// =============================================================================
+namespace Layout {
+
+// Bar heights
+constexpr int16_t TOP_BAR_HEIGHT = 20;
+constexpr int16_t TRANSPORT_BAR_HEIGHT = 20;
+constexpr int16_t BUTTON_HINT_HEIGHT = 30;
+
+// Widget dimensions (4x2 grid in body)
+constexpr int16_t WIDGET_WIDTH = 80;
+constexpr int16_t WIDGET_HEIGHT = 100;
+
+// Component sizes
+constexpr int16_t LEVEL_BAR_WIDTH = 60;
+constexpr int16_t COLOR_BAR_WIDTH = 4;
+constexpr int16_t INDICATOR_SIZE = 12;
+
+// Padding scale (4px base unit)
+constexpr int16_t PAD_XS = 2;
+constexpr int16_t PAD_SM = 4;
+constexpr int16_t PAD_MD = 6;
+constexpr int16_t PAD_LG = 10;
+constexpr int16_t PAD_XL = 12;
+
+// Gaps (for flex/grid)
+constexpr int16_t GAP_SM = 4;
+constexpr int16_t GAP_MD = 6;
+constexpr int16_t GAP_LG = 10;
+
+}  // namespace Layout
+
+// =============================================================================
+// Opacity constants - Semantic opacity levels
+// =============================================================================
+namespace Opacity {
+
+constexpr uint8_t FULL = 255;        // LV_OPA_COVER - fully visible
+constexpr uint8_t SUBTLE = 178;      // ~70% - secondary icons, hints
+constexpr uint8_t DIMMED = 127;      // ~50% - disabled elements
+constexpr uint8_t FADED = 102;       // ~40% - inactive but visible
+constexpr uint8_t HINT = 51;         // ~20% - very subtle background hints
+constexpr uint8_t HIDDEN = 0;        // LV_OPA_TRANSP - invisible
+
+}  // namespace Opacity
+
 }  // namespace Theme

@@ -1,24 +1,27 @@
 #pragma once
 
 #include "TransportBar.hpp"
+#include "ui/state/TransportState.hpp"
 
-namespace Bitwig
-{
+namespace Bitwig {
 
-    class TransportBarController
-    {
-    public:
-        explicit TransportBarController(TransportBar &transportBar);
+class TransportBarController {
+public:
+    explicit TransportBarController(TransportBar& view);
 
-        void setPlaying(bool playing);
-        void setRecording(bool recording);
-        void setTempo(float bpm);
+    // State-based updates
+    void setPlaying(bool playing);
+    void setRecording(bool recording);
+    void setTempo(float bpm);
+    void setMidiIn(bool active);
+    void setMidiOut(bool active);
 
-        void flashMidiIn();
-        void flashMidiOut();
+    // Sync view with state
+    void sync();
 
-    private:
-        TransportBar &transportBar_;
-    };
+private:
+    TransportBar& view_;
+    TransportState state_;
+};
 
-} // namespace Bitwig
+}  // namespace Bitwig

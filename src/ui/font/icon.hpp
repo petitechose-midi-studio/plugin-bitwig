@@ -1,10 +1,10 @@
-// Auto-generated | 24 icons | 2025-11-29
+// Auto-generated | 24 icons | 2025-11-30
 #pragma once
 #include <lvgl.h>
 #include "FontLoader.hpp"
 
 namespace Icon {
-    enum Size { S12 = 12, S14 = 14, S16 = 16 };
+    enum Size { S = 12, M = 14, L = 16 };
 
     constexpr const char* ARROW_LEFT = "\xEE\x80\x80";
     constexpr const char* AUDIO_DEVICES = "\xEE\x80\x81";
@@ -31,9 +31,9 @@ namespace Icon {
     constexpr const char* TRANSPORT_RECORD = "\xEE\x80\x96";
     constexpr const char* TRANSPORT_STOP = "\xEE\x80\x97";
 
-    inline void set(lv_obj_t* label, const char* icon, Size size = S14) {
-        lv_font_t* font = (size == S12) ? bitwig_fonts.icons_12
-                        : (size == S14) ? bitwig_fonts.icons_14
+    inline void set(lv_obj_t* label, const char* icon, Size size = M) {
+        lv_font_t* font = (size == S) ? bitwig_fonts.icons_12
+                        : (size == M) ? bitwig_fonts.icons_14
                         : bitwig_fonts.icons_16;
         lv_obj_set_style_text_font(label, font, 0);
         lv_label_set_text(label, icon);

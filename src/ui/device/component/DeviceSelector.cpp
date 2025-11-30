@@ -1,4 +1,5 @@
 #include "DeviceSelector.hpp"
+#include "ui/device/DeviceTypeHelper.hpp"
 #include "../../theme/BitwigTheme.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/font/FontLoader.hpp"
@@ -185,6 +186,13 @@ void DeviceSelector::createFooter()
 
 void DeviceSelector::clearIndicators()
 {
+    for (auto *icon : type_icons_)
+    {
+        if (icon)
+            lv_obj_delete(icon);
+    }
+    type_icons_.clear();
+
     for (auto *icon : state_icons_)
     {
         if (icon)
@@ -213,6 +221,18 @@ bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index)
     return hasSlots || hasLayers || hasDrums;
 }
 
+lv_obj_t *DeviceSelector::createDeviceTypeIcon(lv_obj_t *parent, uint8_t deviceType)
+{
+    auto info = DeviceType::get(deviceType);
+    if (!info.visible)
+        return nullptr;
+
+    lv_obj_t *icon = lv_label_create(parent);
+    Icon::set(icon, info.icon);
+    lv_obj_set_style_text_color(icon, lv_color_hex(info.color), 0);
+    return icon;
+}
+
 lv_obj_t *DeviceSelector::createDeviceStateIcon(lv_obj_t *parent, bool enabled)
 {
     lv_obj_t *icon = lv_label_create(parent);
@@ -239,6 +259,8 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props)
     const auto &names = *props.names;
     size_t count = names.size();
 
+    type_icons_.clear();
+    type_icons_.resize(count, nullptr);
     state_icons_.clear();
     state_icons_.resize(count, nullptr);
     folder_icons_.clear();
@@ -272,15 +294,28 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props)
 
         if (isDevice)
         {
+            // Create type icon first (index 0)
+            uint8_t deviceType = (props.deviceTypes && i < props.deviceTypes->size())
+                ? (*props.deviceTypes)[i] : 0;
+            lv_obj_t *typeIcon = createDeviceTypeIcon(button, deviceType);
+            if (typeIcon)
+            {
+                lv_obj_move_to_index(typeIcon, 0);
+                type_icons_[i] = typeIcon;
+            }
+
+            // Create state icon (index 1)
             bool isEnabled = props.deviceStates && i < props.deviceStates->size() && (*props.deviceStates)[i];
             lv_obj_t *stateIcon = createDeviceStateIcon(button, isEnabled);
-            lv_obj_move_to_index(stateIcon, 0);
+            lv_obj_move_to_index(stateIcon, typeIcon ? 1 : 0);
             state_icons_[i] = stateIcon;
         }
 
+        // Create folder icon (index 2 or less if no type/state)
         bool isFolder = hasChildren(props, i);
         lv_obj_t *folderIcon = createFolderIcon(button);
-        lv_obj_move_to_index(folderIcon, 1);
+        int folderIndex = (type_icons_[i] ? 1 : 0) + (state_icons_[i] ? 1 : 0);
+        lv_obj_move_to_index(folderIcon, folderIndex);
         folder_icons_[i] = folderIcon;
 
         if (!isFolder)

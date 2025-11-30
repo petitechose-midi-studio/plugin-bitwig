@@ -265,23 +265,35 @@ def generate_font(svg_dir: Path, ttf_path: Path) -> list[tuple[str, int]]:
     return [(name, int(cp)) for line in result.stdout.split('\n')
             if line.startswith('GLYPH|') for _, cp, name in [line.split('|')]]
 
-def generate_header(glyphs: list[tuple[str, int]], path: Path, sizes: list[int]):
+def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[str, int]):
+    """Generate Icon.hpp with enum and set() function.
+
+    Args:
+        glyphs: List of (name, codepoint) tuples
+        path: Output path for Icon.hpp
+        font_sizes: Dict mapping size names to pixel values, e.g. {'S': 12, 'M': 14, 'L': 16}
+    """
     def utf8(cp):
         return f'\\x{0xE0|(cp>>12):02X}\\x{0x80|((cp>>6)&0x3F):02X}\\x{0x80|(cp&0x3F):02X}'
 
-    # Generate Size enum
-    size_enum = ', '.join(f'S{s} = {s}' for s in sizes)
-    default_size = sizes[len(sizes)//2]  # Middle size as default
+    # Extract names and sizes from dict (preserves insertion order in Python 3.7+)
+    names = list(font_sizes.keys())
+    sizes = list(font_sizes.values())
 
-    # Generate font selection (uses bitwig_fonts from FontLoader.hpp)
+    # Generate Size enum: S = 12, M = 14, L = 16
+    size_enum = ', '.join(f'{name} = {size}' for name, size in font_sizes.items())
+    default_name = names[len(names) // 2]  # Middle size as default
+
+    # Generate font selection chain: (size == S) ? ... : (size == M) ? ... : fallback
+    # Works for any number of sizes (2, 3, 4, etc.)
     font_cases = []
-    for i, s in enumerate(sizes):
-        if i == 0:
-            font_cases.append(f'(size == S{s}) ? bitwig_fonts.icons_{s}')
-        elif i == len(sizes) - 1:
-            font_cases.append(f'bitwig_fonts.icons_{s}')
+    for i, (name, size) in enumerate(font_sizes.items()):
+        if i < len(font_sizes) - 1:
+            # All except last: add condition
+            font_cases.append(f'(size == {name}) ? bitwig_fonts.icons_{size}')
         else:
-            font_cases.append(f'(size == S{s}) ? bitwig_fonts.icons_{s}')
+            # Last size: fallback (no condition)
+            font_cases.append(f'bitwig_fonts.icons_{size}')
 
     lines = [
         f'// Auto-generated | {len(glyphs)} icons | {datetime.now():%Y-%m-%d}',
@@ -292,11 +304,11 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, sizes: list[int])
         cname = re.sub(r'[^a-zA-Z0-9]+', '_', name).strip('_').upper()
         lines.append(f'    constexpr const char* {cname} = "{utf8(cp)}";')
 
-    # Build font selection chain
+    # Build font selection chain with proper indentation
     font_select = '\n                        : '.join(font_cases)
 
     lines += ['',
-        f'    inline void set(lv_obj_t* label, const char* icon, Size size = S{default_size}) {{',
+        f'    inline void set(lv_obj_t* label, const char* icon, Size size = {default_name}) {{',
         f'        lv_font_t* font = {font_select};',
         '        lv_obj_set_style_text_font(label, font, 0);',
         '        lv_label_set_text(label, icon);',
@@ -308,8 +320,12 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, sizes: list[int])
 
 # === LVGL Font Generation ===
 
-def generate_lvgl_fonts(ttf_path: Path, out_dir: Path, glyphs: list[tuple[str, int]], sizes: list[int], bpp: int) -> bool:
-    """Generate LVGL binary fonts using npx lv_font_conv."""
+def generate_lvgl_fonts(ttf_path: Path, out_dir: Path, glyphs: list[tuple[str, int]], font_sizes: dict[str, int], bpp: int) -> bool:
+    """Generate LVGL binary fonts using npx lv_font_conv.
+
+    Args:
+        font_sizes: Dict mapping size names to pixel values, e.g. {'S': 12, 'M': 14, 'L': 16}
+    """
     import shutil
     import tempfile
 
@@ -330,7 +346,7 @@ def generate_lvgl_fonts(ttf_path: Path, out_dir: Path, glyphs: list[tuple[str, i
     data_dir = out_dir / "data"
     data_dir.mkdir(exist_ok=True)
 
-    for size in sizes:
+    for size in font_sizes.values():
         arr_name = f"{FONT_NAME}_{size}_bin"
         out_name = f"{FONT_NAME}_{size}"
 
@@ -488,7 +504,7 @@ def main():
     # Check if LVGL fonts need rebuild (in header_dir/data/)
     lvgl_files_exist = all(
         (header_dir / "data" / f"{FONT_NAME}_{s}.c.inc").exists()
-        for s in LVGL_FONT_SIZES
+        for s in FONT_SIZES.values()
     )
 
     if not need_rebuild and ttf_path.exists() and header_path.exists() and lvgl_files_exist:
@@ -502,12 +518,12 @@ def main():
         success(f"{ttf_path.name} ({len(glyphs)} glyphs)")
 
         # Generate Icon.hpp
-        generate_header(glyphs, header_path, LVGL_FONT_SIZES)
+        generate_header(glyphs, header_path, FONT_SIZES)
         success(header_path.name)
 
         # Generate LVGL fonts (output to header_dir for C++ includes)
-        log(f"Generating LVGL fonts ({', '.join(map(str, LVGL_FONT_SIZES))}px)")
-        generate_lvgl_fonts(ttf_path, header_dir, glyphs, LVGL_FONT_SIZES, LVGL_BPP)
+        log(f"Generating LVGL fonts ({', '.join(map(str, FONT_SIZES.values()))}px)")
+        generate_lvgl_fonts(ttf_path, header_dir, glyphs, FONT_SIZES, LVGL_BPP)
 
     # Cleanup temp
     for f in temp_dir.iterdir():

@@ -30,5 +30,5 @@ UNICODE_START = 0xE000
 PADDING_PERCENT = 0.10
 
 # LVGL font generation
-LVGL_FONT_SIZES = [12, 14, 16]
+FONT_SIZES = {'S': 12, 'M': 14, 'L': 16}  # Icon::Size enum: name → pixels
 LVGL_BPP = 4  # Bits per pixel (1, 2, 4, or 8)

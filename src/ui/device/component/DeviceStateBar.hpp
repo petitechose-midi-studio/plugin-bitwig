@@ -2,6 +2,7 @@
 
 #include <lvgl.h>
 #include <memory>
+#include <cstdint>
 #include "DeviceTitleItem.hpp"
 #include "widget/TitleItem.hpp"
 
@@ -11,6 +12,7 @@ namespace Bitwig
 struct DeviceStateBarProps
 {
     const char *deviceName = "";
+    uint8_t deviceType = 0;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
     bool deviceEnabled = false;
     bool deviceHasChildren = false;
     const char *pageName = "";

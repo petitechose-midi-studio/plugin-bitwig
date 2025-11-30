@@ -14,6 +14,7 @@ struct DeviceSelectorProps
 {
     // Device list mode
     const std::vector<std::string> *names = nullptr;
+    const std::vector<uint8_t> *deviceTypes = nullptr;   // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
     const std::vector<bool> *deviceStates = nullptr;
     const std::vector<bool> *hasSlots = nullptr;
     const std::vector<bool> *hasLayers = nullptr;
@@ -53,10 +54,12 @@ private:
     static bool isNonDeviceItem(const std::string &name);
     static bool hasChildren(const DeviceSelectorProps &props, size_t index);
 
+    lv_obj_t *createDeviceTypeIcon(lv_obj_t *parent, uint8_t deviceType);
     lv_obj_t *createDeviceStateIcon(lv_obj_t *parent, bool enabled);
     lv_obj_t *createFolderIcon(lv_obj_t *parent);
 
     std::vector<std::string> prev_items_;  // Cache for itemsChanged detection
+    std::vector<lv_obj_t *> type_icons_;   // LVGL objects for device type
     std::vector<lv_obj_t *> state_icons_;  // LVGL objects for device state
     std::vector<lv_obj_t *> folder_icons_; // LVGL objects for folder indicators
 

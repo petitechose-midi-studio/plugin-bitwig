@@ -55,6 +55,7 @@ namespace Bitwig
     void DeviceController::handleDeviceChangeHeader(const Protocol::DeviceChangeHeaderMessage &msg)
     {
         view_.setDeviceName(msg.deviceName.c_str());
+        view_.setDeviceType(msg.deviceType);
         view_.setDeviceEnabled(msg.isEnabled);
         view_.setDevicePageName(msg.pageInfo.devicePageName.c_str());
         view_.setDevicePageInfo(msg.pageInfo.devicePageIndex, msg.pageInfo.devicePageCount);
@@ -151,11 +152,13 @@ namespace Bitwig
     void DeviceController::handleDeviceList(const Protocol::DeviceListMessage &msg)
     {
         std::vector<std::string> names;
+        std::vector<uint8_t> types;
         std::vector<bool> states, hasSlots, hasLayers, hasDrums;
 
         if (msg.isNested)
         {
             names.push_back(Device::BACK_TO_PARENT_TEXT);
+            types.push_back(0);  // Unknown type for back button
             states.push_back(false);
             hasSlots.push_back(false);
             hasLayers.push_back(false);
@@ -165,6 +168,7 @@ namespace Bitwig
         for (uint8_t i = 0; i < msg.deviceCount; i++)
         {
             names.push_back(std::string(msg.devices[i].deviceName.data()));
+            types.push_back(msg.devices[i].deviceType);
             states.push_back(msg.devices[i].isEnabled);
 
             uint8_t flags = Device::getChildTypeFlags(msg.devices[i].childrenTypes);
@@ -184,7 +188,7 @@ namespace Bitwig
             view_.setDeviceHasChildren(current_device_has_children_);
         }
 
-        view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), states, hasSlots, hasLayers, hasDrums);
+        view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), types, states, hasSlots, hasLayers, hasDrums);
     }
 
     void DeviceController::handleShowDeviceSelectorWithIndicators(
@@ -193,7 +197,9 @@ namespace Bitwig
         const std::vector<bool> &hasLayers, const std::vector<bool> &hasDrums)
     {
         is_device_nested_ = (!names.empty() && names[0] == Device::BACK_TO_PARENT_TEXT);
-        view_.showDeviceList(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
+        // Pass empty deviceTypes - this legacy method doesn't have type info
+        std::vector<uint8_t> emptyTypes(names.size(), 0);
+        view_.showDeviceList(names, currentIndex, emptyTypes, deviceStates, hasSlots, hasLayers, hasDrums);
     }
 
     void DeviceController::handleShowDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)

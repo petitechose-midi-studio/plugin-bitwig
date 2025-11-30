@@ -4,11 +4,14 @@
 #include "widget/ParameterButtonWidget.hpp"
 #include "widget/ParameterKnobWidget.hpp"
 #include "widget/ParameterListWidget.hpp"
+#include "ui/theme/BitwigTheme.hpp"
+#include "ui/theme/StyleHelpers.hpp"
 #include "log/Macros.hpp"
 #include "util/TextUtils.hpp"
 
-namespace Bitwig
-{
+using namespace Theme;
+
+namespace Bitwig {
 
     DeviceView::DeviceView(lv_obj_t *zone, const Config &viewConfig)
         : viewConfig_(viewConfig),
@@ -55,23 +58,16 @@ namespace Bitwig
 
     void DeviceView::createUI()
     {
-        // Fonts are loaded once at startup, not per view
-        // load_fonts();
-
         top_bar_container_ = lv_obj_create(zone_);
-        lv_obj_set_size(top_bar_container_, LV_PCT(100), 20);
-        lv_obj_set_style_bg_opa(top_bar_container_, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(top_bar_container_, 0, 0);
+        lv_obj_set_size(top_bar_container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
+        Style::applyTransparentContainer(top_bar_container_);
         lv_obj_set_style_radius(top_bar_container_, 0, 0);
-        lv_obj_set_style_pad_all(top_bar_container_, 0, 0);
 
         body_container_ = lv_obj_create(zone_);
         lv_obj_set_size(body_container_, LV_PCT(100), LV_SIZE_CONTENT);
         lv_obj_set_flex_grow(body_container_, 1);
-        lv_obj_set_style_bg_opa(body_container_, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(body_container_, 0, 0);
+        Style::applyTransparentContainer(body_container_);
         lv_obj_set_style_radius(body_container_, 0, 0);
-        lv_obj_set_style_pad_all(body_container_, 0, 0);
 
         createDeviceStateBar();
 
@@ -117,6 +113,7 @@ namespace Bitwig
 
         top_bar_component_->render({
             .deviceName = state_.device.name.c_str(),
+            .deviceType = state_.device.deviceType,
             .deviceEnabled = state_.device.enabled,
             .deviceHasChildren = state_.device.hasChildren,
             .pageName = state_.device.pageName.c_str()});
@@ -134,16 +131,19 @@ namespace Bitwig
             switch (param.type)
             {
             case 1:
-                widgets_[index] = std::make_unique<ParameterButtonWidget>(body_container_, 80, 100, index);
+                widgets_[index] = std::make_unique<ParameterButtonWidget>(
+                    body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index);
                 break;
             case 2:
-                widgets_[index] = std::make_unique<ParameterListWidget>(body_container_, 80, 100, index, param.discreteCount);
+                widgets_[index] = std::make_unique<ParameterListWidget>(
+                    body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index, param.discreteCount);
                 break;
             case 0:
             default:
             {
                 bool isCentered = (param.origin == 0.5f);
-                auto knob = std::make_unique<ParameterKnobWidget>(body_container_, 80, 100, index, isCentered);
+                auto knob = std::make_unique<ParameterKnobWidget>(
+                    body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index, isCentered);
                 knob->setOrigin(param.origin);
                 widgets_[index] = std::move(knob);
                 break;
@@ -201,6 +201,7 @@ namespace Bitwig
         auto &ds = state_.deviceSelector;
         device_selector_->render({
             .names = &ds.names,
+            .deviceTypes = &ds.deviceTypes,
             .deviceStates = &ds.deviceStates,
             .hasSlots = &ds.hasSlots,
             .hasLayers = &ds.hasLayers,
@@ -402,6 +403,16 @@ namespace Bitwig
         sync();
     }
 
+    void DeviceView::setDeviceType(uint8_t deviceType)
+    {
+        if (!initialized_)
+            return;
+
+        state_.device.deviceType = deviceType;
+        state_.dirty.device = true;
+        sync();
+    }
+
     void DeviceView::setDeviceEnabled(bool enabled)
     {
         if (!initialized_)
@@ -558,6 +569,7 @@ namespace Bitwig
 
     void DeviceView::showDeviceList(const std::vector<std::string> &names,
                                     int currentIndex,
+                                    const std::vector<uint8_t> &deviceTypes,
                                     const std::vector<bool> &deviceStates,
                                     const std::vector<bool> &hasSlots,
                                     const std::vector<bool> &hasLayers,
@@ -565,6 +577,7 @@ namespace Bitwig
     {
         state_.deviceSelector.names = names;
         state_.deviceSelector.currentIndex = currentIndex;
+        state_.deviceSelector.deviceTypes = deviceTypes;
         state_.deviceSelector.deviceStates = deviceStates;
         state_.deviceSelector.hasSlots = hasSlots;
         state_.deviceSelector.hasLayers = hasLayers;

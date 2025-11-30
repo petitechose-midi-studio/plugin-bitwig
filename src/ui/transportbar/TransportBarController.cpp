@@ -1,29 +1,49 @@
 #include "TransportBarController.hpp"
-#include "log/Macros.hpp"
 
-namespace Bitwig
-{
+namespace Bitwig {
 
-    TransportBarController::TransportBarController(TransportBar &transportBar)
-        : transportBar_(transportBar) {}
+TransportBarController::TransportBarController(TransportBar& view)
+    : view_(view) {
+    // No sync() here - lazy init will happen on first state change
+}
 
-    void TransportBarController::setPlaying(bool playing)
-    {
-        transportBar_.setPlay(playing);
+void TransportBarController::setPlaying(bool playing) {
+    if (state_.playing != playing) {
+        state_.playing = playing;
+        sync();
     }
+}
 
-    void TransportBarController::setRecording(bool recording)
-    {
-        transportBar_.setRecord(recording);
+void TransportBarController::setRecording(bool recording) {
+    if (state_.recording != recording) {
+        state_.recording = recording;
+        sync();
     }
+}
 
-    void TransportBarController::setTempo(float bpm)
-    {
-        transportBar_.setTempo(bpm);
+void TransportBarController::setTempo(float bpm) {
+    if (state_.tempo != bpm) {
+        state_.tempo = bpm;
+        sync();
     }
+}
 
-    void TransportBarController::flashMidiIn() {}
+void TransportBarController::setMidiIn(bool active) {
+    if (state_.midiInActive != active) {
+        state_.midiInActive = active;
+        sync();
+    }
+}
 
-    void TransportBarController::flashMidiOut() {}
+void TransportBarController::setMidiOut(bool active) {
+    if (state_.midiOutActive != active) {
+        state_.midiOutActive = active;
+        sync();
+    }
+}
 
-} // namespace Bitwig
+void TransportBarController::sync() {
+    view_.render(TransportBarProps::fromState(state_));
+}
+
+}  // namespace Bitwig

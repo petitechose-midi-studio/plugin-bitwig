@@ -1,22 +1,20 @@
 #include "LevelBar.hpp"
+#include "ui/theme/BitwigTheme.hpp"
 #include <algorithm>
 
-namespace Bitwig
-{
+using namespace Theme;
+
+namespace Bitwig {
 
 LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
-    : parent_(parent), width_(width), height_(height)
-{
-}
+    : parent_(parent), width_(width), height_(height) {}
 
-LevelBar::~LevelBar()
-{
+LevelBar::~LevelBar() {
     if (bar_)
         lv_obj_delete(bar_);
 }
 
-void LevelBar::ensureCreated()
-{
+void LevelBar::ensureCreated() {
     if (bar_ || !parent_)
         return;
 
@@ -28,16 +26,15 @@ void LevelBar::ensureCreated()
     lv_bar_set_range(bar_, 0, 100);
 
     // Background style (dark)
-    lv_obj_set_style_bg_color(bar_, lv_color_hex(0x1A1A1A), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(bar_, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(bar_, lv_color_hex(Color::KNOB_BACKGROUND), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(bar_, Opacity::FULL, LV_PART_MAIN);
     lv_obj_set_style_radius(bar_, 0, LV_PART_MAIN);
 
     // Indicator style
     lv_obj_set_style_radius(bar_, 0, LV_PART_INDICATOR);
 }
 
-void LevelBar::render(const LevelBarProps &props)
-{
+void LevelBar::render(const LevelBarProps &props) {
     ensureCreated();
     if (!bar_)
         return;
@@ -48,4 +45,4 @@ void LevelBar::render(const LevelBarProps &props)
     lv_obj_set_style_bg_opa(bar_, props.opacity, LV_PART_INDICATOR);
 }
 
-} // namespace Bitwig
+}  // namespace Bitwig
