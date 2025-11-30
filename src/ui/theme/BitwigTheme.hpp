@@ -9,6 +9,8 @@ namespace Theme {
 namespace Color {
 using namespace BaseTheme::Color;
 
+constexpr uint32_t BACKGROUND_BASE = 0x000000;
+
 constexpr uint32_t MACRO_1 = MACRO_1_RED;
 constexpr uint32_t MACRO_2 = MACRO_2_ORANGE;
 constexpr uint32_t MACRO_3 = MACRO_3_YELLOW;
@@ -94,5 +96,14 @@ constexpr uint8_t HINT = 51;         // ~20% - very subtle background hints
 constexpr uint8_t HIDDEN = 0;        // LV_OPA_TRANSP - invisible
 
 }  // namespace Opacity
+
+// =============================================================================
+// Animation timing constants
+// =============================================================================
+namespace Animation {
+
+constexpr uint32_t FADE_MS = 300;  // Standard fade duration
+
+}  // namespace Animation
 
 }  // namespace Theme

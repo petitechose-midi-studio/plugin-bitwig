@@ -7,6 +7,7 @@
 #include "interface/IView.hpp"
 #include "log/Macros.hpp"
 #include "splash/SplashView.hpp"
+#include "theme/BitwigTheme.hpp"
 
 namespace Bitwig
 {
@@ -74,7 +75,9 @@ namespace Bitwig
             lv_timer_delete(splashTimer_);
         }
 
-        uint32_t fadeStartTime = durationMs > 300 ? durationMs - 300 : durationMs;
+        uint32_t fadeStartTime = durationMs > Theme::Animation::FADE_MS
+            ? durationMs - Theme::Animation::FADE_MS
+            : durationMs;
         splashTimer_ = lv_timer_create(splashTimerCallback, fadeStartTime, this);
         lv_timer_set_repeat_count(splashTimer_, 1);
     }
@@ -84,7 +87,7 @@ namespace Bitwig
         auto self = static_cast<ViewManager *>(lv_timer_get_user_data(timer));
         auto &splashView = self->registry_.getView<SplashView>(ViewID::SPLASH);
 
-        splashView.fadeOut(300, [self, &splashView]()
+        splashView.fadeOut(Theme::Animation::FADE_MS, [self, &splashView]()
                            {
         self->splashActive_ = false;
         self->showDefault(); });

@@ -60,7 +60,7 @@ namespace Bitwig
         lv_obj_set_style_pad_all(container_, 0, 0);
         lv_obj_set_style_border_width(container_, 0, 0);
         lv_obj_set_style_radius(container_, 0, 0);
-        lv_obj_set_style_bg_color(container_, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_bg_color(container_, lv_color_hex(Theme::Color::BACKGROUND_BASE), 0);
         lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
 
         lv_obj_add_flag(container_, LV_OBJ_FLAG_FLOATING);
