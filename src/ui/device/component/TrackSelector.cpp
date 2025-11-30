@@ -83,45 +83,37 @@ void TrackSelector::createTrackItems(const std::vector<std::string> &names)
 {
     track_items_.clear();
 
-    for (size_t i = 0; i < names.size(); i++)
+    bool hasBackItem = !names.empty() && (names[0] == Icon::ARROW_LEFT);
+
+    // Apply icon font to back button if present
+    if (hasBackItem)
+    {
+        overlay().setItemFont(0, bitwig_fonts.icons_14);
+        track_items_.push_back(nullptr);
+    }
+
+    // Create TrackTitleItem for regular items (skip back button if present)
+    size_t startIndex = hasBackItem ? 1 : 0;
+    for (size_t i = startIndex; i < names.size(); i++)
     {
         lv_obj_t *btn = overlay().getButton(i);
         if (!btn)
             continue;
 
-        bool isBackItem = (i == 0) && !names.empty() && (names[0] == Icon::ARROW_LEFT);
-
-        // Remove default label
+        // Remove default label to replace with TrackTitleItem
         uint32_t childCount = lv_obj_get_child_cnt(btn);
         for (uint32_t j = 0; j < childCount; j++)
         {
             lv_obj_t *child = lv_obj_get_child(btn, j);
             if (child && lv_obj_check_type(child, &lv_label_class))
             {
-                if (isBackItem)
-                {
-                    if (bitwig_fonts.icons_14)
-                        lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
-                    lv_obj_set_style_text_color(child, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
-                    lv_obj_set_style_text_color(child, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-                }
-                else
-                {
-                    lv_obj_delete(child);
-                }
+                lv_obj_delete(child);
                 break;
             }
         }
 
-        if (!isBackItem)
-        {
-            auto item = std::make_unique<TrackTitleItem>(btn, true, 12);
-            track_items_.push_back(std::move(item));
-        }
-        else
-        {
-            track_items_.push_back(nullptr);
-        }
+        auto item = std::make_unique<TrackTitleItem>(btn, true, 12);
+        track_items_.push_back(std::move(item));
     }
 }
 

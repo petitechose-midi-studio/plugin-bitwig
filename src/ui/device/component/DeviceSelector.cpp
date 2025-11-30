@@ -109,21 +109,7 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props)
         // Apply icon font to Back button (index 0)
         if (!names.empty() && names[0] == Icon::ARROW_LEFT)
         {
-            lv_obj_t *backBtn = overlay().getButton(0);
-            if (backBtn)
-            {
-                uint32_t childCount = lv_obj_get_child_cnt(backBtn);
-                for (uint32_t j = 0; j < childCount; j++)
-                {
-                    lv_obj_t *child = lv_obj_get_child(backBtn, j);
-                    if (child && lv_obj_check_type(child, &lv_label_class))
-                    {
-                        if (bitwig_fonts.icons_14)
-                            lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
-                        break;
-                    }
-                }
-            }
+            overlay().setItemFont(0, bitwig_fonts.icons_14);
         }
 
         // Add type icons for children items
@@ -382,17 +368,7 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props)
 
         if (isBackItem)
         {
-            uint32_t childCount = lv_obj_get_child_cnt(button);
-            for (uint32_t j = 0; j < childCount; j++)
-            {
-                lv_obj_t *child = lv_obj_get_child(button, j);
-                if (child && lv_obj_check_type(child, &lv_label_class))
-                {
-                    if (bitwig_fonts.icons_14)
-                        lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
-                    break;
-                }
-            }
+            overlay().setItemFont(i, bitwig_fonts.icons_14);
             continue;
         }
 
