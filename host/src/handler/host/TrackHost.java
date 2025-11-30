@@ -35,6 +35,7 @@ public class TrackHost {
 
     // Cache for change detection
     private String lastTrackName = "";
+    private long lastTrackColor = 0;
 
     // Pending toggle tracking for reliable mute/solo confirmation
     // Includes timestamp to auto-expire if observer never fires
@@ -66,11 +67,13 @@ public class TrackHost {
     /**
      * Setup track state observers
      */
-    public void setup() {
+    public void setupObservers() {
         // Mark cursor track observables as interested
         cursorTrack.exists().markInterested();
         cursorTrack.name().markInterested();
+        cursorTrack.color().markInterested();
         cursorTrack.position().markInterested();
+        cursorTrack.trackType().markInterested();
         cursorTrack.isActivated().markInterested();
         cursorTrack.mute().markInterested();
         cursorTrack.solo().markInterested();
@@ -114,23 +117,29 @@ public class TrackHost {
             addTrackObservers(track, trackIndex);
         }
 
-        // Observer on cursor track name change
+        // Observer on cursor track change (name or color)
         cursorTrack.name().addValueObserver(trackName -> {
             if (cursorTrack.exists().get() && !trackName.equals(lastTrackName)) {
                 lastTrackName = trackName;
-                // Optional: send track change notification if needed
+                sendTrackChange();
+            }
+        });
+
+        cursorTrack.color().addValueObserver((r, g, b) -> {
+            long trackColor = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
+            if (trackColor != lastTrackColor) {
+                lastTrackColor = trackColor;
+                sendTrackChange();
             }
         });
     }
 
     /**
      * Send current track state (called at startup)
-     *
-     * Delay send to ensure Bitwig API values are stabilized
      */
     public void sendInitialState() {
+        sendTrackChange();
         sendTrackList();
-
     }
 
     /**
@@ -249,6 +258,19 @@ public class TrackHost {
             .filter(i -> tracks.get(i).getTrackIndex() == cursorPosition)
             .findFirst()
             .orElse(0);
+    }
+
+    /**
+     * Send current track info (name, color, position, type)
+     * Called when cursor track changes
+     */
+    private void sendTrackChange() {
+        final String trackName = cursorTrack.name().get();
+        final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
+        final int trackPosition = cursorTrack.position().get();
+        final int trackType = TrackTypeUtils.toInt(cursorTrack.trackType().get());
+
+        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition, trackType));
     }
 
     /**

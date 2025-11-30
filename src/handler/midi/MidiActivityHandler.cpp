@@ -1,15 +1,15 @@
-#include "MidiInputHandler.hpp"
+#include "MidiActivityHandler.hpp"
 #include "api/ControllerAPI.hpp"
 #include "ui/transportbar/TransportBarController.hpp"
 
 namespace Bitwig {
 
-MidiInputHandler::MidiInputHandler(ControllerAPI& api, TransportBarController& transportController)
+MidiActivityHandler::MidiActivityHandler(ControllerAPI& api, TransportBarController& transportController)
     : api_(api), transportController_(transportController) {
-    setupCallbacks();
+    setupMidiCallbacks();
 }
 
-void MidiInputHandler::setupCallbacks() {
+void MidiActivityHandler::setupMidiCallbacks() {
     api_.onNoteOn([this](uint8_t, uint8_t, uint8_t) {
         transportController_.setMidiIn(true);
     });

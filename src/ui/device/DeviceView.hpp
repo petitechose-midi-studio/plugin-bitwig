@@ -19,7 +19,7 @@
 #include "component/PageSelector.hpp"
 #include "component/DeviceSelector.hpp"
 #include "component/TrackSelector.hpp"
-#include "state/DeviceViewState.hpp"
+#include "../state/DeviceState.hpp"
 
 namespace Bitwig
 {
@@ -63,7 +63,7 @@ namespace Bitwig
         void sync();
         void setActive(bool active);
 
-        DeviceViewState &state() { return state_; }
+        DeviceState &state() { return state_; }
 
         lv_obj_t *getPageSelectorElement() const;
         lv_obj_t *getDeviceSelectorElement() const;
@@ -89,7 +89,7 @@ namespace Bitwig
                                         uint8_t currentValueIndex);
 
     private:
-        DeviceViewState state_;
+        DeviceState state_;
         Config viewConfig_;
         bool initialized_;
         bool active_;

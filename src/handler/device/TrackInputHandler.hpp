@@ -29,7 +29,7 @@ namespace Bitwig
         void setTrackListRequested(bool requested) { state_.requested = requested; }
 
     private:
-        void setupBindings();
+        void setupInputBindings();
 
         void navigate(float delta);
         void select();

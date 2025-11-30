@@ -33,7 +33,7 @@ public class TransportHost {
     /**
      * Setup transport state observers
      */
-    public void setup() {
+    public void setupObservers() {
         transport.isPlaying().markInterested();
         transport.isArrangerRecordEnabled().markInterested();
         transport.tempo().markInterested();

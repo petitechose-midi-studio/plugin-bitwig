@@ -50,17 +50,17 @@ public final class BitwigConfig {
     /**
      * Delay at startup sync (longer for initial stabilization)
      */
-    public static final int INIT_MS = 200;
+    public static final int INIT_MS = STANDARD_DELAY_MS * 2;
 
     // ═══════════════════════════════════════════════════════════════════
     // TRACK NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
 
     /** Delay after entering a track group (2x standard - navigation is complex) */
-    public static final int TRACK_ENTER_GROUP_MS = STANDARD_DELAY_MS * 2;
+    public static final int TRACK_ENTER_GROUP_MS = STANDARD_DELAY_MS;
 
     /** Delay after exiting a track group (2x standard - navigation is complex) */
-    public static final int TRACK_EXIT_GROUP_MS = STANDARD_DELAY_MS * 2;
+    public static final int TRACK_EXIT_GROUP_MS = STANDARD_DELAY_MS;
 
     /** Delay after track selection before sending track list */
     public static final int TRACK_SELECT_DELAY_MS = STANDARD_DELAY_MS;
@@ -70,13 +70,13 @@ public final class BitwigConfig {
     // ═══════════════════════════════════════════════════════════════════
 
     /** Delay after entering device child (2x standard - navigation is complex) */
-    public static final int DEVICE_ENTER_CHILD_MS = STANDARD_DELAY_MS * 2;
+    public static final int DEVICE_ENTER_CHILD_MS = STANDARD_DELAY_MS;
 
     /** Delay after device change before reading properties */
     public static final int DEVICE_CHANGE_HEADER_MS = STANDARD_DELAY_MS;
 
     /** Delay after exiting nested device (2x standard - navigation is complex) */
-    public static final int DEVICE_EXIT_NESTED_MS = STANDARD_DELAY_MS * 2;
+    public static final int DEVICE_EXIT_NESTED_MS = STANDARD_DELAY_MS;
 
     /** Delay after changing remote controls page */
     public static final int PAGE_CHANGE_MS = STANDARD_DELAY_MS;
@@ -107,7 +107,7 @@ public final class BitwigConfig {
      * Timeout for mute/solo toggle confirmation.
      * If observer doesn't fire within this window, pending state expires.
      */
-    public static final int TOGGLE_CONFIRM_TIMEOUT_MS = 200;
+    public static final int TOGGLE_CONFIRM_TIMEOUT_MS = STANDARD_DELAY_MS;
 
     // ═══════════════════════════════════════════════════════════════════
     // BANK SIZES

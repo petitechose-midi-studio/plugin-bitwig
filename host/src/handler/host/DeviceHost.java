@@ -4,11 +4,10 @@ import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import protocol.struct.*;
 import config.BitwigConfig;
-import util.ColorUtils;
 import util.DeviceTypeUtils;
-import util.TrackTypeUtils;
 import java.util.List;
 import java.util.ArrayList;
+import handler.controller.DeviceController;
 
 /**
  * DeviceHost - Observes Bitwig Device and sends updates TO controller
@@ -31,12 +30,11 @@ public class DeviceHost {
 
     private DeviceLayerBank layerBank;
     private DrumPadBank drumPadBank;
-    private handler.controller.DeviceController deviceController;
+    private DeviceController deviceController;
+    private DeviceNavigator navigator;
 
     private String lastDeviceName = "";
     private int lastPageIndex = -1;
-    private String lastTrackName = "";
-    private long lastTrackColor = 0;
 
     // Prevent duplicate calls during transitions
     private boolean deviceChangePending = false;  // Ignores individual param messages during device change
@@ -58,10 +56,13 @@ public class DeviceHost {
         this.deviceBank = deviceBank;
     }
 
-    public void setup() {
+    public void setupObservers() {
         // Create banks
         layerBank = cursorDevice.createLayerBank(BitwigConfig.MAX_CHILDREN);
         drumPadBank = cursorDevice.createDrumPadBank(BitwigConfig.MAX_CHILDREN);
+
+        // Create navigator (needs banks)
+        navigator = new DeviceNavigator(host, cursorDevice, deviceBank, layerBank);
 
         // Mark interested + add observers by domain
         setupCursorTrackObservables();
@@ -73,26 +74,11 @@ public class DeviceHost {
 
     private void setupCursorTrackObservables() {
         cursorTrack.name().markInterested();
-        cursorTrack.color().markInterested();
-        cursorTrack.position().markInterested();
-        cursorTrack.trackType().markInterested();
 
+        // Reset device name cache when track changes, so device observer will trigger sendDeviceChange
+        // Note: TrackHost now handles TrackChangeMessage (name, color, position, type)
         cursorTrack.name().addValueObserver(trackName -> {
-            if (!trackName.equals(lastTrackName)) {
-                lastTrackName = trackName;
-                lastDeviceName = "";  // Reset so device observer will trigger sendDeviceChange
-                sendTrackChange();
-                // Note: sendDeviceChange() is NOT called here - it will be triggered
-                // by cursorDevice.exists() or cursorDevice.name() observers when the device changes
-            }
-        });
-
-        cursorTrack.color().addValueObserver((r, g, b) -> {
-            long trackColor = ((int)(r * 255) << 16) | ((int)(g * 255) << 8) | (int)(b * 255);
-            if (trackColor != lastTrackColor) {
-                lastTrackColor = trackColor;
-                sendTrackChange();
-            }
+            lastDeviceName = "";  // Reset so device observer will trigger sendDeviceChange
         });
     }
 
@@ -207,16 +193,16 @@ public class DeviceHost {
 
     /**
      * Send current device state (called at startup)
+     * Note: TrackHost now handles TrackChangeMessage
      */
     public void sendInitialState() {
         // Delay to let Bitwig API initialize values
         host.scheduleTask(() -> {
-            sendTrackChange();
             sendDeviceChange();
         }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
-    public void setDeviceController(handler.controller.DeviceController deviceController) {
+    public void setDeviceController(DeviceController deviceController) {
         this.deviceController = deviceController;
     }
 
@@ -349,13 +335,7 @@ public class DeviceHost {
                 allChildren.add(drum);
             }
 
-            host.println("\n[DEVICE HOST] Sending DeviceChildren: deviceIndex=" + deviceIndex + ", childrenCount="
-                    + allChildren.size());
-            for (int i = 0; i < allChildren.size(); i++) {
-                DeviceChildrenMessage.Children child = allChildren.get(i);
-                host.println("  [" + i + "] " + child.getChildName() + " (itemType=" + child.getItemType() + "/"
-                        + getItemTypeString(child.getItemType()) + ", childIndex=" + child.getChildIndex() + ")");
-            }
+            host.println("[DEVICE HOST] DeviceChildren: deviceIndex=" + deviceIndex + ", count=" + allChildren.size());
 
             protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
@@ -363,59 +343,18 @@ public class DeviceHost {
 
     /**
      * Execute device navigation: enter child (slot/layer/drum)
-     * Called FROM DeviceController when controller sends navigation command
-     *
-     * Navigation logic is HERE (not in Controller) because:
-     * - Needs layerBank/drumPadBank access (can't be shared with Controller)
-     * - Bitwig API limitation: these banks must be created in Host
+     * Delegates to DeviceNavigator
      */
     public void enterDeviceChild(int deviceIndex, int itemType, int childIndex) {
-        Device device = deviceBank.getItemAt(deviceIndex);
-        if (!device.exists().get()) {
-            host.println("[DEVICE HOST] ⚠ enterDeviceChild: device " + deviceIndex + " doesn't exist");
-            return;
-        }
-
-        String deviceName = device.name().get();
-        host.println("\n[DEVICE HOST] ▶ Entering device child: device=" + deviceName + " (" + deviceIndex
-                + "), itemType=" + itemType + " (" + getItemTypeString(itemType) + "), childIndex=" + childIndex + "\n");
-
-        // Execute Bitwig API navigation
-        cursorDevice.selectDevice(device);
-
-        // itemType: 0=slot, 1=layer, 2=drum
-        switch (itemType) {
-            case 0: // Slot
-                String[] slotNames = device.slotNames().get();
-                if (childIndex >= 0 && childIndex < slotNames.length) {
-                    cursorDevice.selectFirstInSlot(slotNames[childIndex]);
-                }
-                break;
-            case 1: // Layer
-                DeviceLayer layer = layerBank.getItemAt(childIndex);
-                if (layer.exists().get()) {
-                    layer.selectInEditor();
-                    cursorDevice.selectFirstInChannel(layer);
-                }
-                break;
-            case 2: // Drum pad
-                cursorDevice.selectFirstInKeyPad(childIndex);
-                break;
-        }
-        // itemCount observer will trigger sendDeviceList() with debounce
+        navigator.enterDeviceChild(deviceIndex, itemType, childIndex);
     }
 
     /**
      * Execute device navigation: exit to parent
-     * Called FROM DeviceController when controller sends navigation command
+     * Delegates to DeviceNavigator
      */
     public void exitToParent() {
-        host.println("\n[DEVICE HOST] ◀ Exit to parent\n");
-
-        // Execute Bitwig API navigation
-        cursorDevice.selectParent();
-        // itemCount observer will trigger sendDeviceList() with debounce
-
+        navigator.exitToParent();
     }
 
     private List<DeviceChildrenMessage.Children> getSlots(Device device) {
@@ -503,16 +442,6 @@ public class DeviceHost {
         }
         return list;
     }
-
-    private void sendTrackChange() {
-        final String trackName = cursorTrack.name().get();
-        final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
-        final int trackPosition = cursorTrack.position().get();
-        final int trackType = TrackTypeUtils.toInt(cursorTrack.trackType().get());
-
-        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition, trackType));
-    }
-
 
     private void sendDeviceCleared() {
         // Send header with empty values
@@ -684,14 +613,5 @@ public class DeviceHost {
         param.value().discreteValueCount().markInterested();
         param.value().displayedValue().markInterested();
         param.value().discreteValueNames().markInterested();
-    }
-
-    private String getItemTypeString(int itemType) {
-        switch (itemType) {
-            case 0: return "SLOT";
-            case 1: return "LAYER";
-            case 2: return "DRUM";
-            default: return "UNKNOWN";
-        }
     }
 }

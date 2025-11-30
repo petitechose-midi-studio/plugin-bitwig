@@ -15,6 +15,8 @@ public final class TrackTypeUtils {
      * @return 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
      */
     public static int toInt(String trackType) {
+        if (trackType == null) return 0;
+
         switch (trackType) {
             case "Audio": return 0;
             case "Instrument": return 1;

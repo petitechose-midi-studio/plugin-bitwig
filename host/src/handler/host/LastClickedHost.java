@@ -3,27 +3,20 @@ package handler.host;
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import protocol.struct.*;
-import config.BitwigConfig;
 
 /**
  * LastClickedHost - Observes last clicked parameter in Bitwig and sends updates TO controller
  *
- * Monitors the last clicked/touched parameter and sends protocol messages
- * to hardware controller for control via OPT encoder.
- *
- * SINGLE RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
+ * RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
+ * - Observes last clicked parameter changes
+ * - Sends protocol messages when parameter changes
+ * - NEVER receives protocol callbacks (that's LastClickedController's job)
  */
-public class LastClicked {
-    @SuppressWarnings("unused")
-    private final ControllerHost host;
+public class LastClickedHost {
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;
 
-    public LastClicked(
-        ControllerHost host,
-        Protocol protocol
-    ) {
-        this.host = host;
+    public LastClickedHost(ControllerHost host, Protocol protocol) {
         this.protocol = protocol;
         this.lastClicked = host.createLastClickedParameter("last_clicked", "Last Clicked");
     }
@@ -31,7 +24,7 @@ public class LastClicked {
     /**
      * Setup observers for last clicked parameter
      */
-    public void setup() {
+    public void setupObservers() {
         // Mark observables as interested
         lastClicked.parameter().markInterested();
         lastClicked.parameter().name().markInterested();
@@ -46,11 +39,6 @@ public class LastClicked {
         lastClicked.parameter().exists().addValueObserver(exists -> {
             sendLastClickedUpdate();
         });
-
-        // Protocol callback: value change FROM controller
-        protocol.onLastClickedValueChange = msg -> {
-            handleValueChange(msg.getParameterValue());
-        };
     }
 
     /**
@@ -63,19 +51,25 @@ public class LastClicked {
     }
 
     /**
+     * Get the underlying parameter for controller to modify
+     */
+    public Parameter getParameter() {
+        return lastClicked.parameter();
+    }
+
+    /**
      * Send full parameter info (when new parameter clicked)
      */
     private void sendLastClickedUpdate() {
-        // Capture all API data immediately (outside scheduleTask)
         final String name = lastClicked.parameter().name().get();
         final double value = lastClicked.parameter().value().get();
         final String displayValue = lastClicked.parameter().displayedValue().get();
         final double origin = lastClicked.parameter().value().getOrigin().get();
         final boolean exists = lastClicked.parameter().exists().get();
-        final int discreteCount = lastClicked.parameter().value().discreteValueCount().get(); // -1=continuous (default)
+        final int discreteCount = lastClicked.parameter().value().discreteValueCount().get();
 
-        final int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1: 0; // 0=Knob (default)
-        final int currentValueIndex = (int)(value * (double)discreteCount);
+        final int paramType = discreteCount > 2 ? 1 : discreteCount < 0 ? -1 : 0;
+        final int currentValueIndex = discreteCount > 0 ? (int)(value * (double)discreteCount) : 0;
 
         protocol.send(new LastClickedUpdateMessage(
             name,
@@ -87,13 +81,5 @@ public class LastClicked {
             (short) discreteCount,
             (byte) currentValueIndex
         ));
-    }
-
-    /**
-     * Handle value change from controller
-     */
-    private void handleValueChange(float value) {
-        // Apply value to parameter (Bitwig will update the UI)
-        lastClicked.parameter().set(value);
     }
 }

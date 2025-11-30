@@ -13,7 +13,7 @@ MacroInputHandler::MacroInputHandler(ControllerAPI& api, DeviceView& view,
                                      Protocol::Protocol& protocol, lv_obj_t* scope)
     : api_(api), view_(view), protocol_(protocol), scope_(scope)
 {
-    setupBindings();
+    setupInputBindings();
 }
 
 MacroInputHandler::~MacroInputHandler() = default;
@@ -34,7 +34,7 @@ EncoderID MacroInputHandler::getEncoderIdForParameter(uint8_t paramIndex) {
 // Bindings Setup
 // =============================================================================
 
-void MacroInputHandler::setupBindings() {
+void MacroInputHandler::setupInputBindings() {
     static constexpr EncoderID encoders[] = {
         EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
         EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8

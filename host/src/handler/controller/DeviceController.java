@@ -55,7 +55,7 @@ public class DeviceController {
             parameterDiscreteCount[i] = -1;  // Default: continuous (safest for echo suppression)
         }
 
-        setupCallbacks();
+        setupProtocolCallbacks();
     }
 
     public void setDeviceHost(DeviceHost deviceHost) {
@@ -95,7 +95,7 @@ public class DeviceController {
         return false;
     }
 
-    private void setupCallbacks() {
+    private void setupProtocolCallbacks() {
         protocol.onDeviceMacroValueChange = msg -> {
             if (msg.fromHost) {
                 host.println("[DeviceController] RECEIVED feedback from HOST param=" + msg.getParameterIndex() + " value=" + msg.getParameterValue());

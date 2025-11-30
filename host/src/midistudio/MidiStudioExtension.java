@@ -3,7 +3,6 @@ package midistudio;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.ControllerExtension;
 import protocol.Protocol;
-import protocol.struct.HostInitializedMessage;
 import protocol.struct.HostDeactivatedMessage;
 import handler.controller.*;
 import handler.host.*;
@@ -51,16 +50,16 @@ public class MidiStudioExtension extends ControllerExtension {
             transport);
 
       TransportHost transportHost = new TransportHost(host, protocol, transport);
-      transportHost.setup();
+      transportHost.setupObservers();
 
       DeviceHost deviceHost = new DeviceHost(host, protocol, cursorTrack, cursorDevice, remoteControls, deviceBank);
-      deviceHost.setup();
+      deviceHost.setupObservers();
 
       deviceController.setDeviceHost(deviceHost);
       deviceHost.setDeviceController(deviceController);
 
       TrackHost trackHost = new TrackHost(host, protocol, cursorTrack, trackBank);
-      trackHost.setup();
+      trackHost.setupObservers();
 
       TrackController trackController = new TrackController(host, cursorTrack, trackBank, cursorDevice, deviceBank,
             protocol);
@@ -68,21 +67,16 @@ public class MidiStudioExtension extends ControllerExtension {
       trackController.setTrackHost(trackHost);
       trackController.setDeviceHost(deviceHost);
 
-      LastClicked lastClickedHost = new LastClicked(host, protocol);
-      protocol.send(new HostInitializedMessage(true));
-      lastClickedHost.setup();
-      transportHost.sendInitialState();
-      deviceHost.sendInitialState();
-      trackHost.sendInitialState();
-      lastClickedHost.sendInitialState();
+      // LastClicked: Host (observers) + Controller (protocol callbacks)
+      LastClickedHost lastClickedHost = new LastClickedHost(host, protocol);
+      LastClickedController lastClickedController = new LastClickedController(protocol);
+      lastClickedController.setLastClickedHost(lastClickedHost);
+      lastClickedHost.setupObservers();
 
-      protocol.onRequestHostStatus = msg -> {
-         protocol.send(new HostInitializedMessage(true));
-         transportHost.sendInitialState();
-         deviceHost.sendInitialState();
-         trackHost.sendInitialState();
-         lastClickedHost.sendInitialState();
-      };
+      // HostStatus: Handles resync requests and initial state
+      HostStatusController hostStatusController = new HostStatusController(
+            protocol, transportHost, deviceHost, trackHost, lastClickedHost);
+      hostStatusController.sendFullState();
 
       host.showPopupNotification("MIDI Studio : Connected");
    }
@@ -91,7 +85,6 @@ public class MidiStudioExtension extends ControllerExtension {
    public void exit() {
       getHost().showPopupNotification("MIDI Studio : Disconnected");
       protocol.send(new HostDeactivatedMessage(false));
-      ;
    }
 
    @Override

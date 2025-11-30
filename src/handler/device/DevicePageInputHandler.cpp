@@ -14,7 +14,7 @@ DevicePageInputHandler::DevicePageInputHandler(ControllerAPI& api, DeviceView& v
                                                Protocol::Protocol& protocol, lv_obj_t* scope)
     : api_(api), view_(view), scope_(scope), protocol_(protocol)
 {
-    setupBindings();
+    setupInputBindings();
 }
 
 DevicePageInputHandler::~DevicePageInputHandler() = default;
@@ -36,7 +36,7 @@ void DevicePageInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t cu
 // Bindings Setup
 // =============================================================================
 
-void DevicePageInputHandler::setupBindings() {
+void DevicePageInputHandler::setupInputBindings() {
     // Open/close page selector (latch behavior)
     api_.onPressed(ButtonID::LEFT_BOTTOM, [this]() { requestPageList(); }, scope_, true);
     api_.onReleased(ButtonID::LEFT_BOTTOM, [this]() { closeSelector(); }, scope_);

@@ -24,7 +24,7 @@ public:
     static EncoderID getEncoderIdForParameter(uint8_t paramIndex);
 
 private:
-    void setupBindings();
+    void setupInputBindings();
     void handleValueChange(uint8_t index, float value);
     void sendTouch(uint8_t index, bool touched);
 

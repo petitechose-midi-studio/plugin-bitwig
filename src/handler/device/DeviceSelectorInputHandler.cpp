@@ -23,7 +23,7 @@ DeviceSelectorInputHandler::DeviceSelectorInputHandler(ControllerAPI& api, Devic
     : api_(api), view_(view), protocol_(protocol),
       trackHandler_(trackHandler), scope_(scope)
 {
-    setupBindings();
+    setupInputBindings();
 }
 
 DeviceSelectorInputHandler::~DeviceSelectorInputHandler() = default;
@@ -77,7 +77,7 @@ void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uin
 // Bindings Setup
 // =============================================================================
 
-void DeviceSelectorInputHandler::setupBindings() {
+void DeviceSelectorInputHandler::setupInputBindings() {
     lv_obj_t* overlay = view_.getDeviceSelectorElement();
 
     // Open device selector (latch behavior)

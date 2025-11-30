@@ -24,7 +24,7 @@ namespace Bitwig
         ~TransportInputHandler() = default;
 
     private:
-        void setupBindings();
+        void setupInputBindings();
         void togglePlay();
         void toggleRecord();
         void stop();

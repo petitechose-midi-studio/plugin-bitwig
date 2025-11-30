@@ -27,10 +27,10 @@ public class TransportController {
         this.transport = transport;
         this.protocol = protocol;
 
-        setupCallbacks();
+        setupProtocolCallbacks();
     }
 
-    private void setupCallbacks() {
+    private void setupProtocolCallbacks() {
         protocol.onTransportPlay = msg -> {
             if (msg.fromHost) return;
             if (msg.isPlaying()) {

@@ -2,8 +2,8 @@ package handler.controller;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
-import config.BitwigConfig;
 import handler.host.TrackHost;
+import handler.host.DeviceHost;
 
 /**
  * TrackController - Handles Track commands FROM controller
@@ -24,7 +24,7 @@ public class TrackController {
     private final DeviceBank deviceBank;
     private final Protocol protocol;
     private TrackHost trackHost;
-    private handler.host.DeviceHost deviceHost;
+    private DeviceHost deviceHost;
 
     public TrackController(
         ControllerHost host,
@@ -41,18 +41,18 @@ public class TrackController {
         this.deviceBank = deviceBank;
         this.protocol = protocol;
 
-        setupCallbacks();
+        setupProtocolCallbacks();
     }
 
     public void setTrackHost(TrackHost trackHost) {
         this.trackHost = trackHost;
     }
 
-    public void setDeviceHost(handler.host.DeviceHost deviceHost) {
+    public void setDeviceHost(DeviceHost deviceHost) {
         this.deviceHost = deviceHost;
     }
 
-    private void setupCallbacks() {
+    private void setupProtocolCallbacks() {
         // Request track list FROM controller
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;

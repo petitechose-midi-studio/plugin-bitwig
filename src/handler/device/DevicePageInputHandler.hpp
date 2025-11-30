@@ -24,7 +24,7 @@ public:
     void setPageSelectionState(uint8_t pageCount, uint8_t currentIndex);
 
 private:
-    void setupBindings();
+    void setupInputBindings();
 
     void requestPageList();
     void navigate(float delta);

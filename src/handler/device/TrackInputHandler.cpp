@@ -19,7 +19,7 @@ namespace Bitwig
                                          Protocol::Protocol &protocol)
         : api_(api), view_(view), protocol_(protocol)
     {
-        setupBindings();
+        setupInputBindings();
     }
 
     TrackInputHandler::~TrackInputHandler() = default;
@@ -51,7 +51,7 @@ namespace Bitwig
     // Bindings Setup
     // =============================================================================
 
-    void TrackInputHandler::setupBindings()
+    void TrackInputHandler::setupInputBindings()
     {
         lv_obj_t *overlay = view_.getTrackSelectorElement();
 

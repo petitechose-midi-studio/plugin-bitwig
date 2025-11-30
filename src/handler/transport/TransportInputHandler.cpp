@@ -7,10 +7,10 @@ namespace Bitwig
     TransportInputHandler::TransportInputHandler(ControllerAPI &api, Protocol::Protocol &protocol)
         : api_(api), protocol_(protocol)
     {
-        setupBindings();
+        setupInputBindings();
     }
 
-    void TransportInputHandler::setupBindings()
+    void TransportInputHandler::setupInputBindings()
     {
         // Configure tempo encoder for Relative mode
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);

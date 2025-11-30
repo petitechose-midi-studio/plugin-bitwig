@@ -14,14 +14,14 @@
 #include "handler/device/DeviceHostHandler.hpp"
 #include "handler/transport/TransportInputHandler.hpp"
 #include "handler/transport/TransportHostHandler.hpp"
-#include "handler/lastclicked/LastClickedHandler.hpp"
-#include "handler/midi/MidiInputHandler.hpp"
+#include "handler/lastclicked/LastClickedState.hpp"
+#include "handler/lastclicked/LastClickedHostHandler.hpp"
+#include "handler/lastclicked/LastClickedInputHandler.hpp"
+#include "handler/midi/MidiActivityHandler.hpp"
 #include "handler/plugin/PluginLifecycleHandler.hpp"
 
 namespace Bitwig
 {
-
-    class PluginHostHandler;
 
     class Plugin : public IPlugin
     {
@@ -60,11 +60,13 @@ namespace Bitwig
         };
 
         struct LastClickedModule {
-            LastClickedHandler handler;
+            LastClickedState state;
+            LastClickedInputHandler inputHandler;
+            LastClickedHostHandler hostHandler;
         };
 
         struct MidiModule {
-            MidiInputHandler handler;
+            MidiActivityHandler handler;
         };
 
         struct LifecycleModule {

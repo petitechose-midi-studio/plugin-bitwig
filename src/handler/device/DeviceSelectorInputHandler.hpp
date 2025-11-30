@@ -37,7 +37,7 @@ public:
 
 private:
     // --- Bindings ---
-    void setupBindings();
+    void setupInputBindings();
 
     // --- Handlers ---
     void requestDeviceList();
