@@ -5,6 +5,7 @@
 #include "widget/ParameterKnobWidget.hpp"
 #include "widget/ParameterListWidget.hpp"
 #include "log/Macros.hpp"
+#include "util/TextUtils.hpp"
 
 namespace Bitwig
 {
@@ -83,6 +84,151 @@ namespace Bitwig
 
     void DeviceView::render() {}
 
+    void DeviceView::sync()
+    {
+        if (!initialized_ || !state_.dirty.any())
+            return;
+
+        if (state_.dirty.device)
+            syncDeviceInfo();
+
+        for (uint8_t i = 0; i < 8; i++)
+        {
+            if (state_.dirty.parameters[i])
+                syncParameter(i);
+        }
+
+        if (state_.dirty.pageSelector)
+            syncPageSelector();
+
+        if (state_.dirty.deviceSelector)
+            syncDeviceSelector();
+
+        if (state_.dirty.trackSelector)
+            syncTrackSelector();
+
+        state_.dirty.clear();
+    }
+
+    void DeviceView::syncDeviceInfo()
+    {
+        if (!top_bar_component_)
+            return;
+
+        top_bar_component_->render({
+            .deviceName = state_.device.name.c_str(),
+            .deviceEnabled = state_.device.enabled,
+            .deviceHasChildren = state_.device.hasChildren,
+            .pageName = state_.device.pageName.c_str()});
+    }
+
+    void DeviceView::syncParameter(uint8_t index)
+    {
+        if (index >= 8 || !body_container_)
+            return;
+
+        auto &param = state_.parameters[index];
+
+        if (param.metadataSet && !widgets_[index])
+        {
+            switch (param.type)
+            {
+            case 1:
+                widgets_[index] = std::make_unique<ParameterButtonWidget>(body_container_, 80, 100, index);
+                break;
+            case 2:
+                widgets_[index] = std::make_unique<ParameterListWidget>(body_container_, 80, 100, index, param.discreteCount);
+                break;
+            case 0:
+            default:
+            {
+                bool isCentered = (param.origin == 0.5f);
+                auto knob = std::make_unique<ParameterKnobWidget>(body_container_, 80, 100, index, isCentered);
+                knob->setOrigin(param.origin);
+                widgets_[index] = std::move(knob);
+                break;
+            }
+            }
+
+            if (widgets_[index])
+            {
+                int col = index % 4;
+                int row = index / 4;
+                lv_obj_set_grid_cell(widgets_[index]->getContainer(),
+                                     LV_GRID_ALIGN_CENTER, col, 1,
+                                     LV_GRID_ALIGN_CENTER, row, 1);
+            }
+        }
+
+        if (!widgets_[index])
+            return;
+
+        widgets_[index]->setName(param.name.c_str());
+        widgets_[index]->setValueWithDisplay(param.value, param.displayValue.c_str());
+
+        if (param.type == 1 || param.type == 2)
+        {
+            widgets_[index]->setDiscreteMetadata(param.discreteCount, param.discreteValueNames, param.currentValueIndex);
+        }
+
+        lv_obj_t *container = widgets_[index]->getContainer();
+        if (container)
+        {
+            if (param.visible)
+                lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
+            else
+                lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    void DeviceView::syncPageSelector()
+    {
+        if (!page_selector_)
+            return;
+
+        auto &ps = state_.pageSelector;
+        page_selector_->render({
+            .names = &ps.names,
+            .selectedIndex = ps.selectedIndex,
+            .visible = ps.visible});
+    }
+
+    void DeviceView::syncDeviceSelector()
+    {
+        if (!device_selector_)
+            return;
+
+        auto &ds = state_.deviceSelector;
+        device_selector_->render({
+            .names = &ds.names,
+            .deviceStates = &ds.deviceStates,
+            .hasSlots = &ds.hasSlots,
+            .hasLayers = &ds.hasLayers,
+            .hasDrums = &ds.hasDrums,
+            .childrenNames = &ds.childrenNames,
+            .childrenTypes = &ds.childrenTypes,
+            .selectedIndex = ds.showingChildren ? 1 : ds.currentIndex,
+            .showingChildren = ds.showingChildren,
+            .showFooter = ds.showFooter,
+            .visible = ds.visible});
+    }
+
+    void DeviceView::syncTrackSelector()
+    {
+        if (!track_selector_)
+            return;
+
+        auto &ts = state_.trackSelector;
+        track_selector_->render({
+            .names = &ts.names,
+            .muteStates = &ts.muteStates,
+            .soloStates = &ts.soloStates,
+            .trackTypes = &ts.trackTypes,
+            .trackColors = &ts.trackColors,
+            .selectedIndex = ts.currentIndex,
+            .visible = ts.visible});
+    }
+
     void DeviceView::update()
     {
         if (!active_ || !initialized_)
@@ -152,52 +298,20 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8 || !body_container_)
             return;
 
+        // Reset widget if type changes
         widgets_[paramIndex].reset();
 
-        switch (parameterType)
-        {
-        case 1:
-            widgets_[paramIndex] =
-                std::make_unique<ParameterButtonWidget>(body_container_, 80, 100, paramIndex);
-            break;
+        auto &param = state_.parameters[paramIndex];
+        param.type = parameterType;
+        param.discreteCount = discreteCount;
+        param.discreteValueNames = discreteValueNames;
+        param.currentValueIndex = currentValueIndex;
+        param.origin = origin;
+        param.displayValue = displayValue ? displayValue : "";
+        param.metadataSet = true;
 
-        case 2:
-            widgets_[paramIndex] = std::make_unique<ParameterListWidget>(body_container_,
-                                                                         80,
-                                                                         100,
-                                                                         paramIndex,
-                                                                         discreteCount);
-            break;
-
-        case 0:
-        default:
-        {
-            bool isCentered = (origin == 0.5f);
-            auto knob = std::make_unique<ParameterKnobWidget>(body_container_, 80, 100, paramIndex, isCentered);
-            knob->setOrigin(origin);
-            widgets_[paramIndex] = std::move(knob);
-            break;
-        }
-        }
-
-        if (widgets_[paramIndex])
-        {
-            int col = paramIndex % 4;
-            int row = paramIndex / 4;
-
-            lv_obj_set_grid_cell(widgets_[paramIndex]->getContainer(),
-                                 LV_GRID_ALIGN_CENTER,
-                                 col,
-                                 1,
-                                 LV_GRID_ALIGN_CENTER,
-                                 row,
-                                 1);
-
-            if (parameterType == 1 || parameterType == 2)
-            {
-                widgets_[paramIndex]->setDiscreteMetadata(discreteCount, discreteValueNames, currentValueIndex);
-            }
-        }
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setParameterValue(uint8_t paramIndex, float normalizedValue)
@@ -205,10 +319,9 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            widgets_[paramIndex]->setValue(normalizedValue);
-        }
+        state_.parameters[paramIndex].value = normalizedValue;
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setParameterValueWithDisplay(uint8_t paramIndex, float normalizedValue,
@@ -217,10 +330,10 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            widgets_[paramIndex]->setValueWithDisplay(normalizedValue, displayValue);
-        }
+        state_.parameters[paramIndex].value = normalizedValue;
+        state_.parameters[paramIndex].displayValue = displayValue ? displayValue : "";
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setParameterName(uint8_t paramIndex, const char *name)
@@ -228,10 +341,9 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8 || !name)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            widgets_[paramIndex]->setName(name);
-        }
+        state_.parameters[paramIndex].name = name;
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setParameterVisible(uint8_t paramIndex, bool visible)
@@ -239,21 +351,9 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            lv_obj_t *container = widgets_[paramIndex]->getContainer();
-            if (container)
-            {
-                if (visible)
-                {
-                    lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
-                }
-                else
-                {
-                    lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
-                }
-            }
-        }
+        state_.parameters[paramIndex].visible = visible;
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setParameterLoading(uint8_t paramIndex, bool loading)
@@ -261,11 +361,9 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            // TODO: Add visual loading indicator (grayed out, spinner, etc.)
-            // For now, just note the state internally
-        }
+        state_.parameters[paramIndex].loading = loading;
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setAllWidgetsLoading(bool loading)
@@ -275,8 +373,10 @@ namespace Bitwig
 
         for (uint8_t i = 0; i < 8; i++)
         {
-            setParameterLoading(i, loading);
+            state_.parameters[i].loading = loading;
+            state_.dirty.parameters[i] = true;
         }
+        sync();
     }
 
     void DeviceView::setParameterDiscreteValues(uint8_t paramIndex,
@@ -286,10 +386,10 @@ namespace Bitwig
         if (!initialized_ || paramIndex >= 8)
             return;
 
-        if (widgets_[paramIndex])
-        {
-            widgets_[paramIndex]->setDiscreteMetadata(discreteValueNames.size(), discreteValueNames, currentValueIndex);
-        }
+        state_.parameters[paramIndex].discreteValueNames = discreteValueNames;
+        state_.parameters[paramIndex].currentValueIndex = currentValueIndex;
+        state_.dirty.parameters[paramIndex] = true;
+        sync();
     }
 
     void DeviceView::setDeviceName(const char *name)
@@ -297,10 +397,9 @@ namespace Bitwig
         if (!initialized_ || !name)
             return;
 
-        if (top_bar_component_)
-        {
-            top_bar_component_->setDeviceName(name);
-        }
+        state_.device.name = name;
+        state_.dirty.device = true;
+        sync();
     }
 
     void DeviceView::setDeviceEnabled(bool enabled)
@@ -308,10 +407,9 @@ namespace Bitwig
         if (!initialized_)
             return;
 
-        if (top_bar_component_)
-        {
-            top_bar_component_->setDeviceState(enabled);
-        }
+        state_.device.enabled = enabled;
+        state_.dirty.device = true;
+        sync();
     }
 
     void DeviceView::setDeviceHasChildren(bool hasChildren)
@@ -319,10 +417,9 @@ namespace Bitwig
         if (!initialized_)
             return;
 
-        if (top_bar_component_)
-        {
-            top_bar_component_->setDeviceHasChildren(hasChildren);
-        }
+        state_.device.hasChildren = hasChildren;
+        state_.dirty.device = true;
+        sync();
     }
 
     void DeviceView::setDevicePageInfo(uint8_t currentPage, uint8_t totalPages)
@@ -336,10 +433,9 @@ namespace Bitwig
         if (!initialized_ || !name)
             return;
 
-        if (top_bar_component_)
-        {
-            top_bar_component_->setPageName(name);
-        }
+        state_.device.pageName = name;
+        state_.dirty.device = true;
+        sync();
     }
 
     void DeviceView::setupLayout()
@@ -409,38 +505,41 @@ namespace Bitwig
 
         top_bar_component_ = std::make_unique<DeviceStateBar>(top_bar_container_);
 
-        top_bar_component_->setDeviceName("Device 1");
-        top_bar_component_->setDeviceState(true);
-        top_bar_component_->setPageName("Page");
+        top_bar_component_->render({
+            .deviceName = "Device 1",
+            .deviceEnabled = true,
+            .deviceHasChildren = false,
+            .pageName = "Page"});
 
         page_selector_ = std::make_unique<PageSelector>(zone_);
 
         device_selector_ = std::make_unique<DeviceSelector>(zone_);
 
-        track_list_selector_ = std::make_unique<TrackListSelector>(zone_);
+        track_selector_ = std::make_unique<TrackSelector>(zone_);
     }
 
     void DeviceView::showPageSelector(const std::vector<std::string> &pageNames, int currentIndex)
     {
-        if (!page_selector_)
-            return;
-        page_selector_->setPageNames(pageNames);
-        page_selector_->setCurrentPageIndex(currentIndex);
-        page_selector_->show();
+        state_.pageSelector.names = pageNames;
+        state_.pageSelector.currentIndex = currentIndex;
+        state_.pageSelector.selectedIndex = currentIndex;
+        state_.pageSelector.visible = true;
+        state_.dirty.pageSelector = true;
+        sync();
     }
 
     void DeviceView::setPageSelectorIndex(int index)
     {
-        if (!page_selector_)
-            return;
-        page_selector_->setSelectedIndex(index);
+        state_.pageSelector.selectedIndex = index;
+        state_.dirty.pageSelector = true;
+        sync();
     }
 
     void DeviceView::hidePageSelector()
     {
-        if (!page_selector_)
-            return;
-        page_selector_->hide();
+        state_.pageSelector.visible = false;
+        state_.dirty.pageSelector = true;
+        sync();
     }
 
     int DeviceView::getPageSelectorIndex() const
@@ -464,40 +563,49 @@ namespace Bitwig
                                     const std::vector<bool> &hasLayers,
                                     const std::vector<bool> &hasDrums)
     {
-        if (!device_selector_)
-            return;
-        device_selector_->setDeviceItems(names, currentIndex, deviceStates, hasSlots, hasLayers, hasDrums);
-        device_selector_->showWithFooter();
+        state_.deviceSelector.names = names;
+        state_.deviceSelector.currentIndex = currentIndex;
+        state_.deviceSelector.deviceStates = deviceStates;
+        state_.deviceSelector.hasSlots = hasSlots;
+        state_.deviceSelector.hasLayers = hasLayers;
+        state_.deviceSelector.hasDrums = hasDrums;
+        state_.deviceSelector.showingChildren = false;
+        state_.deviceSelector.showFooter = true;
+        state_.deviceSelector.visible = true;
+        state_.dirty.deviceSelector = true;
+        sync();
     }
 
     void DeviceView::showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
     {
-        if (!device_selector_)
-            return;
-        device_selector_->setChildrenItems(items, itemTypes);
-        device_selector_->setCurrentItemIndex(1);
-        device_selector_->showWithoutFooter();
+        state_.deviceSelector.childrenNames = items;
+        state_.deviceSelector.childrenTypes = itemTypes;
+        state_.deviceSelector.showingChildren = true;
+        state_.deviceSelector.showFooter = false;
+        state_.deviceSelector.visible = true;
+        state_.dirty.deviceSelector = true;
+        sync();
     }
 
     void DeviceView::setDeviceSelectorIndex(int index)
     {
-        if (!device_selector_)
-            return;
-        device_selector_->setSelectedIndex(index);
+        state_.deviceSelector.currentIndex = index;
+        state_.dirty.deviceSelector = true;
+        sync();
     }
 
     void DeviceView::hideDeviceSelector()
     {
-        if (!device_selector_)
-            return;
-        device_selector_->hide();
+        state_.deviceSelector.visible = false;
+        state_.dirty.deviceSelector = true;
+        sync();
     }
 
     void DeviceView::showDeviceSelector()
     {
-        if (!device_selector_)
-            return;
-        device_selector_->show();
+        state_.deviceSelector.visible = true;
+        state_.dirty.deviceSelector = true;
+        sync();
     }
 
     int DeviceView::getDeviceSelectorIndex() const
@@ -532,7 +640,7 @@ namespace Bitwig
     {
         if (!device_selector_ || !device_selector_->isVisible())
             return;
-        device_selector_->setDeviceStateAtIndex(displayIndex, enabled);
+        device_selector_->updateDeviceState(displayIndex, enabled);
     }
 
     void DeviceView::showTrackList(const std::vector<std::string> &names,
@@ -542,87 +650,98 @@ namespace Bitwig
                                    const std::vector<uint8_t> &trackTypes,
                                    const std::vector<uint32_t> &trackColors)
     {
-        if (!track_list_selector_)
-            return;
-        track_list_selector_->setTrackItems(names, currentIndex, muteStates, soloStates, trackTypes, trackColors);
-        track_list_selector_->show();
+        state_.trackSelector.names = names;
+        state_.trackSelector.currentIndex = currentIndex;
+        state_.trackSelector.muteStates = muteStates;
+        state_.trackSelector.soloStates = soloStates;
+        state_.trackSelector.trackTypes = trackTypes;
+        state_.trackSelector.trackColors = trackColors;
+        state_.trackSelector.visible = true;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
-    void DeviceView::setTrackListSelectorIndex(int index)
+    void DeviceView::setTrackSelectorIndex(int index)
     {
-        if (!track_list_selector_)
-            return;
-        track_list_selector_->setSelectedIndex(index);
+        state_.trackSelector.currentIndex = index;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
     void DeviceView::hideTrackSelector()
     {
-        if (!track_list_selector_)
-            return;
-        track_list_selector_->hide();
+        state_.trackSelector.visible = false;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
     void DeviceView::showTrackSelector()
     {
-        if (!track_list_selector_)
-            return;
-        track_list_selector_->show();
+        state_.trackSelector.visible = true;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
-    int DeviceView::getTrackListSelectorIndex() const
+    int DeviceView::getTrackSelectorIndex() const
     {
-        if (!track_list_selector_)
+        if (!track_selector_)
             return -1;
-        return track_list_selector_->getSelectedIndex();
+        return track_selector_->getSelectedIndex();
     }
 
-    int DeviceView::getTrackListSelectorItemCount() const
+    int DeviceView::getTrackSelectorItemCount() const
     {
-        if (!track_list_selector_)
+        if (!track_selector_)
             return 0;
-        return track_list_selector_->getItemCount();
+        return track_selector_->getItemCount();
     }
 
-    lv_obj_t *DeviceView::getTrackListSelectorElement() const
+    lv_obj_t *DeviceView::getTrackSelectorElement() const
     {
-        if (!track_list_selector_)
+        if (!track_selector_)
             return nullptr;
-        return track_list_selector_->getElement();
+        return track_selector_->getElement();
     }
 
     bool DeviceView::isTrackSelectorVisible() const
     {
-        if (!track_list_selector_)
+        if (!track_selector_)
             return false;
-        return track_list_selector_->isVisible();
+        return track_selector_->isVisible();
     }
 
     void DeviceView::updateTrackMuteState(int displayIndex, bool isMuted)
     {
-        if (!track_list_selector_)
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.muteStates.size()))
             return;
-        track_list_selector_->setTrackMuteStateAtIndex(displayIndex, isMuted);
+
+        state_.trackSelector.muteStates[displayIndex] = isMuted;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
     void DeviceView::updateTrackSoloState(int displayIndex, bool isSoloed)
     {
-        if (!track_list_selector_)
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.soloStates.size()))
             return;
-        track_list_selector_->setTrackSoloStateAtIndex(displayIndex, isSoloed);
+
+        state_.trackSelector.soloStates[displayIndex] = isSoloed;
+        state_.dirty.trackSelector = true;
+        sync();
     }
 
     bool DeviceView::getTrackMuteState(int displayIndex) const
     {
-        if (!track_list_selector_)
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.muteStates.size()))
             return false;
-        return track_list_selector_->getTrackMuteStateAtIndex(displayIndex);
+        return state_.trackSelector.muteStates[displayIndex];
     }
 
     bool DeviceView::getTrackSoloState(int displayIndex) const
     {
-        if (!track_list_selector_)
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.soloStates.size()))
             return false;
-        return track_list_selector_->getTrackSoloStateAtIndex(displayIndex);
+        return state_.trackSelector.soloStates[displayIndex];
     }
 
 } // namespace Bitwig

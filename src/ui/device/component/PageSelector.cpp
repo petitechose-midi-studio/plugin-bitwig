@@ -3,53 +3,28 @@
 namespace Bitwig
 {
 
-    PageSelector::PageSelector(lv_obj_t *parent) : overlay_(parent)
+PageSelector::PageSelector(lv_obj_t *parent)
+    : BaseSelector(parent)
+{
+    setTitle("Select Page");
+}
+
+void PageSelector::render(const PageSelectorProps &props)
+{
+    if (!props.visible)
     {
-        overlay_.setTitle("Select Page");
+        hide();
+        return;
     }
 
-    void PageSelector::setPageNames(const std::vector<std::string> &pageNames)
+    if (props.names)
     {
-        page_names_ = pageNames;
-        overlay_.setItems(page_names_);
+        overlay().setItems(*props.names);
     }
+    overlay().setSelectedIndex(props.selectedIndex);
 
-    void PageSelector::setCurrentPageIndex(int index)
-    {
-        current_page_index_ = index;
-
-        overlay_.setSelectedIndex(index);
-    }
-
-    void PageSelector::setSelectedIndex(int index)
-    {
-        overlay_.setSelectedIndex(index);
-    }
-
-    void PageSelector::show()
-    {
-        overlay_.setSelectedIndex(current_page_index_);
-        overlay_.show();
-    }
-
-    void PageSelector::hide()
-    {
-        overlay_.hide();
-    }
-
-    bool PageSelector::isVisible() const
-    {
-        return overlay_.isVisible();
-    }
-
-    int PageSelector::getSelectedIndex() const
-    {
-        return overlay_.getSelectedIndex();
-    }
-
-    int PageSelector::getPageCount() const
-    {
-        return overlay_.getItemCount();
-    }
+    if (!isVisible())
+        show();
+}
 
 } // namespace Bitwig

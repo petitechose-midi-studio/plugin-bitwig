@@ -7,6 +7,22 @@
 namespace Bitwig
 {
 
+struct ButtonHintItem
+{
+    const char *text = nullptr;   // For text mode
+    const char *icon = nullptr;   // For icon mode (takes precedence over text)
+    uint32_t color = 0xFFFFFF;
+    bool active = true;           // Controls opacity (true = full, false = dimmed)
+};
+
+struct ButtonHintBarProps
+{
+    ButtonHintItem left;
+    ButtonHintItem center;
+    ButtonHintItem right;
+    bool visible = true;
+};
+
 /**
  * @brief A 3-cell footer bar showing button action hints
  *
@@ -21,37 +37,20 @@ public:
     explicit ButtonHintBar(lv_obj_t *parent);
     ~ButtonHintBar();
 
-    void setLeftLabel(const char *text);
-    void setCenterLabel(const char *text);
-    void setRightLabel(const char *text);
-
-    void setLeftIcon(const char *icon, uint32_t color = 0xFFFFFF);
-    void setCenterIcon(const char *icon, uint32_t color = 0xFFFFFF);
-    void setRightIcon(const char *icon, uint32_t color = 0xFFFFFF);
-
-    void setCenterIconActive(bool active);
-    void setRightIconActive(bool active);
-
-    void show();
-    void hide();
+    void render(const ButtonHintBarProps &props);
 
     lv_obj_t *getElement() const { return container_; }
 
 private:
     void ensureCreated();
     void applyStyle(lv_obj_t *label);
+    void renderItem(lv_obj_t *label, const ButtonHintItem &item, lv_grid_align_t align, int col);
 
     lv_obj_t *parent_ = nullptr;
     lv_obj_t *container_ = nullptr;
     lv_obj_t *left_label_ = nullptr;
     lv_obj_t *center_label_ = nullptr;
     lv_obj_t *right_label_ = nullptr;
-
-    // Pending state
-    const char *pending_left_text_ = "";
-    const char *pending_center_text_ = "";
-    const char *pending_right_text_ = "";
-    bool pending_hidden_ = false;
 };
 
 } // namespace Bitwig

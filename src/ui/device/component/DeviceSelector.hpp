@@ -5,13 +5,33 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstdint>
 
 namespace Bitwig
 {
 
+struct DeviceSelectorProps
+{
+    // Device list mode
+    const std::vector<std::string> *names = nullptr;
+    const std::vector<bool> *deviceStates = nullptr;
+    const std::vector<bool> *hasSlots = nullptr;
+    const std::vector<bool> *hasLayers = nullptr;
+    const std::vector<bool> *hasDrums = nullptr;
+
+    // Children mode
+    const std::vector<std::string> *childrenNames = nullptr;
+    const std::vector<uint8_t> *childrenTypes = nullptr;
+
+    int selectedIndex = 0;
+    bool showingChildren = false;
+    bool showFooter = false;
+    bool visible = false;
+};
+
 /**
  * Device selector with hierarchical navigation.
- * Supports device list, children (slots/layers/drums), and state indicators.
+ * Stateless - all data comes from props.
  */
 class DeviceSelector : public UI::BaseSelector
 {
@@ -19,42 +39,26 @@ public:
     explicit DeviceSelector(lv_obj_t *parent);
     ~DeviceSelector() override;
 
-    void setItems(const std::vector<std::string> &items);
+    void render(const DeviceSelectorProps &props);
 
-    void setDeviceItems(const std::vector<std::string> &names,
-                        int currentIndex,
-                        const std::vector<bool> &deviceStates,
-                        const std::vector<bool> &hasSlots,
-                        const std::vector<bool> &hasLayers,
-                        const std::vector<bool> &hasDrums);
-
-    void setChildrenItems(const std::vector<std::string> &items,
-                          const std::vector<uint8_t> &itemTypes);
-
-    void setCurrentItemIndex(int index);
-    void setDeviceStateAtIndex(int displayIndex, bool enabled);
-
-    void show() override;
-    void showWithFooter();
-    void showWithoutFooter();
-    void hide() override;
+    void updateDeviceState(int displayIndex, bool enabled);
 
 private:
+    void renderDeviceList(const DeviceSelectorProps &props);
+    void renderChildren(const DeviceSelectorProps &props);
     void createFooter();
     void clearIndicators();
-    void createIndicators();
-    bool isNonDeviceItem(size_t index) const;
-    bool hasChildren(size_t index) const;
+    void createIndicators(const DeviceSelectorProps &props);
+
+    static bool isNonDeviceItem(const std::string &name);
+    static bool hasChildren(const DeviceSelectorProps &props, size_t index);
+
     lv_obj_t *createDeviceStateIcon(lv_obj_t *parent, bool enabled);
     lv_obj_t *createFolderIcon(lv_obj_t *parent);
 
-    std::vector<std::string> items_;
-    std::vector<bool> device_states_;
-    std::vector<bool> has_slots_;
-    std::vector<bool> has_layers_;
-    std::vector<bool> has_drums_;
-    std::vector<lv_obj_t *> folder_icons_;
-    int current_item_index_ = 0;
+    std::vector<std::string> prev_items_;  // Cache for itemsChanged detection
+    std::vector<lv_obj_t *> state_icons_;  // LVGL objects for device state
+    std::vector<lv_obj_t *> folder_icons_; // LVGL objects for folder indicators
 
     std::unique_ptr<ButtonHintBar> footer_;
 };

@@ -41,7 +41,7 @@ namespace Bitwig
         if (contentChanged)
         {
             state_.currentSelectorIndex = isNested ? currentTrackIndex + 1 : currentTrackIndex;
-            view_.setTrackListSelectorIndex(state_.currentSelectorIndex);
+            view_.setTrackSelectorIndex(state_.currentSelectorIndex);
         }
 
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
@@ -53,7 +53,7 @@ namespace Bitwig
 
     void TrackInputHandler::setupBindings()
     {
-        lv_obj_t *overlay = view_.getTrackListSelectorElement();
+        lv_obj_t *overlay = view_.getTrackSelectorElement();
 
         // Close track list on press (scoped to overlay)
         api_.onPressed(ButtonID::BOTTOM_LEFT, [this]()
@@ -80,13 +80,13 @@ namespace Bitwig
 
     void TrackInputHandler::navigate(float delta)
     {
-        int itemCount = view_.getTrackListSelectorItemCount();
+        int itemCount = view_.getTrackSelectorItemCount();
         if (itemCount == 0)
             return;
 
         state_.currentSelectorIndex += static_cast<int>(delta);
         state_.currentSelectorIndex = InputUtils::wrapIndex(state_.currentSelectorIndex, itemCount);
-        view_.setTrackListSelectorIndex(state_.currentSelectorIndex);
+        view_.setTrackSelectorIndex(state_.currentSelectorIndex);
     }
 
     void TrackInputHandler::closeAndSelect()

@@ -18,7 +18,8 @@
 #include "component/DeviceStateBar.hpp"
 #include "component/PageSelector.hpp"
 #include "component/DeviceSelector.hpp"
-#include "component/TrackListSelector.hpp"
+#include "component/TrackSelector.hpp"
+#include "state/DeviceViewState.hpp"
 
 namespace Bitwig
 {
@@ -59,7 +60,10 @@ namespace Bitwig
 
         void render();
         void update();
+        void sync();
         void setActive(bool active);
+
+        DeviceViewState &state() { return state_; }
 
         int8_t getWidgetIndexForButton(uint16_t button_id) const;
         void setButtonState(uint16_t button_id, bool pressed, bool animate = true);
@@ -93,12 +97,12 @@ namespace Bitwig
                           const std::vector<bool> &soloStates,
                           const std::vector<uint8_t> &trackTypes,
                           const std::vector<uint32_t> &trackColors);
-        void setTrackListSelectorIndex(int index);
+        void setTrackSelectorIndex(int index);
         void hideTrackSelector();
         void showTrackSelector();
-        int getTrackListSelectorIndex() const;
-        int getTrackListSelectorItemCount() const;
-        lv_obj_t *getTrackListSelectorElement() const;
+        int getTrackSelectorIndex() const;
+        int getTrackSelectorItemCount() const;
+        lv_obj_t *getTrackSelectorElement() const;
         bool isTrackSelectorVisible() const;
         void updateTrackMuteState(int displayIndex, bool isMuted);
         void updateTrackSoloState(int displayIndex, bool isSoloed);
@@ -207,6 +211,7 @@ namespace Bitwig
         void setDevicePageName(const char *name);
 
     private:
+        DeviceViewState state_;
         Config viewConfig_;
         bool initialized_;
         bool active_;
@@ -215,7 +220,7 @@ namespace Bitwig
         std::unique_ptr<DeviceStateBar> top_bar_component_;
         std::unique_ptr<PageSelector> page_selector_;
         std::unique_ptr<DeviceSelector> device_selector_;
-        std::unique_ptr<TrackListSelector> track_list_selector_;
+        std::unique_ptr<TrackSelector> track_selector_;
 
         lv_obj_t *zone_; // Dedicated zone for this view's content (non-owned)
 
@@ -232,6 +237,12 @@ namespace Bitwig
         void createDeviceStateBar();
         void updateDeviceStateBarContent();
         void initializeMappingsFromConfig();
+
+        void syncDeviceInfo();
+        void syncParameter(uint8_t index);
+        void syncPageSelector();
+        void syncDeviceSelector();
+        void syncTrackSelector();
     };
 
 } // namespace Bitwig

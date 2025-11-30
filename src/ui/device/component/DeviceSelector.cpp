@@ -19,197 +19,198 @@ DeviceSelector::~DeviceSelector()
     footer_.reset();
 }
 
-void DeviceSelector::setItems(const std::vector<std::string> &items)
+void DeviceSelector::render(const DeviceSelectorProps &props)
 {
-    items_ = items;
-    device_states_.clear();
-    has_slots_.clear();
-    has_layers_.clear();
-    has_drums_.clear();
+    if (!props.visible)
+    {
+        hide();
+        if (footer_)
+            footer_->render({.visible = false});
+        return;
+    }
 
-    overlay().setItems(items);
-    clearIndicators();
+    if (props.showingChildren)
+    {
+        renderChildren(props);
+    }
+    else
+    {
+        renderDeviceList(props);
+    }
 }
 
-void DeviceSelector::setDeviceItems(const std::vector<std::string> &names,
-                                    int currentIndex,
-                                    const std::vector<bool> &deviceStates,
-                                    const std::vector<bool> &hasSlots,
-                                    const std::vector<bool> &hasLayers,
-                                    const std::vector<bool> &hasDrums)
+void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props)
 {
-    items_ = names;
-    current_item_index_ = currentIndex;
+    if (!props.names)
+        return;
 
-    size_t itemCount = names.size();
-    device_states_.assign(deviceStates.begin(), deviceStates.end());
-    has_slots_.assign(hasSlots.begin(), hasSlots.end());
-    has_layers_.assign(hasLayers.begin(), hasLayers.end());
-    has_drums_.assign(hasDrums.begin(), hasDrums.end());
+    const auto &names = *props.names;
 
-    device_states_.resize(itemCount, false);
-    has_slots_.resize(itemCount, false);
-    has_layers_.resize(itemCount, false);
-    has_drums_.resize(itemCount, false);
+    // Check if items changed
+    bool itemsChanged = (prev_items_ != names);
+
+    if (itemsChanged)
+    {
+        clearIndicators();
+        prev_items_ = names;
+    }
 
     overlay().setItems(names);
-    overlay().setSelectedIndex(currentIndex);
+    overlay().setSelectedIndex(props.selectedIndex);
 
-    clearIndicators();
-    createIndicators();
+    if (itemsChanged)
+    {
+        createIndicators(props);
+    }
+
+    if (!isVisible())
+        show();
+
+    if (props.showFooter)
+    {
+        if (!footer_)
+            createFooter();
+        footer_->render({
+            .left = {.text = "Track"},
+            .center = {.text = "State"},
+            .visible = true});
+    }
+    else if (footer_)
+    {
+        footer_->render({.visible = false});
+    }
 }
 
-void DeviceSelector::setChildrenItems(const std::vector<std::string> &items,
-                                      const std::vector<uint8_t> &itemTypes)
+void DeviceSelector::renderChildren(const DeviceSelectorProps &props)
 {
-    items_ = items;
-    device_states_.clear();
-    has_slots_.clear();
-    has_layers_.clear();
-    has_drums_.clear();
+    if (!props.childrenNames)
+        return;
 
-    overlay().setItems(items);
+    const auto &names = *props.childrenNames;
 
-    // Apply icon font to Back button (index 0)
-    if (!items.empty() && items[0] == Icon::ARROW_LEFT)
+    // Check if items changed
+    bool itemsChanged = (prev_items_ != names);
+
+    if (itemsChanged)
     {
-        lv_obj_t *backBtn = overlay().getButton(0);
-        if (backBtn)
+        clearIndicators();
+        prev_items_ = names;
+    }
+
+    overlay().setItems(names);
+
+    if (itemsChanged)
+    {
+        // Apply icon font to Back button (index 0)
+        if (!names.empty() && names[0] == Icon::ARROW_LEFT)
         {
-            uint32_t childCount = lv_obj_get_child_cnt(backBtn);
-            for (uint32_t j = 0; j < childCount; j++)
+            lv_obj_t *backBtn = overlay().getButton(0);
+            if (backBtn)
             {
-                lv_obj_t *child = lv_obj_get_child(backBtn, j);
-                if (child && lv_obj_check_type(child, &lv_label_class))
+                uint32_t childCount = lv_obj_get_child_cnt(backBtn);
+                for (uint32_t j = 0; j < childCount; j++)
                 {
-                    if (bitwig_fonts.icons_14)
-                        lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
-                    break;
+                    lv_obj_t *child = lv_obj_get_child(backBtn, j);
+                    if (child && lv_obj_check_type(child, &lv_label_class))
+                    {
+                        if (bitwig_fonts.icons_14)
+                            lv_obj_set_style_text_font(child, bitwig_fonts.icons_14, 0);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Add type icons for children items
+        if (props.childrenTypes)
+        {
+            const auto &types = *props.childrenTypes;
+            for (size_t i = 0; i < names.size(); i++)
+            {
+                if (i == 0 || i >= types.size())
+                    continue;
+
+                lv_obj_t *btn = overlay().getButton(i);
+                if (!btn)
+                    continue;
+
+                const char *iconSymbol = nullptr;
+                switch (types[i])
+                {
+                case 0: iconSymbol = Icon::SLIDER; break;
+                case 1: iconSymbol = Icon::LAYER; break;
+                case 2: iconSymbol = Icon::DRUM_PAD_MATRIX; break;
+                }
+
+                if (iconSymbol)
+                {
+                    lv_obj_t *icon_label = lv_label_create(btn);
+                    Icon::set(icon_label, iconSymbol);
+                    lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
+                    lv_obj_set_style_text_color(icon_label, lv_color_white(), LV_STATE_PRESSED);
+                    lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
+                    lv_obj_set_style_text_opa(icon_label, LV_OPA_50, LV_STATE_DISABLED);
+                    lv_obj_move_to_index(icon_label, 0);
                 }
             }
         }
     }
 
-    // Add type icons for children items
-    for (size_t i = 0; i < items.size(); i++)
-    {
-        if (i == 0 || i >= itemTypes.size())
-            continue;
+    overlay().setSelectedIndex(props.selectedIndex);
 
-        lv_obj_t *btn = overlay().getButton(i);
-        if (!btn)
-            continue;
-
-        const char *iconSymbol = nullptr;
-        switch (itemTypes[i])
-        {
-        case 0: iconSymbol = Icon::SLIDER; break;
-        case 1: iconSymbol = Icon::LAYER; break;
-        case 2: iconSymbol = Icon::DRUM_PAD_MATRIX; break;
-        }
-
-        if (iconSymbol)
-        {
-            lv_obj_t *icon_label = lv_label_create(btn);
-            Icon::set(icon_label, iconSymbol);
-            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-            lv_obj_set_style_text_color(icon_label, lv_color_white(), LV_STATE_PRESSED);
-            lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
-            lv_obj_set_style_text_opa(icon_label, LV_OPA_50, LV_STATE_DISABLED);
-            lv_obj_move_to_index(icon_label, 0);
-        }
-    }
-
-    clearIndicators();
-}
-
-void DeviceSelector::setCurrentItemIndex(int index)
-{
-    current_item_index_ = index;
-    overlay().setSelectedIndex(index);
-}
-
-void DeviceSelector::setDeviceStateAtIndex(int displayIndex, bool enabled)
-{
-    if (displayIndex < 0 || displayIndex >= static_cast<int>(device_states_.size()))
-        return;
-
-    device_states_[displayIndex] = enabled;
-
-    lv_obj_t *button = overlay().getButton(displayIndex);
-    if (!button || isNonDeviceItem(displayIndex))
-        return;
-
-    uint32_t childCount = lv_obj_get_child_cnt(button);
-    if (childCount > 0)
-    {
-        lv_obj_t *stateIcon = lv_obj_get_child(button, 0);
-        if (stateIcon && lv_obj_check_type(stateIcon, &lv_label_class))
-        {
-            lv_label_set_text(stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-            lv_obj_set_style_text_color(stateIcon,
-                lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
-        }
-    }
-}
-
-void DeviceSelector::show()
-{
-    overlay().setSelectedIndex(current_item_index_);
-    BaseSelector::show();
-}
-
-void DeviceSelector::showWithFooter()
-{
-    overlay().setSelectedIndex(current_item_index_);
-    BaseSelector::show();
-
-    if (!footer_)
-        createFooter();
-    footer_->show();
-}
-
-void DeviceSelector::showWithoutFooter()
-{
-    overlay().setSelectedIndex(current_item_index_);
-    BaseSelector::show();
+    if (!isVisible())
+        show();
 
     if (footer_)
-        footer_->hide();
+        footer_->render({.visible = false});
 }
 
-void DeviceSelector::hide()
+void DeviceSelector::updateDeviceState(int displayIndex, bool enabled)
 {
-    BaseSelector::hide();
-    if (footer_)
-        footer_->hide();
+    size_t index = static_cast<size_t>(displayIndex);
+    if (index >= state_icons_.size() || !state_icons_[index])
+        return;
+
+    lv_obj_t *stateIcon = state_icons_[index];
+    lv_label_set_text(stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+    lv_obj_set_style_text_color(stateIcon,
+        lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
 }
 
 void DeviceSelector::createFooter()
 {
     footer_ = std::make_unique<ButtonHintBar>(parent_);
-    footer_->setLeftLabel("Track");
-    footer_->setCenterLabel("State");
 }
 
 void DeviceSelector::clearIndicators()
 {
+    for (auto *icon : state_icons_)
+    {
+        if (icon)
+            lv_obj_delete(icon);
+    }
+    state_icons_.clear();
+
+    for (auto *icon : folder_icons_)
+    {
+        if (icon)
+            lv_obj_delete(icon);
+    }
     folder_icons_.clear();
 }
 
-bool DeviceSelector::isNonDeviceItem(size_t index) const
+bool DeviceSelector::isNonDeviceItem(const std::string &name)
 {
-    if (index >= items_.size())
-        return false;
-    const std::string &name = items_[index];
     return name == Icon::ARROW_LEFT || (!name.empty() && name[0] == '[');
 }
 
-bool DeviceSelector::hasChildren(size_t index) const
+bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index)
 {
-    return index < has_slots_.size() &&
-           (has_slots_[index] || has_layers_[index] || has_drums_[index]);
+    bool hasSlots = props.hasSlots && index < props.hasSlots->size() && (*props.hasSlots)[index];
+    bool hasLayers = props.hasLayers && index < props.hasLayers->size() && (*props.hasLayers)[index];
+    bool hasDrums = props.hasDrums && index < props.hasDrums->size() && (*props.hasDrums)[index];
+    return hasSlots || hasLayers || hasDrums;
 }
 
 lv_obj_t *DeviceSelector::createDeviceStateIcon(lv_obj_t *parent, bool enabled)
@@ -230,18 +231,26 @@ lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent)
     return icon;
 }
 
-void DeviceSelector::createIndicators()
+void DeviceSelector::createIndicators(const DeviceSelectorProps &props)
 {
-    folder_icons_.clear();
-    folder_icons_.resize(items_.size(), nullptr);
+    if (!props.names)
+        return;
 
-    for (size_t i = 0; i < items_.size(); i++)
+    const auto &names = *props.names;
+    size_t count = names.size();
+
+    state_icons_.clear();
+    state_icons_.resize(count, nullptr);
+    folder_icons_.clear();
+    folder_icons_.resize(count, nullptr);
+
+    for (size_t i = 0; i < count; i++)
     {
         lv_obj_t *button = overlay().getButton(i);
         if (!button)
             continue;
 
-        bool isBackItem = (i == 0) && (items_[i] == Icon::ARROW_LEFT);
+        bool isBackItem = (i == 0) && (names[i] == Icon::ARROW_LEFT);
 
         if (isBackItem)
         {
@@ -259,16 +268,17 @@ void DeviceSelector::createIndicators()
             continue;
         }
 
-        bool isDevice = !isNonDeviceItem(i);
+        bool isDevice = !isNonDeviceItem(names[i]);
 
         if (isDevice)
         {
-            bool isEnabled = (i < device_states_.size()) && device_states_[i];
+            bool isEnabled = props.deviceStates && i < props.deviceStates->size() && (*props.deviceStates)[i];
             lv_obj_t *stateIcon = createDeviceStateIcon(button, isEnabled);
             lv_obj_move_to_index(stateIcon, 0);
+            state_icons_[i] = stateIcon;
         }
 
-        bool isFolder = hasChildren(i);
+        bool isFolder = hasChildren(props, i);
         lv_obj_t *folderIcon = createFolderIcon(button);
         lv_obj_move_to_index(folderIcon, 1);
         folder_icons_[i] = folderIcon;

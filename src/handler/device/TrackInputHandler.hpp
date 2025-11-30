@@ -10,9 +10,9 @@ namespace Bitwig
     class DeviceController;
 
     /**
-     * @brief Hardware input handler for TrackListSelector overlay
+     * @brief Hardware input handler for TrackSelector overlay
      *
-     * Handles track navigation when TrackListSelector overlay is visible:
+     * Handles track navigation when TrackSelector overlay is visible:
      * - Close on BOTTOM_LEFT press
      * - Navigate with encoder while holding
      * - Enter/exit track groups
