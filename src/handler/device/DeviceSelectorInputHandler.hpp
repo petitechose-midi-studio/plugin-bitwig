@@ -64,7 +64,6 @@ private:
     // --- Device list state ---
     struct DeviceListState {
         uint8_t count = 0;
-        uint8_t currentIndex = 0;
         bool isNested = false;
         bool requested = false;
         etl::array<etl::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> childrenTypes;

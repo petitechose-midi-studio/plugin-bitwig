@@ -48,10 +48,8 @@ namespace Bitwig
         struct TrackListState
         {
             uint8_t count = 0;
-            uint8_t currentIndex = 0;
             bool isNested = false;
             bool requested = false;
-            // currentSelectorIndex removed - use view_.state().trackSelector.currentIndex
         };
         TrackListState state_;
     };

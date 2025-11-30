@@ -8,7 +8,6 @@
 #include "ui/ViewManager.hpp"
 #include "ui/splash/SplashView.hpp"
 #include "ui/device/DeviceView.hpp"
-#include "ui/device/DeviceController.hpp"
 #include "ui/transportbar/TransportBar.hpp"
 #include "ui/transportbar/TransportBarController.hpp"
 #include "handler/device/DeviceInputHandler.hpp"
@@ -52,7 +51,6 @@ namespace Bitwig
 
         struct DeviceModule {
             DeviceView view;
-            DeviceController controller;
             DeviceInputHandler inputHandler;
             DeviceHostHandler hostHandler;
         };

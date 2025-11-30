@@ -24,7 +24,7 @@ struct DeviceViewState {
         uint8_t trackType = 0;
     };
 
-    // Track selector info (kept here for now, can migrate to TrackState later)
+    // Track selector info
     struct TrackSelectorInfo {
         std::vector<std::string> names;
         std::vector<bool> muteStates;
@@ -32,6 +32,8 @@ struct DeviceViewState {
         std::vector<uint8_t> trackTypes;
         std::vector<uint32_t> trackColors;
         int currentIndex = 0;
+        int activeTrackIndex = 0;  // The track currently active in Bitwig
+        bool isNested = false;     // True if viewing inside a track group
         bool visible = false;
     };
 

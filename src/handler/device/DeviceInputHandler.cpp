@@ -4,7 +4,6 @@
 #include "DeviceSelectorInputHandler.hpp"
 #include "TrackInputHandler.hpp"
 #include "../../ui/device/DeviceView.hpp"
-#include "../../ui/device/DeviceController.hpp"
 
 namespace Bitwig {
 
@@ -13,11 +12,10 @@ namespace Bitwig {
 // =============================================================================
 
 DeviceInputHandler::DeviceInputHandler(ControllerAPI& api, DeviceView& view,
-                                       DeviceController& controller, Protocol::Protocol& protocol,
-                                       lv_obj_t* scope)
+                                       Protocol::Protocol& protocol, lv_obj_t* scope)
     : api_(api), scope_(scope)
 {
-    macroHandler_ = std::make_unique<MacroInputHandler>(api, controller, protocol, scope);
+    macroHandler_ = std::make_unique<MacroInputHandler>(api, view, protocol, scope);
     pageHandler_ = std::make_unique<DevicePageInputHandler>(api, view, protocol, scope);
     trackHandler_ = std::make_unique<TrackInputHandler>(api, view, protocol);
     deviceSelectorHandler_ = std::make_unique<DeviceSelectorInputHandler>(

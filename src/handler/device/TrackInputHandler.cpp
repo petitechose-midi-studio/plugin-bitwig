@@ -34,7 +34,6 @@ namespace Bitwig
         bool contentChanged = (state_.count != trackCount) || (state_.isNested != isNested);
 
         state_.count = trackCount;
-        state_.currentIndex = currentTrackIndex;
         state_.isNested = isNested;
 
         if (contentChanged)
@@ -85,7 +84,7 @@ namespace Bitwig
 
     void TrackInputHandler::navigate(float delta)
     {
-        int itemCount = view_.getTrackSelectorItemCount();
+        int itemCount = static_cast<int>(view_.state().trackSelector.names.size());
         if (itemCount == 0)
             return;
 
@@ -117,7 +116,7 @@ namespace Bitwig
 
     void TrackInputHandler::close()
     {
-        if (!view_.isTrackSelectorVisible())
+        if (!view_.state().trackSelector.visible)
         {
             state_.requested = false;
             return;
@@ -150,9 +149,6 @@ namespace Bitwig
                 protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
                 // If it's a group, also enter inside
                 protocol_.send(Protocol::EnterTrackGroupMessage{static_cast<uint8_t>(trackIndex)});
-
-                // Update current index to match selection
-                state_.currentIndex = static_cast<uint8_t>(trackIndex);
             }
         }
 

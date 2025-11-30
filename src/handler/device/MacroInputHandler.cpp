@@ -1,5 +1,5 @@
 #include "MacroInputHandler.hpp"
-#include "../../ui/device/DeviceController.hpp"
+#include "../../ui/device/DeviceView.hpp"
 #include "../../protocol/struct/DeviceMacroValueChangeMessage.hpp"
 #include "../../protocol/struct/DeviceMacroTouchMessage.hpp"
 
@@ -9,9 +9,9 @@ namespace Bitwig {
 // Construction / Destruction
 // =============================================================================
 
-MacroInputHandler::MacroInputHandler(ControllerAPI& api, DeviceController& controller,
+MacroInputHandler::MacroInputHandler(ControllerAPI& api, DeviceView& view,
                                      Protocol::Protocol& protocol, lv_obj_t* scope)
-    : api_(api), controller_(controller), protocol_(protocol), scope_(scope)
+    : api_(api), view_(view), protocol_(protocol), scope_(scope)
 {
     setupBindings();
 }
@@ -56,7 +56,11 @@ void MacroInputHandler::setupBindings() {
 // =============================================================================
 
 void MacroInputHandler::handleValueChange(uint8_t index, float value) {
-    controller_.handleParameterValue(index, value);
+    if (index < 8) {
+        view_.state().parameters[index].value = value;
+        view_.state().dirty.parameters[index] = true;
+        view_.sync();
+    }
     protocol_.send(Protocol::DeviceMacroValueChangeMessage{index, value, "", false});
 }
 

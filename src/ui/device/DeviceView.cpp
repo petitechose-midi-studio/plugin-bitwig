@@ -235,20 +235,7 @@ namespace Bitwig {
             .visible = ts.visible});
     }
 
-    void DeviceView::update()
-    {
-        if (!active_ || !initialized_)
-        {
-            return;
-        }
-
-        for (const auto &widget : widgets_)
-        {
-            if (widget)
-            {
-            }
-        }
-    }
+    void DeviceView::update() {}
 
     void DeviceView::setActive(bool active)
     {
@@ -316,16 +303,6 @@ namespace Bitwig {
         param.displayValue = displayValue ? displayValue : "";
         param.metadataSet = true;
 
-        state_.dirty.parameters[paramIndex] = true;
-        sync();
-    }
-
-    void DeviceView::setParameterValue(uint8_t paramIndex, float normalizedValue)
-    {
-        if (!initialized_ || paramIndex >= 8)
-            return;
-
-        state_.parameters[paramIndex].value = normalizedValue;
         state_.dirty.parameters[paramIndex] = true;
         sync();
     }
@@ -433,28 +410,7 @@ namespace Bitwig {
         }
     }
 
-    void DeviceView::initializeMappingsFromConfig()
-    {
-        if (!viewConfig_.isValid())
-        {
-            return;
-        }
-    }
-
-    int8_t DeviceView::getWidgetIndexForButton(uint16_t button_id) const
-    {
-        return -1;
-    }
-
-    IParameterWidget *DeviceView::getWidgetForButton(uint16_t button_id)
-    {
-        int8_t index = getWidgetIndexForButton(button_id);
-        if (index >= 0 && index < 8)
-        {
-            return widgets_[index].get();
-        }
-        return nullptr;
-    }
+    void DeviceView::initializeMappingsFromConfig() {}
 
     void DeviceView::createDeviceStateBar()
     {
@@ -478,16 +434,6 @@ namespace Bitwig {
         track_selector_ = std::make_unique<TrackSelector>(zone_);
     }
 
-    void DeviceView::showPageSelector(const std::vector<std::string> &pageNames, int currentIndex)
-    {
-        state_.pageSelector.names = pageNames;
-        state_.pageSelector.currentIndex = currentIndex;
-        state_.pageSelector.selectedIndex = currentIndex;
-        state_.pageSelector.visible = true;
-        state_.dirty.pageSelector = true;
-        sync();
-    }
-
     lv_obj_t *DeviceView::getPageSelectorElement() const
     {
         if (!page_selector_)
@@ -495,58 +441,11 @@ namespace Bitwig {
         return page_selector_->getElement();
     }
 
-    void DeviceView::showDeviceList(const std::vector<std::string> &names,
-                                    int currentIndex,
-                                    const std::vector<uint8_t> &deviceTypes,
-                                    const std::vector<bool> &deviceStates,
-                                    const std::vector<bool> &hasSlots,
-                                    const std::vector<bool> &hasLayers,
-                                    const std::vector<bool> &hasDrums)
-    {
-        state_.deviceSelector.names = names;
-        state_.deviceSelector.currentIndex = currentIndex;
-        state_.deviceSelector.deviceTypes = deviceTypes;
-        state_.deviceSelector.deviceStates = deviceStates;
-        state_.deviceSelector.hasSlots = hasSlots;
-        state_.deviceSelector.hasLayers = hasLayers;
-        state_.deviceSelector.hasDrums = hasDrums;
-        state_.deviceSelector.showingChildren = false;
-        state_.deviceSelector.showFooter = true;
-        state_.deviceSelector.visible = true;
-        state_.dirty.deviceSelector = true;
-        sync();
-    }
-
-    void DeviceView::showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes)
-    {
-        state_.deviceSelector.childrenNames = items;
-        state_.deviceSelector.childrenTypes = itemTypes;
-        state_.deviceSelector.showingChildren = true;
-        state_.deviceSelector.showFooter = false;
-        state_.deviceSelector.visible = true;
-        state_.dirty.deviceSelector = true;
-        sync();
-    }
-
-    int DeviceView::getDeviceSelectorItemCount() const
-    {
-        if (!device_selector_)
-            return 0;
-        return device_selector_->getItemCount();
-    }
-
     lv_obj_t *DeviceView::getDeviceSelectorElement() const
     {
         if (!device_selector_)
             return nullptr;
         return device_selector_->getElement();
-    }
-
-    bool DeviceView::isDeviceSelectorVisible() const
-    {
-        if (!device_selector_)
-            return false;
-        return device_selector_->isVisible();
     }
 
     void DeviceView::updateDeviceState(int displayIndex, bool enabled)
@@ -563,43 +462,11 @@ namespace Bitwig {
         device_selector_->updateDeviceState(displayIndex, enabled);
     }
 
-    void DeviceView::showTrackList(const std::vector<std::string> &names,
-                                   int currentIndex,
-                                   const std::vector<bool> &muteStates,
-                                   const std::vector<bool> &soloStates,
-                                   const std::vector<uint8_t> &trackTypes,
-                                   const std::vector<uint32_t> &trackColors)
-    {
-        state_.trackSelector.names = names;
-        state_.trackSelector.currentIndex = currentIndex;
-        state_.trackSelector.muteStates = muteStates;
-        state_.trackSelector.soloStates = soloStates;
-        state_.trackSelector.trackTypes = trackTypes;
-        state_.trackSelector.trackColors = trackColors;
-        state_.trackSelector.visible = true;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    int DeviceView::getTrackSelectorItemCount() const
-    {
-        if (!track_selector_)
-            return 0;
-        return track_selector_->getItemCount();
-    }
-
     lv_obj_t *DeviceView::getTrackSelectorElement() const
     {
         if (!track_selector_)
             return nullptr;
         return track_selector_->getElement();
-    }
-
-    bool DeviceView::isTrackSelectorVisible() const
-    {
-        if (!track_selector_)
-            return false;
-        return track_selector_->isVisible();
     }
 
 } // namespace Bitwig

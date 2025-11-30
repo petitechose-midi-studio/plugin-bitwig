@@ -65,46 +65,12 @@ namespace Bitwig
 
         DeviceViewState &state() { return state_; }
 
-        int8_t getWidgetIndexForButton(uint16_t button_id) const;
-        void setButtonState(uint16_t button_id, bool pressed, bool animate = true);
-        IParameterWidget *getWidgetForButton(uint16_t button_id);
-
-        void showPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
         lv_obj_t *getPageSelectorElement() const;
-
-        void showDeviceList(const std::vector<std::string> &names,
-                           int currentIndex,
-                           const std::vector<uint8_t> &deviceTypes,
-                           const std::vector<bool> &deviceStates,
-                           const std::vector<bool> &hasSlots,
-                           const std::vector<bool> &hasLayers,
-                           const std::vector<bool> &hasDrums);
-        void showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
-        int getDeviceSelectorItemCount() const;
         lv_obj_t *getDeviceSelectorElement() const;
-        bool isDeviceSelectorVisible() const;
+        lv_obj_t *getTrackSelectorElement() const;
+
         void updateDeviceState(int displayIndex, bool enabled);
 
-        void showTrackList(const std::vector<std::string> &names,
-                          int currentIndex,
-                          const std::vector<bool> &muteStates,
-                          const std::vector<bool> &soloStates,
-                          const std::vector<uint8_t> &trackTypes,
-                          const std::vector<uint32_t> &trackColors);
-        int getTrackSelectorItemCount() const;
-        lv_obj_t *getTrackSelectorElement() const;
-        bool isTrackSelectorVisible() const;
-
-        /**
-         * @brief Set parameter type and metadata (called ONCE per device/page change)
-         * @param paramIndex Parameter index (0-7)
-         * @param parameterType Widget type (Device::Knob, Device::Button, Device::List)
-         * @param discreteCount Discrete value count (-1=continuous, 2=button, N=list)
-         * @param discreteValueNames Array of discrete value names (empty for continuous)
-         * @param currentValueIndex Current index in discreteValueNames array
-         * @param origin Knob origin (0.0 or 0.5)
-         * @param displayValue Initial formatted display value from Bitwig
-         */
         void setParameterTypeAndMetadata(uint8_t paramIndex,
                                          uint8_t parameterType,
                                          int16_t discreteCount,
@@ -113,54 +79,11 @@ namespace Bitwig
                                          float origin,
                                          const char *displayValue);
 
-        /**
-         * @brief Update parameter value and widget display
-         * @param paramIndex Parameter index (0-7)
-         * @param normalizedValue Normalized value (0.0-1.0)
-         */
-        void setParameterValue(uint8_t paramIndex, float normalizedValue);
-
-        /**
-         * @brief Update parameter value with formatted display text (optimistic updates)
-         * @param paramIndex Parameter index (0-7)
-         * @param normalizedValue Normalized value (0.0-1.0)
-         * @param displayValue Formatted text from Bitwig (e.g., "50.0 Hz", "Sine")
-         */
         void setParameterValueWithDisplay(uint8_t paramIndex, float normalizedValue, const char *displayValue);
-
-        /**
-         * @brief Update parameter name
-         * @param paramIndex Parameter index (0-7)
-         * @param name Parameter name (e.g., "Cutoff", "Resonance")
-         */
         void setParameterName(uint8_t paramIndex, const char *name);
-
-        /**
-         * @brief Show or hide parameter widget
-         * @param paramIndex Parameter index (0-7)
-         * @param visible True to show, false to hide
-         */
         void setParameterVisible(uint8_t paramIndex, bool visible);
-
-        /**
-         * @brief Set parameter loading state (NEW - for progressive rendering)
-         * @param paramIndex Parameter index (0-7)
-         * @param loading True to show loading indicator, false when ready
-         */
         void setParameterLoading(uint8_t paramIndex, bool loading);
-
-        /**
-         * @brief Set all widgets to loading state (NEW - for device change header)
-         * @param loading True to show loading indicators, false when ready
-         */
         void setAllWidgetsLoading(bool loading);
-
-        /**
-         * @brief Update discrete value names for List parameter (NEW)
-         * @param paramIndex Parameter index (0-7)
-         * @param discreteValueNames Array of discrete value names
-         * @param currentValueIndex Current index in discreteValueNames array
-         */
         void setParameterDiscreteValues(uint8_t paramIndex,
                                         const etl::vector<etl::string<16>, 32> &discreteValueNames,
                                         uint8_t currentValueIndex);

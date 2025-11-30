@@ -52,6 +52,8 @@ struct DeviceState {
         std::vector<std::string> childrenNames;
         std::vector<uint8_t> childrenTypes;
         int currentIndex = 0;
+        int activeDeviceIndex = 0;  // The device currently active in Bitwig
+        bool isNested = false;      // True if viewing inside a device chain
         bool showingChildren = false;
         bool showFooter = false;
         bool visible = false;

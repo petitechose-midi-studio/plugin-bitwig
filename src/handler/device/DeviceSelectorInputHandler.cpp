@@ -38,7 +38,6 @@ void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t
                                                     uint8_t childrenTypesCount)
 {
     deviceList_.count = deviceCount;
-    deviceList_.currentIndex = currentDeviceIndex;
     deviceList_.isNested = isNested;
     navigation_.mode = SelectorMode::Devices;
 
@@ -133,10 +132,11 @@ void DeviceSelectorInputHandler::requestDeviceList() {
 }
 
 void DeviceSelectorInputHandler::navigate(float delta) {
-    int itemCount = view_.getDeviceSelectorItemCount();
-    if (itemCount == 0) return;
-
     auto& state = view_.state().deviceSelector;
+    int itemCount = state.showingChildren
+        ? static_cast<int>(state.childrenNames.size())
+        : static_cast<int>(state.names.size());
+    if (itemCount == 0) return;
     int newIndex = state.currentIndex + static_cast<int>(delta);
     newIndex = InputUtils::wrapIndex(newIndex, itemCount);
     state.currentIndex = newIndex;
@@ -244,7 +244,7 @@ void DeviceSelectorInputHandler::requestTrackList() {
 }
 
 void DeviceSelectorInputHandler::close() {
-    if (view_.isTrackSelectorVisible()) {
+    if (view_.state().trackSelector.visible) {
         view_.state().trackSelector.visible = false;
         view_.state().dirty.trackSelector = true;
         trackHandler_.setTrackListRequested(false);

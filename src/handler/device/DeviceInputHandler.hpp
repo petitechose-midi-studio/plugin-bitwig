@@ -7,7 +7,6 @@
 namespace Bitwig {
 
 class DeviceView;
-class DeviceController;
 class MacroInputHandler;
 class DevicePageInputHandler;
 class DeviceSelectorInputHandler;
@@ -15,16 +14,10 @@ class TrackInputHandler;
 
 /**
  * @brief Orchestrator for all device view input handlers
- *
- * Delegates to specialized sub-handlers:
- * - MacroInputHandler: encoder/button controls for parameters
- * - DevicePageInputHandler: page selector overlay
- * - DeviceSelectorInputHandler: device navigation overlay
- * - TrackInputHandler: track list overlay
  */
 class DeviceInputHandler {
 public:
-    DeviceInputHandler(ControllerAPI& api, DeviceView& view, DeviceController& controller,
+    DeviceInputHandler(ControllerAPI& api, DeviceView& view,
                        Protocol::Protocol& protocol, lv_obj_t* scope);
     ~DeviceInputHandler();
 
