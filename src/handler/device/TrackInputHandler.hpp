@@ -33,8 +33,9 @@ namespace Bitwig
         void setupBindings();
 
         void navigate(float delta);
-        void closeAndSelect();
-        void enter();
+        void select();
+        void selectAndDive();
+        void close();
         void toggleMute();
         void toggleSolo();
 

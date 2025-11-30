@@ -43,10 +43,11 @@ private:
     // --- Handlers ---
     void requestDeviceList();
     void navigate(float delta);
-    void enterSelected();
+    void selectAndDive();
+    void select();
     void enterDeviceAtIndex(int selectorIndex);
     void enterChildAtIndex(int selectorIndex);
-    void toggleSelectedState();
+    void toggleState();
     void requestTrackList();
     void close();
 

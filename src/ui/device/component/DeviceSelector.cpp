@@ -12,12 +12,13 @@ namespace Bitwig
 DeviceSelector::DeviceSelector(lv_obj_t *parent)
     : BaseSelector(parent)
 {
-    setTitle("Devices");
+    createHeader();  // Create header first, before list
     createFooter();  // Create footer once, after list - ensures correct flex order
 }
 
 DeviceSelector::~DeviceSelector()
 {
+    track_header_.reset();
     footer_.reset();
 }
 
@@ -69,6 +70,8 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props)
         // Update states for existing indicators (names didn't change but states might have)
         updateIndicatorStates(props);
     }
+
+    renderHeader(props);
 
     if (!isVisible())
         show();
@@ -161,6 +164,8 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props)
 
     overlay().setSelectedIndex(props.selectedIndex);
 
+    renderHeader(props);
+
     if (!isVisible())
         show();
 
@@ -205,6 +210,44 @@ void DeviceSelector::updateIndicatorStates(const DeviceSelectorProps &props)
         lv_obj_set_style_text_color(state_icons_[i],
             lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
     }
+}
+
+void DeviceSelector::createHeader()
+{
+    // Create header container inside overlay container (participates in flex layout)
+    header_ = lv_obj_create(overlay().getContainer());
+    lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(header_, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(header_, 0, 0);
+    lv_obj_set_style_pad_left(header_, 16, 0);
+    lv_obj_set_style_pad_right(header_, 16, 0);
+    lv_obj_set_style_pad_top(header_, 8, 0);
+    lv_obj_set_style_pad_bottom(header_, 4, 0);
+    lv_obj_clear_flag(header_, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Flex row for track title items
+    lv_obj_set_flex_flow(header_, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(header_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(header_, 8, 0);
+
+    // Move header to position 1 (after hidden title, before list)
+    lv_obj_move_to_index(header_, 1);
+
+    // Create TrackTitleItem
+    track_header_ = std::make_unique<TrackTitleItem>(header_, false, 16);
+}
+
+void DeviceSelector::renderHeader(const DeviceSelectorProps &props)
+{
+    if (!track_header_)
+        return;
+
+    track_header_->render({
+        .name = props.trackName ? props.trackName : "",
+        .color = props.trackColor,
+        .trackType = props.trackType,
+        .highlighted = true,
+        .hideIndicators = false});
 }
 
 void DeviceSelector::createFooter()

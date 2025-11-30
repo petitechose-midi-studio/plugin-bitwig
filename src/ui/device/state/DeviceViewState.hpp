@@ -17,6 +17,13 @@ struct DeviceViewState {
     using PageSelectorInfo = DeviceState::PageSelectorInfo;
     using DeviceSelectorInfo = DeviceState::DeviceSelectorInfo;
 
+    // Current track info (the track whose devices are displayed)
+    struct CurrentTrackInfo {
+        std::string name;
+        uint32_t color = 0xFFFFFF;
+        uint8_t trackType = 0;
+    };
+
     // Track selector info (kept here for now, can migrate to TrackState later)
     struct TrackSelectorInfo {
         std::vector<std::string> names;
@@ -33,6 +40,9 @@ struct DeviceViewState {
     std::array<ParameterInfo, 8> parameters;
     PageSelectorInfo pageSelector;
     DeviceSelectorInfo deviceSelector;
+
+    // Current track (the track whose devices are displayed)
+    CurrentTrackInfo currentTrack;
 
     // Track state (to be migrated)
     TrackSelectorInfo trackSelector;

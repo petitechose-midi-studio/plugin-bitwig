@@ -71,7 +71,6 @@ namespace Bitwig
 
         void showPageSelector(const std::vector<std::string> &pageNames, int currentIndex);
         void setPageSelectorIndex(int index);
-        void hidePageSelector();
         int getPageSelectorIndex() const;
         lv_obj_t *getPageSelectorElement() const;
 
@@ -84,8 +83,6 @@ namespace Bitwig
                            const std::vector<bool> &hasDrums);
         void showDeviceChildren(const std::vector<std::string> &items, const std::vector<uint8_t> &itemTypes);
         void setDeviceSelectorIndex(int index);
-        void hideDeviceSelector();
-        void showDeviceSelector();
         int getDeviceSelectorIndex() const;
         int getDeviceSelectorItemCount() const;
         lv_obj_t *getDeviceSelectorElement() const;
@@ -99,16 +96,10 @@ namespace Bitwig
                           const std::vector<uint8_t> &trackTypes,
                           const std::vector<uint32_t> &trackColors);
         void setTrackSelectorIndex(int index);
-        void hideTrackSelector();
-        void showTrackSelector();
         int getTrackSelectorIndex() const;
         int getTrackSelectorItemCount() const;
         lv_obj_t *getTrackSelectorElement() const;
         bool isTrackSelectorVisible() const;
-        void updateTrackMuteState(int displayIndex, bool isMuted);
-        void updateTrackSoloState(int displayIndex, bool isSoloed);
-        bool getTrackMuteState(int displayIndex) const;
-        bool getTrackSoloState(int displayIndex) const;
 
         /**
          * @brief Set parameter type and metadata (called ONCE per device/page change)
@@ -179,43 +170,6 @@ namespace Bitwig
         void setParameterDiscreteValues(uint8_t paramIndex,
                                         const etl::vector<etl::string<16>, 32> &discreteValueNames,
                                         uint8_t currentValueIndex);
-
-        /**
-         * @brief Update device name in top bar
-         * @param name Device name (e.g., "Operator", "EQ Eight")
-         */
-        void setDeviceName(const char *name);
-
-        /**
-         * @brief Update device type (Audio/Instrument/Note)
-         * @param deviceType 0=Unknown, 1=Audio, 2=Instrument, 3=Note
-         */
-        void setDeviceType(uint8_t deviceType);
-
-        /**
-         * @brief Update device enabled/bypassed state
-         * @param enabled True if device is active, false if bypassed
-         */
-        void setDeviceEnabled(bool enabled);
-
-        /**
-         * @brief Update device has children state (shows folder icon)
-         * @param hasChildren True if device has slots/layers/drums
-         */
-        void setDeviceHasChildren(bool hasChildren);
-
-        /**
-         * @brief Update device page info
-         * @param currentPage Current page index (0-based)
-         * @param totalPages Total number of pages
-         */
-        void setDevicePageInfo(uint8_t currentPage, uint8_t totalPages);
-
-        /**
-         * @brief Update device page name
-         * @param name Page name (e.g., "General", "Filter")
-         */
-        void setDevicePageName(const char *name);
 
     private:
         DeviceViewState state_;

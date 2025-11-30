@@ -38,7 +38,9 @@ namespace Bitwig
         // Only update top bar if this is the currently selected device
         if (static_cast<int>(deviceIndex) == current_device_index_)
         {
-            view_.setDeviceEnabled(enabled);
+            view_.state().device.enabled = enabled;
+            view_.state().dirty.device = true;
+            view_.sync();
         }
     }
 
@@ -49,30 +51,40 @@ namespace Bitwig
 
     void DeviceController::handleTrackChange(const Protocol::TrackChangeMessage &msg)
     {
-        // Track info not displayed in device topbar
+        auto& track = view_.state().currentTrack;
+        track.name = msg.trackName.c_str();
+        track.color = msg.color;
+        track.trackType = msg.trackType;
+        view_.state().dirty.deviceSelector = true;
+        view_.sync();
     }
 
     void DeviceController::handleDeviceChangeHeader(const Protocol::DeviceChangeHeaderMessage &msg)
     {
-        view_.setDeviceName(msg.deviceName.c_str());
-        view_.setDeviceType(msg.deviceType);
-        view_.setDeviceEnabled(msg.isEnabled);
-        view_.setDevicePageName(msg.pageInfo.devicePageName.c_str());
-        view_.setDevicePageInfo(msg.pageInfo.devicePageIndex, msg.pageInfo.devicePageCount);
-        view_.setAllWidgetsLoading(true);
-
         // Update hasChildren: true if any childrenTypes element is non-zero
         bool hasChildren = (msg.childrenTypes[0] | msg.childrenTypes[1] |
                            msg.childrenTypes[2] | msg.childrenTypes[3]) != 0;
         current_device_has_children_ = hasChildren;
-        view_.setDeviceHasChildren(hasChildren);
+
+        // Batch update device state (single sync instead of 6)
+        auto& device = view_.state().device;
+        device.name = msg.deviceName.c_str();
+        device.deviceType = msg.deviceType;
+        device.enabled = msg.isEnabled;
+        device.pageName = msg.pageInfo.devicePageName.c_str();
+        device.hasChildren = hasChildren;
+        view_.state().dirty.device = true;
+
+        view_.setAllWidgetsLoading(true);
     }
 
     void DeviceController::handleCurrentDeviceInfo(uint8_t deviceIndex, bool hasChildren)
     {
         current_device_index_ = deviceIndex;
         current_device_has_children_ = hasChildren;
-        view_.setDeviceHasChildren(hasChildren);
+        view_.state().device.hasChildren = hasChildren;
+        view_.state().dirty.device = true;
+        view_.sync();
     }
 
     void DeviceController::handleMacroUpdate(const Protocol::DeviceMacroUpdateMessage &msg)
@@ -107,8 +119,9 @@ namespace Bitwig
 
     void DeviceController::handlePageChange(const Protocol::DevicePageChangeMessage &msg)
     {
-        view_.setDevicePageName(msg.pageInfo.devicePageName.c_str());
-        view_.setDevicePageInfo(msg.pageInfo.devicePageIndex, msg.pageInfo.devicePageCount);
+        view_.state().device.pageName = msg.pageInfo.devicePageName.c_str();
+        view_.state().dirty.device = true;
+        view_.sync();
 
         for (uint8_t i = 0; i < 8 && i < msg.macros.size(); i++)
         {
@@ -141,7 +154,9 @@ namespace Bitwig
 
     void DeviceController::handlePageSelectorConfirm()
     {
-        view_.hidePageSelector();
+        view_.state().pageSelector.visible = false;
+        view_.state().dirty.pageSelector = true;
+        view_.sync();
     }
 
     int DeviceController::getPageSelectorSelectedIndex() const
@@ -185,7 +200,9 @@ namespace Bitwig
         {
             uint8_t flags = Device::getChildTypeFlags(msg.devices[msg.deviceIndex].childrenTypes);
             current_device_has_children_ = (flags & (Device::Slots | Device::Layers | Device::Drums)) != 0;
-            view_.setDeviceHasChildren(current_device_has_children_);
+            view_.state().device.hasChildren = current_device_has_children_;
+            view_.state().dirty.device = true;
+            view_.sync();
         }
 
         view_.showDeviceList(names, toDisplayIndex(msg.deviceIndex), types, states, hasSlots, hasLayers, hasDrums);
@@ -214,7 +231,9 @@ namespace Bitwig
 
     void DeviceController::handleDeviceSelectorConfirm()
     {
-        view_.hideDeviceSelector();
+        view_.state().deviceSelector.visible = false;
+        view_.state().dirty.deviceSelector = true;
+        view_.sync();
     }
 
     int DeviceController::getDeviceSelectorSelectedIndex() const
@@ -251,18 +270,33 @@ namespace Bitwig
         is_track_nested_ = msg.isNested;
 
         // Hide device selector just before showing track selector - no visual gap
-        view_.hideDeviceSelector();
+        view_.state().deviceSelector.visible = false;
+        view_.state().dirty.deviceSelector = true;
         view_.showTrackList(trackNames, toTrackDisplayIndex(msg.trackIndex), muteStates, soloStates, trackTypes, trackColors);
     }
 
     void DeviceController::handleTrackMuteState(uint8_t trackIndex, bool isMuted)
     {
-        view_.updateTrackMuteState(toTrackDisplayIndex(trackIndex), isMuted);
+        int displayIndex = toTrackDisplayIndex(trackIndex);
+        auto& muteStates = view_.state().trackSelector.muteStates;
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(muteStates.size()))
+            return;
+
+        muteStates[displayIndex] = isMuted;
+        view_.state().dirty.trackSelector = true;
+        view_.sync();
     }
 
     void DeviceController::handleTrackSoloState(uint8_t trackIndex, bool isSoloed)
     {
-        view_.updateTrackSoloState(toTrackDisplayIndex(trackIndex), isSoloed);
+        int displayIndex = toTrackDisplayIndex(trackIndex);
+        auto& soloStates = view_.state().trackSelector.soloStates;
+        if (displayIndex < 0 || displayIndex >= static_cast<int>(soloStates.size()))
+            return;
+
+        soloStates[displayIndex] = isSoloed;
+        view_.state().dirty.trackSelector = true;
+        view_.sync();
     }
 
 } // namespace Bitwig

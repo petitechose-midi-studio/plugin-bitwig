@@ -19,14 +19,14 @@ namespace Bitwig
         // Configure tempo encoder for Relative mode (no bounds to avoid initialization event)
         api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
 
-        api_.onPressed(ButtonID::BOTTOM_LEFT, [this]()
-                       { togglePlay(); });
+        api_.onReleased(ButtonID::BOTTOM_LEFT, [this]()
+                        { togglePlay(); });
 
-        api_.onPressed(ButtonID::BOTTOM_RIGHT, [this]()
-                       { toggleRecord(); });
+        api_.onReleased(ButtonID::BOTTOM_RIGHT, [this]()
+                        { toggleRecord(); });
 
-        api_.onPressed(ButtonID::BOTTOM_CENTER, [this]()
-                       { stop(); });
+        api_.onReleased(ButtonID::BOTTOM_CENTER, [this]()
+                        { stop(); });
 
         api_.onTurned(EncoderID::NAV, [this](float delta)
                       { adjustTempo(delta); });

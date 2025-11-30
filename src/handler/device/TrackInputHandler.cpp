@@ -55,23 +55,27 @@ namespace Bitwig
     {
         lv_obj_t *overlay = view_.getTrackSelectorElement();
 
-        // Close track list on press (scoped to overlay)
-        api_.onPressed(ButtonID::BOTTOM_LEFT, [this]()
-                       { closeAndSelect(); }, overlay);
+        // Confirm selection and close on press (scoped to overlay)
+        api_.onReleased(ButtonID::BOTTOM_LEFT, [this]()
+                        { select(); close(); }, overlay);
+
+        // Close without confirming (scoped to overlay)
+        api_.onReleased(ButtonID::LEFT_TOP, [this]()
+                        { close(); }, overlay);
 
         // Navigate tracks while holding
         api_.onTurned(EncoderID::NAV, [this](float delta)
                       { navigate(delta); }, overlay);
 
         // Enter track group
-        api_.onPressed(ButtonID::NAV, [this]()
-                       { enter(); }, overlay);
+        api_.onReleased(ButtonID::NAV, [this]()
+                        { selectAndDive(); }, overlay);
 
         // Mute/Solo
-        api_.onPressed(ButtonID::BOTTOM_CENTER, [this]()
-                       { toggleMute(); }, overlay);
-        api_.onPressed(ButtonID::BOTTOM_RIGHT, [this]()
-                       { toggleSolo(); }, overlay);
+        api_.onReleased(ButtonID::BOTTOM_CENTER, [this]()
+                        { toggleMute(); }, overlay);
+        api_.onReleased(ButtonID::BOTTOM_RIGHT, [this]()
+                        { toggleSolo(); }, overlay);
     }
 
     // =============================================================================
@@ -89,17 +93,9 @@ namespace Bitwig
         view_.setTrackSelectorIndex(state_.currentSelectorIndex);
     }
 
-    void TrackInputHandler::closeAndSelect()
+    void TrackInputHandler::select()
     {
-        if (!view_.isTrackSelectorVisible())
-        {
-            state_.requested = false;
-            return;
-        }
-
         int selectedIndex = state_.currentSelectorIndex;
-        view_.hideTrackSelector();
-        view_.showDeviceSelector();
 
         if (state_.isNested && selectedIndex == 0)
         {
@@ -113,12 +109,26 @@ namespace Bitwig
                 protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
             }
         }
+    }
 
+    void TrackInputHandler::close()
+    {
+        if (!view_.isTrackSelectorVisible())
+        {
+            state_.requested = false;
+            return;
+        }
+
+        view_.state().trackSelector.visible = false;
+        view_.state().dirty.trackSelector = true;
+        view_.state().deviceSelector.visible = true;
+        view_.state().dirty.deviceSelector = true;
+        view_.sync();
         protocol_.send(Protocol::RequestDeviceListMessage{});
         // Don't reset requested here - DeviceSelectorInputHandler checks it to prevent reopen
     }
 
-    void TrackInputHandler::enter()
+    void TrackInputHandler::selectAndDive()
     {
         int selectedIndex = state_.currentSelectorIndex;
 

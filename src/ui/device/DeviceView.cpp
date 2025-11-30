@@ -199,6 +199,7 @@ namespace Bitwig {
             return;
 
         auto &ds = state_.deviceSelector;
+        auto &ct = state_.currentTrack;
         device_selector_->render({
             .names = &ds.names,
             .deviceTypes = &ds.deviceTypes,
@@ -208,7 +209,10 @@ namespace Bitwig {
             .hasDrums = &ds.hasDrums,
             .childrenNames = &ds.childrenNames,
             .childrenTypes = &ds.childrenTypes,
-            .selectedIndex = ds.showingChildren ? 1 : ds.currentIndex,
+            .trackName = ct.name.c_str(),
+            .trackColor = ct.color,
+            .trackType = ct.trackType,
+            .selectedIndex = ds.currentIndex,
             .showingChildren = ds.showingChildren,
             .showFooter = ds.showFooter,
             .visible = ds.visible});
@@ -393,62 +397,6 @@ namespace Bitwig {
         sync();
     }
 
-    void DeviceView::setDeviceName(const char *name)
-    {
-        if (!initialized_ || !name)
-            return;
-
-        state_.device.name = name;
-        state_.dirty.device = true;
-        sync();
-    }
-
-    void DeviceView::setDeviceType(uint8_t deviceType)
-    {
-        if (!initialized_)
-            return;
-
-        state_.device.deviceType = deviceType;
-        state_.dirty.device = true;
-        sync();
-    }
-
-    void DeviceView::setDeviceEnabled(bool enabled)
-    {
-        if (!initialized_)
-            return;
-
-        state_.device.enabled = enabled;
-        state_.dirty.device = true;
-        sync();
-    }
-
-    void DeviceView::setDeviceHasChildren(bool hasChildren)
-    {
-        if (!initialized_)
-            return;
-
-        state_.device.hasChildren = hasChildren;
-        state_.dirty.device = true;
-        sync();
-    }
-
-    void DeviceView::setDevicePageInfo(uint8_t currentPage, uint8_t totalPages)
-    {
-        if (!initialized_)
-            return;
-    }
-
-    void DeviceView::setDevicePageName(const char *name)
-    {
-        if (!initialized_ || !name)
-            return;
-
-        state_.device.pageName = name;
-        state_.dirty.device = true;
-        sync();
-    }
-
     void DeviceView::setupLayout()
     {
         if (!body_container_)
@@ -546,13 +494,6 @@ namespace Bitwig {
         sync();
     }
 
-    void DeviceView::hidePageSelector()
-    {
-        state_.pageSelector.visible = false;
-        state_.dirty.pageSelector = true;
-        sync();
-    }
-
     int DeviceView::getPageSelectorIndex() const
     {
         if (!page_selector_)
@@ -607,20 +548,6 @@ namespace Bitwig {
         sync();
     }
 
-    void DeviceView::hideDeviceSelector()
-    {
-        state_.deviceSelector.visible = false;
-        state_.dirty.deviceSelector = true;
-        sync();
-    }
-
-    void DeviceView::showDeviceSelector()
-    {
-        state_.deviceSelector.visible = true;
-        state_.dirty.deviceSelector = true;
-        sync();
-    }
-
     int DeviceView::getDeviceSelectorIndex() const
     {
         if (!device_selector_)
@@ -653,6 +580,13 @@ namespace Bitwig {
     {
         if (!device_selector_ || !device_selector_->isVisible())
             return;
+
+        // Update state so it persists across navigation
+        if (displayIndex >= 0 && displayIndex < static_cast<int>(state_.deviceSelector.deviceStates.size()))
+        {
+            state_.deviceSelector.deviceStates[displayIndex] = enabled;
+        }
+
         device_selector_->updateDeviceState(displayIndex, enabled);
     }
 
@@ -677,20 +611,6 @@ namespace Bitwig {
     void DeviceView::setTrackSelectorIndex(int index)
     {
         state_.trackSelector.currentIndex = index;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    void DeviceView::hideTrackSelector()
-    {
-        state_.trackSelector.visible = false;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    void DeviceView::showTrackSelector()
-    {
-        state_.trackSelector.visible = true;
         state_.dirty.trackSelector = true;
         sync();
     }
@@ -721,40 +641,6 @@ namespace Bitwig {
         if (!track_selector_)
             return false;
         return track_selector_->isVisible();
-    }
-
-    void DeviceView::updateTrackMuteState(int displayIndex, bool isMuted)
-    {
-        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.muteStates.size()))
-            return;
-
-        state_.trackSelector.muteStates[displayIndex] = isMuted;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    void DeviceView::updateTrackSoloState(int displayIndex, bool isSoloed)
-    {
-        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.soloStates.size()))
-            return;
-
-        state_.trackSelector.soloStates[displayIndex] = isSoloed;
-        state_.dirty.trackSelector = true;
-        sync();
-    }
-
-    bool DeviceView::getTrackMuteState(int displayIndex) const
-    {
-        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.muteStates.size()))
-            return false;
-        return state_.trackSelector.muteStates[displayIndex];
-    }
-
-    bool DeviceView::getTrackSoloState(int displayIndex) const
-    {
-        if (displayIndex < 0 || displayIndex >= static_cast<int>(state_.trackSelector.soloStates.size()))
-            return false;
-        return state_.trackSelector.soloStates[displayIndex];
     }
 
 } // namespace Bitwig

@@ -2,6 +2,7 @@
 
 #include "widget/BaseSelector.hpp"
 #include "ui/shared/widget/HintBar.hpp"
+#include "TrackTitleItem.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -23,6 +24,11 @@ struct DeviceSelectorProps
     // Children mode
     const std::vector<std::string> *childrenNames = nullptr;
     const std::vector<uint8_t> *childrenTypes = nullptr;
+
+    // Track header
+    const char *trackName = nullptr;
+    uint32_t trackColor = 0xFFFFFF;
+    uint8_t trackType = 0;
 
     int selectedIndex = 0;
     bool showingChildren = false;
@@ -47,6 +53,8 @@ public:
 private:
     void renderDeviceList(const DeviceSelectorProps &props);
     void renderChildren(const DeviceSelectorProps &props);
+    void createHeader();
+    void renderHeader(const DeviceSelectorProps &props);
     void createFooter();
     void renderFooter(const DeviceSelectorProps &props);
     void clearIndicators();
@@ -64,6 +72,9 @@ private:
     std::vector<lv_obj_t *> type_icons_;   // LVGL objects for device type
     std::vector<lv_obj_t *> state_icons_;  // LVGL objects for device state
     std::vector<lv_obj_t *> folder_icons_; // LVGL objects for folder indicators
+
+    lv_obj_t *header_ = nullptr;
+    std::unique_ptr<TrackTitleItem> track_header_;
 
     std::unique_ptr<UI::HintBar> footer_;
     lv_obj_t* footer_track_ = nullptr;

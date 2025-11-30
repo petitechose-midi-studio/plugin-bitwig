@@ -80,22 +80,35 @@ void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uin
 void DeviceSelectorInputHandler::setupBindings() {
     lv_obj_t* overlay = view_.getDeviceSelectorElement();
 
-    // Open/close device selector (latch behavior)
-    api_.onPressed(ButtonID::LEFT_CENTER, [this]() { requestDeviceList(); }, scope_, true);
-    api_.onReleased(ButtonID::LEFT_CENTER, [this]() { close(); }, scope_);
+    // Open device selector (latch behavior)
+    api_.onPressed(ButtonID::LEFT_CENTER, [this]()
+                   { requestDeviceList(); }, scope_, true);
 
-    // Navigate devices
-    api_.onTurnedWhilePressed(EncoderID::NAV, ButtonID::LEFT_CENTER,
-        [this](float delta) { navigate(delta); }, scope_);
+    // Confirm selection (no dive) and close on release
+    api_.onReleased(ButtonID::LEFT_CENTER, [this]()
+                    {
+        select();
+        close(); }, scope_);
+
+    // Close without confirming (scoped to overlay)
+    api_.onReleased(ButtonID::LEFT_TOP, [this]()
+                    { close(); }, overlay);
+
+    // Navigate devices (scoped to overlay)
+    api_.onTurned(EncoderID::NAV, [this](float delta)
+                  { navigate(delta); }, overlay);
 
     // Enter device children (scoped to overlay)
-    api_.onPressed(ButtonID::NAV, [this]() { enterSelected(); }, overlay);
+    api_.onReleased(ButtonID::NAV, [this]()
+                    { selectAndDive(); }, overlay);
 
     // Toggle device state (scoped to overlay)
-    api_.onReleased(ButtonID::BOTTOM_CENTER, [this]() { toggleSelectedState(); }, overlay);
+    api_.onReleased(ButtonID::BOTTOM_CENTER, [this]()
+                    { toggleState(); }, overlay);
 
-    // Toggle track list (no latch, simple toggle like device state)
-    api_.onPressed(ButtonID::BOTTOM_LEFT, [this]() { requestTrackList(); }, overlay);
+    // Toggle track list (scoped to overlay)
+    api_.onReleased(ButtonID::BOTTOM_LEFT, [this]()
+                    { requestTrackList(); }, overlay);
 }
 
 // =============================================================================
@@ -118,13 +131,42 @@ void DeviceSelectorInputHandler::navigate(float delta) {
     controller_.handleDeviceSelectorSetIndex(navigation_.currentSelectorIndex);
 }
 
-void DeviceSelectorInputHandler::enterSelected() {
+void DeviceSelectorInputHandler::selectAndDive()
+{
     int index = controller_.getDeviceSelectorSelectedIndex();
     if (index < 0) return;
 
     if (navigation_.mode == SelectorMode::Devices) {
         enterDeviceAtIndex(index);
     } else {
+        enterChildAtIndex(index);
+    }
+}
+
+void DeviceSelectorInputHandler::select()
+{
+    int index = controller_.getDeviceSelectorSelectedIndex();
+    if (index < 0)
+        return;
+
+    if (navigation_.mode == SelectorMode::Devices)
+    {
+        // Handle back button in nested mode
+        if (deviceList_.isNested && index == 0)
+        {
+            protocol_.send(Protocol::ExitToParentMessage{});
+            return;
+        }
+        // Select device directly (no dive into children)
+        int deviceIndex = getAdjustedDeviceIndex(index);
+        if (deviceIndex >= 0 && deviceIndex < deviceList_.count)
+        {
+            protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
+        }
+    }
+    else
+    {
+        // In children mode, confirm the selected child
         enterChildAtIndex(index);
     }
 }
@@ -162,7 +204,8 @@ void DeviceSelectorInputHandler::enterChildAtIndex(int selectorIndex) {
     protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex, itemType, childIndex});
 }
 
-void DeviceSelectorInputHandler::toggleSelectedState() {
+void DeviceSelectorInputHandler::toggleState()
+{
     int selectorIndex = controller_.getDeviceSelectorSelectedIndex();
     int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
 
@@ -184,7 +227,9 @@ void DeviceSelectorInputHandler::requestTrackList() {
 
 void DeviceSelectorInputHandler::close() {
     if (view_.isTrackSelectorVisible()) {
-        view_.hideTrackSelector();
+        view_.state().trackSelector.visible = false;
+        view_.state().dirty.trackSelector = true;
+        view_.sync();
         trackHandler_.setTrackListRequested(false);
     }
     controller_.handleDeviceSelectorConfirm();
