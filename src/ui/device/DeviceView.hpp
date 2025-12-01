@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "../theme/BitwigTheme.hpp"
-#include "../transportbar/TransportBar.hpp"
+#include "ui/theme/BitwigTheme.hpp"
+#include "ui/transportbar/TransportBar.hpp"
 #include "interface/IView.hpp"
 #include "font/FontLoader.hpp"
 #include "widget/ButtonIndicator.hpp"
@@ -18,7 +18,7 @@
 #include "component/PageSelector.hpp"
 #include "component/DeviceSelector.hpp"
 #include "component/TrackSelector.hpp"
-#include "../state/DeviceState.hpp"
+#include "ui/state/DeviceState.hpp"
 
 namespace Bitwig
 {

@@ -1,5 +1,5 @@
 #include "SplashView.hpp"
-#include "../theme/BitwigTheme.hpp"
+#include "ui/theme/BitwigTheme.hpp"
 #include "ui/font/FontLoader.hpp"
 #include "log/Macros.hpp"
 

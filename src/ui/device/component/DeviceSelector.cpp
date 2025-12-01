@@ -1,6 +1,6 @@
 #include "DeviceSelector.hpp"
 #include "ui/device/DeviceTypeHelper.hpp"
-#include "../../theme/BitwigTheme.hpp"
+#include "ui/theme/BitwigTheme.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/font/FontLoader.hpp"
 
