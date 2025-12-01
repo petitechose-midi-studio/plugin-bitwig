@@ -10,8 +10,10 @@ LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
     : parent_(parent), width_(width), height_(height) {}
 
 LevelBar::~LevelBar() {
-    if (bar_)
+    if (bar_) {
         lv_obj_delete(bar_);
+        bar_ = nullptr;
+    }
 }
 
 void LevelBar::ensureCreated() {

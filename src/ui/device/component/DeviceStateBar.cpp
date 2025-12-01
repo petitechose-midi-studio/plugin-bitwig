@@ -11,8 +11,10 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
     : parent_(parent) {}
 
 DeviceStateBar::~DeviceStateBar() {
-    if (container_)
+    if (container_) {
         lv_obj_delete(container_);
+        container_ = nullptr;
+    }
 }
 
 void DeviceStateBar::ensureCreated() {

@@ -3,6 +3,7 @@
 #include "interface/IView.hpp"
 #include <lvgl.h>
 #include <functional>
+#include <memory>
 
 namespace Bitwig
 {
@@ -27,7 +28,7 @@ namespace Bitwig
         lv_obj_t *logo_{nullptr};
         lv_obj_t *label_{nullptr};
 
-        std::function<void()> *fadeCallback_{nullptr};
+        std::function<void()> fadeCallback_;
 
         void createUI();
         void destroyUI();

@@ -12,11 +12,26 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
     : parent_(parent), bar_height_(barHeight), has_mute_solo_(withMuteSolo) {}
 
 TrackTitleItem::~TrackTitleItem() {
-    if (color_bar_) lv_obj_delete(color_bar_);
-    if (type_icon_) lv_obj_delete(type_icon_);
-    if (label_) lv_obj_delete(label_);
-    if (mute_icon_) lv_obj_delete(mute_icon_);
-    if (solo_icon_) lv_obj_delete(solo_icon_);
+    if (color_bar_) {
+        lv_obj_delete(color_bar_);
+        color_bar_ = nullptr;
+    }
+    if (type_icon_) {
+        lv_obj_delete(type_icon_);
+        type_icon_ = nullptr;
+    }
+    if (label_) {
+        lv_obj_delete(label_);
+        label_ = nullptr;
+    }
+    if (mute_icon_) {
+        lv_obj_delete(mute_icon_);
+        mute_icon_ = nullptr;
+    }
+    if (solo_icon_) {
+        lv_obj_delete(solo_icon_);
+        solo_icon_ = nullptr;
+    }
 }
 
 void TrackTitleItem::ensureCreated() {

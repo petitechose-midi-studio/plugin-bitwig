@@ -55,15 +55,19 @@ void MacroInputHandler::setupInputBindings() {
 // =============================================================================
 
 void MacroInputHandler::handleValueChange(uint8_t index, float value) {
-    if (index < 8) {
-        view_.state().parameters[index].value = value;
-        view_.state().dirty.parameters[index] = true;
-        view_.sync();
-    }
+    if (index >= Device::PARAMETER_COUNT)
+        return;
+
+    view_.state().parameters[index].value = value;
+    view_.state().dirty.parameters[index] = true;
+    view_.sync();
     protocol_.send(Protocol::DeviceMacroValueChangeMessage{index, value, "", false});
 }
 
 void MacroInputHandler::sendTouch(uint8_t index, bool touched) {
+    if (index >= Device::PARAMETER_COUNT)
+        return;
+
     protocol_.send(Protocol::DeviceMacroTouchMessage{index, touched});
 }
 

@@ -13,10 +13,22 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     : parent_(parent), icon_size_(iconSize) {}
 
 DeviceTitleItem::~DeviceTitleItem() {
-    if (type_icon_) lv_obj_delete(type_icon_);
-    if (state_icon_) lv_obj_delete(state_icon_);
-    if (folder_icon_) lv_obj_delete(folder_icon_);
-    if (label_) lv_obj_delete(label_);
+    if (type_icon_) {
+        lv_obj_delete(type_icon_);
+        type_icon_ = nullptr;
+    }
+    if (state_icon_) {
+        lv_obj_delete(state_icon_);
+        state_icon_ = nullptr;
+    }
+    if (folder_icon_) {
+        lv_obj_delete(folder_icon_);
+        folder_icon_ = nullptr;
+    }
+    if (label_) {
+        lv_obj_delete(label_);
+        label_ = nullptr;
+    }
 }
 
 void DeviceTitleItem::ensureCreated() {

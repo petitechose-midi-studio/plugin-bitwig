@@ -43,6 +43,7 @@ namespace Bitwig
         if (container_)
         {
             lv_obj_delete(container_);
+            container_ = nullptr;
         }
     }
 
