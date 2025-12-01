@@ -47,7 +47,7 @@ struct LastClickedUpdateMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 272;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 82;
 
     /**
      * Minimum payload size in bytes (with empty strings)

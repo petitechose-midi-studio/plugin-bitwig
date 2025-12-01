@@ -10,7 +10,25 @@ using namespace Theme;
 namespace Bitwig {
 
 DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
-    : parent_(parent), icon_size_(iconSize) {}
+    : parent_(parent), icon_size_(iconSize) {
+    if (!parent_) return;
+
+    // Order: type_icon -> state_icon -> folder_icon -> label
+    type_icon_ = lv_label_create(parent_);
+    if (!type_icon_) return;
+
+    state_icon_ = lv_label_create(parent_);
+
+    folder_icon_ = lv_label_create(parent_);
+    if (folder_icon_)
+        lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
+
+    label_ = lv_label_create(parent_);
+    if (label_) {
+        Style::setTextColor(label_, Color::TEXT_LIGHT);
+        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
+    }
+}
 
 DeviceTitleItem::~DeviceTitleItem() {
     if (type_icon_) {
@@ -31,30 +49,7 @@ DeviceTitleItem::~DeviceTitleItem() {
     }
 }
 
-void DeviceTitleItem::ensureCreated() {
-    if (type_icon_ || !parent_)
-        return;
-
-    // Order: type_icon -> state_icon -> folder_icon -> label
-    type_icon_ = lv_label_create(parent_);
-    if (!type_icon_)
-        return;
-
-    state_icon_ = lv_label_create(parent_);
-
-    folder_icon_ = lv_label_create(parent_);
-    if (folder_icon_)
-        lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
-
-    label_ = lv_label_create(parent_);
-    if (label_) {
-        Style::setTextColor(label_, Color::TEXT_LIGHT);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
-    }
-}
-
 void DeviceTitleItem::render(const DeviceTitleItemProps &props) {
-    ensureCreated();
 
     if (label_) {
         lv_label_set_text(label_, props.name ? props.name : "");

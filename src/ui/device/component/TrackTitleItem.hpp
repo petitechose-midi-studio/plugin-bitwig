@@ -31,7 +31,6 @@ public:
     static const char *getTrackTypeIcon(uint8_t trackType);
 
 private:
-    void ensureCreated();
     void updateIndicatorOpacity(bool isMuted, bool isSoloed, bool highlighted);
 
     lv_obj_t *parent_ = nullptr;

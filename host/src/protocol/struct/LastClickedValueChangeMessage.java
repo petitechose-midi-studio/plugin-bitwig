@@ -92,7 +92,7 @@ public final class LastClickedValueChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 134;
+    public static final int MAX_PAYLOAD_SIZE = 39;
 
     /**
      * Encode message to MIDI-safe bytes

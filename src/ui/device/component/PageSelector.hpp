@@ -14,7 +14,7 @@ struct PageSelectorProps
     bool visible = false;
 };
 
-class PageSelector : public UI::BaseSelector
+class PageSelector : public BaseSelector
 {
 public:
     explicit PageSelector(lv_obj_t *parent);

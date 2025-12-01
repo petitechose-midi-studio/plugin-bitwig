@@ -59,7 +59,7 @@ struct TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4580;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1445;
 
     /**
      * Minimum payload size in bytes (with empty strings)

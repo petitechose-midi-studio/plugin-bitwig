@@ -32,6 +32,19 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
 
     private final MidiOut midiOut;
+    private volatile boolean isActive = true;
+
+    // ========================================================================
+    // Lifecycle
+    // ========================================================================
+
+    /**
+     * Deactivate the protocol (prevents sending after extension exit)
+     * Must be called before sending HostDeactivatedMessage
+     */
+    public void deactivate() {
+        isActive = false;
+    }
 
     // ========================================================================
     // Constructor
@@ -64,6 +77,23 @@ public class Protocol extends ProtocolCallbacks {
      *   protocol.send(new TransportPlayMessage(true));
      */
     public <T> void send(T message) {
+        if (!isActive) return;  // Skip if extension is deactivating
+        sendInternal(message);
+    }
+
+    /**
+     * Send a final message (bypasses isActive check, used during exit)
+     * Catches exceptions to handle socket closed gracefully
+     */
+    public <T> void sendFinal(T message) {
+        try {
+            sendInternal(message);
+        } catch (Exception e) {
+            // Ignore - socket may already be closed
+        }
+    }
+
+    private <T> void sendInternal(T message) {
         if (message == null) {
             throw new IllegalArgumentException("Message cannot be null");
         }

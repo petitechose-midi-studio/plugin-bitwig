@@ -63,7 +63,7 @@ void TrackSelector::render(const TrackSelectorProps &props)
 void TrackSelector::createFooter()
 {
     // Create footer inside overlay container (participates in flex layout)
-    footer_ = std::make_unique<UI::HintBar>(overlay().getContainer(), UI::HintBarPosition::Bottom);
+    footer_ = std::make_unique<HintBar>(overlay().getContainer(), HintBarPosition::Bottom);
     footer_->setSize(Layout::HINT_BAR_HEIGHT);
 
     // Create mute icon (cell 1 = center)

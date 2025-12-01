@@ -51,13 +51,13 @@ public final class ProtocolConstants {
     // ============================================================================
 
     /** Maximum characters per string field (7-bit encoding) */
-    public static final int STRING_MAX_LENGTH = 127;
+    public static final int STRING_MAX_LENGTH = 32;
 
     /** Maximum items per array field (7-bit count) */
-    public static final int ARRAY_MAX_ITEMS = 127;
+    public static final int ARRAY_MAX_ITEMS = 32;
 
     /** Maximum payload bytes */
-    public static final int MAX_PAYLOAD_SIZE = 256;
+    public static final int MAX_PAYLOAD_SIZE = 10000;
 
     /** Maximum total message bytes */
     public static final int MAX_MESSAGE_SIZE = 16000;

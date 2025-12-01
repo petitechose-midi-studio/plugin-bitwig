@@ -8,7 +8,7 @@
 namespace Bitwig
 {
 
-    class SplashView : public UI::IView
+    class SplashView : public IView
     {
     public:
         explicit SplashView(lv_obj_t *zone);

@@ -20,6 +20,11 @@ namespace Bitwig {
 
 TransportBar::TransportBar(lv_obj_t* parent)
     : parent_(parent) {
+    if (!parent_) return;
+
+    createContainer(parent_);
+    createTransportControls();
+    createTempoDisplay();
 }
 
 TransportBar::~TransportBar() {
@@ -29,19 +34,8 @@ TransportBar::~TransportBar() {
     }
 }
 
-void TransportBar::ensureCreated() {
-    if (container_ || !parent_)
-        return;
-
-    createContainer(parent_);
-    createTransportControls();
-    createTempoDisplay();
-}
-
 void TransportBar::render(const TransportBarProps& props) {
-    ensureCreated();
-    if (!container_)
-        return;
+    if (!container_) return;
 
     // Play state
     if (play_icon_) {
@@ -74,7 +68,6 @@ void TransportBar::render(const TransportBarProps& props) {
 }
 
 void TransportBar::show() {
-    ensureCreated();
     if (container_) {
         lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
     }

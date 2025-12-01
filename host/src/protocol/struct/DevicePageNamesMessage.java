@@ -94,7 +94,7 @@ public final class DevicePageNamesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 4098;
+    public static final int MAX_PAYLOAD_SIZE = 1058;
 
     /**
      * Encode message to MIDI-safe bytes

@@ -8,22 +8,11 @@ using namespace Theme;
 namespace Bitwig {
 
 DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
-    : parent_(parent) {}
-
-DeviceStateBar::~DeviceStateBar() {
-    if (container_) {
-        lv_obj_delete(container_);
-        container_ = nullptr;
-    }
-}
-
-void DeviceStateBar::ensureCreated() {
-    if (container_ || !parent_)
-        return;
+    : parent_(parent) {
+    if (!parent_) return;
 
     container_ = lv_obj_create(parent_);
-    if (!container_)
-        return;
+    if (!container_) return;
 
     lv_obj_set_size(container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
     lv_obj_set_pos(container_, 0, 0);
@@ -46,11 +35,17 @@ void DeviceStateBar::ensureCreated() {
 
     page_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_END);
     lv_obj_set_grid_cell(page_cell_, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    page_item_ = std::make_unique<UI::TitleItem>(page_cell_);
+    page_item_ = std::make_unique<TitleItem>(page_cell_);
+}
+
+DeviceStateBar::~DeviceStateBar() {
+    if (container_) {
+        lv_obj_delete(container_);
+        container_ = nullptr;
+    }
 }
 
 void DeviceStateBar::render(const DeviceStateBarProps &props) {
-    ensureCreated();
 
     if (device_item_) {
         device_item_->render({
@@ -61,7 +56,7 @@ void DeviceStateBar::render(const DeviceStateBarProps &props) {
     }
 
     if (page_item_) {
-        UI::TitleItemProps pageProps;
+        TitleItemProps pageProps;
         pageProps.text = (props.pageName && props.pageName[0]) ? props.pageName : "Page";
         pageProps.textColor = Color::TEXT_LIGHT;
         pageProps.textFont = bitwig_fonts.page_label;

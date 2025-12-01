@@ -26,7 +26,7 @@ struct TrackSelectorProps
  * Track list selector with mute/solo indicators.
  * Stateless - all data comes from props.
  */
-class TrackSelector : public UI::BaseSelector
+class TrackSelector : public BaseSelector
 {
 public:
     explicit TrackSelector(lv_obj_t *parent);
@@ -44,7 +44,7 @@ private:
     std::vector<std::string> prev_items_;  // Cache for itemsChanged detection
     std::vector<std::unique_ptr<TrackTitleItem>> track_items_;
 
-    std::unique_ptr<UI::HintBar> footer_;
+    std::unique_ptr<HintBar> footer_;
     lv_obj_t* footer_mute_ = nullptr;
     lv_obj_t* footer_solo_ = nullptr;
 };

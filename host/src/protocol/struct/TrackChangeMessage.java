@@ -104,7 +104,7 @@ public final class TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 135;
+    public static final int MAX_PAYLOAD_SIZE = 40;
 
     /**
      * Encode message to MIDI-safe bytes

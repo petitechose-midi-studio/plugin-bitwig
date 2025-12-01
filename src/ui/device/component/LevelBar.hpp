@@ -18,7 +18,6 @@ struct LevelBarProps
  *
  * Displays a colored bar with configurable opacity representing a value.
  * Used for track volume/level display in TrackListOverlay.
- * Uses lazy initialization - LVGL widget created on first use.
  */
 class LevelBar
 {
@@ -29,8 +28,6 @@ public:
     void render(const LevelBarProps &props);
 
 private:
-    void ensureCreated();
-
     lv_obj_t *parent_ = nullptr;
     lv_obj_t *bar_ = nullptr;
     lv_coord_t width_ = 60;

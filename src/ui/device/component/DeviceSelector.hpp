@@ -40,7 +40,7 @@ struct DeviceSelectorProps
  * Device selector with hierarchical navigation.
  * Stateless - all data comes from props.
  */
-class DeviceSelector : public UI::BaseSelector
+class DeviceSelector : public BaseSelector
 {
 public:
     explicit DeviceSelector(lv_obj_t *parent);
@@ -76,7 +76,7 @@ private:
     lv_obj_t *header_ = nullptr;
     std::unique_ptr<TrackTitleItem> track_header_;
 
-    std::unique_ptr<UI::HintBar> footer_;
+    std::unique_ptr<HintBar> footer_;
     lv_obj_t* footer_track_ = nullptr;
     lv_obj_t* footer_state_ = nullptr;
 };

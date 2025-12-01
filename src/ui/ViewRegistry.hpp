@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <map>
 
-namespace UI { class IView; }
+class IView;
 
 namespace Bitwig
 {
@@ -23,7 +23,7 @@ namespace Bitwig
         struct ViewEntry
         {
             ViewID id;
-            UI::IView &view;
+            IView &view;
         };
 
         ViewRegistry(std::initializer_list<ViewEntry> views)
@@ -34,7 +34,7 @@ namespace Bitwig
             }
         }
 
-        template <typename T = UI::IView>
+        template <typename T = IView>
         T &getView(ViewID id) const
         {
             auto it = views_.find(id);
@@ -48,7 +48,7 @@ namespace Bitwig
         }
 
     private:
-        std::map<ViewID, UI::IView *> views_;
+        std::map<ViewID, IView *> views_;
     };
 
 } // namespace Bitwig

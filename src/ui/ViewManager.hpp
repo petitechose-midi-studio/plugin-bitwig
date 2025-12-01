@@ -29,7 +29,7 @@ namespace Bitwig
         ViewContainer &view_container_;
 
         ViewID current_view_id_;
-        UI::IView *current_view_{nullptr};
+        IView *current_view_{nullptr};
         lv_timer_t *splash_timer_{nullptr};
         bool splash_active_{false};
 

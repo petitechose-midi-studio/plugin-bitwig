@@ -53,7 +53,7 @@ struct DeviceChildrenMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 2084;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 564;
 
     /**
      * Minimum payload size in bytes (with empty strings)

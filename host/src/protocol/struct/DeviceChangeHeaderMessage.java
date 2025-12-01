@@ -146,7 +146,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 264;
+    public static final int MAX_PAYLOAD_SIZE = 74;
 
     /**
      * Encode message to MIDI-safe bytes

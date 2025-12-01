@@ -23,7 +23,7 @@
 namespace Bitwig
 {
 
-    class DeviceView : public UI::IView
+    class DeviceView : public IView
     {
     public:
         struct Config

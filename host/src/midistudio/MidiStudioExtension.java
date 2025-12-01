@@ -84,7 +84,9 @@ public class MidiStudioExtension extends ControllerExtension {
    @Override
    public void exit() {
       getHost().showPopupNotification("MIDI Studio : Disconnected");
-      protocol.send(new HostDeactivatedMessage(false));
+      // Deactivate first to stop observers, then send final message
+      protocol.deactivate();
+      protocol.sendFinal(new HostDeactivatedMessage(false));
    }
 
    @Override

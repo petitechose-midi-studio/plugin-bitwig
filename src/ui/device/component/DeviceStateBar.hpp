@@ -27,7 +27,6 @@ public:
     void render(const DeviceStateBarProps &props);
 
 private:
-    void ensureCreated();
     lv_obj_t *createCellWrapper(lv_obj_t *parent, lv_flex_align_t hAlign);
 
     lv_obj_t *parent_ = nullptr;
@@ -36,7 +35,7 @@ private:
     lv_obj_t *page_cell_ = nullptr;
 
     std::unique_ptr<DeviceTitleItem> device_item_;
-    std::unique_ptr<UI::TitleItem> page_item_;
+    std::unique_ptr<TitleItem> page_item_;
 };
 
 } // namespace Bitwig

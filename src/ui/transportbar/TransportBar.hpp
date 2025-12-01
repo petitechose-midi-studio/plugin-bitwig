@@ -8,7 +8,7 @@
 
 namespace Bitwig {
 
-class TransportBar : public UI::IComponent {
+class TransportBar : public IComponent {
 public:
     explicit TransportBar(lv_obj_t* parent);
     ~TransportBar();
@@ -23,7 +23,6 @@ public:
     lv_obj_t* getElement() const override { return container_; }
 
 private:
-    void ensureCreated();
     void createContainer(lv_obj_t* parent);
     void createTransportControls();
     void createTempoDisplay();

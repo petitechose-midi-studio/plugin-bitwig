@@ -239,7 +239,7 @@ void DeviceSelector::renderHeader(const DeviceSelectorProps &props)
 void DeviceSelector::createFooter()
 {
     // Create footer inside overlay container (participates in flex layout)
-    footer_ = std::make_unique<UI::HintBar>(overlay().getContainer(), UI::HintBarPosition::Bottom);
+    footer_ = std::make_unique<HintBar>(overlay().getContainer(), HintBarPosition::Bottom);
     footer_->setSize(Layout::HINT_BAR_HEIGHT);
 
     // Create track icon (cell 0 = left)

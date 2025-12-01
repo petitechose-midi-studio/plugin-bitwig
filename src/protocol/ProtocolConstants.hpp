@@ -35,9 +35,9 @@ constexpr uint8_t PAYLOAD_OFFSET = 5;      // Start of payload data
 // ENCODING LIMITS
 // ============================================================================
 
-constexpr uint8_t STRING_MAX_LENGTH = 127;  // Max chars per string (7-bit encoding)
-constexpr uint8_t ARRAY_MAX_ITEMS = 127;      // Max items per array (7-bit count)
-constexpr uint16_t MAX_PAYLOAD_SIZE = 256;    // Max payload bytes
+constexpr uint8_t STRING_MAX_LENGTH = 32;  // Max chars per string (7-bit encoding)
+constexpr uint8_t ARRAY_MAX_ITEMS = 32;      // Max items per array (7-bit count)
+constexpr uint16_t MAX_PAYLOAD_SIZE = 10000;    // Max payload bytes
 constexpr uint16_t MAX_MESSAGE_SIZE = 16000;    // Max total message bytes
 
 

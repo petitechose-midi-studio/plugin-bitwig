@@ -30,7 +30,6 @@ public:
     lv_coord_t getContentWidth() const;
 
 private:
-    void ensureCreated();
     void updateTypeIcon(uint8_t deviceType);
     void updateStateIcon(bool enabled);
     void updateFolderIcon(bool hasChildren);

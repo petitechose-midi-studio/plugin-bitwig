@@ -72,7 +72,7 @@ struct DeviceChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 35340;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 9215;
 
     /**
      * Minimum payload size in bytes (with empty strings)

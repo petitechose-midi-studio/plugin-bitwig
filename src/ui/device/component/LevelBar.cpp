@@ -7,22 +7,11 @@ using namespace Theme;
 namespace Bitwig {
 
 LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
-    : parent_(parent), width_(width), height_(height) {}
-
-LevelBar::~LevelBar() {
-    if (bar_) {
-        lv_obj_delete(bar_);
-        bar_ = nullptr;
-    }
-}
-
-void LevelBar::ensureCreated() {
-    if (bar_ || !parent_)
-        return;
+    : parent_(parent), width_(width), height_(height) {
+    if (!parent_) return;
 
     bar_ = lv_bar_create(parent_);
-    if (!bar_)
-        return;
+    if (!bar_) return;
 
     lv_obj_set_size(bar_, width_, height_);
     lv_bar_set_range(bar_, 0, 100);
@@ -36,10 +25,15 @@ void LevelBar::ensureCreated() {
     lv_obj_set_style_radius(bar_, 0, LV_PART_INDICATOR);
 }
 
+LevelBar::~LevelBar() {
+    if (bar_) {
+        lv_obj_delete(bar_);
+        bar_ = nullptr;
+    }
+}
+
 void LevelBar::render(const LevelBarProps &props) {
-    ensureCreated();
-    if (!bar_)
-        return;
+    if (!bar_) return;
 
     float value = std::clamp(props.value, 0.0f, 1.0f);
     lv_bar_set_value(bar_, static_cast<int32_t>(value * 100), LV_ANIM_OFF);
