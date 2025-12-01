@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -30,7 +32,7 @@ struct TrackChangeMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::TRACK_CHANGE;
 
-    etl::string<STRING_MAX_LENGTH> trackName;
+    std::string trackName;
     uint32_t color;
     uint8_t trackIndex;
     uint8_t trackType;
@@ -41,7 +43,7 @@ struct TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 24;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 135;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -73,25 +75,25 @@ struct TrackChangeMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<TrackChangeMessage> decode(
+    static std::optional<TrackChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
-        etl::string<STRING_MAX_LENGTH> trackName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, trackName)) return etl::nullopt;
+        std::string trackName;
+        if (!decodeString(ptr, remaining, trackName)) return std::nullopt;
         uint32_t color;
-        if (!decodeUint32(ptr, remaining, color)) return etl::nullopt;
+        if (!decodeUint32(ptr, remaining, color)) return std::nullopt;
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         uint8_t trackType;
-        if (!decodeUint8(ptr, remaining, trackType)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, trackType)) return std::nullopt;
 
         return TrackChangeMessage{trackName, color, trackIndex, trackType};
     }

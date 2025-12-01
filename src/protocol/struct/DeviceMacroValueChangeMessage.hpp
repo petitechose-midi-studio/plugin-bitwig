@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -32,7 +34,7 @@ struct DeviceMacroValueChangeMessage {
 
     uint8_t parameterIndex;
     float parameterValue;
-    etl::string<STRING_MAX_LENGTH> displayValue;
+    std::string displayValue;
     bool isEcho;
 
     // Origin tracking (set by DecoderRegistry during decode)
@@ -41,7 +43,7 @@ struct DeviceMacroValueChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 24;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 135;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -73,25 +75,25 @@ struct DeviceMacroValueChangeMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceMacroValueChangeMessage> decode(
+    static std::optional<DeviceMacroValueChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
         float parameterValue;
-        if (!decodeFloat32(ptr, remaining, parameterValue)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> displayValue;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, displayValue)) return etl::nullopt;
+        if (!decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
+        std::string displayValue;
+        if (!decodeString(ptr, remaining, displayValue)) return std::nullopt;
         bool isEcho;
-        if (!decodeBool(ptr, remaining, isEcho)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isEcho)) return std::nullopt;
 
         return DeviceMacroValueChangeMessage{parameterIndex, parameterValue, displayValue, isEcho};
     }

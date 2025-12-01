@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -69,21 +71,21 @@ struct TrackSoloMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<TrackSoloMessage> decode(
+    static std::optional<TrackSoloMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         bool isSolo;
-        if (!decodeBool(ptr, remaining, isSolo)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isSolo)) return std::nullopt;
 
         return TrackSoloMessage{trackIndex, isSolo};
     }

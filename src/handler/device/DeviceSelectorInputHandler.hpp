@@ -3,7 +3,7 @@
 #include "api/ControllerAPI.hpp"
 #include "../../protocol/Protocol.hpp"
 #include "DeviceConstants.hpp"
-#include <etl/array.h>
+#include <array>
 
 namespace Bitwig {
 
@@ -29,7 +29,7 @@ public:
 
     // --- Public API ---
     void setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex, bool isNested,
-                            const etl::array<uint8_t, 4>* childrenTypes, uint8_t childrenTypesCount);
+                            const std::array<uint8_t, 4>* childrenTypes, uint8_t childrenTypesCount);
     void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
                                 const std::vector<uint8_t>& itemTypes,
                                 const std::vector<uint8_t>& childIndices);
@@ -66,7 +66,7 @@ private:
         uint8_t count = 0;
         bool isNested = false;
         bool requested = false;
-        etl::array<etl::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> childrenTypes;
+        std::array<std::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> childrenTypes;
     };
     DeviceListState deviceList_;
 
@@ -77,8 +77,8 @@ private:
         uint8_t deviceIndex = 0;
         uint8_t childType = 0;
         uint8_t childrenCount = 0;
-        etl::array<uint8_t, 16> itemTypes = {};
-        etl::array<uint8_t, 16> childIndices = {};
+        std::array<uint8_t, 16> itemTypes = {};
+        std::array<uint8_t, 16> childIndices = {};
         // currentSelectorIndex removed - use view_.state().deviceSelector.currentIndex
     };
     NavigationState navigation_;

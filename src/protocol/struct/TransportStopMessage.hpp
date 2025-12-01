@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -67,19 +69,19 @@ struct TransportStopMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<TransportStopMessage> decode(
+    static std::optional<TransportStopMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         bool isStopping;
-        if (!decodeBool(ptr, remaining, isStopping)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isStopping)) return std::nullopt;
 
         return TransportStopMessage{isStopping};
     }

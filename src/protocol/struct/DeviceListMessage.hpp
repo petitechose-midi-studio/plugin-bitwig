@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -30,10 +32,10 @@ namespace Protocol {
 
 struct Devices {
     uint8_t deviceIndex;
-    etl::string<STRING_MAX_LENGTH> deviceName;
+    std::string deviceName;
     bool isEnabled;
     uint8_t deviceType;
-    etl::array<uint8_t, 4> childrenTypes;
+    std::array<uint8_t, 4> childrenTypes;
 };
 
 #endif // PROTOCOL_DEVICES_STRUCT
@@ -45,8 +47,8 @@ struct DeviceListMessage {
     uint8_t deviceCount;
     uint8_t deviceIndex;
     bool isNested;
-    etl::string<STRING_MAX_LENGTH> parentName;
-    etl::array<Devices, 32> devices;
+    std::string parentName;
+    std::array<Devices, 32> devices;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -54,7 +56,7 @@ struct DeviceListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 789;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4452;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -97,38 +99,38 @@ struct DeviceListMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceListMessage> decode(
+    static std::optional<DeviceListMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t deviceCount;
-        if (!decodeUint8(ptr, remaining, deviceCount)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, deviceCount)) return std::nullopt;
         uint8_t deviceIndex;
-        if (!decodeUint8(ptr, remaining, deviceIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
         bool isNested;
-        if (!decodeBool(ptr, remaining, isNested)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> parentName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, parentName)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isNested)) return std::nullopt;
+        std::string parentName;
+        if (!decodeString(ptr, remaining, parentName)) return std::nullopt;
         uint8_t count_devices;
-        if (!decodeUint8(ptr, remaining, count_devices)) return etl::nullopt;
-        etl::array<Devices, 32> devices_data;
+        if (!decodeUint8(ptr, remaining, count_devices)) return std::nullopt;
+        std::array<Devices, 32> devices_data;
         for (uint8_t i = 0; i < count_devices && i < 32; ++i) {
             Devices item;
-            if (!decodeUint8(ptr, remaining, item.deviceIndex)) return etl::nullopt;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.deviceName)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.isEnabled)) return etl::nullopt;
-            if (!decodeUint8(ptr, remaining, item.deviceType)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.deviceIndex)) return std::nullopt;
+            if (!decodeString(ptr, remaining, item.deviceName)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isEnabled)) return std::nullopt;
+            if (!decodeUint8(ptr, remaining, item.deviceType)) return std::nullopt;
             uint8_t count_childrenTypes;
-            if (!decodeUint8(ptr, remaining, count_childrenTypes)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
             for (uint8_t j = 0; j < count_childrenTypes && j < 4; ++j) {
-                if (!decodeUint8(ptr, remaining, item.childrenTypes[j])) return etl::nullopt;
+                if (!decodeUint8(ptr, remaining, item.childrenTypes[j])) return std::nullopt;
             }
             devices_data[i] = item;
         }

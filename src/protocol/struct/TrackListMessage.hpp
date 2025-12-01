@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -30,7 +32,7 @@ namespace Protocol {
 
 struct Tracks {
     uint8_t trackIndex;
-    etl::string<STRING_MAX_LENGTH> trackName;
+    std::string trackName;
     uint32_t color;
     bool isActivated;
     bool isMute;
@@ -48,8 +50,8 @@ struct TrackListMessage {
     uint8_t trackCount;
     uint8_t trackIndex;
     bool isNested;
-    etl::string<STRING_MAX_LENGTH> parentGroupName;
-    etl::array<Tracks, 32> tracks;
+    std::string parentGroupName;
+    std::array<Tracks, 32> tracks;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -57,7 +59,7 @@ struct TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 917;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4580;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -100,38 +102,38 @@ struct TrackListMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<TrackListMessage> decode(
+    static std::optional<TrackListMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t trackCount;
-        if (!decodeUint8(ptr, remaining, trackCount)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, trackCount)) return std::nullopt;
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         bool isNested;
-        if (!decodeBool(ptr, remaining, isNested)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> parentGroupName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, parentGroupName)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isNested)) return std::nullopt;
+        std::string parentGroupName;
+        if (!decodeString(ptr, remaining, parentGroupName)) return std::nullopt;
         uint8_t count_tracks;
-        if (!decodeUint8(ptr, remaining, count_tracks)) return etl::nullopt;
-        etl::array<Tracks, 32> tracks_data;
+        if (!decodeUint8(ptr, remaining, count_tracks)) return std::nullopt;
+        std::array<Tracks, 32> tracks_data;
         for (uint8_t i = 0; i < count_tracks && i < 32; ++i) {
             Tracks item;
-            if (!decodeUint8(ptr, remaining, item.trackIndex)) return etl::nullopt;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.trackName)) return etl::nullopt;
-            if (!decodeUint32(ptr, remaining, item.color)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.isActivated)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.isMute)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.isSolo)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.isGroup)) return etl::nullopt;
-            if (!decodeUint8(ptr, remaining, item.trackType)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.trackIndex)) return std::nullopt;
+            if (!decodeString(ptr, remaining, item.trackName)) return std::nullopt;
+            if (!decodeUint32(ptr, remaining, item.color)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isActivated)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isMute)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isSolo)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isGroup)) return std::nullopt;
+            if (!decodeUint8(ptr, remaining, item.trackType)) return std::nullopt;
             tracks_data[i] = item;
         }
 

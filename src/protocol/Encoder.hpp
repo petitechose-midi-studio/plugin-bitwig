@@ -28,7 +28,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstring>
-#include <etl/string.h>
+#include <string>
 
 namespace Protocol {
 
@@ -104,13 +104,12 @@ static inline void encodeInt8(uint8_t*& buf, int8_t val) {
 
 /**
  * Encode string (variable length: 1 byte length + data)
- * Variable-length UTF-8 string (prefixed with uint8 length, max 16 chars)
+ * Variable-length UTF-8 string (prefixed with uint8 length)
  *
  * Format: [length (7-bit)] [char0] [char1] ... [charN-1]
  * Max length: 127 chars (7-bit length encoding)
  */
-template<size_t MAX_SIZE>
-static inline void encodeString(uint8_t*& buf, const etl::string<MAX_SIZE>& str) {
+static inline void encodeString(uint8_t*& buf, const std::string& str) {
     uint8_t len = static_cast<uint8_t>(str.length()) & 0x7F;  // Max 127
     *buf++ = len;
 

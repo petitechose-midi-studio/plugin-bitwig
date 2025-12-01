@@ -36,7 +36,7 @@ void DeviceInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t curren
 
 void DeviceInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex,
                                             bool isNested,
-                                            const etl::array<uint8_t, 4>* childrenTypes,
+                                            const std::array<uint8_t, 4>* childrenTypes,
                                             uint8_t childrenTypesCount)
 {
     deviceSelectorHandler_->setDeviceListState(deviceCount, currentDeviceIndex, isNested,

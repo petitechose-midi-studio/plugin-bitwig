@@ -3,8 +3,8 @@
 #include "api/ControllerAPI.hpp"
 #include "../../protocol/Protocol.hpp"
 #include "DeviceConstants.hpp"
-#include <etl/string.h>
-#include <etl/array.h>
+#include <array>
+#include <string>
 
 namespace Bitwig
 {

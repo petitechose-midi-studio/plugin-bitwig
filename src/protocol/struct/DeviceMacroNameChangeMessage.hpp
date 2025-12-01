@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,7 +33,7 @@ struct DeviceMacroNameChangeMessage {
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_NAME_CHANGE;
 
     uint8_t parameterIndex;
-    etl::string<STRING_MAX_LENGTH> parameterName;
+    std::string parameterName;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -39,7 +41,7 @@ struct DeviceMacroNameChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 18;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 129;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -69,21 +71,21 @@ struct DeviceMacroNameChangeMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceMacroNameChangeMessage> decode(
+    static std::optional<DeviceMacroNameChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> parameterName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, parameterName)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
+        std::string parameterName;
+        if (!decodeString(ptr, remaining, parameterName)) return std::nullopt;
 
         return DeviceMacroNameChangeMessage{parameterIndex, parameterName};
     }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <etl/map.h>
+#include <cstdint>
 #include <initializer_list>
+#include <map>
 
 namespace UI { class IView; }
 
@@ -47,7 +48,7 @@ namespace Bitwig
         }
 
     private:
-        etl::map<ViewID, UI::IView *, 8> views_;
+        std::map<ViewID, UI::IView *> views_;
     };
 
 } // namespace Bitwig

@@ -2,6 +2,7 @@
 
 #include "api/ControllerAPI.hpp"
 #include "../../protocol/Protocol.hpp"
+#include <array>
 #include <memory>
 
 namespace Bitwig {
@@ -24,7 +25,7 @@ public:
     // --- Public API: State updates from host ---
     void setPageSelectionState(uint8_t pageCount, uint8_t currentIndex);
     void setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex, bool isNested,
-                            const etl::array<uint8_t, 4>* childrenTypes, uint8_t childrenTypesCount);
+                            const std::array<uint8_t, 4>* childrenTypes, uint8_t childrenTypesCount);
     void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
                                 const std::vector<uint8_t>& itemTypes,
                                 const std::vector<uint8_t>& childIndices);

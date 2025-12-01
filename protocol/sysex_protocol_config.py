@@ -14,8 +14,6 @@ PROTOCOL_CONFIG = SysExConfig(
         device_id=0x01,        # Bitwig MIDI Studio device
     ),
     limits=SysExLimits(
-        max_message_size=512,   # Maximum SysEx message size
-        string_max_length=16,   # Maximum string length (optimized for display)
-        array_max_items=32,     # Maximum array size
+        max_message_size=16000,  # Match System::Protocol::MAX_MESSAGE_SIZE
     ),
 )

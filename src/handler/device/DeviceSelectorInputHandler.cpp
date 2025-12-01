@@ -34,7 +34,7 @@ DeviceSelectorInputHandler::~DeviceSelectorInputHandler() = default;
 
 void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex,
                                                     bool isNested,
-                                                    const etl::array<uint8_t, 4>* childrenTypes,
+                                                    const std::array<uint8_t, 4>* childrenTypes,
                                                     uint8_t childrenTypesCount)
 {
     deviceList_.count = deviceCount;

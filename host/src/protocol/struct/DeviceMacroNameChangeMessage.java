@@ -80,7 +80,7 @@ public final class DeviceMacroNameChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 18;
+    public static final int MAX_PAYLOAD_SIZE = 129;
 
     /**
      * Encode message to MIDI-safe bytes

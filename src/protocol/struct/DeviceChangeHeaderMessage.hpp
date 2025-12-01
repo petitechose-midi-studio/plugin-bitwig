@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,7 +33,7 @@ namespace Protocol {
 struct PageInfo {
     uint8_t devicePageIndex;
     uint8_t devicePageCount;
-    etl::string<STRING_MAX_LENGTH> devicePageName;
+    std::string devicePageName;
 };
 
 #endif // PROTOCOL_PAGEINFO_STRUCT
@@ -40,11 +42,11 @@ struct DeviceChangeHeaderMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_CHANGE_HEADER;
 
-    etl::string<STRING_MAX_LENGTH> deviceName;
+    std::string deviceName;
     bool isEnabled;
     uint8_t deviceType;
     PageInfo pageInfo;
-    etl::array<uint8_t, 4> childrenTypes;
+    std::array<uint8_t, 4> childrenTypes;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -52,7 +54,7 @@ struct DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 42;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 264;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -90,32 +92,32 @@ struct DeviceChangeHeaderMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceChangeHeaderMessage> decode(
+    static std::optional<DeviceChangeHeaderMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
-        etl::string<STRING_MAX_LENGTH> deviceName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, deviceName)) return etl::nullopt;
+        std::string deviceName;
+        if (!decodeString(ptr, remaining, deviceName)) return std::nullopt;
         bool isEnabled;
-        if (!decodeBool(ptr, remaining, isEnabled)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isEnabled)) return std::nullopt;
         uint8_t deviceType;
-        if (!decodeUint8(ptr, remaining, deviceType)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, deviceType)) return std::nullopt;
         PageInfo pageInfo_data;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return etl::nullopt;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return etl::nullopt;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, pageInfo_data.devicePageName)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
+        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
+        if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
         uint8_t count_childrenTypes;
-        if (!decodeUint8(ptr, remaining, count_childrenTypes)) return etl::nullopt;
-        etl::array<uint8_t, 4> childrenTypes_data;
+        if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
+        std::array<uint8_t, 4> childrenTypes_data;
         for (uint8_t i = 0; i < count_childrenTypes && i < 4; ++i) {
-            if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return std::nullopt;
         }
 
         return DeviceChangeHeaderMessage{deviceName, isEnabled, deviceType, pageInfo_data, childrenTypes_data};

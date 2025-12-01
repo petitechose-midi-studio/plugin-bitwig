@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,7 +33,7 @@ namespace Protocol {
 struct PageInfo {
     uint8_t devicePageIndex;
     uint8_t devicePageCount;
-    etl::string<STRING_MAX_LENGTH> devicePageName;
+    std::string devicePageName;
 };
 
 #endif // PROTOCOL_PAGEINFO_STRUCT
@@ -42,13 +44,13 @@ struct PageInfo {
 struct Macros {
     uint8_t parameterIndex;
     float parameterValue;
-    etl::string<STRING_MAX_LENGTH> parameterName;
+    std::string parameterName;
     float parameterOrigin;
     bool parameterExists;
     int16_t discreteValueCount;
-    etl::string<STRING_MAX_LENGTH> displayValue;
+    std::string displayValue;
     uint8_t parameterType;
-    etl::vector<etl::string<STRING_MAX_LENGTH>, 32> discreteValueNames;
+    std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
 };
 
@@ -59,7 +61,7 @@ struct DevicePageChangeMessage {
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_PAGE_CHANGE;
 
     PageInfo pageInfo;
-    etl::array<Macros, 8> macros;
+    std::array<Macros, 8> macros;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -67,7 +69,7 @@ struct DevicePageChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4780;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 35083;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -114,42 +116,42 @@ struct DevicePageChangeMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DevicePageChangeMessage> decode(
+    static std::optional<DevicePageChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         PageInfo pageInfo_data;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return etl::nullopt;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return etl::nullopt;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, pageInfo_data.devicePageName)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
+        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
+        if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
         uint8_t count_macros;
-        if (!decodeUint8(ptr, remaining, count_macros)) return etl::nullopt;
-        etl::array<Macros, 8> macros_data;
+        if (!decodeUint8(ptr, remaining, count_macros)) return std::nullopt;
+        std::array<Macros, 8> macros_data;
         for (uint8_t i = 0; i < count_macros && i < 8; ++i) {
             Macros item;
-            if (!decodeUint8(ptr, remaining, item.parameterIndex)) return etl::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.parameterValue)) return etl::nullopt;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.parameterName)) return etl::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.parameterOrigin)) return etl::nullopt;
-            if (!decodeBool(ptr, remaining, item.parameterExists)) return etl::nullopt;
-            if (!decodeInt16(ptr, remaining, item.discreteValueCount)) return etl::nullopt;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.displayValue)) return etl::nullopt;
-            if (!decodeUint8(ptr, remaining, item.parameterType)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.parameterIndex)) return std::nullopt;
+            if (!decodeFloat32(ptr, remaining, item.parameterValue)) return std::nullopt;
+            if (!decodeString(ptr, remaining, item.parameterName)) return std::nullopt;
+            if (!decodeFloat32(ptr, remaining, item.parameterOrigin)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.parameterExists)) return std::nullopt;
+            if (!decodeInt16(ptr, remaining, item.discreteValueCount)) return std::nullopt;
+            if (!decodeString(ptr, remaining, item.displayValue)) return std::nullopt;
+            if (!decodeUint8(ptr, remaining, item.parameterType)) return std::nullopt;
             uint8_t count_discreteValueNames;
-            if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
             for (uint8_t j = 0; j < count_discreteValueNames && j < 32; ++j) {
-                etl::string<STRING_MAX_LENGTH> temp_discreteValueNames;
-                if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, temp_discreteValueNames)) return etl::nullopt;
+                std::string temp_discreteValueNames;
+                if (!decodeString(ptr, remaining, temp_discreteValueNames)) return std::nullopt;
                 item.discreteValueNames.push_back(temp_discreteValueNames);
             }
-            if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
             macros_data[i] = item;
         }
 

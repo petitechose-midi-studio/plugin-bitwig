@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,7 +33,7 @@ struct LastClickedValueChangeMessage {
     static constexpr MessageID MESSAGE_ID = MessageID::LAST_CLICKED_VALUE_CHANGE;
 
     float parameterValue;
-    etl::string<STRING_MAX_LENGTH> displayValue;
+    std::string displayValue;
     bool isEcho;
 
     // Origin tracking (set by DecoderRegistry during decode)
@@ -40,7 +42,7 @@ struct LastClickedValueChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 23;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 134;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -71,23 +73,23 @@ struct LastClickedValueChangeMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<LastClickedValueChangeMessage> decode(
+    static std::optional<LastClickedValueChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         float parameterValue;
-        if (!decodeFloat32(ptr, remaining, parameterValue)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> displayValue;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, displayValue)) return etl::nullopt;
+        if (!decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
+        std::string displayValue;
+        if (!decodeString(ptr, remaining, displayValue)) return std::nullopt;
         bool isEcho;
-        if (!decodeBool(ptr, remaining, isEcho)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, isEcho)) return std::nullopt;
 
         return LastClickedValueChangeMessage{parameterValue, displayValue, isEcho};
     }

@@ -5,9 +5,8 @@
 #include <array>
 #include <map>
 #include <memory>
-#include <etl/array.h>
-#include <etl/string.h>
-#include <etl/vector.h>
+#include <string>
+#include <vector>
 
 #include "../theme/BitwigTheme.hpp"
 #include "../transportbar/TransportBar.hpp"
@@ -71,7 +70,7 @@ namespace Bitwig
         void setParameterTypeAndMetadata(uint8_t paramIndex,
                                          uint8_t parameterType,
                                          int16_t discreteCount,
-                                         const etl::vector<etl::string<16>, 32> &discreteValueNames,
+                                         const std::vector<std::string> &discreteValueNames,
                                          uint8_t currentValueIndex,
                                          float origin,
                                          const char *displayValue);
@@ -82,7 +81,7 @@ namespace Bitwig
         void setParameterLoading(uint8_t paramIndex, bool loading);
         void setAllWidgetsLoading(bool loading);
         void setParameterDiscreteValues(uint8_t paramIndex,
-                                        const etl::vector<etl::string<16>, 32> &discreteValueNames,
+                                        const std::vector<std::string> &discreteValueNames,
                                         uint8_t currentValueIndex);
 
     private:

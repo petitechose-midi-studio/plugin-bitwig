@@ -247,7 +247,7 @@ namespace Bitwig {
     void DeviceView::setParameterTypeAndMetadata(uint8_t paramIndex,
                                                  uint8_t parameterType,
                                                  int16_t discreteCount,
-                                                 const etl::vector<etl::string<16>, 32> &discreteValueNames,
+                                                 const std::vector<std::string> &discreteValueNames,
                                                  uint8_t currentValueIndex,
                                                  float origin,
                                                  const char *displayValue)
@@ -327,7 +327,7 @@ namespace Bitwig {
     }
 
     void DeviceView::setParameterDiscreteValues(uint8_t paramIndex,
-                                                const etl::vector<etl::string<16>, 32> &discreteValueNames,
+                                                const std::vector<std::string> &discreteValueNames,
                                                 uint8_t currentValueIndex)
     {
         if (!initialized_ || paramIndex >= 8)

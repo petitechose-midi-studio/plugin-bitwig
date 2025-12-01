@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -30,7 +32,7 @@ namespace Protocol {
 
 struct Children {
     uint8_t childIndex;
-    etl::string<STRING_MAX_LENGTH> childName;
+    std::string childName;
     uint8_t itemType;
 };
 
@@ -43,7 +45,7 @@ struct DeviceChildrenMessage {
     uint8_t deviceIndex;
     uint8_t childType;
     uint8_t childrenCount;
-    etl::array<Children, 16> children;
+    std::array<Children, 16> children;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -51,7 +53,7 @@ struct DeviceChildrenMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 308;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 2084;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -88,31 +90,31 @@ struct DeviceChildrenMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceChildrenMessage> decode(
+    static std::optional<DeviceChildrenMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t deviceIndex;
-        if (!decodeUint8(ptr, remaining, deviceIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
         uint8_t childType;
-        if (!decodeUint8(ptr, remaining, childType)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, childType)) return std::nullopt;
         uint8_t childrenCount;
-        if (!decodeUint8(ptr, remaining, childrenCount)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, childrenCount)) return std::nullopt;
         uint8_t count_children;
-        if (!decodeUint8(ptr, remaining, count_children)) return etl::nullopt;
-        etl::array<Children, 16> children_data;
+        if (!decodeUint8(ptr, remaining, count_children)) return std::nullopt;
+        std::array<Children, 16> children_data;
         for (uint8_t i = 0; i < count_children && i < 16; ++i) {
             Children item;
-            if (!decodeUint8(ptr, remaining, item.childIndex)) return etl::nullopt;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, item.childName)) return etl::nullopt;
-            if (!decodeUint8(ptr, remaining, item.itemType)) return etl::nullopt;
+            if (!decodeUint8(ptr, remaining, item.childIndex)) return std::nullopt;
+            if (!decodeString(ptr, remaining, item.childName)) return std::nullopt;
+            if (!decodeUint8(ptr, remaining, item.itemType)) return std::nullopt;
             children_data[i] = item;
         }
 

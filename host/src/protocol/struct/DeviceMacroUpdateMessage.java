@@ -164,7 +164,7 @@ public final class DeviceMacroUpdateMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 51;
+    public static final int MAX_PAYLOAD_SIZE = 273;
 
     /**
      * Encode message to MIDI-safe bytes

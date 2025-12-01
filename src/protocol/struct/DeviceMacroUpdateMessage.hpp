@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,9 +33,9 @@ struct DeviceMacroUpdateMessage {
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_UPDATE;
 
     uint8_t parameterIndex;
-    etl::string<STRING_MAX_LENGTH> parameterName;
+    std::string parameterName;
     float parameterValue;
-    etl::string<STRING_MAX_LENGTH> displayValue;
+    std::string displayValue;
     float parameterOrigin;
     bool parameterExists;
     uint8_t parameterType;
@@ -46,7 +48,7 @@ struct DeviceMacroUpdateMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 51;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 273;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -83,35 +85,35 @@ struct DeviceMacroUpdateMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceMacroUpdateMessage> decode(
+    static std::optional<DeviceMacroUpdateMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> parameterName;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, parameterName)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
+        std::string parameterName;
+        if (!decodeString(ptr, remaining, parameterName)) return std::nullopt;
         float parameterValue;
-        if (!decodeFloat32(ptr, remaining, parameterValue)) return etl::nullopt;
-        etl::string<STRING_MAX_LENGTH> displayValue;
-        if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, displayValue)) return etl::nullopt;
+        if (!decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
+        std::string displayValue;
+        if (!decodeString(ptr, remaining, displayValue)) return std::nullopt;
         float parameterOrigin;
-        if (!decodeFloat32(ptr, remaining, parameterOrigin)) return etl::nullopt;
+        if (!decodeFloat32(ptr, remaining, parameterOrigin)) return std::nullopt;
         bool parameterExists;
-        if (!decodeBool(ptr, remaining, parameterExists)) return etl::nullopt;
+        if (!decodeBool(ptr, remaining, parameterExists)) return std::nullopt;
         uint8_t parameterType;
-        if (!decodeUint8(ptr, remaining, parameterType)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, parameterType)) return std::nullopt;
         int16_t discreteValueCount;
-        if (!decodeInt16(ptr, remaining, discreteValueCount)) return etl::nullopt;
+        if (!decodeInt16(ptr, remaining, discreteValueCount)) return std::nullopt;
         uint8_t currentValueIndex;
-        if (!decodeUint8(ptr, remaining, currentValueIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
 
         return DeviceMacroUpdateMessage{parameterIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex};
     }

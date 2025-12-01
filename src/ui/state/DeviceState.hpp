@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <etl/string.h>
-#include <etl/vector.h>
 
 namespace Bitwig {
 
@@ -36,7 +34,7 @@ namespace Bitwig {
         {
             uint8_t type = 0;
             int16_t discreteCount = -1;
-            etl::vector<etl::string<16>, 32> discreteValueNames;
+            std::vector<std::string> discreteValueNames;
             uint8_t currentValueIndex = 0;
             float origin = 0.0f;
             float value = 0.0f;

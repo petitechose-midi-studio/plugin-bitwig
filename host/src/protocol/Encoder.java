@@ -123,7 +123,7 @@ public final class Encoder {
 
     /**
      * Encode string (variable length: 1 byte length + data)
-     * Variable-length UTF-8 string (prefixed with uint8 length, max 16 chars)
+     * Variable-length UTF-8 string (prefixed with uint8 length)
      *
      * Format: [length (7-bit)] [char0] [char1] ... [charN-1]
      * Max length: 127 chars (7-bit length encoding)

@@ -143,7 +143,7 @@ public final class Decoder {
 
     /**
      * Decode string (variable length)
-     * Variable-length UTF-8 string (prefixed with uint8 length, max 16 chars)
+     * Variable-length UTF-8 string (prefixed with uint8 length)
      *
      * @param data Byte array containing encoded data
      * @param offset Start offset in array

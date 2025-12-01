@@ -28,8 +28,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstring>
-#include <etl/optional.h>
-#include <etl/string.h>
+#include <string>
 
 namespace Protocol {
 
@@ -135,11 +134,10 @@ static inline bool decodeInt8(
 
 /**
  * Decode string (variable length)
- * Variable-length UTF-8 string (prefixed with uint8 length, max 16 chars)
+ * Variable-length UTF-8 string (prefixed with uint8 length)
  */
-template<size_t MAX_SIZE>
 static inline bool decodeString(
-    const uint8_t*& buf, size_t& remaining, etl::string<MAX_SIZE>& out) {
+    const uint8_t*& buf, size_t& remaining, std::string& out) {
 
     if (remaining < 1) return false;
 
@@ -147,9 +145,9 @@ static inline bool decodeString(
     remaining -= 1;
 
     if (remaining < len) return false;
-    if (len > MAX_SIZE) return false;  // String too long
 
     out.clear();
+    out.reserve(len);
     for (uint8_t i = 0; i < len; ++i) {
         out.push_back(static_cast<char>(buf[i] & 0x7F));
     }

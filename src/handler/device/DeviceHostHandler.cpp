@@ -1,5 +1,6 @@
 #include "DeviceHostHandler.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -205,7 +206,7 @@ namespace Bitwig
             if (!msg.fromHost)
                 return;
 
-            etl::array<etl::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> allChildrenTypes;
+            std::array<std::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> allChildrenTypes;
             for (uint8_t i = 0; i < msg.deviceCount && i < Device::MAX_DEVICES; i++)
             {
                 allChildrenTypes[i] = msg.devices[i].childrenTypes;

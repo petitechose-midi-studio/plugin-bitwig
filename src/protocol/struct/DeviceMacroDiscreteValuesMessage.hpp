@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -31,7 +33,7 @@ struct DeviceMacroDiscreteValuesMessage {
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_DISCRETE_VALUES;
 
     uint8_t parameterIndex;
-    etl::vector<etl::string<STRING_MAX_LENGTH>, 32> discreteValueNames;
+    std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
 
     // Origin tracking (set by DecoderRegistry during decode)
@@ -40,7 +42,7 @@ struct DeviceMacroDiscreteValuesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 546;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4098;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -74,29 +76,29 @@ struct DeviceMacroDiscreteValuesMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DeviceMacroDiscreteValuesMessage> decode(
+    static std::optional<DeviceMacroDiscreteValuesMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
         uint8_t count_discreteValueNames;
-        if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return etl::nullopt;
-        etl::vector<etl::string<STRING_MAX_LENGTH>, 32> discreteValueNames_data;
+        if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
+        std::vector<std::string> discreteValueNames_data;
         for (uint8_t i = 0; i < count_discreteValueNames && i < 32; ++i) {
-            etl::string<STRING_MAX_LENGTH> temp_item;
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, temp_item)) return etl::nullopt;
+            std::string temp_item;
+            if (!decodeString(ptr, remaining, temp_item)) return std::nullopt;
             discreteValueNames_data.push_back(temp_item);
         }
         uint8_t currentValueIndex;
-        if (!decodeUint8(ptr, remaining, currentValueIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
 
         return DeviceMacroDiscreteValuesMessage{parameterIndex, discreteValueNames_data, currentValueIndex};
     }

@@ -18,9 +18,11 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include <array>
 #include <cstdint>
-#include <etl/optional.h>
-#include <etl/vector.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Protocol {
 
@@ -32,7 +34,7 @@ struct DevicePageNamesMessage {
 
     uint8_t devicePageCount;
     uint8_t devicePageIndex;
-    etl::array<etl::string<STRING_MAX_LENGTH>, 32> pageNames;
+    std::array<std::string, 32> pageNames;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -40,7 +42,7 @@ struct DevicePageNamesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 546;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 4098;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -74,26 +76,26 @@ struct DevicePageNamesMessage {
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
-     * @return Decoded struct, or etl::nullopt if invalid/insufficient data
+     * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static etl::optional<DevicePageNamesMessage> decode(
+    static std::optional<DevicePageNamesMessage> decode(
         const uint8_t* data, uint16_t len) {
 
-        if (len < MIN_PAYLOAD_SIZE) return etl::nullopt;
+        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
         size_t remaining = len;
 
         // Decode fields
         uint8_t devicePageCount;
-        if (!decodeUint8(ptr, remaining, devicePageCount)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, devicePageCount)) return std::nullopt;
         uint8_t devicePageIndex;
-        if (!decodeUint8(ptr, remaining, devicePageIndex)) return etl::nullopt;
+        if (!decodeUint8(ptr, remaining, devicePageIndex)) return std::nullopt;
         uint8_t count_pageNames;
-        if (!decodeUint8(ptr, remaining, count_pageNames)) return etl::nullopt;
-        etl::array<etl::string<STRING_MAX_LENGTH>, 32> pageNames_data;
+        if (!decodeUint8(ptr, remaining, count_pageNames)) return std::nullopt;
+        std::array<std::string, 32> pageNames_data;
         for (uint8_t i = 0; i < count_pageNames && i < 32; ++i) {
-            if (!decodeString<STRING_MAX_LENGTH>(ptr, remaining, pageNames_data[i])) return etl::nullopt;
+            if (!decodeString(ptr, remaining, pageNames_data[i])) return std::nullopt;
         }
 
         return DevicePageNamesMessage{devicePageCount, devicePageIndex, pageNames_data};
