@@ -69,13 +69,13 @@ void TrackSelector::createFooter()
     // Create mute icon (cell 1 = center)
     footer_mute_ = lv_label_create(footer_->getElement());
     Icon::set(footer_mute_, Icon::MUTE, Icon::L);
-    lv_obj_set_style_text_color(footer_mute_, lv_color_hex(Color::TRACK_MUTE), 0);
+    lv_obj_set_style_text_color(footer_mute_, lv_color_hex(Color::TRACK_MUTE), LV_STATE_DEFAULT);
     footer_->setCell(1, footer_mute_);
 
     // Create solo icon (cell 2 = right)
     footer_solo_ = lv_label_create(footer_->getElement());
     Icon::set(footer_solo_, Icon::SOLO, Icon::L);
-    lv_obj_set_style_text_color(footer_solo_, lv_color_hex(Color::TRACK_SOLO), 0);
+    lv_obj_set_style_text_color(footer_solo_, lv_color_hex(Color::TRACK_SOLO), LV_STATE_DEFAULT);
     footer_->setCell(2, footer_solo_);
 }
 
@@ -165,9 +165,9 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props)
 
     // Update opacity based on state (active = full, inactive = faded)
     if (footer_mute_)
-        lv_obj_set_style_text_opa(footer_mute_, isMuted ? LV_OPA_COVER : LV_OPA_40, 0);
+        lv_obj_set_style_text_opa(footer_mute_, isMuted ? LV_OPA_COVER : LV_OPA_40, LV_STATE_DEFAULT);
     if (footer_solo_)
-        lv_obj_set_style_text_opa(footer_solo_, isSoloed ? LV_OPA_COVER : LV_OPA_40, 0);
+        lv_obj_set_style_text_opa(footer_solo_, isSoloed ? LV_OPA_COVER : LV_OPA_40, LV_STATE_DEFAULT);
 
     footer_->show();
 }

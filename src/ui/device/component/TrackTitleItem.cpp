@@ -16,22 +16,22 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
     if (!color_bar_) return;
 
     lv_obj_set_size(color_bar_, Layout::COLOR_BAR_WIDTH, bar_height_);
-    lv_obj_set_style_radius(color_bar_, 0, 0);
-    lv_obj_set_style_border_width(color_bar_, 0, 0);
-    lv_obj_set_style_pad_all(color_bar_, 0, 0);
-    lv_obj_set_style_bg_opa(color_bar_, Opacity::FULL, 0);
+    lv_obj_set_style_radius(color_bar_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(color_bar_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(color_bar_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(color_bar_, Opacity::FULL, LV_STATE_DEFAULT);
     lv_obj_clear_flag(color_bar_, LV_OBJ_FLAG_SCROLLABLE);
 
     type_icon_ = lv_label_create(parent_);
     if (type_icon_) {
         Style::setTextColor(type_icon_, Color::TEXT_PRIMARY);
-        lv_obj_set_style_text_opa(type_icon_, Opacity::SUBTLE, 0);
+        lv_obj_set_style_text_opa(type_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
     }
 
     label_ = lv_label_create(parent_);
     if (label_) {
         Style::setTextColor(label_, Color::TEXT_LIGHT);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, 0);
+        lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, LV_STATE_DEFAULT);
     }
 
     if (has_mute_solo_ && label_) {
@@ -41,14 +41,14 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
         if (mute_icon_) {
             Icon::set(mute_icon_, Icon::MUTE);
             Style::setTextColor(mute_icon_, Color::TRACK_MUTE);
-            lv_obj_set_style_text_opa(mute_icon_, Opacity::HINT, 0);
+            lv_obj_set_style_text_opa(mute_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
 
         solo_icon_ = lv_label_create(parent_);
         if (solo_icon_) {
             Icon::set(solo_icon_, Icon::SOLO);
             Style::setTextColor(solo_icon_, Color::TRACK_SOLO);
-            lv_obj_set_style_text_opa(solo_icon_, Opacity::HINT, 0);
+            lv_obj_set_style_text_opa(solo_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
 
         level_bar_ = std::make_unique<LevelBar>(parent_, Layout::LEVEL_BAR_WIDTH, bar_height_);
@@ -87,13 +87,13 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
     }
 
     if (color_bar_) {
-        lv_obj_set_style_bg_color(color_bar_, lv_color_hex(props.color), 0);
-        lv_obj_set_style_bg_opa(color_bar_, props.hideIndicators ? Opacity::HIDDEN : Opacity::FULL, 0);
+        lv_obj_set_style_bg_color(color_bar_, lv_color_hex(props.color), LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(color_bar_, props.hideIndicators ? Opacity::HIDDEN : Opacity::FULL, LV_STATE_DEFAULT);
     }
 
     if (type_icon_) {
         Icon::set(type_icon_, getTrackTypeIcon(props.trackType), Icon::M);
-        lv_obj_set_style_text_opa(type_icon_, props.hideIndicators ? Opacity::HIDDEN : Opacity::SUBTLE, 0);
+        lv_obj_set_style_text_opa(type_icon_, props.hideIndicators ? Opacity::HIDDEN : Opacity::SUBTLE, LV_STATE_DEFAULT);
     }
 
     if (level_bar_) {
@@ -106,8 +106,8 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
     if (!props.hideIndicators) {
         updateIndicatorOpacity(props.isMuted, props.isSoloed, props.highlighted);
     } else {
-        if (mute_icon_) lv_obj_set_style_text_opa(mute_icon_, Opacity::HIDDEN, 0);
-        if (solo_icon_) lv_obj_set_style_text_opa(solo_icon_, Opacity::HIDDEN, 0);
+        if (mute_icon_) lv_obj_set_style_text_opa(mute_icon_, Opacity::HIDDEN, LV_STATE_DEFAULT);
+        if (solo_icon_) lv_obj_set_style_text_opa(solo_icon_, Opacity::HIDDEN, LV_STATE_DEFAULT);
     }
 }
 
@@ -117,12 +117,12 @@ void TrackTitleItem::updateIndicatorOpacity(bool isMuted, bool isSoloed, bool hi
 
     if (mute_icon_) {
         uint8_t opa = isMuted ? Opacity::FULL : (highlighted ? Opacity::FADED : Opacity::HINT);
-        lv_obj_set_style_text_opa(mute_icon_, opa, 0);
+        lv_obj_set_style_text_opa(mute_icon_, opa, LV_STATE_DEFAULT);
     }
 
     if (solo_icon_) {
         uint8_t opa = isSoloed ? Opacity::FULL : (highlighted ? Opacity::FADED : Opacity::HINT);
-        lv_obj_set_style_text_opa(solo_icon_, opa, 0);
+        lv_obj_set_style_text_opa(solo_icon_, opa, LV_STATE_DEFAULT);
     }
 }
 

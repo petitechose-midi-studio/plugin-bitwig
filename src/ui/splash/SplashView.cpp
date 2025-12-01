@@ -25,7 +25,7 @@ namespace Bitwig
         if (container_)
         {
             lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_set_style_opa(container_, LV_OPA_COVER, 0); // Reset opacity after fadeOut
+            lv_obj_set_style_opa(container_, LV_OPA_COVER, LV_STATE_DEFAULT); // Reset opacity after fadeOut
         }
     }
 
@@ -53,11 +53,11 @@ namespace Bitwig
     {
         container_ = lv_obj_create(zone_);
         lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
-        lv_obj_set_style_pad_all(container_, 0, 0);
-        lv_obj_set_style_border_width(container_, 0, 0);
-        lv_obj_set_style_radius(container_, 0, 0);
-        lv_obj_set_style_bg_color(container_, lv_color_hex(Theme::Color::BACKGROUND_BASE), 0);
-        lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
+        lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
+        lv_obj_set_style_radius(container_, 0, LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(container_, lv_color_hex(Theme::Color::BACKGROUND_BASE), LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, LV_STATE_DEFAULT);
 
         lv_obj_add_flag(container_, LV_OBJ_FLAG_FLOATING);
         lv_obj_set_pos(container_, 0, 0);
@@ -67,18 +67,18 @@ namespace Bitwig
 
         logo_ = lv_image_create(container_);
         lv_image_set_src(logo_, &Bitwig_Logo);
-        lv_obj_set_style_img_opa(logo_, LV_OPA_COVER, 0);
+        lv_obj_set_style_img_opa(logo_, LV_OPA_COVER, LV_STATE_DEFAULT);
 
         label_ = lv_label_create(container_);
-        lv_obj_set_style_text_color(label_, lv_color_hex(Theme::Color::TEXT_PRIMARY), 0);
+        lv_obj_set_style_text_color(label_, lv_color_hex(Theme::Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
 
         if (bitwig_fonts.device_label)
         {
-            lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
+            lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
         }
 
-        lv_obj_set_style_text_align(label_, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_style_pad_top(label_, 15, 0);
+        lv_obj_set_style_text_align(label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(label_, 15, LV_STATE_DEFAULT);
 
         lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
     }
@@ -119,7 +119,7 @@ namespace Bitwig
     void SplashView::fadeAnimCallback(void *var, int32_t value)
     {
         lv_obj_t *obj = (lv_obj_t *)var;
-        lv_obj_set_style_opa(obj, (lv_opa_t)value, 0);
+        lv_obj_set_style_opa(obj, (lv_opa_t)value, LV_STATE_DEFAULT);
     }
 
     void SplashView::fadeAnimDeletedCallback(lv_anim_t *anim)

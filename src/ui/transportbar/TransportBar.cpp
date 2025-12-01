@@ -39,12 +39,12 @@ void TransportBar::render(const TransportBarProps& props) {
 
     // Play state
     if (play_icon_) {
-        lv_obj_set_style_text_color(play_icon_, props.playing ? COLOR_PLAY : COLOR_INACTIVE, 0);
+        lv_obj_set_style_text_color(play_icon_, props.playing ? COLOR_PLAY : COLOR_INACTIVE, LV_STATE_DEFAULT);
     }
 
     // Record state
     if (record_icon_) {
-        lv_obj_set_style_text_color(record_icon_, props.recording ? COLOR_RECORD : COLOR_INACTIVE, 0);
+        lv_obj_set_style_text_color(record_icon_, props.recording ? COLOR_RECORD : COLOR_INACTIVE, LV_STATE_DEFAULT);
     }
 
     // Tempo
@@ -87,8 +87,8 @@ void TransportBar::createContainer(lv_obj_t* parent) {
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_PCT(100), Layout::TRANSPORT_BAR_HEIGHT);
     Style::setBgColor(container_, Color::BACKGROUND_FILL);
-    lv_obj_set_style_border_width(container_, 0, 0);
-    lv_obj_set_style_pad_all(container_, 0, 0);
+    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
 
     // Grid: 3 columns (MIDI | Transport | Tempo)
@@ -127,15 +127,15 @@ void TransportBar::createTransportControls() {
 
     play_icon_ = lv_label_create(transport_container);
     Icon::set(play_icon_, Icon::TRANSPORT_PLAY, Icon::L);
-    lv_obj_set_style_text_color(play_icon_, COLOR_INACTIVE, 0);
+    lv_obj_set_style_text_color(play_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     stop_icon_ = lv_label_create(transport_container);
     Icon::set(stop_icon_, Icon::TRANSPORT_STOP, Icon::L);
-    lv_obj_set_style_text_color(stop_icon_, COLOR_INACTIVE, 0);
+    lv_obj_set_style_text_color(stop_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     record_icon_ = lv_label_create(transport_container);
     Icon::set(record_icon_, Icon::TRANSPORT_RECORD, Icon::L);
-    lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, 0);
+    lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 }
 
 void TransportBar::createTempoDisplay() {
@@ -143,7 +143,7 @@ void TransportBar::createTempoDisplay() {
     lv_obj_set_grid_cell(bpm_label_, LV_GRID_ALIGN_END, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
     lv_label_set_text(bpm_label_, "120.00");
     Style::setTextColor(bpm_label_, Color::TEXT_LIGHT);
-    lv_obj_set_style_text_font(bpm_label_, fonts.tempo_label, 0);
+    lv_obj_set_style_text_font(bpm_label_, fonts.tempo_label, LV_STATE_DEFAULT);
 }
 
 }  // namespace Bitwig

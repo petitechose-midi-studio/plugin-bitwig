@@ -17,7 +17,7 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
     lv_obj_set_size(container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
     lv_obj_set_pos(container_, 0, 0);
     Style::setBgColor(container_, Color::BACKGROUND_FILL);
-    lv_obj_set_style_border_width(container_, 0, 0);
+    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
     Style::applyPadHorizontal(container_, Layout::PAD_SM);
     Style::applyPadVertical(container_, 0);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
@@ -27,7 +27,7 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
     static const lv_coord_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
     lv_obj_set_layout(container_, LV_LAYOUT_GRID);
     lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
-    lv_obj_set_style_pad_column(container_, Layout::GAP_MD, 0);
+    lv_obj_set_style_pad_column(container_, Layout::GAP_MD, LV_STATE_DEFAULT);
 
     device_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_START);
     lv_obj_set_grid_cell(device_cell_, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);

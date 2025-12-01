@@ -139,7 +139,7 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props)
                     Icon::set(icon_label, iconSymbol);
                     lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-                    lv_obj_set_style_text_color(icon_label, lv_color_white(), LV_STATE_PRESSED);
+                    lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_PRESSED);
                     lv_obj_set_style_text_color(icon_label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DISABLED);
                     lv_obj_set_style_text_opa(icon_label, LV_OPA_50, LV_STATE_DISABLED);
                     lv_obj_move_to_index(icon_label, 0);
@@ -203,18 +203,18 @@ void DeviceSelector::createHeader()
     // Create header container inside overlay container (participates in flex layout)
     header_ = lv_obj_create(overlay().getContainer());
     lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(header_, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(header_, 0, 0);
-    lv_obj_set_style_pad_left(header_, 16, 0);
-    lv_obj_set_style_pad_right(header_, 16, 0);
-    lv_obj_set_style_pad_top(header_, 8, 0);
-    lv_obj_set_style_pad_bottom(header_, 4, 0);
+    lv_obj_set_style_bg_opa(header_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(header_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(header_, 16, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(header_, 16, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(header_, 8, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(header_, 4, LV_STATE_DEFAULT);
     lv_obj_clear_flag(header_, LV_OBJ_FLAG_SCROLLABLE);
 
     // Flex row for track title items
     lv_obj_set_flex_flow(header_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(header_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(header_, 8, 0);
+    lv_obj_set_style_pad_column(header_, 8, LV_STATE_DEFAULT);
 
     // Move header to position 1 (after hidden title, before list)
     lv_obj_move_to_index(header_, 1);
@@ -245,13 +245,13 @@ void DeviceSelector::createFooter()
     // Create track icon (cell 0 = left)
     footer_track_ = lv_label_create(footer_->getElement());
     Icon::set(footer_track_, Icon::CHANNEL_LIST, Icon::L);
-    lv_obj_set_style_text_color(footer_track_, lv_color_hex(Color::TEXT_LIGHT), 0);
+    lv_obj_set_style_text_color(footer_track_, lv_color_hex(Color::TEXT_LIGHT), LV_STATE_DEFAULT);
     footer_->setCell(0, footer_track_);
 
     // Create state icon (cell 1 = center) - will be updated in renderFooter
     footer_state_ = lv_label_create(footer_->getElement());
     Icon::set(footer_state_, Icon::DEVICE_ON, Icon::L);
-    lv_obj_set_style_text_color(footer_state_, lv_color_hex(Color::DEVICE_STATE_ENABLED), 0);
+    lv_obj_set_style_text_color(footer_state_, lv_color_hex(Color::DEVICE_STATE_ENABLED), LV_STATE_DEFAULT);
     footer_->setCell(1, footer_state_);
 }
 
@@ -321,7 +321,7 @@ lv_obj_t *DeviceSelector::createDeviceTypeIcon(lv_obj_t *parent, uint8_t deviceT
 
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, info.icon);
-    lv_obj_set_style_text_color(icon, lv_color_hex(info.color), 0);
+    lv_obj_set_style_text_color(icon, lv_color_hex(info.color), LV_STATE_DEFAULT);
     return icon;
 }
 
@@ -338,8 +338,8 @@ lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent)
 {
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, Icon::DIRECTORY);
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), 0);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, 0);
+    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_DEFAULT);
     return icon;
 }
 

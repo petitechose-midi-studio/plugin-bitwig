@@ -26,7 +26,7 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     label_ = lv_label_create(parent_);
     if (label_) {
         Style::setTextColor(label_, Color::TEXT_LIGHT);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, 0);
+        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
     }
 }
 
@@ -53,7 +53,7 @@ void DeviceTitleItem::render(const DeviceTitleItemProps &props) {
 
     if (label_) {
         lv_label_set_text(label_, props.name ? props.name : "");
-        lv_obj_set_style_text_opa(label_, props.enabled ? Opacity::FULL : Opacity::DIMMED, 0);
+        lv_obj_set_style_text_opa(label_, props.enabled ? Opacity::FULL : Opacity::DIMMED, LV_STATE_DEFAULT);
     }
 
     updateTypeIcon(props.deviceType);
@@ -97,7 +97,7 @@ void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
     Icon::set(folder_icon_, Icon::DIRECTORY, size);
 
     Style::setTextColor(folder_icon_, Color::INACTIVE_LIGHTER);
-    lv_obj_set_style_text_opa(folder_icon_, Opacity::SUBTLE, 0);
+    lv_obj_set_style_text_opa(folder_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
 
     if (hasChildren)
         lv_obj_clear_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
