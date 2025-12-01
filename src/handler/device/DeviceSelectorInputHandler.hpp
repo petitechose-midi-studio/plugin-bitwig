@@ -33,7 +33,7 @@ public:
     void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
                                 const std::vector<uint8_t>& itemTypes,
                                 const std::vector<uint8_t>& childIndices);
-    bool isRequested() const { return deviceList_.requested; }
+    bool isRequested() const { return device_list_.requested; }
 
 private:
     // --- Bindings ---
@@ -58,7 +58,7 @@ private:
     ControllerAPI& api_;
     DeviceView& view_;
     Protocol::Protocol& protocol_;
-    TrackInputHandler& trackHandler_;
+    TrackInputHandler& track_handler_;
     lv_obj_t* scope_;
 
     // --- Device list state ---
@@ -68,7 +68,7 @@ private:
         bool requested = false;
         std::array<std::array<uint8_t, Device::MAX_CHILD_TYPES>, Device::MAX_DEVICES> childrenTypes;
     };
-    DeviceListState deviceList_;
+    DeviceListState device_list_;
 
     // --- Navigation state ---
     enum class SelectorMode { Devices, Children };

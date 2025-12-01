@@ -102,7 +102,7 @@ namespace Bitwig
             return;
         }
 
-        fadeCallback_ = std::move(onComplete);
+        fade_callback_ = std::move(onComplete);
 
         lv_anim_t anim;
         lv_anim_init(&anim);
@@ -125,10 +125,10 @@ namespace Bitwig
     void SplashView::fadeAnimDeletedCallback(lv_anim_t *anim)
     {
         auto *self = static_cast<SplashView *>(lv_anim_get_user_data(anim));
-        if (self && self->fadeCallback_)
+        if (self && self->fade_callback_)
         {
-            self->fadeCallback_();
-            self->fadeCallback_ = nullptr;
+            self->fade_callback_();
+            self->fade_callback_ = nullptr;
         }
     }
 

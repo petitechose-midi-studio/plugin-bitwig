@@ -26,12 +26,12 @@ namespace Bitwig
     private:
         ControllerAPI &api_;
         ViewRegistry &registry_;
-        ViewContainer &viewContainer_;
+        ViewContainer &view_container_;
 
-        ViewID currentViewID_;
-        UI::IView *currentView_{nullptr};
-        lv_timer_t *splashTimer_{nullptr};
-        bool splashActive_{false};
+        ViewID current_view_id_;
+        UI::IView *current_view_{nullptr};
+        lv_timer_t *splash_timer_{nullptr};
+        bool splash_active_{false};
 
         static void splashTimerCallback(lv_timer_t *timer);
     };

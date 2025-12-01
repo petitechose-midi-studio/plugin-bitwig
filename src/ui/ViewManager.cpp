@@ -15,14 +15,14 @@ namespace Bitwig
     ViewManager::ViewManager(ControllerAPI &api, ViewRegistry &registry, ViewContainer &viewContainer)
         : api_(api),
           registry_(registry),
-          viewContainer_(viewContainer),
-          currentViewID_(ViewID::SPLASH) {}
+          view_container_(viewContainer),
+          current_view_id_(ViewID::SPLASH) {}
 
     ViewManager::~ViewManager()
     {
-        if (splashTimer_)
+        if (splash_timer_)
         {
-            lv_timer_delete(splashTimer_);
+            lv_timer_delete(splash_timer_);
         }
     }
 
@@ -33,53 +33,53 @@ namespace Bitwig
 
     void ViewManager::show(ViewID id)
     {
-        if (currentViewID_ == id)
+        if (current_view_id_ == id)
             return;
 
         // Deactivate the previous view
-        if (currentView_)
+        if (current_view_)
         {
-            currentView_->onDeactivate();
+            current_view_->onDeactivate();
         }
 
-        lv_obj_clear_flag(viewContainer_.getContainer(), LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(view_container_.getContainer(), LV_OBJ_FLAG_HIDDEN);
         auto &view = registry_.getView(id);
         api_.showPluginView(view);
-        currentViewID_ = id;
-        currentView_ = &view;
+        current_view_id_ = id;
+        current_view_ = &view;
     }
 
     void ViewManager::showCore()
     {
-        currentViewID_ = ViewID::SPLASH;
-        currentView_ = nullptr;
+        current_view_id_ = ViewID::SPLASH;
+        current_view_ = nullptr;
         api_.hidePluginView();
     }
 
     void ViewManager::showSplash(uint32_t durationMs, const char *message)
     {
         // Deactivate the previous view
-        if (currentView_ && currentViewID_ != ViewID::SPLASH)
+        if (current_view_ && current_view_id_ != ViewID::SPLASH)
         {
-            currentView_->onDeactivate();
+            current_view_->onDeactivate();
         }
 
         auto &splashView = registry_.getView<SplashView>(ViewID::SPLASH);
         splashView.setText(message);
         api_.showPluginView(splashView);
-        currentViewID_ = ViewID::SPLASH;
-        currentView_ = &splashView;
+        current_view_id_ = ViewID::SPLASH;
+        current_view_ = &splashView;
 
-        if (splashTimer_)
+        if (splash_timer_)
         {
-            lv_timer_delete(splashTimer_);
+            lv_timer_delete(splash_timer_);
         }
 
         uint32_t fadeStartTime = durationMs > Theme::Animation::FADE_MS
             ? durationMs - Theme::Animation::FADE_MS
             : durationMs;
-        splashTimer_ = lv_timer_create(splashTimerCallback, fadeStartTime, this);
-        lv_timer_set_repeat_count(splashTimer_, 1);
+        splash_timer_ = lv_timer_create(splashTimerCallback, fadeStartTime, this);
+        lv_timer_set_repeat_count(splash_timer_, 1);
     }
 
     void ViewManager::splashTimerCallback(lv_timer_t *timer)
@@ -89,10 +89,10 @@ namespace Bitwig
 
         splashView.fadeOut(Theme::Animation::FADE_MS, [self, &splashView]()
                            {
-        self->splashActive_ = false;
+        self->splash_active_ = false;
         self->showDefault(); });
 
-        self->splashTimer_ = nullptr;
+        self->splash_timer_ = nullptr;
     }
 
 } // namespace Bitwig

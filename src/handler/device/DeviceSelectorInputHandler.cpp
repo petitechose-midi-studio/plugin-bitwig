@@ -21,7 +21,7 @@ DeviceSelectorInputHandler::DeviceSelectorInputHandler(ControllerAPI& api, Devic
                                                        TrackInputHandler& trackHandler,
                                                        lv_obj_t* scope)
     : api_(api), view_(view), protocol_(protocol),
-      trackHandler_(trackHandler), scope_(scope)
+      track_handler_(trackHandler), scope_(scope)
 {
     setupInputBindings();
 }
@@ -37,12 +37,12 @@ void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t
                                                     const std::array<uint8_t, 4>* childrenTypes,
                                                     uint8_t childrenTypesCount)
 {
-    deviceList_.count = deviceCount;
-    deviceList_.isNested = isNested;
+    device_list_.count = deviceCount;
+    device_list_.isNested = isNested;
     navigation_.mode = SelectorMode::Devices;
 
     for (uint8_t i = 0; i < childrenTypesCount && i < Device::MAX_DEVICES; i++) {
-        deviceList_.childrenTypes[i] = childrenTypes[i];
+        device_list_.childrenTypes[i] = childrenTypes[i];
     }
 
     api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
@@ -125,9 +125,9 @@ void DeviceSelectorInputHandler::requestDeviceList() {
     }
 
     // Always request fresh data from Bitwig
-    if (!deviceList_.requested) {
+    if (!device_list_.requested) {
         protocol_.send(Protocol::RequestDeviceListMessage{});
-        deviceList_.requested = true;
+        device_list_.requested = true;
     }
 }
 
@@ -162,14 +162,14 @@ void DeviceSelectorInputHandler::select()
     if (navigation_.mode == SelectorMode::Devices)
     {
         // Handle back button in nested mode
-        if (deviceList_.isNested && index == 0)
+        if (device_list_.isNested && index == 0)
         {
             protocol_.send(Protocol::ExitToParentMessage{});
             return;
         }
         // Select device directly (no dive into children)
         int deviceIndex = getAdjustedDeviceIndex(index);
-        if (deviceIndex >= 0 && deviceIndex < deviceList_.count)
+        if (deviceIndex >= 0 && deviceIndex < device_list_.count)
         {
             protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
         }
@@ -182,13 +182,13 @@ void DeviceSelectorInputHandler::select()
 }
 
 void DeviceSelectorInputHandler::enterDeviceAtIndex(int selectorIndex) {
-    if (deviceList_.isNested && selectorIndex == 0) {
+    if (device_list_.isNested && selectorIndex == 0) {
         protocol_.send(Protocol::ExitToParentMessage{});
         return;
     }
 
     int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
-    if (deviceIndex < 0 || deviceIndex >= deviceList_.count) return;
+    if (deviceIndex < 0 || deviceIndex >= device_list_.count) return;
 
     if (hasChildren(deviceIndex)) {
         navigation_.deviceIndex = deviceIndex;
@@ -219,15 +219,15 @@ void DeviceSelectorInputHandler::toggleState()
     int selectorIndex = view_.state().deviceSelector.currentIndex;
     int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
 
-    if (deviceIndex >= 0 && deviceIndex < deviceList_.count) {
+    if (deviceIndex >= 0 && deviceIndex < device_list_.count) {
         protocol_.send(Protocol::DeviceStateChangeMessage{static_cast<uint8_t>(deviceIndex), true});
     }
 }
 
 void DeviceSelectorInputHandler::requestTrackList() {
     // Skip if track list was just closed by this same press
-    if (trackHandler_.isTrackListRequested()) {
-        trackHandler_.setTrackListRequested(false);
+    if (track_handler_.isTrackListRequested()) {
+        track_handler_.setTrackListRequested(false);
         return;
     }
 
@@ -240,14 +240,14 @@ void DeviceSelectorInputHandler::requestTrackList() {
     }
 
     protocol_.send(Protocol::RequestTrackListMessage{});
-    trackHandler_.setTrackListRequested(true);
+    track_handler_.setTrackListRequested(true);
 }
 
 void DeviceSelectorInputHandler::close() {
     if (view_.state().trackSelector.visible) {
         view_.state().trackSelector.visible = false;
         view_.state().dirty.trackSelector = true;
-        trackHandler_.setTrackListRequested(false);
+        track_handler_.setTrackListRequested(false);
     }
 
     // Hide device selector
@@ -255,7 +255,7 @@ void DeviceSelectorInputHandler::close() {
     view_.state().dirty.deviceSelector = true;
     view_.sync();
 
-    deviceList_.requested = false;
+    device_list_.requested = false;
     api_.setLatch(ButtonID::LEFT_CENTER, false);
 }
 
@@ -265,11 +265,11 @@ void DeviceSelectorInputHandler::close() {
 
 bool DeviceSelectorInputHandler::hasChildren(uint8_t deviceIndex) const {
     return deviceIndex < Device::MAX_DEVICES &&
-           deviceList_.childrenTypes[deviceIndex][0] != Device::None;
+           device_list_.childrenTypes[deviceIndex][0] != Device::None;
 }
 
 int DeviceSelectorInputHandler::getAdjustedDeviceIndex(int selectorIndex) const {
-    return deviceList_.isNested ? selectorIndex - 1 : selectorIndex;
+    return device_list_.isNested ? selectorIndex - 1 : selectorIndex;
 }
 
 } // namespace Bitwig

@@ -24,7 +24,7 @@ private:
     void setupMidiCallbacks();
 
     ControllerAPI& api_;
-    TransportBarController& transportController_;
+    TransportBarController& transport_controller_;
 };
 
 }  // namespace Bitwig

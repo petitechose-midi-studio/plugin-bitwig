@@ -28,7 +28,7 @@ namespace Bitwig
         lv_obj_t *logo_{nullptr};
         lv_obj_t *label_{nullptr};
 
-        std::function<void()> fadeCallback_;
+        std::function<void()> fade_callback_;
 
         void createUI();
         void destroyUI();

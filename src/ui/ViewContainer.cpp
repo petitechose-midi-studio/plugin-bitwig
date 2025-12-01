@@ -20,22 +20,22 @@ namespace Bitwig
         // Hidden at startup (splash covers everything initially)
         lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
 
-        mainZone_ = lv_obj_create(container_);
-        lv_obj_set_size(mainZone_, LV_PCT(100), LV_SIZE_CONTENT);
-        lv_obj_set_flex_grow(mainZone_, 1);
-        lv_obj_set_style_pad_all(mainZone_, 0, 0);
-        lv_obj_set_style_pad_gap(mainZone_, 0, 0);
-        lv_obj_set_style_border_width(mainZone_, 0, 0);
-        lv_obj_set_style_bg_opa(mainZone_, LV_OPA_TRANSP, 0);
+        main_zone_ = lv_obj_create(container_);
+        lv_obj_set_size(main_zone_, LV_PCT(100), LV_SIZE_CONTENT);
+        lv_obj_set_flex_grow(main_zone_, 1);
+        lv_obj_set_style_pad_all(main_zone_, 0, 0);
+        lv_obj_set_style_pad_gap(main_zone_, 0, 0);
+        lv_obj_set_style_border_width(main_zone_, 0, 0);
+        lv_obj_set_style_bg_opa(main_zone_, LV_OPA_TRANSP, 0);
 
-        lv_obj_set_layout(mainZone_, LV_LAYOUT_FLEX);
-        lv_obj_set_flex_flow(mainZone_, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_layout(main_zone_, LV_LAYOUT_FLEX);
+        lv_obj_set_flex_flow(main_zone_, LV_FLEX_FLOW_COLUMN);
 
-        bottomZone_ = lv_obj_create(container_);
-        lv_obj_set_size(bottomZone_, LV_PCT(100), LV_SIZE_CONTENT);
-        lv_obj_set_style_pad_all(bottomZone_, 0, 0);
-        lv_obj_set_style_border_width(bottomZone_, 0, 0);
-        lv_obj_set_style_bg_opa(bottomZone_, LV_OPA_TRANSP, 0);
+        bottom_zone_ = lv_obj_create(container_);
+        lv_obj_set_size(bottom_zone_, LV_PCT(100), LV_SIZE_CONTENT);
+        lv_obj_set_style_pad_all(bottom_zone_, 0, 0);
+        lv_obj_set_style_border_width(bottom_zone_, 0, 0);
+        lv_obj_set_style_bg_opa(bottom_zone_, LV_OPA_TRANSP, 0);
     }
 
     ViewContainer::~ViewContainer()

@@ -39,10 +39,10 @@ private:
     ControllerAPI& api_;
     lv_obj_t* scope_;
 
-    std::unique_ptr<MacroInputHandler> macroHandler_;
-    std::unique_ptr<DevicePageInputHandler> pageHandler_;
-    std::unique_ptr<DeviceSelectorInputHandler> deviceSelectorHandler_;
-    std::unique_ptr<TrackInputHandler> trackHandler_;
+    std::unique_ptr<MacroInputHandler> macro_handler_;
+    std::unique_ptr<DevicePageInputHandler> page_handler_;
+    std::unique_ptr<DeviceSelectorInputHandler> device_selector_handler_;
+    std::unique_ptr<TrackInputHandler> track_handler_;
 };
 
 } // namespace Bitwig

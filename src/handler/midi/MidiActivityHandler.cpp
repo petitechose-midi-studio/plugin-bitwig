@@ -5,17 +5,17 @@
 namespace Bitwig {
 
 MidiActivityHandler::MidiActivityHandler(ControllerAPI& api, TransportBarController& transportController)
-    : api_(api), transportController_(transportController) {
+    : api_(api), transport_controller_(transportController) {
     setupMidiCallbacks();
 }
 
 void MidiActivityHandler::setupMidiCallbacks() {
     api_.onNoteOn([this](uint8_t, uint8_t, uint8_t) {
-        transportController_.setMidiIn(true);
+        transport_controller_.setMidiIn(true);
     });
 
     api_.onNoteOff([this](uint8_t, uint8_t, uint8_t) {
-        transportController_.setMidiIn(false);
+        transport_controller_.setMidiIn(false);
     });
 }
 

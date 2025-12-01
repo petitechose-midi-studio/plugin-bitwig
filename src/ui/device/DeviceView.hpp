@@ -86,7 +86,7 @@ namespace Bitwig
 
     private:
         DeviceState state_;
-        Config viewConfig_;
+        Config view_config_;
         bool initialized_;
 
         std::array<std::unique_ptr<IParameterWidget>, 8> widgets_;

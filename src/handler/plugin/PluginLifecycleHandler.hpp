@@ -16,7 +16,7 @@ namespace Bitwig
         explicit PluginLifecycleHandler(ViewManager &viewManager, Protocol::Protocol &protocol);
         ~PluginLifecycleHandler() = default;
 
-        bool isHostActive() const { return isHostActive_; }
+        bool isHostActive() const { return is_host_active_; }
 
     private:
         void setupProtocolCallbacks();
@@ -24,9 +24,9 @@ namespace Bitwig
         void handleHostInitialized(const Protocol::HostInitializedMessage &msg);
         void handleHostDeactivated(const Protocol::HostDeactivatedMessage &msg);
 
-        ViewManager &viewManager_;
+        ViewManager &view_manager_;
         Protocol::Protocol &protocol_;
-        bool isHostActive_ = false;
+        bool is_host_active_ = false;
     };
 
 } // namespace Bitwig

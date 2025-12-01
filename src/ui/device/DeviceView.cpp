@@ -15,7 +15,7 @@ using namespace Theme;
 namespace Bitwig {
 
     DeviceView::DeviceView(lv_obj_t *zone, const Config &viewConfig)
-        : viewConfig_(viewConfig),
+        : view_config_(viewConfig),
           initialized_(false),
           zone_(zone),
           top_bar_container_(nullptr),

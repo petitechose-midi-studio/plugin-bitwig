@@ -15,11 +15,11 @@ DeviceInputHandler::DeviceInputHandler(ControllerAPI& api, DeviceView& view,
                                        Protocol::Protocol& protocol, lv_obj_t* scope)
     : api_(api), scope_(scope)
 {
-    macroHandler_ = std::make_unique<MacroInputHandler>(api, view, protocol, scope);
-    pageHandler_ = std::make_unique<DevicePageInputHandler>(api, view, protocol, scope);
-    trackHandler_ = std::make_unique<TrackInputHandler>(api, view, protocol);
-    deviceSelectorHandler_ = std::make_unique<DeviceSelectorInputHandler>(
-        api, view, protocol, *trackHandler_, scope);
+    macro_handler_ = std::make_unique<MacroInputHandler>(api, view, protocol, scope);
+    page_handler_ = std::make_unique<DevicePageInputHandler>(api, view, protocol, scope);
+    track_handler_ = std::make_unique<TrackInputHandler>(api, view, protocol);
+    device_selector_handler_ = std::make_unique<DeviceSelectorInputHandler>(
+        api, view, protocol, *track_handler_, scope);
 }
 
 DeviceInputHandler::~DeviceInputHandler() {
@@ -31,7 +31,7 @@ DeviceInputHandler::~DeviceInputHandler() {
 // =============================================================================
 
 void DeviceInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t currentIndex) {
-    pageHandler_->setPageSelectionState(pageCount, currentIndex);
+    page_handler_->setPageSelectionState(pageCount, currentIndex);
 }
 
 void DeviceInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex,
@@ -39,7 +39,7 @@ void DeviceInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t current
                                             const std::array<uint8_t, 4>* childrenTypes,
                                             uint8_t childrenTypesCount)
 {
-    deviceSelectorHandler_->setDeviceListState(deviceCount, currentDeviceIndex, isNested,
+    device_selector_handler_->setDeviceListState(deviceCount, currentDeviceIndex, isNested,
                                                childrenTypes, childrenTypesCount);
 }
 
@@ -48,20 +48,20 @@ void DeviceInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t chi
                                                 const std::vector<uint8_t>& itemTypes,
                                                 const std::vector<uint8_t>& childIndices)
 {
-    deviceSelectorHandler_->setDeviceChildrenState(deviceIndex, childType, childrenCount,
+    device_selector_handler_->setDeviceChildrenState(deviceIndex, childType, childrenCount,
                                                    itemTypes, childIndices);
 }
 
 void DeviceInputHandler::setTrackListState(uint8_t trackCount, uint8_t currentTrackIndex, bool isNested) {
-    trackHandler_->setTrackListState(trackCount, currentTrackIndex, isNested);
+    track_handler_->setTrackListState(trackCount, currentTrackIndex, isNested);
 }
 
 bool DeviceInputHandler::isDeviceListRequested() const {
-    return deviceSelectorHandler_->isRequested();
+    return device_selector_handler_->isRequested();
 }
 
 bool DeviceInputHandler::isTrackListRequested() const {
-    return trackHandler_->isTrackListRequested();
+    return track_handler_->isTrackListRequested();
 }
 
 } // namespace Bitwig

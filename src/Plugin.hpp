@@ -78,16 +78,16 @@ namespace Bitwig
         bool enabled_;
 
         Protocol::Protocol protocol_;
-        ViewContainer viewContainer_;
+        ViewContainer view_container_;
 
         TransportModule transport_;
         DeviceModule device_;
         SplashModule splash_;
-        LastClickedModule lastClicked_;
+        LastClickedModule last_clicked_;
         MidiModule midi_;
 
-        ViewRegistry viewRegistry_;
-        ViewManager viewManager_;
+        ViewRegistry view_registry_;
+        ViewManager view_manager_;
 
         LifecycleModule lifecycle_;
     };
