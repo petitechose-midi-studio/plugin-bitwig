@@ -1,4 +1,5 @@
-// Auto-generated | bitwig_icons | 12px | 4bpp | 2025-12-02 12:45
+// Auto-generated | bitwig_icons | 12px | 4bpp | 2025-12-02 13:10
+#include <Arduino.h>
 
 const uint8_t bitwig_icons_12_bin[] PROGMEM = {
     0x30, 0x00, 0x00, 0x00, 0x68, 0x65, 0x61, 0x64, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x0c, 0x00,

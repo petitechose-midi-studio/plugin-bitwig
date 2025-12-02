@@ -8,8 +8,8 @@ import os
 
 # Force UTF-8 output on Windows
 if sys.platform == 'win32':
-    sys.stdout.reconfigure(encoding='utf-8')
-    sys.stderr.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding='utf-8')  # type: ignore[union-attr]
+    sys.stderr.reconfigure(encoding='utf-8')  # type: ignore[union-attr]
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 import subprocess
@@ -18,11 +18,21 @@ import json
 import re
 from pathlib import Path
 from datetime import datetime
+from typing import cast
 from xml.etree import ElementTree as ET
 
-# Find project root
-SCRIPT_DIR = Path(__file__).parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent
+# Find project root by looking for platformio.ini
+def find_project_root() -> Path:
+    """Find project root by looking for platformio.ini in parent directories."""
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        if (current / "platformio.ini").exists():
+            return current
+        current = current.parent
+    raise FileNotFoundError("Project root not found (no platformio.ini)")
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = find_project_root()
 
 sys.path.insert(0, str(SCRIPT_DIR))
 from config import *
@@ -38,14 +48,14 @@ class C:
     DIM = '\033[2m'
     NC = '\033[0m'
 
-def log(msg):      print(f"{C.BLUE}●{C.NC} {msg}")
-def success(msg):  print(f"  {C.GREEN}✓{C.NC} {msg}")
-def warn(msg):     print(f"  {C.YELLOW}⚠{C.NC} {msg}")
-def error(msg):    print(f"{C.RED}✗{C.NC} {msg}", file=sys.stderr); sys.exit(1)
-def added(msg):    print(f"  {C.GREEN}+{C.NC} {C.DIM}{msg}{C.NC}")
-def modified(msg): print(f"  {C.YELLOW}~{C.NC} {C.DIM}{msg}{C.NC}")
-def removed(msg):  print(f"  {C.RED}-{C.NC} {C.DIM}{msg}{C.NC}")
-def skip(msg):     print(f"  {C.DIM}  {msg}{C.NC}")
+def log(msg: str) -> None:      print(f"{C.BLUE}●{C.NC} {msg}")
+def success(msg: str) -> None:  print(f"  {C.GREEN}✓{C.NC} {msg}")
+def warn(msg: str) -> None:     print(f"  {C.YELLOW}⚠{C.NC} {msg}")
+def error(msg: str) -> None:    print(f"{C.RED}✗{C.NC} {msg}", file=sys.stderr); sys.exit(1)
+def added(msg: str) -> None:    print(f"  {C.GREEN}+{C.NC} {C.DIM}{msg}{C.NC}")
+def modified(msg: str) -> None: print(f"  {C.YELLOW}~{C.NC} {C.DIM}{msg}{C.NC}")
+def removed(msg: str) -> None:  print(f"  {C.RED}-{C.NC} {C.DIM}{msg}{C.NC}")
+def skip(msg: str) -> None:     print(f"  {C.DIM}  {msg}{C.NC}")
 
 
 # === Hash & Cache ===
@@ -53,19 +63,19 @@ def skip(msg):     print(f"  {C.DIM}  {msg}{C.NC}")
 def file_hash(path: Path) -> str:
     return hashlib.md5(path.read_bytes()).hexdigest()[:12]
 
-def load_hashes(cache_dir: Path) -> dict:
+def load_hashes(cache_dir: Path) -> dict[str, str]:
     hash_file = cache_dir / "hashes.json"
     if hash_file.exists():
         return json.loads(hash_file.read_text())
     return {}
 
-def save_hashes(cache_dir: Path, hashes: dict):
+def save_hashes(cache_dir: Path, hashes: dict[str, str]) -> None:
     (cache_dir / "hashes.json").write_text(json.dumps(hashes, indent=2))
 
 
 # === SVG Cleaning ===
 
-def inkscape_run(src: Path, dst: Path, actions: list[str] = None, fit: bool = False) -> bool:
+def inkscape_run(src: Path, dst: Path, actions: list[str] | None = None, fit: bool = False) -> bool:
     cmd = [INKSCAPE, str(src), "--export-type=svg", "--export-plain-svg", f"--export-filename={dst}"]
     if fit:
         cmd.append("--export-area-drawing")
@@ -79,8 +89,8 @@ def xml_cleanup(src: Path, dst: Path):
     tree = ET.parse(src)
     root = tree.getroot()
 
-    def tag_name(e): return e.tag.split('}')[-1] if '}' in e.tag else e.tag
-    def remove(e):
+    def tag_name(e: ET.Element) -> str: return e.tag.split('}')[-1] if '}' in e.tag else e.tag
+    def remove(e: ET.Element) -> None:
         for p in root.iter():
             if e in list(p): p.remove(e); return
 
@@ -113,7 +123,7 @@ def get_original_viewbox(svg_path: Path) -> tuple[float, float, float, float] | 
         root = tree.getroot()
         vb = root.get('viewBox', '').split()
         if len(vb) == 4:
-            return tuple(map(float, vb))
+            return cast(tuple[float, float, float, float], tuple(map(float, vb)))
         return None
     except:
         return None
@@ -165,7 +175,7 @@ def square_and_center(src: Path, dst: Path, original_viewbox: tuple[float, float
 
     # 4. Wrap all content in a group with transform
     ns = '{http://www.w3.org/2000/svg}'
-    g = ET.Element(f'{ns}g')
+    g = ET.Element(f'{ns}g')  # type: ignore[arg-type]
     g.set('transform', f'translate({tx:.4f}, {ty:.4f})')
 
     # Move all children into the group
@@ -273,12 +283,11 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[
         path: Output path for Icon.hpp
         font_sizes: Dict mapping size names to pixel values, e.g. {'S': 12, 'M': 14, 'L': 16}
     """
-    def utf8(cp):
+    def utf8(cp: int) -> str:
         return f'\\x{0xE0|(cp>>12):02X}\\x{0x80|((cp>>6)&0x3F):02X}\\x{0x80|(cp&0x3F):02X}'
 
-    # Extract names and sizes from dict (preserves insertion order in Python 3.7+)
+    # Extract names from dict (preserves insertion order in Python 3.7+)
     names = list(font_sizes.keys())
-    sizes = list(font_sizes.values())
 
     # Generate Size enum: S = 12, M = 14, L = 16
     size_enum = ', '.join(f'{name} = {size}' for name, size in font_sizes.items())
@@ -295,7 +304,7 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[
             # Last size: fallback (no condition)
             font_cases.append(f'bitwig_fonts.icons_{size}')
 
-    lines = [
+    lines: list[str] = [
         f'// Auto-generated | {len(glyphs)} icons | {datetime.now():%Y-%m-%d}',
         '#pragma once', '#include "FontLoader.hpp"', '',
         '#include <lvgl.h>', '',
@@ -382,6 +391,7 @@ def generate_lvgl_fonts(ttf_path: Path, out_dir: Path, glyphs: list[tuple[str, i
         hex_lines = [hex_data[i:i+16*6-2] for i in range(0, len(hex_data), 16*6)]
 
         cpp_content = f'''// Auto-generated | {FONT_NAME} | {size}px | {bpp}bpp | {datetime.now():%Y-%m-%d %H:%M}
+#include <Arduino.h>
 
 const uint8_t {arr_name}[] PROGMEM = {{
     {(','+chr(10)+'    ').join(hex_lines)}
