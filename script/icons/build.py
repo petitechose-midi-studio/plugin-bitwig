@@ -284,21 +284,22 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[
     size_enum = ', '.join(f'{name} = {size}' for name, size in font_sizes.items())
     default_name = names[len(names) // 2]  # Middle size as default
 
-    # Generate font selection chain: (size == S) ? ... : (size == M) ? ... : fallback
+    # Generate font selection chain: (size == Size::S) ? ... : (size == Size::M) ? ... : fallback
     # Works for any number of sizes (2, 3, 4, etc.)
     font_cases = []
     for i, (name, size) in enumerate(font_sizes.items()):
         if i < len(font_sizes) - 1:
             # All except last: add condition
-            font_cases.append(f'(size == {name}) ? bitwig_fonts.icons_{size}')
+            font_cases.append(f'(size == Size::{name}) ? bitwig_fonts.icons_{size}')
         else:
             # Last size: fallback (no condition)
             font_cases.append(f'bitwig_fonts.icons_{size}')
 
     lines = [
         f'// Auto-generated | {len(glyphs)} icons | {datetime.now():%Y-%m-%d}',
-        '#pragma once', '#include <lvgl.h>', '#include "FontLoader.hpp"', '',
-        'namespace Icon {', f'    enum Size {{ {size_enum} }};', ''
+        '#pragma once', '#include "FontLoader.hpp"', '',
+        '#include <lvgl.h>', '',
+        'namespace Icon {', f'enum class Size : uint8_t {{ {size_enum} }};', ''
     ]
     for name, cp in glyphs:
         cname = re.sub(r'[^a-zA-Z0-9]+', '_', name).strip('_').upper()
@@ -308,11 +309,11 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[
     font_select = '\n                        : '.join(font_cases)
 
     lines += ['',
-        f'    inline void set(lv_obj_t* label, const char* icon, Size size = {default_name}) {{',
-        f'        lv_font_t* font = {font_select};',
-        '        lv_obj_set_style_text_font(label, font, 0);',
-        '        lv_label_set_text(label, icon);',
-        '    }',
+        f'inline void set(lv_obj_t* label, const char* icon, Size size = Size::{default_name}) {{',
+        f'    lv_font_t* font = {font_select};',
+        '    lv_obj_set_style_text_font(label, font, 0);',
+        '    lv_label_set_text(label, icon);',
+        '}',
         '}  // namespace Icon'
     ]
     path.write_text('\n'.join(lines), encoding='utf-8')

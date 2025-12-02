@@ -1,7 +1,7 @@
 #pragma once
 
 #include "api/ControllerAPI.hpp"
-#include "../../protocol/Protocol.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace Bitwig {
 
@@ -17,12 +17,11 @@ class DeviceView;
  */
 class DevicePageInputHandler {
 public:
-    DevicePageInputHandler(ControllerAPI& api, DeviceView& view,
-                           Protocol::Protocol& protocol, lv_obj_t* scope);
+    DevicePageInputHandler(ControllerAPI& api, DeviceView& view, Protocol::Protocol& protocol,
+                           lv_obj_t* scope);
     ~DevicePageInputHandler();
 
     void setPageSelectionState(uint8_t pageCount, uint8_t currentIndex);
-
 private:
     void setupInputBindings();
 
@@ -43,4 +42,4 @@ private:
     PageState state_;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

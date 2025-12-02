@@ -1,13 +1,12 @@
 #pragma once
 
-#include <lvgl.h>
 #include <cstdint>
 
-namespace Bitwig
-{
+#include <lvgl.h>
 
-struct LevelBarProps
-{
+namespace Bitwig {
+
+struct LevelBarProps {
     float value = 0.0f;
     uint32_t color = 0xFFFFFF;
     lv_opa_t opacity = LV_OPA_50;
@@ -19,14 +18,12 @@ struct LevelBarProps
  * Displays a colored bar with configurable opacity representing a value.
  * Used for track volume/level display in TrackListOverlay.
  */
-class LevelBar
-{
+class LevelBar {
 public:
     LevelBar(lv_obj_t *parent, lv_coord_t width = 60, lv_coord_t height = LV_PCT(100));
     ~LevelBar();
 
     void render(const LevelBarProps &props);
-
 private:
     lv_obj_t *parent_ = nullptr;
     lv_obj_t *bar_ = nullptr;
@@ -34,4 +31,4 @@ private:
     lv_coord_t height_ = 12;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

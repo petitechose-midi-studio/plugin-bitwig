@@ -1,16 +1,18 @@
 #pragma once
 
-#include <lvgl.h>
-#include <memory>
-#include <cstdint>
 #include "DeviceTitleItem.hpp"
+
+#include <cstdint>
+
+#include <memory>
+
+#include <lvgl.h>
+
 #include "widget/TitleItem.hpp"
 
-namespace Bitwig
-{
+namespace Bitwig {
 
-struct DeviceStateBarProps
-{
+struct DeviceStateBarProps {
     const char *deviceName = "";
     uint8_t deviceType = 0;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
     bool deviceEnabled = false;
@@ -18,14 +20,12 @@ struct DeviceStateBarProps
     const char *pageName = "";
 };
 
-class DeviceStateBar
-{
+class DeviceStateBar {
 public:
     explicit DeviceStateBar(lv_obj_t *parent);
     ~DeviceStateBar();
 
     void render(const DeviceStateBarProps &props);
-
 private:
     lv_obj_t *createCellWrapper(lv_obj_t *parent, lv_flex_align_t hAlign);
 
@@ -38,4 +38,4 @@ private:
     std::unique_ptr<TitleItem> page_item_;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

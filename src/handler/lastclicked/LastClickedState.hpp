@@ -1,8 +1,10 @@
 #pragma once
 
-#include <string>
 #include <cstdint>
-#include "../device/DeviceConstants.hpp"
+
+#include <string>
+
+#include "handler/device/DeviceConstants.hpp"
 
 namespace Bitwig {
 
@@ -17,7 +19,7 @@ struct LastClickedState {
     std::string name;
     float value = 0.0f;
     std::string displayValue;
-    uint8_t parameterType = Device::Knob;
+    uint8_t parameterType = static_cast<uint8_t>(Device::ParameterType::KNOB);
     int16_t discreteCount = -1;  // -1=continuous, N=steps
     bool exists = false;
 
@@ -25,7 +27,7 @@ struct LastClickedState {
         name.clear();
         value = 0.0f;
         displayValue.clear();
-        parameterType = Device::Knob;
+        parameterType = static_cast<uint8_t>(Device::ParameterType::KNOB);
         discreteCount = -1;
         exists = false;
     }

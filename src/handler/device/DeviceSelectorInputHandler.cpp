@@ -1,14 +1,16 @@
 #include "DeviceSelectorInputHandler.hpp"
-#include "TrackInputHandler.hpp"
+
 #include "InputUtils.hpp"
-#include "../../ui/device/DeviceView.hpp"
-#include "../../protocol/struct/RequestDeviceListMessage.hpp"
-#include "../../protocol/struct/RequestDeviceChildrenMessage.hpp"
-#include "../../protocol/struct/EnterDeviceChildMessage.hpp"
-#include "../../protocol/struct/ExitToParentMessage.hpp"
-#include "../../protocol/struct/DeviceStateChangeMessage.hpp"
-#include "../../protocol/struct/DeviceSelectByIndexMessage.hpp"
-#include "../../protocol/struct/RequestTrackListMessage.hpp"
+#include "TrackInputHandler.hpp"
+
+#include "protocol/struct/DeviceSelectByIndexMessage.hpp"
+#include "protocol/struct/DeviceStateChangeMessage.hpp"
+#include "protocol/struct/EnterDeviceChildMessage.hpp"
+#include "protocol/struct/ExitToParentMessage.hpp"
+#include "protocol/struct/RequestDeviceChildrenMessage.hpp"
+#include "protocol/struct/RequestDeviceListMessage.hpp"
+#include "protocol/struct/RequestTrackListMessage.hpp"
+#include "ui/device/DeviceView.hpp"
 
 namespace Bitwig {
 
@@ -20,9 +22,7 @@ DeviceSelectorInputHandler::DeviceSelectorInputHandler(ControllerAPI& api, Devic
                                                        Protocol::Protocol& protocol,
                                                        TrackInputHandler& trackHandler,
                                                        lv_obj_t* scope)
-    : api_(api), view_(view), protocol_(protocol),
-      track_handler_(trackHandler), scope_(scope)
-{
+    : api_(api), view_(view), protocol_(protocol), track_handler_(trackHandler), scope_(scope) {
     setupInputBindings();
 }
 
@@ -35,8 +35,7 @@ DeviceSelectorInputHandler::~DeviceSelectorInputHandler() = default;
 void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex,
                                                     bool isNested,
                                                     const std::array<uint8_t, 4>* childrenTypes,
-                                                    uint8_t childrenTypesCount)
-{
+                                                    uint8_t childrenTypesCount) {
     device_list_.count = deviceCount;
     device_list_.isNested = isNested;
     navigation_.mode = SelectorMode::Devices;
@@ -45,7 +44,7 @@ void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t
         device_list_.childrenTypes[i] = childrenTypes[i];
     }
 
-    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::RELATIVE);
     int selectorIndex = isNested ? currentDeviceIndex + 1 : currentDeviceIndex;
     view_.state().deviceSelector.currentIndex = selectorIndex;
     view_.state().dirty.deviceSelector = true;
@@ -55,8 +54,7 @@ void DeviceSelectorInputHandler::setDeviceListState(uint8_t deviceCount, uint8_t
 void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType,
                                                         uint8_t childrenCount,
                                                         const std::vector<uint8_t>& itemTypes,
-                                                        const std::vector<uint8_t>& childIndices)
-{
+                                                        const std::vector<uint8_t>& childIndices) {
     navigation_.deviceIndex = deviceIndex;
     navigation_.childType = childType;
     navigation_.childrenCount = childrenCount;
@@ -67,7 +65,7 @@ void DeviceSelectorInputHandler::setDeviceChildrenState(uint8_t deviceIndex, uin
         navigation_.childIndices[i] = (i < childIndices.size()) ? childIndices[i] : i;
     }
 
-    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::RELATIVE);
     view_.state().deviceSelector.currentIndex = 1;
     view_.state().dirty.deviceSelector = true;
     view_.sync();
@@ -81,34 +79,31 @@ void DeviceSelectorInputHandler::setupInputBindings() {
     lv_obj_t* overlay = view_.getDeviceSelectorElement();
 
     // Open device selector (latch behavior)
-    api_.onPressed(ButtonID::LEFT_CENTER, [this]()
-                   { requestDeviceList(); }, scope_, true);
+    api_.onPressed(ButtonID::LEFT_CENTER, [this]() { requestDeviceList(); }, scope_, true);
 
     // Confirm selection (no dive) and close on release
-    api_.onReleased(ButtonID::LEFT_CENTER, [this]()
-                    {
-        select();
-        close(); }, scope_);
+    api_.onReleased(
+        ButtonID::LEFT_CENTER,
+        [this]() {
+            select();
+            close();
+        },
+        scope_);
 
     // Close without confirming (scoped to overlay)
-    api_.onReleased(ButtonID::LEFT_TOP, [this]()
-                    { close(); }, overlay);
+    api_.onReleased(ButtonID::LEFT_TOP, [this]() { close(); }, overlay);
 
     // Navigate devices (scoped to overlay)
-    api_.onTurned(EncoderID::NAV, [this](float delta)
-                  { navigate(delta); }, overlay);
+    api_.onTurned(EncoderID::NAV, [this](float delta) { navigate(delta); }, overlay);
 
     // Enter device children (scoped to overlay)
-    api_.onReleased(ButtonID::NAV, [this]()
-                    { selectAndDive(); }, overlay);
+    api_.onReleased(ButtonID::NAV, [this]() { selectAndDive(); }, overlay);
 
     // Toggle device state (scoped to overlay)
-    api_.onReleased(ButtonID::BOTTOM_CENTER, [this]()
-                    { toggleState(); }, overlay);
+    api_.onReleased(ButtonID::BOTTOM_CENTER, [this]() { toggleState(); }, overlay);
 
     // Toggle track list (scoped to overlay)
-    api_.onReleased(ButtonID::BOTTOM_LEFT, [this]()
-                    { requestTrackList(); }, overlay);
+    api_.onReleased(ButtonID::BOTTOM_LEFT, [this]() { requestTrackList(); }, overlay);
 }
 
 // =============================================================================
@@ -133,9 +128,8 @@ void DeviceSelectorInputHandler::requestDeviceList() {
 
 void DeviceSelectorInputHandler::navigate(float delta) {
     auto& state = view_.state().deviceSelector;
-    int itemCount = state.showingChildren
-        ? static_cast<int>(state.childrenNames.size())
-        : static_cast<int>(state.names.size());
+    int itemCount = state.showingChildren ? static_cast<int>(state.childrenNames.size())
+                                          : static_cast<int>(state.names.size());
     if (itemCount == 0) return;
     int newIndex = state.currentIndex + static_cast<int>(delta);
     newIndex = InputUtils::wrapIndex(newIndex, itemCount);
@@ -144,8 +138,7 @@ void DeviceSelectorInputHandler::navigate(float delta) {
     view_.sync();
 }
 
-void DeviceSelectorInputHandler::selectAndDive()
-{
+void DeviceSelectorInputHandler::selectAndDive() {
     int index = view_.state().deviceSelector.currentIndex;
 
     if (navigation_.mode == SelectorMode::Devices) {
@@ -155,27 +148,21 @@ void DeviceSelectorInputHandler::selectAndDive()
     }
 }
 
-void DeviceSelectorInputHandler::select()
-{
+void DeviceSelectorInputHandler::select() {
     int index = view_.state().deviceSelector.currentIndex;
 
-    if (navigation_.mode == SelectorMode::Devices)
-    {
+    if (navigation_.mode == SelectorMode::Devices) {
         // Handle back button in nested mode
-        if (device_list_.isNested && index == 0)
-        {
+        if (device_list_.isNested && index == 0) {
             protocol_.send(Protocol::ExitToParentMessage{});
             return;
         }
         // Select device directly (no dive into children)
         int deviceIndex = getAdjustedDeviceIndex(index);
-        if (deviceIndex >= 0 && deviceIndex < device_list_.count)
-        {
+        if (deviceIndex >= 0 && deviceIndex < device_list_.count) {
             protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
         }
-    }
-    else
-    {
+    } else {
         // In children mode, confirm the selected child
         enterChildAtIndex(index);
     }
@@ -192,7 +179,8 @@ void DeviceSelectorInputHandler::enterDeviceAtIndex(int selectorIndex) {
 
     if (hasChildren(deviceIndex)) {
         navigation_.deviceIndex = deviceIndex;
-        protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
+        protocol_.send(
+            Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
     } else {
         // No children - select/focus this device directly
         protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
@@ -207,15 +195,17 @@ void DeviceSelectorInputHandler::enterChildAtIndex(int selectorIndex) {
 
     int listIndex = selectorIndex - 1;
     uint8_t itemType = (listIndex < static_cast<int>(navigation_.itemTypes.size()))
-                       ? navigation_.itemTypes[listIndex] : 0;
+                           ? navigation_.itemTypes[listIndex]
+                           : 0;
     uint8_t childIndex = (listIndex < static_cast<int>(navigation_.childIndices.size()))
-                         ? navigation_.childIndices[listIndex] : listIndex;
+                             ? navigation_.childIndices[listIndex]
+                             : listIndex;
 
-    protocol_.send(Protocol::EnterDeviceChildMessage{navigation_.deviceIndex, itemType, childIndex});
+    protocol_.send(
+        Protocol::EnterDeviceChildMessage{navigation_.deviceIndex, itemType, childIndex});
 }
 
-void DeviceSelectorInputHandler::toggleState()
-{
+void DeviceSelectorInputHandler::toggleState() {
     int selectorIndex = view_.state().deviceSelector.currentIndex;
     int deviceIndex = getAdjustedDeviceIndex(selectorIndex);
 
@@ -264,12 +254,12 @@ void DeviceSelectorInputHandler::close() {
 // =============================================================================
 
 bool DeviceSelectorInputHandler::hasChildren(uint8_t deviceIndex) const {
-    return deviceIndex < Device::MAX_DEVICES &&
-           device_list_.childrenTypes[deviceIndex][0] != Device::None;
+    return deviceIndex < Device::MAX_DEVICES && device_list_.childrenTypes[deviceIndex][0] !=
+                                                    static_cast<uint8_t>(Device::ChildType::NONE);
 }
 
 int DeviceSelectorInputHandler::getAdjustedDeviceIndex(int selectorIndex) const {
     return device_list_.isNested ? selectorIndex - 1 : selectorIndex;
 }
 
-} // namespace Bitwig
+}  // namespace Bitwig

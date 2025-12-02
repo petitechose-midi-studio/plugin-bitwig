@@ -1,10 +1,10 @@
 #pragma once
 
-#include <lvgl.h>
 #include "BitwigTheme.hpp"
 
-namespace Theme {
-namespace Style {
+#include <lvgl.h>
+
+namespace Theme { namespace Style {
 
 /**
  * @brief Apply transparent container style (no bg, no border, no padding)
@@ -23,8 +23,7 @@ inline void applyTransparentContainer(lv_obj_t* obj) {
  * @param hAlign Horizontal alignment (default: START)
  * @param gap Gap between items (default: GAP_MD)
  */
-inline void applyFlexRow(lv_obj_t* obj,
-                         lv_flex_align_t hAlign = LV_FLEX_ALIGN_START,
+inline void applyFlexRow(lv_obj_t* obj, lv_flex_align_t hAlign = LV_FLEX_ALIGN_START,
                          int16_t gap = Layout::GAP_MD) {
     lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(obj, hAlign, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -37,8 +36,7 @@ inline void applyFlexRow(lv_obj_t* obj,
  * @param vAlign Vertical alignment (default: START)
  * @param gap Gap between items (default: GAP_MD)
  */
-inline void applyFlexColumn(lv_obj_t* obj,
-                            lv_flex_align_t vAlign = LV_FLEX_ALIGN_START,
+inline void applyFlexColumn(lv_obj_t* obj, lv_flex_align_t vAlign = LV_FLEX_ALIGN_START,
                             int16_t gap = Layout::GAP_MD) {
     lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(obj, LV_FLEX_ALIGN_CENTER, vAlign, LV_FLEX_ALIGN_CENTER);
@@ -93,5 +91,4 @@ inline void setBgColor(lv_obj_t* obj, uint32_t color, uint8_t opacity = Opacity:
     lv_obj_set_style_bg_opa(obj, opacity, 0);
 }
 
-}  // namespace Style
-}  // namespace Theme
+}}  // namespace Theme::Style

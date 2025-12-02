@@ -1,26 +1,24 @@
 #pragma once
 
-#include "../../protocol/Protocol.hpp"
+#include "protocol/Protocol.hpp"
 
 class ControllerAPI;
 
-namespace Bitwig
-{
+namespace Bitwig {
 
-    class TransportBarController;
+class TransportBarController;
 
-    class TransportHostHandler
-    {
-    public:
-        TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol, TransportBarController &controller);
-        ~TransportHostHandler() = default;
+class TransportHostHandler {
+public:
+    TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol,
+                         TransportBarController &controller);
+    ~TransportHostHandler() = default;
+private:
+    void setupProtocolCallbacks();
 
-    private:
-        void setupProtocolCallbacks();
+    ControllerAPI &api_;
+    Protocol::Protocol &protocol_;
+    TransportBarController &view_controller_;
+};
 
-        ControllerAPI &api_;
-        Protocol::Protocol &protocol_;
-        TransportBarController &view_controller_;
-    };
-
-} // namespace Bitwig
+}  // namespace Bitwig

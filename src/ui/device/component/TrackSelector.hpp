@@ -1,18 +1,19 @@
 #pragma once
 
-#include "widget/BaseSelector.hpp"
-#include "ui/shared/widget/HintBar.hpp"
 #include "TrackTitleItem.hpp"
-#include <string>
-#include <vector>
-#include <memory>
+
 #include <cstdint>
 
-namespace Bitwig
-{
+#include <memory>
+#include <string>
+#include <vector>
 
-struct TrackSelectorProps
-{
+#include "ui/shared/widget/HintBar.hpp"
+#include "widget/BaseSelector.hpp"
+
+namespace Bitwig {
+
+struct TrackSelectorProps {
     const std::vector<std::string> *names = nullptr;
     const std::vector<bool> *muteStates = nullptr;
     const std::vector<bool> *soloStates = nullptr;
@@ -26,14 +27,12 @@ struct TrackSelectorProps
  * Track list selector with mute/solo indicators.
  * Stateless - all data comes from props.
  */
-class TrackSelector : public BaseSelector
-{
+class TrackSelector : public BaseSelector {
 public:
     explicit TrackSelector(lv_obj_t *parent);
     ~TrackSelector() override;
 
     void render(const TrackSelectorProps &props);
-
 private:
     void createFooter();
     void createTrackItems(const std::vector<std::string> &names);
@@ -45,8 +44,8 @@ private:
     std::vector<std::unique_ptr<TrackTitleItem>> track_items_;
 
     std::unique_ptr<HintBar> footer_;
-    lv_obj_t* footer_mute_ = nullptr;
-    lv_obj_t* footer_solo_ = nullptr;
+    lv_obj_t *footer_mute_ = nullptr;
+    lv_obj_t *footer_solo_ = nullptr;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

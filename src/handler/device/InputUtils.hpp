@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Bitwig {
 
 /**
@@ -9,13 +7,11 @@ namespace Bitwig {
  */
 namespace InputUtils {
 
-    /**
-     * @brief Wrap index within range [0, modulo) with negative handling
-     */
-    inline int wrapIndex(int value, int modulo) {
-        return ((value % modulo) + modulo) % modulo;
-    }
+/**
+ * @brief Wrap index within range [0, modulo) with negative handling
+ */
+inline int wrapIndex(int value, int modulo) { return ((value % modulo) + modulo) % modulo; }
 
-} // namespace InputUtils
+}  // namespace InputUtils
 
-} // namespace Bitwig
+}  // namespace Bitwig

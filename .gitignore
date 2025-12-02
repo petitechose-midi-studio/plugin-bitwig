@@ -46,3 +46,6 @@ host/target/
 .DS_Store
 Thumbs.db
 
+# Clangd
+compile_commands.json
+

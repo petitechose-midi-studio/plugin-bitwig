@@ -1,0 +1,21 @@
+CompileFlags:
+  CompilationDatabase: .
+
+Diagnostics:
+  Suppress:
+    - ovl_diff_return_type  # GCC/Clang incompatibility in external libs (Teensy/Arduino)
+
+---
+# Suppress all diagnostics for generated protocol files (except Protocol.hpp)
+If:
+  PathMatch: src/protocol/.*
+  PathExclude: src/protocol/Protocol\.hpp
+Diagnostics:
+  Suppress: '*'
+
+---
+# Suppress all diagnostics for generated resource files (images, fonts, etc.)
+If:
+  PathMatch: .*/ui/resource/.*
+Diagnostics:
+  Suppress: '*'

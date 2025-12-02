@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TransportBar.hpp"
+
 #include "ui/state/TransportState.hpp"
 
 namespace Bitwig {
@@ -18,7 +19,6 @@ public:
 
     // Sync view with state
     void sync();
-
 private:
     TransportBar& view_;
     TransportState state_;

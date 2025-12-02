@@ -1,15 +1,16 @@
 #pragma once
 
-#include <lvgl.h>
-#include <cstdint>
-#include <memory>
 #include "LevelBar.hpp"
 
-namespace Bitwig
-{
+#include <cstdint>
 
-struct TrackTitleItemProps
-{
+#include <memory>
+
+#include <lvgl.h>
+
+namespace Bitwig {
+
+struct TrackTitleItemProps {
     const char *name = "";
     uint32_t color = 0xFFFFFF;
     uint8_t trackType = 0;
@@ -20,16 +21,15 @@ struct TrackTitleItemProps
     bool hideIndicators = false;
 };
 
-class TrackTitleItem
-{
+class TrackTitleItem {
 public:
-    explicit TrackTitleItem(lv_obj_t *parent, bool withMuteSolo = false, lv_coord_t barHeight = LV_PCT(100));
+    explicit TrackTitleItem(lv_obj_t *parent, bool withMuteSolo = false,
+                            lv_coord_t barHeight = LV_PCT(100));
     ~TrackTitleItem();
 
     void render(const TrackTitleItemProps &props);
 
     static const char *getTrackTypeIcon(uint8_t trackType);
-
 private:
     void updateIndicatorOpacity(bool isMuted, bool isSoloed, bool highlighted);
 
@@ -45,4 +45,4 @@ private:
     bool has_mute_solo_ = false;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

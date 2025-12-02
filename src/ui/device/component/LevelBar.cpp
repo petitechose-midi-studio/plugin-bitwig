@@ -1,6 +1,8 @@
 #include "LevelBar.hpp"
-#include "ui/theme/BitwigTheme.hpp"
+
 #include <algorithm>
+
+#include "ui/theme/BitwigTheme.hpp"
 
 using namespace Theme;
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 class ControllerAPI;
 
 namespace Bitwig {
@@ -19,7 +17,6 @@ class MidiActivityHandler {
 public:
     MidiActivityHandler(ControllerAPI& api, TransportBarController& transportController);
     ~MidiActivityHandler() = default;
-
 private:
     void setupMidiCallbacks();
 

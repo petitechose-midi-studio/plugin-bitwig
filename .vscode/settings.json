@@ -65,6 +65,15 @@
     },
     "claudeCode.allowDangerouslySkipPermissions": true,
     "claudeCode.initialPermissionMode": "bypassPermissions",
+
+    // Disable C/C++ IntelliSense (use clangd instead)
+    "C_Cpp.intelliSenseEngine": "disabled",
+
+    // Clangd settings
+    "clangd.arguments": [
+        "--query-driver=**/arm-none-eabi-*"
+    ],
+
     "taskexplorer.exclude": [
         "**/.*/**"
     ],

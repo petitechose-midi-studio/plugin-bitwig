@@ -1,14 +1,14 @@
 #include "DeviceStateBar.hpp"
+
+#include "ui/font/FontLoader.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/theme/StyleHelpers.hpp"
-#include "ui/font/FontLoader.hpp"
 
 using namespace Theme;
 
 namespace Bitwig {
 
-DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
-    : parent_(parent) {
+DeviceStateBar::DeviceStateBar(lv_obj_t *parent) : parent_(parent) {
     if (!parent_) return;
 
     container_ = lv_obj_create(parent_);
@@ -31,7 +31,8 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent)
 
     device_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_START);
     lv_obj_set_grid_cell(device_cell_, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    device_item_ = std::make_unique<DeviceTitleItem>(device_cell_, DeviceTitleItem::IconSize::Medium);
+    device_item_ =
+        std::make_unique<DeviceTitleItem>(device_cell_, DeviceTitleItem::IconSize::MEDIUM);
 
     page_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_END);
     lv_obj_set_grid_cell(page_cell_, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
@@ -46,13 +47,11 @@ DeviceStateBar::~DeviceStateBar() {
 }
 
 void DeviceStateBar::render(const DeviceStateBarProps &props) {
-
     if (device_item_) {
-        device_item_->render({
-            .name = props.deviceName,
-            .deviceType = props.deviceType,
-            .enabled = props.deviceEnabled,
-            .hasChildren = props.deviceHasChildren});
+        device_item_->render({.name = props.deviceName,
+                              .deviceType = props.deviceType,
+                              .enabled = props.deviceEnabled,
+                              .hasChildren = props.deviceHasChildren});
     }
 
     if (page_item_) {

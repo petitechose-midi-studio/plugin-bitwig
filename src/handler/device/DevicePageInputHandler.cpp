@@ -1,8 +1,10 @@
 #include "DevicePageInputHandler.hpp"
+
 #include "InputUtils.hpp"
-#include "../../ui/device/DeviceView.hpp"
-#include "../../protocol/struct/RequestDevicePageNamesMessage.hpp"
-#include "../../protocol/struct/DevicePageSelectByIndexMessage.hpp"
+
+#include "protocol/struct/DevicePageSelectByIndexMessage.hpp"
+#include "protocol/struct/RequestDevicePageNamesMessage.hpp"
+#include "ui/device/DeviceView.hpp"
 
 namespace Bitwig {
 
@@ -12,8 +14,7 @@ namespace Bitwig {
 
 DevicePageInputHandler::DevicePageInputHandler(ControllerAPI& api, DeviceView& view,
                                                Protocol::Protocol& protocol, lv_obj_t* scope)
-    : api_(api), view_(view), scope_(scope), protocol_(protocol)
-{
+    : api_(api), view_(view), scope_(scope), protocol_(protocol) {
     setupInputBindings();
 }
 
@@ -26,7 +27,7 @@ DevicePageInputHandler::~DevicePageInputHandler() = default;
 void DevicePageInputHandler::setPageSelectionState(uint8_t pageCount, uint8_t currentIndex) {
     state_.count = pageCount;
 
-    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::Relative);
+    api_.setEncoderMode(EncoderID::NAV, Hardware::EncoderMode::RELATIVE);
     view_.state().pageSelector.selectedIndex = currentIndex;
     view_.state().dirty.pageSelector = true;
     view_.sync();
@@ -42,8 +43,8 @@ void DevicePageInputHandler::setupInputBindings() {
     api_.onReleased(ButtonID::LEFT_BOTTOM, [this]() { closeSelector(); }, scope_);
 
     // Navigate pages
-    api_.onTurnedWhilePressed(EncoderID::NAV, ButtonID::LEFT_BOTTOM,
-        [this](float delta) { navigate(delta); }, scope_);
+    api_.onTurnedWhilePressed(
+        EncoderID::NAV, ButtonID::LEFT_BOTTOM, [this](float delta) { navigate(delta); }, scope_);
 
     // Confirm selection (scoped to overlay)
     api_.onPressed(ButtonID::NAV, [this]() { confirmSelection(); }, view_.getPageSelectorElement());
@@ -103,4 +104,4 @@ void DevicePageInputHandler::closeSelector() {
     api_.setLatch(ButtonID::LEFT_BOTTOM, false);
 }
 
-} // namespace Bitwig
+}  // namespace Bitwig

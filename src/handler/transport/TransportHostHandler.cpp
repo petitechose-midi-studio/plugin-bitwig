@@ -1,41 +1,33 @@
 #include "TransportHostHandler.hpp"
-#include "../../ui/transportbar/TransportBarController.hpp"
-#include "TransportInputHandler.hpp"
-#include "log/Macros.hpp"
 
-namespace Bitwig
-{
+#include "ui/transportbar/TransportBarController.hpp"
 
-    TransportHostHandler::TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol,
-                                               TransportBarController &controller)
-        : api_(api), protocol_(protocol), view_controller_(controller)
-    {
-        setupProtocolCallbacks();
-    }
+namespace Bitwig {
 
-    void TransportHostHandler::setupProtocolCallbacks()
-    {
-        protocol_.onTransportPlay = [this](const Protocol::TransportPlayMessage &msg)
-        {
-            view_controller_.setPlaying(msg.isPlaying);
-        };
+TransportHostHandler::TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol,
+                                           TransportBarController &controller)
+    : api_(api), protocol_(protocol), view_controller_(controller) {
+    setupProtocolCallbacks();
+}
 
-        protocol_.onTransportRecord = [this](const Protocol::TransportRecordMessage &msg)
-        {
-            view_controller_.setRecording(msg.isRecording);
-        };
+void TransportHostHandler::setupProtocolCallbacks() {
+    protocol_.onTransportPlay = [this](const Protocol::TransportPlayMessage &msg) {
+        view_controller_.setPlaying(msg.isPlaying);
+    };
 
-        protocol_.onTransportStop = [this](const Protocol::TransportStopMessage &msg)
-        {
-            view_controller_.setPlaying(false);
-            view_controller_.setRecording(false);
-        };
+    protocol_.onTransportRecord = [this](const Protocol::TransportRecordMessage &msg) {
+        view_controller_.setRecording(msg.isRecording);
+    };
 
-        protocol_.onTransportTempo = [this](const Protocol::TransportTempoMessage &msg)
-        {
-            // Update display (encoder position not synced in Relative mode)
-            view_controller_.setTempo(msg.tempo);
-        };
-    }
+    protocol_.onTransportStop = [this](const Protocol::TransportStopMessage &msg) {
+        view_controller_.setPlaying(false);
+        view_controller_.setRecording(false);
+    };
 
-} // namespace Bitwig
+    protocol_.onTransportTempo = [this](const Protocol::TransportTempoMessage &msg) {
+        // Update display (encoder position not synced in Relative mode)
+        view_controller_.setTempo(msg.tempo);
+    };
+}
+
+}  // namespace Bitwig

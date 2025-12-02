@@ -1,8 +1,7 @@
 #pragma once
 
 #include "api/ControllerAPI.hpp"
-#include "../../protocol/Protocol.hpp"
-#include "DeviceConstants.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace Bitwig {
 
@@ -17,12 +16,11 @@ class DeviceView;
  */
 class MacroInputHandler {
 public:
-    MacroInputHandler(ControllerAPI& api, DeviceView& view,
-                      Protocol::Protocol& protocol, lv_obj_t* scope);
+    MacroInputHandler(ControllerAPI& api, DeviceView& view, Protocol::Protocol& protocol,
+                      lv_obj_t* scope);
     ~MacroInputHandler();
 
     static EncoderID getEncoderIdForParameter(uint8_t paramIndex);
-
 private:
     void setupInputBindings();
     void handleValueChange(uint8_t index, float value);
@@ -34,4 +32,4 @@ private:
     lv_obj_t* scope_;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

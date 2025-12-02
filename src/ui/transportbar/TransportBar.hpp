@@ -1,10 +1,12 @@
 #pragma once
 
-#include <lvgl.h>
 #include <memory>
+
+#include <lvgl.h>
+
 #include "interface/IComponent.hpp"
-#include "widget/ButtonIndicator.hpp"
 #include "ui/state/TransportState.hpp"
+#include "widget/ButtonIndicator.hpp"
 
 namespace Bitwig {
 
@@ -21,7 +23,6 @@ public:
     void hide() override;
     bool isVisible() const override;
     lv_obj_t* getElement() const override { return container_; }
-
 private:
     void createContainer(lv_obj_t* parent);
     void createTransportControls();

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Bitwig {
 
 /**
@@ -35,14 +33,12 @@ struct TransportBarProps {
     bool visible = true;
 
     static TransportBarProps fromState(const TransportState& state) {
-        return {
-            .playing = state.playing,
-            .recording = state.recording,
-            .tempo = state.tempo,
-            .midiInActive = state.midiInActive,
-            .midiOutActive = state.midiOutActive,
-            .visible = true
-        };
+        return {.playing = state.playing,
+                .recording = state.recording,
+                .tempo = state.tempo,
+                .midiInActive = state.midiInActive,
+                .midiOutActive = state.midiOutActive,
+                .visible = true};
     }
 };
 

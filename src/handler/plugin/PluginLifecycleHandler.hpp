@@ -1,32 +1,28 @@
 #pragma once
 
-#include "../../protocol/Protocol.hpp"
-#include "../../protocol/struct/HostInitializedMessage.hpp"
-#include "../../protocol/struct/HostDeactivatedMessage.hpp"
-#include "log/Macros.hpp"
+#include "protocol/Protocol.hpp"
+#include "protocol/struct/HostDeactivatedMessage.hpp"
+#include "protocol/struct/HostInitializedMessage.hpp"
 
-namespace Bitwig
-{
+namespace Bitwig {
 
-    class ViewManager;
+class ViewManager;
 
-    class PluginLifecycleHandler
-    {
-    public:
-        explicit PluginLifecycleHandler(ViewManager &viewManager, Protocol::Protocol &protocol);
-        ~PluginLifecycleHandler() = default;
+class PluginLifecycleHandler {
+public:
+    explicit PluginLifecycleHandler(ViewManager &viewManager, Protocol::Protocol &protocol);
+    ~PluginLifecycleHandler() = default;
 
-        bool isHostActive() const { return is_host_active_; }
+    bool isHostActive() const { return is_host_active_; }
+private:
+    void setupProtocolCallbacks();
 
-    private:
-        void setupProtocolCallbacks();
+    void handleHostInitialized(const Protocol::HostInitializedMessage &msg);
+    void handleHostDeactivated(const Protocol::HostDeactivatedMessage &msg);
 
-        void handleHostInitialized(const Protocol::HostInitializedMessage &msg);
-        void handleHostDeactivated(const Protocol::HostDeactivatedMessage &msg);
+    ViewManager &view_manager_;
+    Protocol::Protocol &protocol_;
+    bool is_host_active_ = false;
+};
 
-        ViewManager &view_manager_;
-        Protocol::Protocol &protocol_;
-        bool is_host_active_ = false;
-    };
-
-} // namespace Bitwig
+}  // namespace Bitwig

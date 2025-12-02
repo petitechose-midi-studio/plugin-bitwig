@@ -2,8 +2,7 @@
 
 namespace Bitwig {
 
-TransportBarController::TransportBarController(TransportBar& view)
-    : view_(view) {
+TransportBarController::TransportBarController(TransportBar& view) : view_(view) {
     // No sync() here - lazy init will happen on first state change
 }
 
@@ -42,8 +41,6 @@ void TransportBarController::setMidiOut(bool active) {
     }
 }
 
-void TransportBarController::sync() {
-    view_.render(TransportBarProps::fromState(state_));
-}
+void TransportBarController::sync() { view_.render(TransportBarProps::fromState(state_)); }
 
 }  // namespace Bitwig

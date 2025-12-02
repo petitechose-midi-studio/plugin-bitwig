@@ -9,13 +9,14 @@
 
 #pragma once
 
-#include "api/ControllerAPI.hpp"
-#include "MessageID.hpp"
-#include "ProtocolConstants.hpp"
-#include "ProtocolCallbacks.hpp"
 #include "DecoderRegistry.hpp"
+#include "MessageID.hpp"
+#include "ProtocolCallbacks.hpp"
+#include "ProtocolConstants.hpp"
 
 #include <cstdint>
+
+#include "api/ControllerAPI.hpp"
 
 namespace Protocol {
 
@@ -35,7 +36,7 @@ public:
      * Example:
      *   protocol.send(TransportPlayMessage{true});
      */
-    template<typename T>
+    template <typename T>
     void send(const T& message) {
         constexpr MessageID messageId = T::MESSAGE_ID;
 
@@ -51,9 +52,7 @@ public:
         sysex[offset++] = static_cast<uint8_t>(messageId);
         sysex[offset++] = 0;  // fromHost flag (C++ = controller = 0)
 
-        for (uint16_t i = 0; i < payloadLen; ++i) {
-            sysex[offset++] = payload[i];
-        }
+        for (uint16_t i = 0; i < payloadLen; ++i) { sysex[offset++] = payload[i]; }
 
         sysex[offset++] = SYSEX_END;
 
@@ -65,17 +64,11 @@ public:
      * Called automatically by SysEx receive callback
      */
     void dispatch(const uint8_t* sysex, uint16_t length) {
-        if (sysex == nullptr || length < MIN_MESSAGE_LENGTH) {
-            return;
-        }
+        if (sysex == nullptr || length < MIN_MESSAGE_LENGTH) { return; }
 
-        if (sysex[0] != SYSEX_START || sysex[length - 1] != SYSEX_END) {
-            return;
-        }
+        if (sysex[0] != SYSEX_START || sysex[length - 1] != SYSEX_END) { return; }
 
-        if (sysex[1] != MANUFACTURER_ID || sysex[2] != DEVICE_ID) {
-            return;
-        }
+        if (sysex[1] != MANUFACTURER_ID || sysex[2] != DEVICE_ID) { return; }
 
         MessageID messageId = static_cast<MessageID>(sysex[MESSAGE_TYPE_OFFSET]);
         bool fromHost = (sysex[FROM_HOST_OFFSET] != 0);
@@ -85,7 +78,6 @@ public:
 
         DecoderRegistry::dispatch(*this, messageId, payload, payloadLen, fromHost);
     }
-
 private:
     ControllerAPI& api_;
 };

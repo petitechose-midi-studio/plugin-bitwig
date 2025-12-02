@@ -1,8 +1,9 @@
 #include "TrackTitleItem.hpp"
-#include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
+
 #include "ui/font/FontLoader.hpp"
 #include "ui/font/icon.hpp"
+#include "ui/theme/BitwigTheme.hpp"
+#include "ui/theme/StyleHelpers.hpp"
 
 using namespace Theme;
 
@@ -79,7 +80,6 @@ TrackTitleItem::~TrackTitleItem() {
 }
 
 void TrackTitleItem::render(const TrackTitleItemProps &props) {
-
     if (label_) {
         lv_label_set_text(label_, props.name ? props.name : "");
         uint32_t labelColor = props.highlighted ? Color::TEXT_PRIMARY : Color::INACTIVE_LIGHTER;
@@ -88,19 +88,21 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
 
     if (color_bar_) {
         lv_obj_set_style_bg_color(color_bar_, lv_color_hex(props.color), LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(color_bar_, props.hideIndicators ? Opacity::HIDDEN : Opacity::FULL, LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(color_bar_, props.hideIndicators ? Opacity::HIDDEN : Opacity::FULL,
+                                LV_STATE_DEFAULT);
     }
 
     if (type_icon_) {
-        Icon::set(type_icon_, getTrackTypeIcon(props.trackType), Icon::M);
-        lv_obj_set_style_text_opa(type_icon_, props.hideIndicators ? Opacity::HIDDEN : Opacity::SUBTLE, LV_STATE_DEFAULT);
+        Icon::set(type_icon_, getTrackTypeIcon(props.trackType), Icon::Size::M);
+        lv_obj_set_style_text_opa(
+            type_icon_, props.hideIndicators ? Opacity::HIDDEN : Opacity::SUBTLE, LV_STATE_DEFAULT);
     }
 
     if (level_bar_) {
-        level_bar_->render({
-            .value = props.level,
-            .color = props.color,
-            .opacity = static_cast<lv_opa_t>(props.hideIndicators ? Opacity::HIDDEN : Opacity::DIMMED)});
+        level_bar_->render({.value = props.level,
+                            .color = props.color,
+                            .opacity = static_cast<lv_opa_t>(
+                                props.hideIndicators ? Opacity::HIDDEN : Opacity::DIMMED)});
     }
 
     if (!props.hideIndicators) {
@@ -112,8 +114,7 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
 }
 
 void TrackTitleItem::updateIndicatorOpacity(bool isMuted, bool isSoloed, bool highlighted) {
-    if (!has_mute_solo_)
-        return;
+    if (!has_mute_solo_) return;
 
     if (mute_icon_) {
         uint8_t opa = isMuted ? Opacity::FULL : (highlighted ? Opacity::FADED : Opacity::HINT);
@@ -128,13 +129,13 @@ void TrackTitleItem::updateIndicatorOpacity(bool isMuted, bool isSoloed, bool hi
 
 const char *TrackTitleItem::getTrackTypeIcon(uint8_t trackType) {
     switch (trackType) {
-    case 0: return Icon::TRACK_AUDIO;
-    case 1: return Icon::TRACK_INSTRUMENT;
-    case 2: return Icon::TRACK_HYBRID;
-    case 3: return Icon::DIRECTORY;
-    case 4: return Icon::RETURN_TRACK;
-    case 5: return Icon::MASTER_TRACK;
-    default: return Icon::TRACK_AUDIO;
+        case 0: return Icon::TRACK_AUDIO;
+        case 1: return Icon::TRACK_INSTRUMENT;
+        case 2: return Icon::TRACK_HYBRID;
+        case 3: return Icon::DIRECTORY;
+        case 4: return Icon::RETURN_TRACK;
+        case 5: return Icon::MASTER_TRACK;
+        default: return Icon::TRACK_AUDIO;
     }
 }
 

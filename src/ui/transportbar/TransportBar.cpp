@@ -1,8 +1,9 @@
 #include "TransportBar.hpp"
-#include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
+
 #include "font/FontLoader.hpp"
 #include "ui/font/icon.hpp"
+#include "ui/theme/BitwigTheme.hpp"
+#include "ui/theme/StyleHelpers.hpp"
 
 using namespace Theme;
 
@@ -18,8 +19,7 @@ const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
 
 namespace Bitwig {
 
-TransportBar::TransportBar(lv_obj_t* parent)
-    : parent_(parent) {
+TransportBar::TransportBar(lv_obj_t* parent) : parent_(parent) {
     if (!parent_) return;
 
     createContainer(parent_);
@@ -39,44 +39,40 @@ void TransportBar::render(const TransportBarProps& props) {
 
     // Play state
     if (play_icon_) {
-        lv_obj_set_style_text_color(play_icon_, props.playing ? COLOR_PLAY : COLOR_INACTIVE, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(play_icon_, props.playing ? COLOR_PLAY : COLOR_INACTIVE,
+                                    LV_STATE_DEFAULT);
     }
 
     // Record state
     if (record_icon_) {
-        lv_obj_set_style_text_color(record_icon_, props.recording ? COLOR_RECORD : COLOR_INACTIVE, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(record_icon_, props.recording ? COLOR_RECORD : COLOR_INACTIVE,
+                                    LV_STATE_DEFAULT);
     }
 
     // Tempo
-    if (bpm_label_) {
-        lv_label_set_text_fmt(bpm_label_, "%.2f", static_cast<double>(props.tempo));
-    }
+    if (bpm_label_) { lv_label_set_text_fmt(bpm_label_, "%.2f", static_cast<double>(props.tempo)); }
 
     // MIDI indicators
     if (midi_in_indicator_) {
-        midi_in_indicator_->setState(props.midiInActive ? ButtonIndicator::ACTIVE : ButtonIndicator::OFF);
+        midi_in_indicator_->setState(props.midiInActive ? ButtonIndicator::ACTIVE
+                                                        : ButtonIndicator::OFF);
     }
     if (midi_out_indicator_) {
-        midi_out_indicator_->setState(props.midiOutActive ? ButtonIndicator::ACTIVE : ButtonIndicator::OFF);
+        midi_out_indicator_->setState(props.midiOutActive ? ButtonIndicator::ACTIVE
+                                                          : ButtonIndicator::OFF);
     }
 
     // Visibility
-    if (props.visible)
-        lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-    else
-        lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
+    if (props.visible) lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
+    else lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }
 
 void TransportBar::show() {
-    if (container_) {
-        lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-    }
+    if (container_) { lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN); }
 }
 
 void TransportBar::hide() {
-    if (container_) {
-        lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
-    }
+    if (container_) { lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN); }
 }
 
 bool TransportBar::isVisible() const {
@@ -92,7 +88,8 @@ void TransportBar::createContainer(lv_obj_t* parent) {
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
 
     // Grid: 3 columns (MIDI | Transport | Tempo)
-    static const lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    static const lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1),
+                                         LV_GRID_TEMPLATE_LAST};
     static const lv_coord_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
     lv_obj_set_layout(container_, LV_LAYOUT_GRID);
     lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
@@ -121,20 +118,21 @@ void TransportBar::createTransportControls() {
 
     // Center cell: Transport icons
     lv_obj_t* transport_container = lv_obj_create(container_);
-    lv_obj_set_grid_cell(transport_container, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_grid_cell(transport_container, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_STRETCH, 0,
+                         1);
     Style::applyTransparentContainer(transport_container);
     Style::applyFlexRow(transport_container, LV_FLEX_ALIGN_CENTER, Layout::GAP_SM);
 
     play_icon_ = lv_label_create(transport_container);
-    Icon::set(play_icon_, Icon::TRANSPORT_PLAY, Icon::L);
+    Icon::set(play_icon_, Icon::TRANSPORT_PLAY, Icon::Size::L);
     lv_obj_set_style_text_color(play_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     stop_icon_ = lv_label_create(transport_container);
-    Icon::set(stop_icon_, Icon::TRANSPORT_STOP, Icon::L);
+    Icon::set(stop_icon_, Icon::TRANSPORT_STOP, Icon::Size::L);
     lv_obj_set_style_text_color(stop_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     record_icon_ = lv_label_create(transport_container);
-    Icon::set(record_icon_, Icon::TRANSPORT_RECORD, Icon::L);
+    Icon::set(record_icon_, Icon::TRANSPORT_RECORD, Icon::Size::L);
     lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 }
 

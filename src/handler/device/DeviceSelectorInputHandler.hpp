@@ -1,9 +1,11 @@
 #pragma once
 
-#include "api/ControllerAPI.hpp"
-#include "../../protocol/Protocol.hpp"
 #include "DeviceConstants.hpp"
+
 #include <array>
+
+#include "api/ControllerAPI.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace Bitwig {
 
@@ -22,19 +24,18 @@ class TrackInputHandler;
  */
 class DeviceSelectorInputHandler {
 public:
-    DeviceSelectorInputHandler(ControllerAPI& api, DeviceView& view,
-                               Protocol::Protocol& protocol, TrackInputHandler& trackHandler,
-                               lv_obj_t* scope);
+    DeviceSelectorInputHandler(ControllerAPI& api, DeviceView& view, Protocol::Protocol& protocol,
+                               TrackInputHandler& trackHandler, lv_obj_t* scope);
     ~DeviceSelectorInputHandler();
 
     // --- Public API ---
     void setDeviceListState(uint8_t deviceCount, uint8_t currentDeviceIndex, bool isNested,
-                            const std::array<uint8_t, 4>* childrenTypes, uint8_t childrenTypesCount);
+                            const std::array<uint8_t, 4>* childrenTypes,
+                            uint8_t childrenTypesCount);
     void setDeviceChildrenState(uint8_t deviceIndex, uint8_t childType, uint8_t childrenCount,
                                 const std::vector<uint8_t>& itemTypes,
                                 const std::vector<uint8_t>& childIndices);
     bool isRequested() const { return device_list_.requested; }
-
 private:
     // --- Bindings ---
     void setupInputBindings();
@@ -84,4 +85,4 @@ private:
     NavigationState navigation_;
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

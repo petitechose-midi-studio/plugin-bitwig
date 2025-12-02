@@ -1,21 +1,19 @@
 #pragma once
 
-#include "widget/BaseSelector.hpp"
 #include <string>
 #include <vector>
 
-namespace Bitwig
-{
+#include "widget/BaseSelector.hpp"
 
-struct PageSelectorProps
-{
+namespace Bitwig {
+
+struct PageSelectorProps {
     const std::vector<std::string> *names = nullptr;
     int selectedIndex = 0;
     bool visible = false;
 };
 
-class PageSelector : public BaseSelector
-{
+class PageSelector : public BaseSelector {
 public:
     explicit PageSelector(lv_obj_t *parent);
     ~PageSelector() override = default;
@@ -25,4 +23,4 @@ public:
     int getPageCount() const { return getItemCount(); }
 };
 
-} // namespace Bitwig
+}  // namespace Bitwig

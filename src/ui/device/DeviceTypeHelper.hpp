@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 

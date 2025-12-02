@@ -1,10 +1,9 @@
 #pragma once
 
-#include "api/ControllerAPI.hpp"
 #include "LastClickedState.hpp"
-#include "../../protocol/Protocol.hpp"
-#include "../../protocol/struct/LastClickedValueChangeMessage.hpp"
-#include "../../protocol/struct/LastClickedTouchMessage.hpp"
+
+#include "api/ControllerAPI.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace Bitwig {
 
@@ -22,7 +21,6 @@ public:
     LastClickedInputHandler(ControllerAPI& api, Protocol::Protocol& protocol,
                             LastClickedState& state, lv_obj_t* scope);
     ~LastClickedInputHandler();
-
 private:
     void setupInputBindings();
     void handleEncoderTurn(float value);

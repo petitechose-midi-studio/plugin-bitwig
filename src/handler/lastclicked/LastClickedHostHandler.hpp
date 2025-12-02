@@ -1,10 +1,11 @@
 #pragma once
 
-#include "api/ControllerAPI.hpp"
 #include "LastClickedState.hpp"
-#include "../../protocol/Protocol.hpp"
-#include "../../protocol/struct/LastClickedUpdateMessage.hpp"
-#include "../../protocol/struct/LastClickedValueChangeMessage.hpp"
+
+#include "api/ControllerAPI.hpp"
+#include "protocol/Protocol.hpp"
+#include "protocol/struct/LastClickedUpdateMessage.hpp"
+#include "protocol/struct/LastClickedValueChangeMessage.hpp"
 
 namespace Bitwig {
 
@@ -21,7 +22,6 @@ class LastClickedHostHandler {
 public:
     LastClickedHostHandler(ControllerAPI& api, Protocol::Protocol& protocol,
                            LastClickedState& state);
-
 private:
     void setupProtocolCallbacks();
     void handleLastClickedUpdate(const Protocol::LastClickedUpdateMessage& msg);
