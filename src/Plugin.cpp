@@ -43,9 +43,11 @@ Plugin::Plugin(ControllerAPI &api)
                              .host = LastClickedHostHandler(api_, protocol_, last_clicked_state_)},
       midi_handler_(api_, transport_controller_),
       // View management
-      view_registry_({{ViewID::DEVICE, device_view_}, {ViewID::SPLASH, splash_view_}}),
       view_manager_(api, view_registry_, view_container_),
-      lifecycle_handler_(view_manager_, protocol_) {}
+      lifecycle_handler_(view_manager_, protocol_) {
+    view_registry_.add(ViewID::DEVICE, device_view_);
+    view_registry_.add(ViewID::SPLASH, splash_view_);
+}
 
 Plugin::~Plugin() = default;
 

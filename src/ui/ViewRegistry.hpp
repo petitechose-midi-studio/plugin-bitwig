@@ -2,44 +2,35 @@
 
 #include <cstdint>
 
-#include <map>
-
-#include <initializer_list>
-
 class IView;
 
 namespace Bitwig {
 
+// ============================================================================
+// SINGLE SOURCE OF TRUTH: add new views here
+// ============================================================================
 enum class ViewID : uint8_t {
-    DEVICE = 0,
-    TRANSPORT = 1,
-    MIXER = 2,
-    SPLASH = 255,
+    DEVICE,
+    SPLASH,
+    // Add new views above ↑
+    COUNT  // Must remain last
 };
+
+// ============================================================================
 
 class ViewRegistry {
 public:
-    struct ViewEntry {
-        ViewID id;
-        IView &view;
-    };
-
-    ViewRegistry(std::initializer_list<ViewEntry> views) {
-        for (const auto &entry : views) { views_[entry.id] = &entry.view; }
+    void add(ViewID id, IView& view) {
+        views_[static_cast<uint8_t>(id)] = &view;
     }
 
     template <typename T = IView>
-    T &getView(ViewID id) const {
-        auto it = views_.find(id);
-        if (it == views_.end() || !it->second) {
-            // This should never happen in normal operation.
-            // If it does, we have a programming error.
-            while (true) {}  // Halt in debug
-        }
-        return static_cast<T &>(*it->second);
+    T& get(ViewID id) const {
+        return static_cast<T&>(*views_[static_cast<uint8_t>(id)]);
     }
+
 private:
-    std::map<ViewID, IView *> views_;
+    IView* views_[static_cast<uint8_t>(ViewID::COUNT)] = {nullptr};
 };
 
 }  // namespace Bitwig

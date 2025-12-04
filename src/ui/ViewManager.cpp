@@ -28,7 +28,7 @@ void ViewManager::show(ViewID id) {
     if (current_view_) { current_view_->onDeactivate(); }
 
     lv_obj_clear_flag(view_container_.getContainer(), LV_OBJ_FLAG_HIDDEN);
-    auto &view = registry_.getView(id);
+    auto &view = registry_.get(id);
     api_.showPluginView(view);
     current_view_id_ = id;
     current_view_ = &view;
@@ -44,7 +44,7 @@ void ViewManager::showSplash(uint32_t durationMs, const char *message) {
     // Deactivate the previous view
     if (current_view_ && current_view_id_ != ViewID::SPLASH) { current_view_->onDeactivate(); }
 
-    auto &splash_view = registry_.getView<SplashView>(ViewID::SPLASH);
+    auto &splash_view = registry_.get<SplashView>(ViewID::SPLASH);
     splash_view.setText(message);
     api_.showPluginView(splash_view);
     current_view_id_ = ViewID::SPLASH;
@@ -61,7 +61,7 @@ void ViewManager::showSplash(uint32_t durationMs, const char *message) {
 
 void ViewManager::splashTimerCallback(lv_timer_t *timer) {
     auto self = static_cast<ViewManager *>(lv_timer_get_user_data(timer));
-    auto &splash_view = self->registry_.getView<SplashView>(ViewID::SPLASH);
+    auto &splash_view = self->registry_.get<SplashView>(ViewID::SPLASH);
 
     splash_view.fadeOut(Theme::Animation::FADE_MS, [self]() {
         self->splash_active_ = false;
