@@ -4,21 +4,28 @@
  * @file BitwigContext.hpp
  * @brief Main context for Bitwig DAW integration
  *
- * BitwigContext manages:
+ * BitwigContext manages the lifecycle and wires together:
  * - BitwigState: reactive state for all Bitwig-related data
  * - BitwigProtocol: SysEx communication with Bitwig
- * - Input bindings: encoder/button mappings to protocol actions
- * - Host connection: detect connect/disconnect from Bitwig
+ * - Handlers: protocol callbacks and input bindings
+ * - Views: UI components that subscribe to state
  *
  * ## Architecture
  *
  * ```
  * BitwigContext
- *     ├── BitwigState (reactive state)
+ *     ├── BitwigState (reactive state - single source of truth)
  *     ├── BitwigProtocol (SysEx transport)
- *     ├── Views (subscribe to state)
- *     └── Input bindings (update state/send protocol)
+ *     ├── Handlers (update state from protocol/input)
+ *     │   ├── DeviceHostHandler (protocol → state)
+ *     │   ├── TransportHostHandler (protocol → state)
+ *     │   ├── MacroInputHandler (input → protocol)
+ *     │   └── ...
+ *     └── Views (subscribe to state)
+ *         └── DeviceView, TransportBar, etc.
  * ```
+ *
+ * The context itself is thin - handlers and views do the work.
  */
 
 #include <memory>
@@ -31,13 +38,19 @@
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
+// Forward declarations for handlers (will be adapted)
+namespace bitwig::handler {
+class HostHandler;
+class InputHandler;
+}
+
 namespace bitwig {
 
 /**
  * @brief Context for Bitwig DAW control
  *
  * Implements IContext lifecycle with DAW connection detection.
- * Owns BitwigState and BitwigProtocol instances.
+ * Owns BitwigState, BitwigProtocol, and coordinates handlers/views.
  */
 class BitwigContext : public oc::context::IContext {
 public:
@@ -68,7 +81,7 @@ public:
     void onDisconnected() override;
 
     // =========================================================================
-    // State Access (for handlers and views)
+    // Accessors (for handlers)
     // =========================================================================
 
     state::BitwigState& state() { return state_; }
@@ -78,35 +91,9 @@ public:
     const BitwigProtocol& protocol() const { return *protocol_; }
 
 private:
-    // =========================================================================
-    // Setup Methods
-    // =========================================================================
-
-    void setupProtocol();
-    void setupProtocolCallbacks();
-    void setupInputBindings();
-    void setupView();
-
-    // =========================================================================
-    // Protocol Callback Handlers
-    // =========================================================================
-
-    void handleHostInitialized();
-    void handleHostDeactivated();
-    void handleTransportTempo(float tempo);
-    void handleDeviceChange(const std::string& name, uint8_t type, bool enabled);
-    void handleParameterUpdate(uint8_t index, float value, const std::string& displayValue);
-    void handleParameterName(uint8_t index, const std::string& name);
-
-    // =========================================================================
-    // Input Handlers
-    // =========================================================================
-
-    void onEncoderTurn(uint8_t index, float value);
-    void onEncoderPress(uint8_t index);
-    void onPlayPressed();
-    void onRecordPressed();
-    void onStopPressed();
+    void createProtocol();
+    void createHandlers();
+    void createViews();
 
     // =========================================================================
     // Members
@@ -114,11 +101,13 @@ private:
 
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
-    std::unique_ptr<oc::ui::lvgl::IView> view_;
 
-    // Host connection timeout
-    uint32_t lastHostPing_ = 0;
-    static constexpr uint32_t HOST_TIMEOUT_MS = 5000;
+    // Handlers (will be populated when adapted)
+    std::unique_ptr<handler::HostHandler> hostHandler_;
+    std::unique_ptr<handler::InputHandler> inputHandler_;
+
+    // Views
+    std::unique_ptr<oc::ui::lvgl::IView> view_;
 };
 
 }  // namespace bitwig
