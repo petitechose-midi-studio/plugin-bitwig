@@ -2,9 +2,11 @@
 
 #include <cstdint>
 
-class IView;
+#include <oc/ui/lvgl/IView.hpp>
 
 namespace Bitwig {
+
+using IView = oc::ui::lvgl::IView;
 
 // ============================================================================
 // SINGLE SOURCE OF TRUTH: add new views here

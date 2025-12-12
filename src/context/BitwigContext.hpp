@@ -16,11 +16,19 @@
  * BitwigContext
  *     ├── BitwigState (reactive state - single source of truth)
  *     ├── BitwigProtocol (SysEx transport)
- *     ├── Handlers (update state from protocol/input)
- *     │   ├── DeviceHostHandler (protocol → state)
- *     │   ├── TransportHostHandler (protocol → state)
- *     │   ├── MacroInputHandler (input → protocol)
- *     │   └── ...
+ *     ├── HostHandlers (protocol → state)
+ *     │   ├── HandlerHostPlugin
+ *     │   ├── HandlerHostTransport
+ *     │   ├── HandlerHostDevice
+ *     │   ├── HandlerHostLastClicked
+ *     │   └── HandlerHostMidi
+ *     ├── InputHandlers (input → state + protocol)
+ *     │   ├── HandlerInputTransport
+ *     │   ├── HandlerInputMacro
+ *     │   ├── HandlerInputDevicePage
+ *     │   ├── HandlerInputDeviceSelector
+ *     │   ├── HandlerInputTrack
+ *     │   └── HandlerInputLastClicked
  *     └── Views (subscribe to state)
  *         └── DeviceView, TransportBar, etc.
  * ```
@@ -29,22 +37,34 @@
  */
 
 #include <memory>
+#include <vector>
 
 #include <lvgl.h>
 
 #include <oc/context/IContext.hpp>
+#include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
-// Forward declarations for handlers (will be adapted)
-namespace bitwig::handler {
-class HostHandler;
-class InputHandler;
-}
+// Include all handlers (required for unique_ptr with make_unique in templates)
+#include "handler/host/HandlerHostDevice.hpp"
+#include "handler/host/HandlerHostLastClicked.hpp"
+#include "handler/host/HandlerHostMidi.hpp"
+#include "handler/host/HandlerHostPlugin.hpp"
+#include "handler/host/HandlerHostTransport.hpp"
+#include "handler/input/HandlerInputDevicePage.hpp"
+#include "handler/input/HandlerInputDeviceSelector.hpp"
+#include "handler/input/HandlerInputLastClicked.hpp"
+#include "handler/input/HandlerInputMacro.hpp"
+#include "handler/input/HandlerInputTrack.hpp"
+#include "handler/input/HandlerInputTransport.hpp"
+#include "ui/device/DeviceView.hpp"
 
 namespace bitwig {
+
+using Bitwig::DeviceView;
 
 /**
  * @brief Context for Bitwig DAW control
@@ -54,8 +74,11 @@ namespace bitwig {
  */
 class BitwigContext : public oc::context::IContext {
 public:
+    // Static resource loading (called by ContextManager during registration)
+    static void loadResources();
+
     BitwigContext() = default;
-    ~BitwigContext() override = default;
+    ~BitwigContext() override;
 
     // Non-copyable, non-movable
     BitwigContext(const BitwigContext&) = delete;
@@ -81,7 +104,7 @@ public:
     void onDisconnected() override;
 
     // =========================================================================
-    // Accessors (for handlers)
+    // Accessors (for testing/debugging)
     // =========================================================================
 
     state::BitwigState& state() { return state_; }
@@ -92,7 +115,8 @@ public:
 
 private:
     void createProtocol();
-    void createHandlers();
+    void createHostHandlers();
+    void createInputHandlers();
     void createViews();
 
     // =========================================================================
@@ -102,12 +126,23 @@ private:
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
 
-    // Handlers (will be populated when adapted)
-    std::unique_ptr<handler::HostHandler> hostHandler_;
-    std::unique_ptr<handler::InputHandler> inputHandler_;
+    // Host Handlers (protocol → state)
+    std::unique_ptr<handler::HandlerHostPlugin> hostPlugin_;
+    std::unique_ptr<handler::HandlerHostTransport> hostTransport_;
+    std::unique_ptr<handler::HandlerHostDevice> hostDevice_;
+    std::unique_ptr<handler::HandlerHostLastClicked> hostLastClicked_;
+    std::unique_ptr<handler::HandlerHostMidi> hostMidi_;
 
-    // Views
-    std::unique_ptr<oc::ui::lvgl::IView> view_;
+    // Input Handlers (input → state + protocol)
+    std::unique_ptr<handler::HandlerInputTransport> inputTransport_;
+    std::unique_ptr<handler::HandlerInputMacro> inputMacro_;
+    std::unique_ptr<handler::HandlerInputDevicePage> inputDevicePage_;
+    std::unique_ptr<handler::HandlerInputDeviceSelector> inputDeviceSelector_;
+    std::unique_ptr<handler::HandlerInputTrack> inputTrack_;
+    std::unique_ptr<handler::HandlerInputLastClicked> inputLastClicked_;
+
+    // Views (subscribe to state in their constructors)
+    std::unique_ptr<DeviceView> deviceView_;
 };
 
 }  // namespace bitwig

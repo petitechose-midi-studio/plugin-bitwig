@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "widget/BaseSelector.hpp"
+#include "ui/widget/BaseSelector.hpp"
 
 namespace Bitwig {
 

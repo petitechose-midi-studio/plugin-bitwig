@@ -1,6 +1,6 @@
 // Auto-generated | 24 icons | 2025-12-02
 #pragma once
-#include "FontLoader.hpp"
+#include "BitwigFonts.hpp"
 
 #include <lvgl.h>
 

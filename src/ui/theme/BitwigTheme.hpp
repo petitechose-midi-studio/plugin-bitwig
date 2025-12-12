@@ -2,9 +2,12 @@
 
 #include <cstdint>
 
-#include "theme/BaseTheme.hpp"
+#include <oc/ui/lvgl/theme/BaseTheme.hpp>
 
 namespace Theme {
+
+// Import base theme for convenience
+using namespace oc::ui::lvgl;
 
 namespace Color {
 

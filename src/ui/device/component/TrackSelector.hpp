@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "ui/shared/widget/HintBar.hpp"
-#include "widget/BaseSelector.hpp"
+#include "ui/widget/HintBar.hpp"
+#include "ui/widget/BaseSelector.hpp"
 
 namespace Bitwig {
 

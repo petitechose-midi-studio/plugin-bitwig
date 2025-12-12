@@ -8,7 +8,7 @@
 
 #include <lvgl.h>
 
-#include "widget/TitleItem.hpp"
+#include "ui/widget/TitleItem.hpp"
 
 namespace Bitwig {
 

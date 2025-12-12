@@ -2,22 +2,23 @@
 
 /**
  * @file BitwigProtocol.hpp
- * @brief Bitwig protocol wrapper for open-control MidiAPI
+ * @brief Bitwig protocol wrapper for open-control framework
  *
- * Adapts the existing Protocol class to use the framework's MidiAPI
- * instead of the legacy ControllerAPI.
+ * Adapts the Protocol class to use the framework's MidiAPI and EventBus.
+ * Subscribes to SysExEvent from the EventBus (set up by OpenControlApp)
+ * to avoid callback conflicts.
  *
  * ## Usage
  *
  * ```cpp
  * // In BitwigContext
- * BitwigProtocol protocol(midi());
+ * BitwigProtocol protocol(midi(), events());
  *
  * // Send messages
  * protocol.send(TransportPlayMessage{true});
  * protocol.send(DeviceSelectByIndexMessage{index});
  *
- * // Register callbacks
+ * // Register callbacks (inherited from ProtocolCallbacks)
  * protocol.onDeviceChange = [this](const DeviceChangeMessage& msg) {
  *     state_.device.name.set(msg.deviceName);
  * };
@@ -27,6 +28,8 @@
 #include <cstdint>
 
 #include <oc/api/MidiAPI.hpp>
+#include <oc/core/event/Events.hpp>
+#include <oc/core/event/IEventBus.hpp>
 
 #include "DecoderRegistry.hpp"
 #include "MessageID.hpp"
@@ -36,24 +39,39 @@
 namespace bitwig {
 
 /**
- * @brief Bitwig SysEx protocol handler using open-control MidiAPI
+ * @brief Bitwig SysEx protocol handler using open-control framework
  *
  * Inherits from ProtocolCallbacks for message callbacks.
- * Uses MidiAPI for SysEx transport.
+ * Subscribes to EventBus for incoming SysEx (avoids callback conflicts).
+ * Uses MidiAPI for outgoing SysEx.
  */
 class BitwigProtocol : public Protocol::ProtocolCallbacks {
 public:
     /**
-     * @brief Construct protocol with MidiAPI reference
+     * @brief Construct protocol with MidiAPI and EventBus
      *
-     * Automatically registers SysEx receive callback.
+     * Subscribes to SysExEvent from EventBus for incoming messages.
+     * Uses MidiAPI only for sending outgoing messages.
      *
-     * @param midi Reference to MidiAPI (from IContext::midi())
+     * @param midi Reference to MidiAPI (for sending)
+     * @param events Reference to EventBus (for receiving SysEx events)
      */
-    explicit BitwigProtocol(oc::api::MidiAPI& midi) : midi_(midi) {
-        midi_.onSysEx([this](const uint8_t* data, size_t length) {
-            dispatch(data, static_cast<uint16_t>(length));
-        });
+    BitwigProtocol(oc::api::MidiAPI& midi, oc::core::event::IEventBus& events)
+        : midi_(midi), events_(events) {
+        // Subscribe to SysEx events from EventBus
+        using namespace oc::core::event;
+        subscriptionId_ = events_.on(
+            EventCategory::MIDI,
+            MidiEvent::SYSEX,
+            [this](const Event& evt) {
+                const auto& sysex = static_cast<const SysExEvent&>(evt);
+                dispatch(sysex.data, sysex.length);
+            });
+    }
+
+    ~BitwigProtocol() {
+        // Unsubscribe from EventBus
+        events_.off(subscriptionId_);
     }
 
     // Non-copyable, non-movable
@@ -178,6 +196,8 @@ public:
 
 private:
     oc::api::MidiAPI& midi_;
+    oc::core::event::IEventBus& events_;
+    oc::core::event::SubscriptionID subscriptionId_{0};
 
     /**
      * @brief Dispatch incoming SysEx to callbacks
