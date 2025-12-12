@@ -1,7 +1,7 @@
 #include "DeviceTitleItem.hpp"
 
 #include "ui/device/DeviceTypeHelper.hpp"
-#include "ui/font/FontLoader.hpp"
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/theme/StyleHelpers.hpp"

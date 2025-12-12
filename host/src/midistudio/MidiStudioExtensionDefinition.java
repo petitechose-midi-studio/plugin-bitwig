@@ -61,12 +61,16 @@ public class MidiStudioExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public void listAutoDetectionMidiPortNames(final AutoDetectionMidiPortNamesList list,
          final PlatformType platformType) {
+      // Dev firmware: "MIDI Studio [bitwig:dev]", Release: "MIDI Studio"
       if (platformType == PlatformType.WINDOWS) {
-         list.add(new String[] { "PC-MIDI Studio" }, new String[] { "PC-MIDI Studio" });
+         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
+         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
       } else if (platformType == PlatformType.MAC) {
-         list.add(new String[] { "PC-MIDI Studio" }, new String[] { "PC-MIDI Studio" });
+         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
+         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
       } else if (platformType == PlatformType.LINUX) {
-         list.add(new String[] { "PC-MIDI Studio" }, new String[] { "PC-MIDI Studio" });
+         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
+         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
       }
    }
 

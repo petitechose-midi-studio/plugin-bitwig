@@ -1,6 +1,6 @@
 #include "SplashView.hpp"
 
-#include "ui/font/FontLoader.hpp"
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 LV_IMG_DECLARE(Bitwig_Logo);

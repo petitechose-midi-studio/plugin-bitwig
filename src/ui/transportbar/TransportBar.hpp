@@ -4,11 +4,15 @@
 
 #include <lvgl.h>
 
-#include "interface/IComponent.hpp"
+#include <oc/ui/lvgl/IComponent.hpp>
+#include <oc/ui/lvgl/widget/StateIndicator.hpp>
+
 #include "ui/state/TransportState.hpp"
-#include "widget/ButtonIndicator.hpp"
 
 namespace Bitwig {
+
+using oc::ui::lvgl::IComponent;
+using oc::ui::lvgl::StateIndicator;
 
 class TransportBar : public IComponent {
 public:
@@ -30,8 +34,8 @@ private:
 
     lv_obj_t* parent_ = nullptr;
     lv_obj_t* container_ = nullptr;
-    std::unique_ptr<ButtonIndicator> midi_in_indicator_;
-    std::unique_ptr<ButtonIndicator> midi_out_indicator_;
+    std::unique_ptr<StateIndicator> midi_in_indicator_;
+    std::unique_ptr<StateIndicator> midi_out_indicator_;
     lv_obj_t* play_icon_ = nullptr;
     lv_obj_t* stop_icon_ = nullptr;
     lv_obj_t* record_icon_ = nullptr;

@@ -1,6 +1,6 @@
 #include "TransportBar.hpp"
 
-#include "font/FontLoader.hpp"
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/theme/StyleHelpers.hpp"
@@ -54,12 +54,12 @@ void TransportBar::render(const TransportBarProps& props) {
 
     // MIDI indicators
     if (midi_in_indicator_) {
-        midi_in_indicator_->setState(props.midiInActive ? ButtonIndicator::ACTIVE
-                                                        : ButtonIndicator::OFF);
+        midi_in_indicator_->setState(props.midiInActive ? StateIndicator::State::ACTIVE
+                                                        : StateIndicator::State::OFF);
     }
     if (midi_out_indicator_) {
-        midi_out_indicator_->setState(props.midiOutActive ? ButtonIndicator::ACTIVE
-                                                          : ButtonIndicator::OFF);
+        midi_out_indicator_->setState(props.midiOutActive ? StateIndicator::State::ACTIVE
+                                                          : StateIndicator::State::OFF);
     }
 
     // Visibility
@@ -102,19 +102,19 @@ void TransportBar::createTransportControls() {
     Style::applyTransparentContainer(midi_container);
     Style::applyFlexRow(midi_container, LV_FLEX_ALIGN_START, Layout::GAP_SM);
 
-    midi_in_indicator_ = std::make_unique<ButtonIndicator>(midi_container, Layout::INDICATOR_SIZE);
-    midi_in_indicator_->setCustomColor(ButtonIndicator::OFF, COLOR_MIDI);
-    midi_in_indicator_->setCustomOpacity(ButtonIndicator::OFF, Opacity::FULL);
-    midi_in_indicator_->setCustomColor(ButtonIndicator::ACTIVE, COLOR_ACTIVE);
-    midi_in_indicator_->setCustomOpacity(ButtonIndicator::ACTIVE, Opacity::FULL);
-    midi_in_indicator_->setState(ButtonIndicator::OFF);
+    midi_in_indicator_ = std::make_unique<StateIndicator>(midi_container, Layout::INDICATOR_SIZE);
+    midi_in_indicator_->color(StateIndicator::State::OFF, lv_color_to_u32(COLOR_MIDI))
+        .opacity(StateIndicator::State::OFF, Opacity::FULL)
+        .color(StateIndicator::State::ACTIVE, lv_color_to_u32(COLOR_ACTIVE))
+        .opacity(StateIndicator::State::ACTIVE, Opacity::FULL);
+    midi_in_indicator_->setState(StateIndicator::State::OFF);
 
-    midi_out_indicator_ = std::make_unique<ButtonIndicator>(midi_container, Layout::INDICATOR_SIZE);
-    midi_out_indicator_->setCustomColor(ButtonIndicator::OFF, COLOR_MIDI);
-    midi_out_indicator_->setCustomOpacity(ButtonIndicator::OFF, Opacity::FULL);
-    midi_out_indicator_->setCustomColor(ButtonIndicator::ACTIVE, COLOR_ACTIVE);
-    midi_out_indicator_->setCustomOpacity(ButtonIndicator::ACTIVE, Opacity::FULL);
-    midi_out_indicator_->setState(ButtonIndicator::OFF);
+    midi_out_indicator_ = std::make_unique<StateIndicator>(midi_container, Layout::INDICATOR_SIZE);
+    midi_out_indicator_->color(StateIndicator::State::OFF, lv_color_to_u32(COLOR_MIDI))
+        .opacity(StateIndicator::State::OFF, Opacity::FULL)
+        .color(StateIndicator::State::ACTIVE, lv_color_to_u32(COLOR_ACTIVE))
+        .opacity(StateIndicator::State::ACTIVE, Opacity::FULL);
+    midi_out_indicator_->setState(StateIndicator::State::OFF);
 
     // Center cell: Transport icons
     lv_obj_t* transport_container = lv_obj_create(container_);
@@ -141,7 +141,7 @@ void TransportBar::createTempoDisplay() {
     lv_obj_set_grid_cell(bpm_label_, LV_GRID_ALIGN_END, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
     lv_label_set_text(bpm_label_, "120.00");
     Style::setTextColor(bpm_label_, Color::TEXT_LIGHT);
-    lv_obj_set_style_text_font(bpm_label_, fonts.tempo_label, LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(bpm_label_, bitwig_fonts.page_label, LV_STATE_DEFAULT);
 }
 
 }  // namespace Bitwig

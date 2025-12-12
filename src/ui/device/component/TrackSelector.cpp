@@ -1,6 +1,6 @@
 #include "TrackSelector.hpp"
 
-#include "ui/font/FontLoader.hpp"
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 

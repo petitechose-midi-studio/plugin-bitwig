@@ -1,6 +1,6 @@
 #include "DeviceStateBar.hpp"
 
-#include "ui/font/FontLoader.hpp"
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/theme/StyleHelpers.hpp"
 

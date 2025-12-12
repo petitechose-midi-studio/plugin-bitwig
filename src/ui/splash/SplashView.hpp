@@ -4,9 +4,11 @@
 
 #include <lvgl.h>
 
-#include "interface/IView.hpp"
+#include <oc/ui/lvgl/IView.hpp>
 
 namespace Bitwig {
+
+using oc::ui::lvgl::IView;
 
 class SplashView : public IView {
 public:
