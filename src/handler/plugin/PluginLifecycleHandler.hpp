@@ -1,28 +1,38 @@
 #pragma once
 
-#include "protocol/Protocol.hpp"
-#include "protocol/struct/HostDeactivatedMessage.hpp"
-#include "protocol/struct/HostInitializedMessage.hpp"
+/**
+ * @file PluginLifecycleHandler.hpp
+ * @brief Handles host connection/disconnection → updates BitwigState
+ *
+ * Adapted to use BitwigState (Signal-based) instead of ViewManager.
+ * BitwigContext uses state_.host.connected to determine isConnected().
+ */
 
-namespace Bitwig {
+#include "protocol/BitwigProtocol.hpp"
+#include "state/BitwigState.hpp"
 
-class ViewManager;
+namespace bitwig::handler {
 
+/**
+ * @brief Host lifecycle handler
+ *
+ * Sets up protocol callbacks for HostInitialized/HostDeactivated.
+ * Updates state_.host.connected which BitwigContext uses for isConnected().
+ */
 class PluginLifecycleHandler {
 public:
-    explicit PluginLifecycleHandler(ViewManager &viewManager, Protocol::Protocol &protocol);
+    PluginLifecycleHandler(state::BitwigState& state, BitwigProtocol& protocol);
     ~PluginLifecycleHandler() = default;
 
-    bool isHostActive() const { return is_host_active_; }
+    // Non-copyable
+    PluginLifecycleHandler(const PluginLifecycleHandler&) = delete;
+    PluginLifecycleHandler& operator=(const PluginLifecycleHandler&) = delete;
+
 private:
     void setupProtocolCallbacks();
 
-    void handleHostInitialized(const Protocol::HostInitializedMessage &msg);
-    void handleHostDeactivated(const Protocol::HostDeactivatedMessage &msg);
-
-    ViewManager &view_manager_;
-    Protocol::Protocol &protocol_;
-    bool is_host_active_ = false;
+    state::BitwigState& state_;
+    BitwigProtocol& protocol_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig::handler

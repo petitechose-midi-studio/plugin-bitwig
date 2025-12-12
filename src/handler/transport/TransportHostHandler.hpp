@@ -1,24 +1,37 @@
 #pragma once
 
-#include "protocol/Protocol.hpp"
+/**
+ * @file TransportHostHandler.hpp
+ * @brief Handles transport messages from Bitwig → updates BitwigState
+ *
+ * Adapted to use BitwigState (Signal-based) instead of direct view updates.
+ */
 
-class ControllerAPI;
+#include "protocol/BitwigProtocol.hpp"
+#include "state/BitwigState.hpp"
 
-namespace Bitwig {
+namespace bitwig::handler {
 
-class TransportBarController;
-
+/**
+ * @brief Transport protocol handler
+ *
+ * Sets up protocol callbacks to update TransportState signals.
+ * Views subscribe to these signals for automatic UI updates.
+ */
 class TransportHostHandler {
 public:
-    TransportHostHandler(ControllerAPI &api, Protocol::Protocol &protocol,
-                         TransportBarController &controller);
+    TransportHostHandler(state::BitwigState& state, BitwigProtocol& protocol);
     ~TransportHostHandler() = default;
+
+    // Non-copyable
+    TransportHostHandler(const TransportHostHandler&) = delete;
+    TransportHostHandler& operator=(const TransportHostHandler&) = delete;
+
 private:
     void setupProtocolCallbacks();
 
-    ControllerAPI &api_;
-    Protocol::Protocol &protocol_;
-    TransportBarController &view_controller_;
+    state::BitwigState& state_;
+    BitwigProtocol& protocol_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig::handler
