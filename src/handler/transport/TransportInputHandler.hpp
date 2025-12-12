@@ -1,34 +1,53 @@
 #pragma once
 
-#include "api/ControllerAPI.hpp"
-#include "protocol/Protocol.hpp"
+/**
+ * @file TransportInputHandler.hpp
+ * @brief Transport input actions → sends protocol messages
+ *
+ * Helper class for transport input handling.
+ * BitwigContext sets up the actual input bindings and calls these methods.
+ *
+ * Note: Input bindings (onButton, onEncoder) are set up in BitwigContext
+ * because IContext's binding methods are protected.
+ */
 
-namespace Bitwig {
+#include "protocol/BitwigProtocol.hpp"
+
+namespace bitwig::handler {
 
 /**
- * @brief Hardware input handler for transport controls (GLOBAL)
+ * @brief Transport input helper
  *
- * Sends transport commands to Bitwig:
- * - Play/Pause toggle
- * - Record toggle
- * - Stop
- * - Tempo adjustment
- *
- * State is managed by TransportHostHandler (receives confirmations from Bitwig).
+ * Sends transport commands to Bitwig via protocol.
+ * State updates come back via TransportHostHandler → BitwigState.
  */
 class TransportInputHandler {
 public:
-    TransportInputHandler(ControllerAPI &api, Protocol::Protocol &protocol);
+    explicit TransportInputHandler(BitwigProtocol& protocol);
     ~TransportInputHandler() = default;
-private:
-    void setupInputBindings();
+
+    // Non-copyable
+    TransportInputHandler(const TransportInputHandler&) = delete;
+    TransportInputHandler& operator=(const TransportInputHandler&) = delete;
+
+    // =========================================================================
+    // Actions (called by BitwigContext input bindings)
+    // =========================================================================
+
+    /// Toggle play/pause
     void togglePlay();
+
+    /// Toggle record
     void toggleRecord();
+
+    /// Stop transport
     void stop();
+
+    /// Adjust tempo by delta (relative)
     void adjustTempo(float delta);
 
-    ControllerAPI &api_;
-    Protocol::Protocol &protocol_;
+private:
+    BitwigProtocol& protocol_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig::handler
