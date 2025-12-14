@@ -28,7 +28,7 @@ using namespace Protocol;
 using namespace Bitwig::Device;
 using bitwig::state::MAX_TRACKS;
 using bitwig::state::MAX_DEVICES;
-using Config::EncoderID;
+using EncoderID = Config::EncoderID;
 // Both Device and Track have BACK_TO_PARENT_TEXT (same value), import one explicitly
 constexpr auto BACK_TO_PARENT = Bitwig::Device::BACK_TO_PARENT_TEXT;
 
@@ -70,7 +70,7 @@ void HandlerHostDevice::updateMacroEncoderModes(const MacroArray& macros) {
             static_cast<state::ParameterType>(macros[i].parameterType));
 
         // Configure encoder mode
-        EncoderID encoderId = getEncoderIdForParameter(paramIndex);
+        auto encoderId = getEncoderIdForParameter(paramIndex);
         if (encoderId != EncoderID{0}) {
             if (macros[i].parameterType == static_cast<uint8_t>(ParameterType::KNOB)) {
                 encoders_.setContinuous(encoderId);
@@ -94,6 +94,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onTrackList = [this](const TrackListMessage& msg) {
+        OC_LOG_INFO("[SYSEX RX] TrackList count={} idx={}", msg.trackCount, msg.trackIndex);
         if (!msg.fromHost) return;
 
         // Update navigation state
@@ -130,8 +131,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         state_.trackSelector.trackColors.set(trackColors.data(), trackColors.size());
 
         state_.trackSelector.currentIndex.set(msg.isNested ? msg.trackIndex + 1 : msg.trackIndex);
-        state_.trackSelector.visible.set(true);
-        state_.deviceSelector.visible.set(false);
+        // NOTE: visibility is controlled by input handlers, not host handlers
     };
 
     protocol_.onTrackMute = [this](const TrackMuteMessage& msg) {
@@ -157,6 +157,9 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     // =========================================================================
 
     protocol_.onDeviceChangeHeader = [this](const DeviceChangeHeaderMessage& msg) {
+        OC_LOG_INFO("[SYSEX RX] DeviceChangeHeader device='{}' type={}",
+                    msg.deviceName.c_str(), msg.deviceType);
+
         bool hasChildren = (msg.childrenTypes[0] | msg.childrenTypes[1] |
                            msg.childrenTypes[2] | msg.childrenTypes[3]) != 0;
 
@@ -185,6 +188,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onDeviceList = [this](const DeviceListMessage& msg) {
+        OC_LOG_INFO("[SYSEX RX] DeviceList count={} idx={}", msg.deviceCount, msg.deviceIndex);
         if (!msg.fromHost) return;
 
         // Update active device info
@@ -219,6 +223,8 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         }
 
         for (uint8_t i = 0; i < msg.deviceCount && displayIndex < MAX_DEVICES; i++) {
+            OC_LOG_DEBUG("[DeviceList] {} -> deviceType={}",
+                        msg.devices[i].deviceName.c_str(), msg.devices[i].deviceType);
             names.push_back(std::string(msg.devices[i].deviceName.data()));
             deviceTypes.push_back(msg.devices[i].deviceType);
             state_.deviceSelector.deviceStates[displayIndex].set(msg.devices[i].isEnabled);
@@ -239,7 +245,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         state_.deviceSelector.currentIndex.set(msg.isNested ? msg.deviceIndex + 1 : msg.deviceIndex);
         state_.deviceSelector.showingChildren.set(false);
-        state_.deviceSelector.visible.set(true);
+        // NOTE: visibility is controlled by input handlers, not host handlers
     };
 
     protocol_.onDeviceChildren = [this](const DeviceChildrenMessage& msg) {
@@ -259,7 +265,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         state_.deviceSelector.childrenNames.set(names.data(), names.size());
         state_.deviceSelector.childrenTypes.set(types.data(), types.size());
         state_.deviceSelector.showingChildren.set(true);
-        state_.deviceSelector.visible.set(true);
+        // NOTE: visibility is controlled by input handlers, not host handlers
     };
 
     // =========================================================================
@@ -276,37 +282,53 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         state_.pageSelector.names.set(names.data(), names.size());
         state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
-        state_.pageSelector.visible.set(true);
+        // NOTE: visibility is controlled by input handlers, not host handlers
     };
 
     protocol_.onDevicePageChange = [this](const DevicePageChangeMessage& msg) {
+        OC_LOG_INFO("[SYSEX RX] DevicePageChange page='{}' macros={}",
+                    msg.pageInfo.devicePageName.c_str(), msg.macros.size());
+
         updateMacroEncoderModes(msg.macros);
 
         state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
 
+        // Static buffer to avoid heap allocation per parameter
+        static std::array<std::string, state::MAX_DISCRETE_VALUES> tempDiscreteValues;
+
         for (uint8_t i = 0; i < PARAMETER_COUNT && i < msg.macros.size(); i++) {
             auto& slot = state_.parameters.slots[i];
+            const auto& macro = msg.macros[i];
 
-            slot.type.set(static_cast<state::ParameterType>(msg.macros[i].parameterType));
-            slot.discreteCount.set(msg.macros[i].discreteValueCount);
-            slot.currentValueIndex.set(msg.macros[i].currentValueIndex);
-            slot.origin.set(msg.macros[i].parameterOrigin);
-            slot.displayValue.set(msg.macros[i].displayValue.c_str());
-            slot.value.set(msg.macros[i].parameterValue);
-            slot.name.set(msg.macros[i].parameterName.c_str());
-            slot.visible.set(msg.macros[i].parameterExists);
-            slot.loading.set(false);
-            slot.metadataSet.set(true);
+            // IMPORTANT: Set metadata BEFORE type!
+            // When type changes, ensureWidgetForType() reads these values to create the widget.
+            // If type is set first, discreteCount would still have old/default value.
+            slot.discreteCount.set(macro.discreteValueCount);
+            slot.currentValueIndex.set(macro.currentValueIndex);
+            slot.origin.set(macro.parameterOrigin);
 
-            // Update discrete values (bulk)
-            std::vector<std::string> discreteValues;
-            for (const auto& dv : msg.macros[i].discreteValueNames) {
-                if (!dv.empty()) {
-                    discreteValues.push_back(std::string(dv.data()));
+            // Update discrete values BEFORE type (needed for LIST widgets)
+            size_t count = 0;
+            for (const auto& dv : macro.discreteValueNames) {
+                if (!dv.empty() && count < state::MAX_DISCRETE_VALUES) {
+                    tempDiscreteValues[count++] = dv;
                 }
             }
-            slot.discreteValues.set(discreteValues.data(), discreteValues.size());
+            slot.discreteValues.set(tempDiscreteValues.data(), count);
+
+            // NOW set type - this triggers widget creation with correct metadata
+            slot.type.set(static_cast<state::ParameterType>(macro.parameterType));
+
+            // Set remaining display properties
+            slot.displayValue.set(macro.displayValue.c_str());
+            slot.value.set(macro.parameterValue);
+            slot.name.set(macro.parameterName.c_str());
+            slot.visible.set(macro.parameterExists);
+            slot.loading.set(false);
+            slot.metadataSet.set(true);
         }
+        OC_LOG_INFO("[STATE] DevicePageChange -> {} params updated",
+                    std::min(static_cast<size_t>(PARAMETER_COUNT), msg.macros.size()));
     };
 
     // =========================================================================
@@ -329,7 +351,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         slot.loading.set(false);
 
         // Configure encoder
-        EncoderID encoderId = getEncoderIdForParameter(msg.parameterIndex);
+        auto encoderId = getEncoderIdForParameter(msg.parameterIndex);
         if (encoderId != EncoderID{0}) {
             if (msg.parameterType == static_cast<uint8_t>(ParameterType::KNOB)) {
                 encoders_.setContinuous(encoderId);
@@ -345,35 +367,52 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         auto& slot = state_.parameters.slots[msg.parameterIndex];
 
-        // Build temporary vector for bulk update
-        std::vector<std::string> values;
+        // Static buffer to avoid heap allocation
+        static std::array<std::string, state::MAX_DISCRETE_VALUES> tempValues;
+        size_t count = 0;
         for (const auto& dv : msg.discreteValueNames) {
-            if (!dv.empty()) {
-                values.push_back(std::string(dv.data()));
+            if (!dv.empty() && count < state::MAX_DISCRETE_VALUES) {
+                tempValues[count++] = dv;  // Direct assignment
             }
         }
-        slot.discreteValues.set(values.data(), values.size());
+        slot.discreteValues.set(tempValues.data(), count);
         slot.currentValueIndex.set(msg.currentValueIndex);
     };
 
     protocol_.onDeviceMacroValueChange = [this](const DeviceMacroValueChangeMessage& msg) {
-        if (!msg.fromHost) return;
-        if (msg.parameterIndex >= PARAMETER_COUNT) return;
+        OC_LOG_DEBUG("[HostDevice] onMacroValueChange: idx={} val={:.3f} echo={} fromHost={}",
+                     msg.parameterIndex, msg.parameterValue, msg.isEcho, msg.fromHost);
+
+        if (!msg.fromHost) {
+            OC_LOG_DEBUG("[HostDevice] onMacroValueChange: skipped (not from host)");
+            return;
+        }
+        if (msg.parameterIndex >= PARAMETER_COUNT) {
+            OC_LOG_DEBUG("[HostDevice] onMacroValueChange: skipped (index {} >= {})",
+                         msg.parameterIndex, PARAMETER_COUNT);
+            return;
+        }
 
         auto& slot = state_.parameters.slots[msg.parameterIndex];
+        auto currentType = slot.type.get();
 
         if (msg.isEcho) {
             // Echo: only update display value for non-knob parameters
-            if (slot.type.get() != state::ParameterType::KNOB) {
+            if (currentType != state::ParameterType::KNOB) {
+                OC_LOG_DEBUG("[HostDevice] onMacroValueChange: echo update (non-knob type={})",
+                             static_cast<int>(currentType));
                 slot.value.set(msg.parameterValue);
                 slot.displayValue.set(msg.displayValue.c_str());
+            } else {
+                OC_LOG_DEBUG("[HostDevice] onMacroValueChange: echo skipped (knob)");
             }
         } else {
             // External change: update value and encoder position
+            OC_LOG_DEBUG("[HostDevice] onMacroValueChange: external update -> state");
             slot.value.set(msg.parameterValue);
             slot.displayValue.set(msg.displayValue.c_str());
 
-            EncoderID encoderId = getEncoderIdForParameter(msg.parameterIndex);
+            auto encoderId = getEncoderIdForParameter(msg.parameterIndex);
             if (encoderId != EncoderID{0}) {
                 encoders_.setPosition(encoderId, msg.parameterValue);
             }
@@ -381,6 +420,9 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onDeviceMacroNameChange = [this](const DeviceMacroNameChangeMessage& msg) {
+        OC_LOG_DEBUG("[HostDevice] onMacroNameChange: idx={} name='{}'",
+                     msg.parameterIndex, msg.parameterName.c_str());
+
         if (msg.parameterIndex >= PARAMETER_COUNT) return;
         state_.parameters.slots[msg.parameterIndex].name.set(msg.parameterName.c_str());
     };

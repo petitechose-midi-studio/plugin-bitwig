@@ -12,7 +12,7 @@
 namespace Bitwig {
 
 /**
- * @brief Parameter widget with KnobWidget + name label + value display
+ * @brief Parameter widget with KnobWidget + name label (no value text display)
  */
 class ParameterKnobWidget : public IParameterWidget {
 public:
@@ -31,9 +31,9 @@ public:
 private:
     void createUI(lv_coord_t width, lv_coord_t height, bool centered);
 
+    lv_obj_t* parent_ = nullptr;
     lv_obj_t* container_ = nullptr;
     lv_obj_t* name_label_ = nullptr;
-    lv_obj_t* value_label_ = nullptr;
     std::unique_ptr<oc::ui::lvgl::KnobWidget> knob_;
     uint8_t index_ = 0;
 };

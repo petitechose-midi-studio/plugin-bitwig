@@ -82,7 +82,7 @@ public final class DeviceSelectByIndexMessage {
         System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
         offset += deviceIndex_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

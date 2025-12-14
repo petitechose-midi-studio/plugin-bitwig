@@ -203,7 +203,7 @@ public final class DeviceMacroUpdateMessage {
         System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
         offset += currentValueIndex_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

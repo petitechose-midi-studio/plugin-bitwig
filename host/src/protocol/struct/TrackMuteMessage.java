@@ -97,7 +97,7 @@ public final class TrackMuteMessage {
         System.arraycopy(isMute_encoded, 0, buffer, offset, isMute_encoded.length);
         offset += isMute_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

@@ -98,7 +98,7 @@ public final class DeviceMacroNameChangeMessage {
         System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
         offset += parameterName_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

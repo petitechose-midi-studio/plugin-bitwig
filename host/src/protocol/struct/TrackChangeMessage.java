@@ -128,7 +128,7 @@ public final class TrackChangeMessage {
         System.arraycopy(trackType_encoded, 0, buffer, offset, trackType_encoded.length);
         offset += trackType_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

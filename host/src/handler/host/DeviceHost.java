@@ -39,6 +39,7 @@ public class DeviceHost {
     // Prevent duplicate calls during transitions
     private boolean deviceChangePending = false;  // Ignores individual param messages during device change
     private boolean deviceListPending = false;  // Debounce for sendDeviceList
+    private boolean pageChangePending = false;  // Debounce for sendPageChange
 
     public DeviceHost(
         ControllerHost host,
@@ -122,12 +123,18 @@ public class DeviceHost {
             markParameterInterested(remoteControls.getParameter(i));
         }
 
-        // Page change observer - skip if device change will handle it
+        // Page change observer - debounced, skip if device change will handle it
         remoteControls.selectedPageIndex().addValueObserver(pageIndex -> {
             if (pageIndex != lastPageIndex) {
                 lastPageIndex = pageIndex;
-                if (!deviceChangePending) {
-                    host.scheduleTask(() -> sendPageChange(), BitwigConfig.PAGE_CHANGE_MS);
+                if (!deviceChangePending && !pageChangePending) {
+                    pageChangePending = true;
+                    host.scheduleTask(() -> {
+                        pageChangePending = false;
+                        if (!deviceChangePending) {
+                            sendPageChange();
+                        }
+                    }, BitwigConfig.PAGE_CHANGE_MS);
                 }
             }
         });
@@ -268,12 +275,14 @@ public class DeviceHost {
             if (!device.exists().get()) continue;
 
             String deviceTypeRaw = device.deviceType().get();
+            int deviceTypeInt = DeviceTypeUtils.toInt(deviceTypeRaw);
+            host.println("[DeviceList] " + device.name().get() + " -> deviceType='" + deviceTypeRaw + "' (" + deviceTypeInt + ")");
 
             list.add(new DeviceListMessage.Devices(
                 device.position().get(),
                 device.name().get(),
                 device.isEnabled().get(),
-                DeviceTypeUtils.toInt(deviceTypeRaw),
+                deviceTypeInt,
                 getDeviceChildrenTypes(device)
             ));
         }
@@ -443,20 +452,14 @@ public class DeviceHost {
     }
 
     private void sendDeviceCleared() {
-        // Send header with empty values
-        protocol.send(new DeviceChangeHeaderMessage("No Device", false, DeviceTypeUtils.UNKNOWN, new DeviceChangeHeaderMessage.PageInfo(0, 0, ""), new ArrayList<>()));
+        // Block individual observers during clear - no messages sent
+        // Controller keeps current display until a real device is selected
+        deviceChangePending = true;
 
-        // Send empty macros bundled in one message
-        List<DevicePageChangeMessage.Macros> emptyMacros = new ArrayList<>();
-        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
-            emptyMacros.add(new DevicePageChangeMessage.Macros(
-                i, 0.0f, "", 0.0f, false, (short) 0, "", 0, new String[0], 0
-            ));
-        }
-        protocol.send(new DevicePageChangeMessage(
-            new DevicePageChangeMessage.PageInfo(0, 0, ""),
-            emptyMacros
-        ));
+        // Small delay then resume observers (in case device is quickly reselected)
+        host.scheduleTask(() -> {
+            deviceChangePending = false;
+        }, BitwigConfig.STANDARD_DELAY_MS);
     }
 
     private void sendPageChange() {

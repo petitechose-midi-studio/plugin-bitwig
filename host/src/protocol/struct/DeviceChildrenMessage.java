@@ -171,7 +171,7 @@ public final class DeviceChildrenMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

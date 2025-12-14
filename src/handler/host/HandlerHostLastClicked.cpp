@@ -9,7 +9,7 @@ namespace bitwig::handler {
 
 using namespace Protocol;
 using namespace Bitwig::Device;
-using Config::EncoderID;
+using EncoderID = Config::EncoderID;
 
 HandlerHostLastClicked::HandlerHostLastClicked(state::BitwigState& state,
                                                BitwigProtocol& protocol,

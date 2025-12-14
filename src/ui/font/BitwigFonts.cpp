@@ -19,8 +19,8 @@ void bitwigFontsRegister() {
 
 void bitwigFontsLink() {
     // Link text fonts to core's fonts after they're loaded
-    bitwig_fonts.track_label = ::fonts.inter_14_bold;
-    bitwig_fonts.device_label = ::fonts.inter_14_semibold;
+    bitwig_fonts.track_label = ::fonts.list_item_label;   // Semibold 14 (from core)
+    bitwig_fonts.device_label = ::fonts.list_item_label;  // Semibold 14 (from core)
     bitwig_fonts.page_label = ::fonts.inter_14_regular;
     bitwig_fonts.param_label = ::fonts.inter_14_regular;
     bitwig_fonts.lvgl_symbols = &lv_font_montserrat_12;  // Built-in LVGL symbols

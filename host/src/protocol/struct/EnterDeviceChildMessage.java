@@ -112,7 +112,7 @@ public final class EnterDeviceChildMessage {
         System.arraycopy(childIndex_encoded, 0, buffer, offset, childIndex_encoded.length);
         offset += childIndex_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

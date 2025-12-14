@@ -97,7 +97,7 @@ public final class DeviceMacroTouchMessage {
         System.arraycopy(isTouched_encoded, 0, buffer, offset, isTouched_encoded.length);
         offset += isTouched_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

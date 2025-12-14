@@ -42,6 +42,7 @@ public class MidiStudioExtension extends ControllerExtension {
       TrackBank trackBank = host.createTrackBank(32, 0, 0, false);
 
       protocol = new Protocol(
+            host,
             host.getMidiOutPort(0),
             host.getMidiInPort(0));
 

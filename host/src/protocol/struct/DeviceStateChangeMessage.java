@@ -97,7 +97,7 @@ public final class DeviceStateChangeMessage {
         System.arraycopy(isEnabled_encoded, 0, buffer, offset, isEnabled_encoded.length);
         offset += isEnabled_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

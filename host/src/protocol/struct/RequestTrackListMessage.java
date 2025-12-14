@@ -63,7 +63,7 @@ public final class RequestTrackListMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
 
-        return buffer;
+        return new byte[0];
     }
 
     // ============================================================================

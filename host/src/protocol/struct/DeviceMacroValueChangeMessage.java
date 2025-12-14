@@ -128,7 +128,7 @@ public final class DeviceMacroValueChangeMessage {
         System.arraycopy(isEcho_encoded, 0, buffer, offset, isEcho_encoded.length);
         offset += isEcho_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

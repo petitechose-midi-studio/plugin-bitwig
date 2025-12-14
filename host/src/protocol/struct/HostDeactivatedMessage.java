@@ -82,7 +82,7 @@ public final class HostDeactivatedMessage {
         System.arraycopy(isHostActive_encoded, 0, buffer, offset, isHostActive_encoded.length);
         offset += isHostActive_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

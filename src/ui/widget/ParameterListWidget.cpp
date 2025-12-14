@@ -1,5 +1,6 @@
 #include "ParameterListWidget.hpp"
 
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace Theme;
@@ -8,7 +9,9 @@ namespace Bitwig {
 
 ParameterListWidget::ParameterListWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                          uint8_t index, int16_t discreteCount)
-    : index_(index), discrete_count_(discreteCount) {
+    : parent_(parent ? parent : lv_screen_active()),
+      index_(index),
+      discrete_count_(discreteCount) {
     createUI(width, height);
 }
 
@@ -21,42 +24,45 @@ ParameterListWidget::~ParameterListWidget() {
 }
 
 void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
-    container_ = lv_obj_create(lv_obj_get_parent(lv_screen_active()));
+    // Container with grid layout: widget row (flexible) + label row (content)
+    container_ = lv_obj_create(parent_);
     lv_obj_set_size(container_, width, height);
     lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
     lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Flex column layout
-    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
-                          LV_FLEX_ALIGN_CENTER);
+    // Grid: 1 column, 2 rows (FR(1) for widget, CONTENT for label)
+    static const int32_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    static const int32_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST};
+    lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
+    lv_obj_set_layout(container_, LV_LAYOUT_GRID);
 
-    // Name label (top)
-    name_label_ = lv_label_create(container_);
-    lv_label_set_text(name_label_, "");
-    lv_obj_set_style_text_color(name_label_, lv_color_hex(Color::TEXT_LIGHT), LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(name_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-
-    // Enum widget container
-    lv_obj_t* enum_container = lv_obj_create(container_);
-    lv_obj_set_size(enum_container, 70, 50);
-    lv_obj_set_style_bg_opa(enum_container, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(enum_container, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(enum_container, 0, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(enum_container, LV_OBJ_FLAG_SCROLLABLE);
-
-    // Enum widget
-    enum_widget_ = std::make_unique<oc::ui::lvgl::EnumWidget>(enum_container);
+    // Enum widget - stretched to fill grid cell
+    enum_widget_ = std::make_unique<oc::ui::lvgl::EnumWidget>(container_);
     enum_widget_->lineColor(Color::DATA_INACTIVE).flashColor(Color::DATA_ACTIVE);
+    lv_obj_set_grid_cell(enum_widget_->getElement(),
+        LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
+        LV_GRID_ALIGN_STRETCH, 0, 1); // Vertical: fill FR(1) space
 
-    // Value label inside enum widget
+    // Value label inside enum widget's inner area
     value_label_ = lv_label_create(enum_widget_->inner());
     lv_label_set_text(value_label_, "");
+    lv_obj_set_size(value_label_, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_style_text_color(value_label_, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(value_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(value_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
     lv_obj_center(value_label_);
+
+    // Name label - stretched width, content height
+    name_label_ = lv_label_create(container_);
+    lv_label_set_text(name_label_, "");
+    lv_obj_set_style_text_color(name_label_, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(name_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(name_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
+    lv_obj_set_grid_cell(name_label_,
+        LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
+        LV_GRID_ALIGN_CENTER, 1, 1);  // Vertical: center in CONTENT row
 }
 
 void ParameterListWidget::setName(const std::string& name) {
@@ -91,7 +97,7 @@ void ParameterListWidget::setDiscreteMetadata(int16_t discreteCount,
     discrete_count_ = discreteCount;
     value_names_ = valueNames;
     current_index_ = currentIndex;
-    updateValueDisplay();
+    // Note: Don't call updateValueDisplay() here - setValueWithDisplay() handles the display
 }
 
 void ParameterListWidget::setVisible(bool visible) {

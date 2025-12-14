@@ -97,7 +97,7 @@ public final class RequestDeviceChildrenMessage {
         System.arraycopy(childType_encoded, 0, buffer, offset, childType_encoded.length);
         offset += childType_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

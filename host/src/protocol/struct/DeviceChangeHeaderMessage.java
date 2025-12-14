@@ -186,7 +186,7 @@ public final class DeviceChangeHeaderMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

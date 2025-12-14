@@ -122,7 +122,7 @@ public final class DevicePageNamesMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

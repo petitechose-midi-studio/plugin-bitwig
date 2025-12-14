@@ -2,6 +2,7 @@ package protocol;
 
 import com.bitwig.extension.controller.api.MidiOut;
 import com.bitwig.extension.controller.api.MidiIn;
+import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.MessageID;
 import protocol.ProtocolConstants;
 import protocol.DecoderRegistry;
@@ -32,6 +33,7 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
 
     private final MidiOut midiOut;
+    private final ControllerHost host;
     private volatile boolean isActive = true;
 
     // ========================================================================
@@ -50,13 +52,17 @@ public class Protocol extends ProtocolCallbacks {
     // Constructor
     // ========================================================================
 
-    public Protocol(MidiOut midiOut, MidiIn midiIn) {
+    public Protocol(ControllerHost host, MidiOut midiOut, MidiIn midiIn) {
+        if (host == null) {
+            throw new IllegalArgumentException("ControllerHost cannot be null");
+        }
         if (midiOut == null) {
             throw new IllegalArgumentException("MidiOut cannot be null");
         }
         if (midiIn == null) {
             throw new IllegalArgumentException("MidiIn cannot be null");
         }
+        this.host = host;
         this.midiOut = midiOut;
 
         // Register SysEx callback automatically (no need to store midiIn)
@@ -113,6 +119,9 @@ public class Protocol extends ProtocolCallbacks {
 
         // Build SysEx frame
         byte[] sysex = buildSysExFrame(messageId.getValue(), payload);
+
+        // Profiling log: message type, payload size, total size
+        host.println("[SYSEX TX] " + messageId.name() + " payload=" + payload.length + "B total=" + sysex.length + "B");
 
         // Send via MidiOut
         midiOut.sendSysex(sysex);
