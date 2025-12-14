@@ -8,7 +8,7 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using Config::EncoderID;
+using EncoderID = Config::EncoderID;
 
 HandlerInputLastClicked::HandlerInputLastClicked(state::BitwigState& state,
                                                  BitwigProtocol& protocol,

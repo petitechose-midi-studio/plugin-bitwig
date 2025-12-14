@@ -1,7 +1,9 @@
 #include "DeviceView.hpp"
 
+#include <oc/teensy/LogOutput.hpp>
 #include <oc/log/Log.hpp>
 
+#include "config/App.hpp"
 #include "handler/DeviceConstants.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/theme/StyleHelpers.hpp"
@@ -24,8 +26,22 @@ DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
     for (auto& widget : widgets_) {
         widget = nullptr;
     }
+    for (auto& dirty : paramDirty_) {
+        dirty = false;
+    }
 
     createUI();
+
+    // Create all 8 parameter widgets with default type (KNOB)
+    // This ensures widgets exist before signals start firing
+    for (uint8_t i = 0; i < 8; i++) {
+        ensureWidgetForType(i);
+    }
+
+    // Create timer for debounced parameter updates (synced with LVGL display refresh)
+    constexpr uint32_t refrPeriodMs = 1000 / Config::Timing::LVGL_HZ;
+    updateTimer_ = lv_timer_create(onUpdateTimer, refrPeriodMs, this);
+
     setupBindings();
     initialized_ = true;
 
@@ -33,6 +49,12 @@ DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
 }
 
 DeviceView::~DeviceView() {
+    // Delete update timer
+    if (updateTimer_) {
+        lv_timer_delete(updateTimer_);
+        updateTimer_ = nullptr;
+    }
+
     // Subscriptions auto-unsubscribe via RAII
     subs_.clear();
 
@@ -97,44 +119,38 @@ void DeviceView::setupBindings() {
     }));
 
     // =========================================================================
-    // Parameters → Widgets (8 slots)
+    // Parameters → Widgets (8 slots, debounced via dirty flags)
     // =========================================================================
     for (uint8_t i = 0; i < 8; i++) {
         auto& slot = state_.parameters.slots[i];
 
-        // Type change triggers widget creation/recreation
+        // Type change triggers widget creation/recreation (immediate)
         subs_.push_back(slot.type.subscribe([this, i](bitwig::state::ParameterType type) {
             OC_LOG_DEBUG("[DeviceView] signal: param[{}].type = {}", i, static_cast<int>(type));
             ensureWidgetForType(i);
-            updateParameter(i);
+            markParameterDirty(i);
         }));
 
-        // Value/display changes
-        subs_.push_back(slot.value.subscribe([this, i](float val) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].value = {:.3f}", i, val);
-            updateParameter(i);
+        // Value/display changes (debounced)
+        subs_.push_back(slot.value.subscribe([this, i](float) {
+            markParameterDirty(i);
         }));
-        subs_.push_back(slot.name.subscribe([this, i](const char* name) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].name = '{}'", i, name);
-            updateParameter(i);
+        subs_.push_back(slot.name.subscribe([this, i](const char*) {
+            markParameterDirty(i);
         }));
-        subs_.push_back(slot.displayValue.subscribe([this, i](const char* val) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].displayValue = '{}'", i, val);
-            updateParameter(i);
+        subs_.push_back(slot.displayValue.subscribe([this, i](const char*) {
+            markParameterDirty(i);
         }));
-        subs_.push_back(slot.visible.subscribe([this, i](bool vis) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].visible = {}", i, vis);
-            updateParameter(i);
+        subs_.push_back(slot.visible.subscribe([this, i](bool) {
+            markParameterDirty(i);
         }));
-        subs_.push_back(slot.currentValueIndex.subscribe([this, i](uint8_t idx) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].currentValueIndex = {}", i, idx);
-            updateParameter(i);
+        subs_.push_back(slot.currentValueIndex.subscribe([this, i](uint8_t) {
+            markParameterDirty(i);
         }));
 
-        // Discrete values list change
+        // Discrete values list change (debounced)
         subs_.push_back(slot.discreteValues.subscribe([this, i]() {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].discreteValues changed", i);
-            updateParameter(i);
+            markParameterDirty(i);
         }));
     }
 
@@ -224,8 +240,21 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
     auto& slot = state_.parameters.slots[index];
     auto type = slot.type.get();
 
-    // Reset existing widget
-    widgets_[index].reset();
+    // Skip recreation if widget already exists WITH SAME TYPE (like OLD's pattern)
+    if (widgets_[index] && widgetTypes_[index] == type) {
+        OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - same type {}, skipping", index, static_cast<int>(type));
+        return;
+    }
+
+    // Destroy existing widget if type changed
+    if (widgets_[index]) {
+        OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - type changed {} -> {}, recreating",
+                     index, static_cast<int>(widgetTypes_[index]), static_cast<int>(type));
+        widgets_[index].reset();
+    }
+
+    OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - creating type={}", index, static_cast<int>(type));
+    widgetTypes_[index] = type;  // Track the new type
 
     switch (type) {
         case bitwig::state::ParameterType::BUTTON:
@@ -261,10 +290,21 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
 }
 
 void DeviceView::updateParameter(uint8_t index) {
-    if (!initialized_ || index >= 8 || !widgets_[index]) return;
+    if (!initialized_ || index >= 8) {
+        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (init={} idx>=8={})",
+                     index, initialized_, index >= 8);
+        return;
+    }
+    if (!widgets_[index]) {
+        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (no widget)", index);
+        return;
+    }
 
     auto& slot = state_.parameters.slots[index];
     auto type = slot.type.get();
+    bool visible = slot.visible.get();
+
+    OC_LOG_INFO("[UI] updateParameter({}) name='{}'", index, slot.name.get());
 
     // Update name and value
     widgets_[index]->setName(slot.name.get());
@@ -283,7 +323,7 @@ void DeviceView::updateParameter(uint8_t index) {
     // Update visibility
     lv_obj_t* container = widgets_[index]->getContainer();
     if (container) {
-        if (slot.visible.get()) {
+        if (visible) {
             lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(container, LV_OBJ_FLAG_HIDDEN);
@@ -456,6 +496,32 @@ lv_obj_t* DeviceView::getDeviceSelectorElement() const {
 lv_obj_t* DeviceView::getTrackSelectorElement() const {
     if (!track_selector_) return nullptr;
     return track_selector_->getElement();
+}
+
+// =============================================================================
+// Dirty Flag System (Debounced Updates)
+// =============================================================================
+
+void DeviceView::markParameterDirty(uint8_t index) {
+    if (index < 8) {
+        paramDirty_[index] = true;
+    }
+}
+
+void DeviceView::processDirtyParameters() {
+    for (uint8_t i = 0; i < 8; i++) {
+        if (paramDirty_[i]) {
+            paramDirty_[i] = false;
+            updateParameter(i);
+        }
+    }
+}
+
+void DeviceView::onUpdateTimer(lv_timer_t* timer) {
+    auto* self = static_cast<DeviceView*>(lv_timer_get_user_data(timer));
+    if (self) {
+        self->processDirtyParameters();
+    }
 }
 
 }  // namespace Bitwig

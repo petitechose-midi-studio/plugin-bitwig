@@ -1,5 +1,4 @@
 {
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
     "files.associations": {
         "*.inc": "cpp"
     },
@@ -29,10 +28,6 @@
     // Disable C/C++ IntelliSense (use clangd instead)
     "C_Cpp.intelliSenseEngine": "default",
     
-    // Clangd settings
-    "clangd.arguments": [
-        "--query-driver=**/arm-none-eabi-*"
-    ],
 
     "taskexplorer.exclude": [
         "**/.*/**"

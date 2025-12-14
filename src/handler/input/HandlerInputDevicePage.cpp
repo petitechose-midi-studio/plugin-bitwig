@@ -9,8 +9,8 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using Config::ButtonID;
-using Config::EncoderID;
+using ButtonID = Config::ButtonID;
+using EncoderID = Config::EncoderID;
 
 namespace {
 int wrapIndex(int value, int modulo) {

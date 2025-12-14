@@ -209,7 +209,7 @@ public final class DeviceListMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

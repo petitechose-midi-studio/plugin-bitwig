@@ -244,7 +244,7 @@ public final class DevicePageChangeMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

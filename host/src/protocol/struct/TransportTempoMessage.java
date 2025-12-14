@@ -82,7 +82,7 @@ public final class TransportTempoMessage {
         System.arraycopy(tempo_encoded, 0, buffer, offset, tempo_encoded.length);
         offset += tempo_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

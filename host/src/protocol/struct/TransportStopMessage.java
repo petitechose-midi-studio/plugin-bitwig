@@ -82,7 +82,7 @@ public final class TransportStopMessage {
         System.arraycopy(isStopping_encoded, 0, buffer, offset, isStopping_encoded.length);
         offset += isStopping_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

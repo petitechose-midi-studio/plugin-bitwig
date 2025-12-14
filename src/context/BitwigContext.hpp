@@ -61,10 +61,14 @@
 #include "handler/input/HandlerInputTrack.hpp"
 #include "handler/input/HandlerInputTransport.hpp"
 #include "ui/device/DeviceView.hpp"
+#include "ui/transportbar/TransportBar.hpp"
+#include "ui/ViewContainer.hpp"
 
 namespace bitwig {
 
 using Bitwig::DeviceView;
+using Bitwig::TransportBar;
+using Bitwig::ViewContainer;
 
 /**
  * @brief Context for Bitwig DAW control
@@ -99,7 +103,11 @@ public:
     // DAW Connection
     // =========================================================================
 
-    bool isConnected() const override { return state_.host.connected.get(); }
+    // Always return true - BitwigContext is the default context.
+    // The framework's disconnect logic is for switching away from DAW contexts,
+    // but since this is the only context, we never want to "disconnect".
+    // Host connection state is tracked separately in state_.host.connected.
+    bool isConnected() const override { return true; }
     void onConnected() override;
     void onDisconnected() override;
 
@@ -141,8 +149,12 @@ private:
     std::unique_ptr<handler::HandlerInputTrack> inputTrack_;
     std::unique_ptr<handler::HandlerInputLastClicked> inputLastClicked_;
 
+    // UI Container
+    std::unique_ptr<ViewContainer> viewContainer_;
+
     // Views (subscribe to state in their constructors)
     std::unique_ptr<DeviceView> deviceView_;
+    std::unique_ptr<TransportBar> transportBar_;
 };
 
 }  // namespace bitwig

@@ -33,6 +33,7 @@ private:
     void createUI(lv_coord_t width, lv_coord_t height);
     void updateValueDisplay();
 
+    lv_obj_t* parent_ = nullptr;  // Parent for widget creation
     lv_obj_t* container_ = nullptr;
     lv_obj_t* name_label_ = nullptr;
     lv_obj_t* value_label_ = nullptr;

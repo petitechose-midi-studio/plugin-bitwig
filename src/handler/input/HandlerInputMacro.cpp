@@ -11,8 +11,8 @@ namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
 using namespace Bitwig::Device;
-using Config::EncoderID;
-using Config::ButtonID;
+using EncoderID = Config::EncoderID;
+using ButtonID = Config::ButtonID;
 
 namespace {
 constexpr EncoderID MACRO_ENCODERS[] = {

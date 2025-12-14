@@ -289,7 +289,7 @@ public final class DeviceChangeMessage {
         }
 
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

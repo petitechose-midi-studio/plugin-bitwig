@@ -82,7 +82,7 @@ public final class DevicePageSelectByIndexMessage {
         System.arraycopy(devicePageIndex_encoded, 0, buffer, offset, devicePageIndex_encoded.length);
         offset += devicePageIndex_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

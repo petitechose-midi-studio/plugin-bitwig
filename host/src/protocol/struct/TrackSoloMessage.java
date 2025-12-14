@@ -97,7 +97,7 @@ public final class TrackSoloMessage {
         System.arraycopy(isSolo_encoded, 0, buffer, offset, isSolo_encoded.length);
         offset += isSolo_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

@@ -58,7 +58,7 @@ struct DeviceChildrenMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 52;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 4;
 
     /**
      * Encode struct to MIDI-safe bytes

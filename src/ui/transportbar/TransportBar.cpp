@@ -8,8 +8,6 @@
 using namespace Theme;
 
 namespace {
-const lv_color_t COLOR_BACKGROUND = lv_color_hex(Color::BACKGROUND_FILL);
-const lv_color_t COLOR_TEXT = lv_color_hex(Color::TEXT_LIGHT);
 const lv_color_t COLOR_INACTIVE = lv_color_hex(Color::DATA_INACTIVE);
 const lv_color_t COLOR_ACTIVE = lv_color_hex(Color::DATA_ACTIVE);
 const lv_color_t COLOR_PLAY = lv_color_hex(Color::MACRO_5);
@@ -19,52 +17,72 @@ const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
 
 namespace Bitwig {
 
-TransportBar::TransportBar(lv_obj_t* parent) : parent_(parent) {
+TransportBar::TransportBar(lv_obj_t* parent, bitwig::state::TransportState& state)
+    : state_(state), parent_(parent) {
     if (!parent_) return;
 
     createContainer(parent_);
     createTransportControls();
     createTempoDisplay();
+    setupBindings();
+    render();  // Initial render
 }
 
 TransportBar::~TransportBar() {
+    subs_.clear();
     if (container_) {
         lv_obj_delete(container_);
         container_ = nullptr;
     }
 }
 
-void TransportBar::render(const TransportBarProps& props) {
-    if (!container_) return;
+void TransportBar::setupBindings() {
+    subs_.push_back(state_.playing.subscribe([this](bool playing) { setPlayState(playing); }));
+    subs_.push_back(
+        state_.recording.subscribe([this](bool recording) { setRecordState(recording); }));
+    subs_.push_back(state_.tempo.subscribe([this](float tempo) { setTempo(tempo); }));
+    subs_.push_back(state_.midiInActive.subscribe([this](bool active) { setMidiIn(active); }));
+    subs_.push_back(state_.midiOutActive.subscribe([this](bool active) { setMidiOut(active); }));
+}
 
-    // Play state
+void TransportBar::render() {
+    setPlayState(state_.playing.get());
+    setRecordState(state_.recording.get());
+    setTempo(state_.tempo.get());
+    setMidiIn(state_.midiInActive.get());
+    setMidiOut(state_.midiOutActive.get());
+}
+
+void TransportBar::setPlayState(bool playing) {
     if (play_icon_) {
-        lv_obj_set_style_text_color(play_icon_, props.playing ? COLOR_PLAY : COLOR_INACTIVE,
+        lv_obj_set_style_text_color(play_icon_, playing ? COLOR_PLAY : COLOR_INACTIVE,
                                     LV_STATE_DEFAULT);
     }
+}
 
-    // Record state
+void TransportBar::setRecordState(bool recording) {
     if (record_icon_) {
-        lv_obj_set_style_text_color(record_icon_, props.recording ? COLOR_RECORD : COLOR_INACTIVE,
+        lv_obj_set_style_text_color(record_icon_, recording ? COLOR_RECORD : COLOR_INACTIVE,
                                     LV_STATE_DEFAULT);
     }
+}
 
-    // Tempo
-    if (bpm_label_) { lv_label_set_text_fmt(bpm_label_, "%.2f", static_cast<double>(props.tempo)); }
+void TransportBar::setTempo(float tempo) {
+    if (bpm_label_) { lv_label_set_text_fmt(bpm_label_, "%.2f", static_cast<double>(tempo)); }
+}
 
-    // MIDI indicators
+void TransportBar::setMidiIn(bool active) {
     if (midi_in_indicator_) {
-        midi_in_indicator_->setState(props.midiInActive ? StateIndicator::State::ACTIVE
-                                                        : StateIndicator::State::OFF);
+        midi_in_indicator_->setState(active ? StateIndicator::State::ACTIVE
+                                            : StateIndicator::State::OFF);
     }
-    if (midi_out_indicator_) {
-        midi_out_indicator_->setState(props.midiOutActive ? StateIndicator::State::ACTIVE
-                                                          : StateIndicator::State::OFF);
-    }
+}
 
-    // Visibility
-    if (props.visible) lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-    else lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
+void TransportBar::setMidiOut(bool active) {
+    if (midi_out_indicator_) {
+        midi_out_indicator_->setState(active ? StateIndicator::State::ACTIVE
+                                             : StateIndicator::State::OFF);
+    }
 }
 
 void TransportBar::show() {

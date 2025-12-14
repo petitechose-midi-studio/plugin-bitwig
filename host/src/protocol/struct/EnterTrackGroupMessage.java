@@ -82,7 +82,7 @@ public final class EnterTrackGroupMessage {
         System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
         offset += trackIndex_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================

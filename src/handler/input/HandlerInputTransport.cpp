@@ -1,5 +1,6 @@
 #include "HandlerInputTransport.hpp"
 
+#include <oc/teensy/LogOutput.hpp>
 #include <oc/log/Log.hpp>
 
 #include "config/App.hpp"
@@ -7,8 +8,8 @@
 
 namespace bitwig::handler {
 
-using Config::ButtonID;
-using Config::EncoderID;
+using ButtonID = Config::ButtonID;
+using EncoderID = Config::EncoderID;
 
 HandlerInputTransport::HandlerInputTransport(state::BitwigState& state,
                                              BitwigProtocol& protocol,
@@ -29,24 +30,29 @@ void HandlerInputTransport::setupBindings() {
     // They only fire if no scoped binding captures the input.
     // This matches the original behavior.
 
+    OC_LOG_INFO("[TransportInput] Setting NAV encoder to RELATIVE mode");
     // Configure NAV encoder for Relative mode
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
-    // Play/Pause - BOTTOM_LEFT (global)
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_LEFT -> togglePlay (on release)");
+    // Play/Pause - BOTTOM_LEFT (global, on release like OLD)
     buttons_.button(ButtonID::BOTTOM_LEFT)
-        .press()
+        .release()
         .then([this]() { togglePlay(); });
 
-    // Stop - BOTTOM_CENTER (global)
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_CENTER -> stop (on release)");
+    // Stop - BOTTOM_CENTER (global, on release like OLD)
     buttons_.button(ButtonID::BOTTOM_CENTER)
-        .press()
+        .release()
         .then([this]() { stop(); });
 
-    // Record - BOTTOM_RIGHT (global)
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_RIGHT -> toggleRecord (on release)");
+    // Record - BOTTOM_RIGHT (global, on release like OLD)
     buttons_.button(ButtonID::BOTTOM_RIGHT)
-        .press()
+        .release()
         .then([this]() { toggleRecord(); });
 
+    OC_LOG_INFO("[TransportInput] Binding NAV encoder -> adjustTempo");
     // Tempo - NAV encoder (global)
     encoders_.encoder(EncoderID::NAV)
         .turn()
@@ -54,36 +60,50 @@ void HandlerInputTransport::setupBindings() {
 }
 
 void HandlerInputTransport::togglePlay() {
+    OC_LOG_INFO("[TransportInput] >> togglePlay() called");
     // Optimistic update (will be confirmed by host)
     bool newState = !state_.transport.playing.get();
+    OC_LOG_INFO("[TransportInput] Optimistic: playing {} -> {}", !newState, newState);
     state_.transport.playing.set(newState);
 
     // Send to host
+    OC_LOG_INFO("[TransportInput] Sending protocol_.togglePlay()");
     protocol_.togglePlay();
+    OC_LOG_INFO("[TransportInput] << togglePlay() done");
 }
 
 void HandlerInputTransport::stop() {
+    OC_LOG_INFO("[TransportInput] >> stop() called");
     // Optimistic update
+    OC_LOG_INFO("[TransportInput] Optimistic: playing=false, recording=false");
     state_.transport.playing.set(false);
     state_.transport.recording.set(false);
 
     // Send to host
+    OC_LOG_INFO("[TransportInput] Sending protocol_.stop()");
     protocol_.stop();
+    OC_LOG_INFO("[TransportInput] << stop() done");
 }
 
 void HandlerInputTransport::toggleRecord() {
+    OC_LOG_INFO("[TransportInput] >> toggleRecord() called");
     // Optimistic update
     bool newState = !state_.transport.recording.get();
+    OC_LOG_INFO("[TransportInput] Optimistic: recording {} -> {}", !newState, newState);
     state_.transport.recording.set(newState);
 
     // Send to host
+    OC_LOG_INFO("[TransportInput] Sending protocol_.toggleRecord()");
     protocol_.toggleRecord();
+    OC_LOG_INFO("[TransportInput] << toggleRecord() done");
 }
 
 void HandlerInputTransport::adjustTempo(float delta) {
+    OC_LOG_INFO("[TransportInput] >> adjustTempo(delta={})", delta);
     // In Relative mode, encoder sends delta directly (±1)
     // Send to host - no optimistic update for tempo (host is authoritative)
     protocol_.send(Protocol::TransportTempoMessage{delta});
+    OC_LOG_INFO("[TransportInput] << adjustTempo() done");
 }
 
 }  // namespace bitwig::handler

@@ -64,6 +64,7 @@ private:
 
     bool hasChildren(uint8_t deviceIndex) const;
     int getAdjustedDeviceIndex(int selectorIndex) const;
+    bool isShowingChildren() const;
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
@@ -72,18 +73,8 @@ private:
     lv_obj_t* scopeElement_;
     lv_obj_t* overlayElement_;
 
-    // Internal navigation state
-    enum class SelectorMode { Devices, Children };
-    struct NavigationState {
-        SelectorMode mode = SelectorMode::Devices;
-        uint8_t deviceIndex = 0;
-        uint8_t childType = 0;
-        uint8_t childrenCount = 0;
-        std::array<uint8_t, 16> itemTypes = {};
-        std::array<uint8_t, 16> childIndices = {};
-    };
-    NavigationState navigation_;
-
+    // Minimal local state - everything else comes from BitwigState Signals
+    uint8_t currentDeviceIndex_ = 0;  // Device being navigated (for children mode)
     bool requested_ = false;
     bool trackListRequested_ = false;
 };

@@ -82,7 +82,7 @@ public final class TransportRecordMessage {
         System.arraycopy(isRecording_encoded, 0, buffer, offset, isRecording_encoded.length);
         offset += isRecording_encoded.length;
 
-        return buffer;
+        return java.util.Arrays.copyOf(buffer, offset);
     }
 
     // ============================================================================
