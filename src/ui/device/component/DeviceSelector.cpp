@@ -7,7 +7,7 @@
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
-using namespace Theme;
+using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
@@ -118,7 +118,7 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
                                                 LV_STATE_PRESSED);
                     lv_obj_set_style_text_color(icon_lbl, lv_color_hex(Color::INACTIVE_LIGHTER),
                                                 LV_STATE_DISABLED);
-                    lv_obj_set_style_text_opa(icon_lbl, LV_OPA_50, LV_STATE_DISABLED);
+                    lv_obj_set_style_text_opa(icon_lbl, Opacity::DIMMED, LV_STATE_DISABLED);
                     lv_obj_move_to_index(icon_lbl, 0);
                 }
             }
@@ -172,16 +172,16 @@ void DeviceSelector::createHeader() {
     lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_style_bg_opa(header_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(header_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(header_, 16, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(header_, 16, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(header_, 8, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(header_, 4, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(header_, Layout::OVERLAY_PAD_TOP, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(header_, Layout::OVERLAY_PAD_BOTTOM, LV_STATE_DEFAULT);
     lv_obj_clear_flag(header_, LV_OBJ_FLAG_SCROLLABLE);
 
     // Flex row for track title items
     lv_obj_set_flex_flow(header_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(header_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(header_, 8, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(header_, Layout::OVERLAY_PAD_TOP, LV_STATE_DEFAULT);
 
     // Move header to position 1 (after hidden title, before list)
     lv_obj_move_to_index(header_, 1);
@@ -286,7 +286,7 @@ lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent) {
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, Icon::DIRECTORY);
     style::apply(icon).textColor(Color::INACTIVE_LIGHTER);
-    lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(icon, Opacity::SUBTLE, LV_STATE_DEFAULT);
     return icon;
 }
 

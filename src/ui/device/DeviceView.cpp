@@ -2,15 +2,17 @@
 
 #include <oc/log/Log.hpp>
 #include <oc/state/Bind.hpp>
+#include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
 #include "config/App.hpp"
 #include "ui/theme/BitwigTheme.hpp"
+#include "ui/widget/BaseParameterWidget.hpp"
 #include "ui/widget/ParameterButtonWidget.hpp"
 #include "ui/widget/ParameterKnobWidget.hpp"
 #include "ui/widget/ParameterListWidget.hpp"
 
-using namespace Theme;
+using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
@@ -30,9 +32,9 @@ DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
 
     createUI();
 
-    // Create all 8 parameter widgets with default type (KNOB)
+    // Create all parameter widgets with default type (KNOB)
     // This ensures widgets exist before signals start firing
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < state::PARAMETER_COUNT; i++) {
         ensureWidgetForType(i);
     }
 
@@ -84,10 +86,23 @@ void DeviceView::onDeactivate() {
 
 // =============================================================================
 // Signal Bindings (Reactive Architecture)
+//
+// Two binding patterns are used intentionally:
+//
+// 1. bind(subs_).on() - IMMEDIATE execution, used for:
+//    - Parameter type changes → must recreate widget immediately before
+//      other signals (value, name) fire, otherwise widget would be wrong type
+//
+// 2. watcher_.watchAll() / watcher_.group() - COALESCED execution, used for:
+//    - Multiple signals that update the same UI component
+//    - Deferred to end of tick via NotificationQueue
+//    - Prevents redundant updates when many signals change together
+//
 // =============================================================================
 
 void DeviceView::setupBindings() {
     using oc::state::bind;
+    using state::PARAMETER_COUNT;
     OC_LOG_DEBUG("[DeviceView] Setting up signal bindings...");
 
     // =========================================================================
@@ -103,13 +118,14 @@ void DeviceView::setupBindings() {
     );
 
     // =========================================================================
-    // Parameters → Widgets (8 slots, debounced via dirty flags)
+    // Parameters → Widgets (debounced via dirty flags)
     // Each parameter slot is its own coalesced group
     // =========================================================================
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < PARAMETER_COUNT; i++) {
         auto& slot = state_.parameters.slots[i];
 
-        // Type change triggers widget creation/recreation (immediate) + dirty
+        // Type change triggers widget creation/recreation (IMMEDIATE via bind)
+        // Must execute before value/name signals to ensure correct widget type
         bind(subs_).on(slot.type, [this, i](bitwig::state::ParameterType) {
             ensureWidgetForType(i);
             markParameterDirty(i);
@@ -183,7 +199,7 @@ void DeviceView::updateDeviceInfo() {
 }
 
 void DeviceView::ensureWidgetForType(uint8_t index) {
-    if (index >= 8 || !body_container_) return;
+    if (index >= state::PARAMETER_COUNT || !body_container_) return;
 
     auto& slot = state_.parameters.slots[index];
     auto type = slot.type.get();
@@ -230,17 +246,17 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
 
     // Position in grid
     if (widgets_[index]) {
-        int col = index % 4;
-        int row = index / 4;
+        int col = index % Layout::PARAMETER_GRID_COLS;
+        int row = index / Layout::PARAMETER_GRID_COLS;
         lv_obj_set_grid_cell(widgets_[index]->getElement(), LV_GRID_ALIGN_CENTER, col, 1,
                              LV_GRID_ALIGN_CENTER, row, 1);
     }
 }
 
 void DeviceView::updateParameter(uint8_t index) {
-    if (!initialized_ || index >= 8) {
-        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (init={} idx>=8={})",
-                     index, initialized_, index >= 8);
+    if (!initialized_ || index >= state::PARAMETER_COUNT) {
+        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (init={} idx>=PARAMETER_COUNT={})",
+                     index, initialized_, index >= state::PARAMETER_COUNT);
         return;
     }
     if (!widgets_[index]) {
@@ -257,9 +273,10 @@ void DeviceView::updateParameter(uint8_t index) {
     widgets_[index]->setValueWithDisplay(slot.value.get(), slot.displayValue.get());
 
     // Update discrete metadata for button/list widgets
+    // Uses static_cast as all widgets inherit from BaseParameterWidget
     if (type == bitwig::state::ParameterType::BUTTON ||
         type == bitwig::state::ParameterType::LIST) {
-        widgets_[index]->setDiscreteMetadata(
+        static_cast<BaseParameterWidget*>(widgets_[index].get())->setDiscreteMetadata(
             slot.discreteCount.get(), slot.discreteValues.toVector(), slot.currentValueIndex.get());
     }
 
@@ -277,34 +294,35 @@ void DeviceView::updateParameter(uint8_t index) {
 void DeviceView::updatePageSelector() {
     if (!initialized_ || !page_selector_) return;
 
-    OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={} names.size()={}",
-                 state_.pageSelector.visible.get(), state_.pageSelector.names.size());
+    bool visible = state_.pageSelector.visible.get();
+    if (!visible) {
+        page_selector_->hide();
+        return;
+    }
 
     page_selector_->render({
         .names = state_.pageSelector.names,
         .selectedIndex = state_.pageSelector.selectedIndex.get(),
-        .visible = state_.pageSelector.visible.get()
+        .visible = true
     });
 }
 
 void DeviceView::updateDeviceSelector() {
     if (!initialized_ || !device_selector_) return;
 
-    OC_LOG_DEBUG("[DeviceView] >> updateDeviceSelector() visible={}",
-                 state_.deviceSelector.visible.get());
-
-    // Device states need special handling (array of Signals)
-    std::vector<bool> deviceStates;
-    size_t count = state_.deviceSelector.names.size();
-    deviceStates.reserve(count);
-    for (size_t i = 0; i < count; i++) {
-        deviceStates.push_back(state_.deviceSelector.deviceStates[i].get());
+    bool visible = state_.deviceSelector.visible.get();
+    if (!visible) {
+        device_selector_->hide();
+        return;
     }
+
+    // Device states: convert array of Signals to vector using helper
+    size_t count = state_.deviceSelector.names.size();
 
     device_selector_->render({
         .names = state_.deviceSelector.names,
         .deviceTypes = state_.deviceSelector.deviceTypes,
-        .deviceStates = std::move(deviceStates),
+        .deviceStates = oc::state::toVector(state_.deviceSelector.deviceStates, count),
         .hasSlots = state_.deviceSelector.hasSlots,
         .hasLayers = state_.deviceSelector.hasLayers,
         .hasDrums = state_.deviceSelector.hasDrums,
@@ -316,34 +334,30 @@ void DeviceView::updateDeviceSelector() {
         .selectedIndex = state_.deviceSelector.currentIndex.get(),
         .showingChildren = state_.deviceSelector.showingChildren.get(),
         .showFooter = state_.deviceSelector.showFooter.get(),
-        .visible = state_.deviceSelector.visible.get()
+        .visible = true
     });
 }
 
 void DeviceView::updateTrackSelector() {
     if (!initialized_ || !track_selector_) return;
 
-    OC_LOG_DEBUG("[DeviceView] >> updateTrackSelector() visible={}",
-                 state_.trackSelector.visible.get());
-
-    // Mute/Solo states need special handling (array of Signals)
-    size_t count = state_.trackSelector.names.size();
-    std::vector<bool> muteStates, soloStates;
-    muteStates.reserve(count);
-    soloStates.reserve(count);
-    for (size_t i = 0; i < count; i++) {
-        muteStates.push_back(state_.trackSelector.muteStates[i].get());
-        soloStates.push_back(state_.trackSelector.soloStates[i].get());
+    bool visible = state_.trackSelector.visible.get();
+    if (!visible) {
+        track_selector_->hide();
+        return;
     }
+
+    // Mute/Solo states: convert array of Signals to vector using helper
+    size_t count = state_.trackSelector.names.size();
 
     track_selector_->render({
         .names = state_.trackSelector.names,
-        .muteStates = std::move(muteStates),
-        .soloStates = std::move(soloStates),
+        .muteStates = oc::state::toVector(state_.trackSelector.muteStates, count),
+        .soloStates = oc::state::toVector(state_.trackSelector.soloStates, count),
         .trackTypes = state_.trackSelector.trackTypes,
         .trackColors = state_.trackSelector.trackColors,
         .selectedIndex = state_.trackSelector.currentIndex.get(),
-        .visible = state_.trackSelector.visible.get()
+        .visible = true
     });
 }
 
@@ -420,13 +434,13 @@ lv_obj_t* DeviceView::getTrackSelectorElement() const {
 // =============================================================================
 
 void DeviceView::markParameterDirty(uint8_t index) {
-    if (index < 8) {
+    if (index < state::PARAMETER_COUNT) {
         paramDirty_[index] = true;
     }
 }
 
 void DeviceView::processDirtyParameters() {
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < state::PARAMETER_COUNT; i++) {
         if (paramDirty_[i]) {
             paramDirty_[i] = false;
             updateParameter(i);

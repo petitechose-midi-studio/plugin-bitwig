@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
@@ -14,6 +13,9 @@ namespace bitwig {
  * - ParameterKnobWidget (continuous/centered knobs)
  * - ParameterListWidget (enum/list selectors)
  * - ParameterButtonWidget (toggle buttons)
+ *
+ * @note Discrete metadata (for LIST/BUTTON types) is handled by
+ *       BaseParameterWidget::setDiscreteMetadata(), not in this interface.
  */
 class IParameterWidget : public oc::ui::lvgl::IWidget {
 public:
@@ -22,15 +24,6 @@ public:
     virtual void setName(const std::string& name) = 0;
     virtual void setValue(float value) = 0;
     virtual void setValueWithDisplay(float value, const char* displayValue) = 0;
-
-    virtual void setDiscreteMetadata(int16_t discreteCount,
-                                     const std::vector<std::string>& valueNames,
-                                     uint8_t currentIndex) {
-        (void)discreteCount;
-        (void)valueNames;
-        (void)currentIndex;
-    }
-
     virtual void setVisible(bool visible) = 0;
 };
 

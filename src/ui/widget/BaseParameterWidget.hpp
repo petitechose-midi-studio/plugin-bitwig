@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <lvgl.h>
 
@@ -34,9 +35,15 @@ public:
     void setVisible(bool visible) override;
     lv_obj_t* getElement() const override { return container_; }
 
-    // Default no-op for widgets that don't use discrete metadata
-    void setDiscreteMetadata(int16_t discreteCount, const std::vector<std::string>& valueNames,
-                             uint8_t currentIndex) override {
+    /**
+     * @brief Set discrete metadata for button/list widgets
+     *
+     * Default no-op. Override in ParameterListWidget for actual implementation.
+     * Called via static_cast<BaseParameterWidget*> from DeviceView for BUTTON/LIST types.
+     */
+    virtual void setDiscreteMetadata(int16_t discreteCount,
+                                     const std::vector<std::string>& valueNames,
+                                     uint8_t currentIndex) {
         (void)discreteCount;
         (void)valueNames;
         (void)currentIndex;

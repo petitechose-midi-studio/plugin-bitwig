@@ -2,7 +2,7 @@
 
 #include "ui/theme/BitwigTheme.hpp"
 
-using namespace Theme;
+using namespace bitwig::theme;
 
 namespace bitwig {
 

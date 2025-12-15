@@ -6,7 +6,7 @@
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
-using namespace Theme;
+using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
@@ -137,10 +137,10 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
 
     // Update opacity based on state (active = full, inactive = faded)
     if (footer_mute_)
-        lv_obj_set_style_text_opa(footer_mute_, is_muted ? LV_OPA_COVER : LV_OPA_40,
+        lv_obj_set_style_text_opa(footer_mute_, is_muted ? Opacity::FULL : Opacity::FADED,
                                   LV_STATE_DEFAULT);
     if (footer_solo_)
-        lv_obj_set_style_text_opa(footer_solo_, is_soloed ? LV_OPA_COVER : LV_OPA_40,
+        lv_obj_set_style_text_opa(footer_solo_, is_soloed ? Opacity::FULL : Opacity::FADED,
                                   LV_STATE_DEFAULT);
 
     footer_->show();

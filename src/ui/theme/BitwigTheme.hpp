@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/theme/BaseTheme.hpp>
 
-namespace Theme {
+namespace bitwig::theme {
 
 // Import base theme for convenience
 using namespace oc::ui::lvgl;
@@ -69,7 +69,11 @@ constexpr int16_t TOP_BAR_HEIGHT = 20;
 constexpr int16_t TRANSPORT_BAR_HEIGHT = 20;
 constexpr int16_t HINT_BAR_HEIGHT = 20;
 
-// Widget dimensions (4x2 grid in body)
+// Parameter grid (4x2 layout in body)
+constexpr int16_t PARAMETER_GRID_COLS = 4;
+constexpr int16_t PARAMETER_GRID_ROWS = 2;
+
+// Widget dimensions
 constexpr int16_t WIDGET_WIDTH = 80;
 constexpr int16_t WIDGET_HEIGHT = 100;
 
@@ -90,6 +94,14 @@ constexpr int16_t GAP_SM = 4;
 constexpr int16_t GAP_MD = 6;
 constexpr int16_t GAP_LG = 10;
 
+// Overlay/Selector header padding
+constexpr int16_t OVERLAY_PAD_H = 16;       // Horizontal padding for overlay headers
+constexpr int16_t OVERLAY_PAD_TOP = 8;      // Top padding for overlay headers
+constexpr int16_t OVERLAY_PAD_BOTTOM = 4;   // Bottom padding for overlay headers
+
+// HintBar edge padding
+constexpr int16_t HINT_BAR_EDGE_PAD = 24;   // Padding from screen edges for hint cells
+
 }  // namespace Layout
 
 // =============================================================================
@@ -97,12 +109,14 @@ constexpr int16_t GAP_LG = 10;
 // =============================================================================
 namespace Opacity {
 
-constexpr uint8_t FULL = 255;    // LV_OPA_COVER - fully visible
-constexpr uint8_t SUBTLE = 178;  // ~70% - secondary icons, hints
-constexpr uint8_t DIMMED = 127;  // ~50% - disabled elements
-constexpr uint8_t FADED = 102;   // ~40% - inactive but visible
-constexpr uint8_t HINT = 51;     // ~20% - very subtle background hints
-constexpr uint8_t HIDDEN = 0;    // LV_OPA_TRANSP - invisible
+constexpr uint8_t FULL = 255;        // LV_OPA_COVER - fully visible
+constexpr uint8_t OVERLAY_BG = 230;  // ~90% - modal overlay backgrounds
+constexpr uint8_t SUBTLE = 178;      // ~70% - secondary icons, hints
+constexpr uint8_t DIMMED = 127;      // ~50% - disabled elements
+constexpr uint8_t FADED = 102;       // ~40% - inactive but visible
+constexpr uint8_t SCROLLBAR = 77;    // ~30% - scrollbar track
+constexpr uint8_t HINT = 51;         // ~20% - very subtle background hints
+constexpr uint8_t HIDDEN = 0;        // LV_OPA_TRANSP - invisible
 
 }  // namespace Opacity
 
@@ -115,4 +129,4 @@ constexpr uint32_t FADE_MS = 300;  // Standard fade duration
 
 }  // namespace Animation
 
-}  // namespace Theme
+}  // namespace bitwig::theme

@@ -5,15 +5,14 @@
  * @brief Handles device-related messages from Bitwig -> updates BitwigState
  *
  * HostHandler pattern: Protocol callbacks -> State updates
- * This is the most complex HostHandler, handling:
+ * Handles:
  * - Device info and state changes
- * - Device/track/page lists for selectors
- * - Macro parameter updates (values, names, types, discrete values)
+ * - Device list and children for selector
  *
- * Also configures encoders based on parameter types (continuous/discrete).
+ * @see HandlerHostTrack for track-related messages
+ * @see HandlerHostPage for page names and changes
+ * @see HandlerHostMacro for macro parameter updates
  */
-
-#include <oc/api/EncoderAPI.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -23,14 +22,11 @@ namespace bitwig::handler {
 /**
  * @brief Device protocol handler (Host -> State)
  *
- * Receives all device-related protocol messages and updates BitwigState.
- * Configures encoder modes based on parameter types.
+ * Receives device info and selector messages and updates BitwigState.
  */
 class HandlerHostDevice {
 public:
-    HandlerHostDevice(state::BitwigState& state,
-                      BitwigProtocol& protocol,
-                      oc::api::EncoderAPI& encoders);
+    HandlerHostDevice(state::BitwigState& state, BitwigProtocol& protocol);
     ~HandlerHostDevice() = default;
 
     // Non-copyable
@@ -40,13 +36,8 @@ public:
 private:
     void setupProtocolCallbacks();
 
-    // Encoder configuration based on parameter type
-    template <typename MacroArray>
-    void updateMacroEncoderModes(const MacroArray& macros);
-
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
 };
 
 }  // namespace bitwig::handler

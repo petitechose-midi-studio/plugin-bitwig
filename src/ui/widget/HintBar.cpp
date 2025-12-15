@@ -2,9 +2,12 @@
 
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
+#include "ui/theme/BitwigTheme.hpp"
+
 namespace bitwig {
 
 namespace style = oc::ui::lvgl::style;
+using namespace bitwig::theme;
 
 HintBar::HintBar(lv_obj_t* parent, HintBarPosition position)
     : position_(position), parent_(parent) {
@@ -68,16 +71,16 @@ void HintBar::setCell(int index, lv_obj_t* element) {
         static const lv_grid_align_t h_aligns[] = {LV_GRID_ALIGN_START, LV_GRID_ALIGN_CENTER,
                                                    LV_GRID_ALIGN_END};
         lv_obj_set_grid_cell(element, h_aligns[index], index, 1, LV_GRID_ALIGN_CENTER, 0, 1);
-        if (index == 0) lv_obj_set_style_pad_left(element, 24, LV_STATE_DEFAULT);
-        else if (index == 2) lv_obj_set_style_pad_right(element, 24, LV_STATE_DEFAULT);
+        if (index == 0) lv_obj_set_style_pad_left(element, Layout::HINT_BAR_EDGE_PAD, LV_STATE_DEFAULT);
+        else if (index == 2) lv_obj_set_style_pad_right(element, Layout::HINT_BAR_EDGE_PAD, LV_STATE_DEFAULT);
     } else {
         static const lv_grid_align_t v_aligns[] = {LV_GRID_ALIGN_START, LV_GRID_ALIGN_CENTER,
                                                    LV_GRID_ALIGN_END};
         lv_grid_align_t h_align =
             (position_ == HintBarPosition::LEFT) ? LV_GRID_ALIGN_START : LV_GRID_ALIGN_END;
         lv_obj_set_grid_cell(element, h_align, 0, 1, v_aligns[index], index, 1);
-        if (index == 0) lv_obj_set_style_pad_top(element, 24, LV_STATE_DEFAULT);
-        else if (index == 2) lv_obj_set_style_pad_bottom(element, 24, LV_STATE_DEFAULT);
+        if (index == 0) lv_obj_set_style_pad_top(element, Layout::HINT_BAR_EDGE_PAD, LV_STATE_DEFAULT);
+        else if (index == 2) lv_obj_set_style_pad_bottom(element, Layout::HINT_BAR_EDGE_PAD, LV_STATE_DEFAULT);
     }
 }
 
