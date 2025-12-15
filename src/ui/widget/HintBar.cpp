@@ -1,6 +1,10 @@
 #include "HintBar.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 namespace bitwig {
+
+namespace style = oc::ui::lvgl::style;
 
 HintBar::HintBar(lv_obj_t* parent, HintBarPosition position)
     : position_(position), parent_(parent) {
@@ -9,10 +13,7 @@ HintBar::HintBar(lv_obj_t* parent, HintBarPosition position)
     container_ = lv_obj_create(parent_);
     if (!container_) return;
 
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
+    style::apply(container_).transparent().noScroll();
 
     applyGridLayout();
 }

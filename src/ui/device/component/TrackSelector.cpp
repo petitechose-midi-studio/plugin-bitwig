@@ -1,10 +1,13 @@
 #include "TrackSelector.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -54,13 +57,13 @@ void TrackSelector::createFooter() {
     // Create mute icon (cell 1 = center)
     footer_mute_ = lv_label_create(footer_->getElement());
     Icon::set(footer_mute_, Icon::MUTE, Icon::Size::L);
-    lv_obj_set_style_text_color(footer_mute_, lv_color_hex(Color::TRACK_MUTE), LV_STATE_DEFAULT);
+    style::apply(footer_mute_).textColor(Color::TRACK_MUTE);
     footer_->setCell(1, footer_mute_);
 
     // Create solo icon (cell 2 = right)
     footer_solo_ = lv_label_create(footer_->getElement());
     Icon::set(footer_solo_, Icon::SOLO, Icon::Size::L);
-    lv_obj_set_style_text_color(footer_solo_, lv_color_hex(Color::TRACK_SOLO), LV_STATE_DEFAULT);
+    style::apply(footer_solo_).textColor(Color::TRACK_SOLO);
     footer_->setCell(2, footer_solo_);
 }
 

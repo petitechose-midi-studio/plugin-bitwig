@@ -1,6 +1,10 @@
 #include "TitleItem.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 namespace bitwig {
+
+namespace style = oc::ui::lvgl::style;
 
 TitleItem::TitleItem(lv_obj_t* parent) {
     if (!parent) return;
@@ -8,9 +12,7 @@ TitleItem::TitleItem(lv_obj_t* parent) {
     // Create container with flex row layout
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
+    style::apply(container_).transparent();
 
     // Flex row with gap
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_ROW);
@@ -57,7 +59,7 @@ void TitleItem::applyProps(const TitleItemProps& props) {
     if (icon_) {
         if (props.icon && props.icon[0] != '\0') {
             lv_label_set_text(icon_, props.icon);
-            lv_obj_set_style_text_color(icon_, lv_color_hex(props.iconColor), LV_STATE_DEFAULT);
+            style::apply(icon_).textColor(props.iconColor);
             lv_obj_set_style_text_opa(icon_, props.iconOpacity, LV_STATE_DEFAULT);
             if (props.iconFont) {
                 lv_obj_set_style_text_font(icon_, props.iconFont, LV_STATE_DEFAULT);
@@ -71,7 +73,7 @@ void TitleItem::applyProps(const TitleItemProps& props) {
     // Label
     if (label_) {
         lv_label_set_text(label_, props.text ? props.text : "");
-        lv_obj_set_style_text_color(label_, lv_color_hex(props.textColor), LV_STATE_DEFAULT);
+        style::apply(label_).textColor(props.textColor);
         lv_obj_set_style_text_opa(label_, props.textOpacity, LV_STATE_DEFAULT);
         if (props.textFont) {
             lv_obj_set_style_text_font(label_, props.textFont, LV_STATE_DEFAULT);
@@ -83,8 +85,7 @@ void TitleItem::applyProps(const TitleItemProps& props) {
     if (indicator_) {
         if (props.showIndicator && props.indicator && props.indicator[0] != '\0') {
             lv_label_set_text(indicator_, props.indicator);
-            lv_obj_set_style_text_color(indicator_, lv_color_hex(props.indicatorColor),
-                                        LV_STATE_DEFAULT);
+            style::apply(indicator_).textColor(props.indicatorColor);
             if (props.iconFont) {
                 lv_obj_set_style_text_font(indicator_, props.iconFont, LV_STATE_DEFAULT);
             }

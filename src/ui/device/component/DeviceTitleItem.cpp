@@ -1,12 +1,14 @@
 #include "DeviceTitleItem.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/device/DeviceTypeHelper.hpp"
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -25,7 +27,7 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
 
     label_ = lv_label_create(parent_);
     if (label_) {
-        Style::setTextColor(label_, Color::TEXT_LIGHT);
+        style::apply(label_).textColor(Color::TEXT_LIGHT);
         lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
     }
 }
@@ -72,7 +74,7 @@ void DeviceTitleItem::updateTypeIcon(uint8_t deviceType) {
 
     Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
     Icon::set(type_icon_, info.icon, size);
-    Style::setTextColor(type_icon_, info.color);
+    style::apply(type_icon_).textColor(info.color);
     lv_obj_clear_flag(type_icon_, LV_OBJ_FLAG_HIDDEN);
 }
 
@@ -84,7 +86,7 @@ void DeviceTitleItem::updateStateIcon(bool enabled) {
     Icon::set(state_icon_, icon_str, size);
 
     uint32_t color = enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED;
-    Style::setTextColor(state_icon_, color);
+    style::apply(state_icon_).textColor(color);
 }
 
 void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
@@ -93,7 +95,7 @@ void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
     Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
     Icon::set(folder_icon_, Icon::DIRECTORY, size);
 
-    Style::setTextColor(folder_icon_, Color::INACTIVE_LIGHTER);
+    style::apply(folder_icon_).textColor(Color::INACTIVE_LIGHTER);
     lv_obj_set_style_text_opa(folder_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
 
     if (hasChildren) lv_obj_clear_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);

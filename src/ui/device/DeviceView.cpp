@@ -2,16 +2,17 @@
 
 #include <oc/log/Log.hpp>
 #include <oc/state/Bind.hpp>
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
 #include "config/App.hpp"
 #include "handler/DeviceConstants.hpp"
 #include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
 #include "ui/widget/ParameterButtonWidget.hpp"
 #include "ui/widget/ParameterKnobWidget.hpp"
 #include "ui/widget/ParameterListWidget.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -389,13 +390,13 @@ void DeviceView::updateTrackSelector() {
 void DeviceView::createUI() {
     top_bar_container_ = lv_obj_create(zone_);
     lv_obj_set_size(top_bar_container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
-    Style::applyTransparentContainer(top_bar_container_);
+    style::apply(top_bar_container_).transparent().noScroll();
     lv_obj_set_style_radius(top_bar_container_, 0, LV_STATE_DEFAULT);
 
     body_container_ = lv_obj_create(zone_);
     lv_obj_set_size(body_container_, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_grow(body_container_, 1);
-    Style::applyTransparentContainer(body_container_);
+    style::apply(body_container_).transparent().noScroll();
     lv_obj_set_style_radius(body_container_, 0, LV_STATE_DEFAULT);
 
     createDeviceStateBar();

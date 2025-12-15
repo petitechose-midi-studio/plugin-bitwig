@@ -1,11 +1,13 @@
 #include "TrackTitleItem.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -25,13 +27,13 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
 
     type_icon_ = lv_label_create(parent_);
     if (type_icon_) {
-        Style::setTextColor(type_icon_, Color::TEXT_PRIMARY);
+        style::apply(type_icon_).textColor(Color::TEXT_PRIMARY);
         lv_obj_set_style_text_opa(type_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
     }
 
     label_ = lv_label_create(parent_);
     if (label_) {
-        Style::setTextColor(label_, Color::TEXT_LIGHT);
+        style::apply(label_).textColor(Color::TEXT_LIGHT);
         lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, LV_STATE_DEFAULT);
     }
 
@@ -41,14 +43,14 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
         mute_icon_ = lv_label_create(parent_);
         if (mute_icon_) {
             Icon::set(mute_icon_, Icon::MUTE);
-            Style::setTextColor(mute_icon_, Color::TRACK_MUTE);
+            style::apply(mute_icon_).textColor(Color::TRACK_MUTE);
             lv_obj_set_style_text_opa(mute_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
 
         solo_icon_ = lv_label_create(parent_);
         if (solo_icon_) {
             Icon::set(solo_icon_, Icon::SOLO);
-            Style::setTextColor(solo_icon_, Color::TRACK_SOLO);
+            style::apply(solo_icon_).textColor(Color::TRACK_SOLO);
             lv_obj_set_style_text_opa(solo_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
 
@@ -83,7 +85,7 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
     if (label_) {
         lv_label_set_text(label_, props.name ? props.name : "");
         uint32_t labelColor = props.highlighted ? Color::TEXT_PRIMARY : Color::INACTIVE_LIGHTER;
-        Style::setTextColor(label_, labelColor);
+        style::apply(label_).textColor(labelColor);
     }
 
     if (color_bar_) {
