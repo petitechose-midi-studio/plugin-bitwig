@@ -5,7 +5,7 @@
 
 LV_IMG_DECLARE(Bitwig_Logo);
 
-namespace Bitwig {
+namespace bitwig {
 
 SplashView::SplashView(lv_obj_t *zone) : zone_(zone) {}
 
@@ -105,4 +105,4 @@ void SplashView::fadeAnimDeletedCallback(lv_anim_t *anim) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

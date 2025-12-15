@@ -3,7 +3,7 @@
 #include "ISelector.hpp"
 #include "ListOverlay.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Base implementation for list selectors
@@ -38,4 +38,4 @@ protected:
     ListOverlay overlay_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

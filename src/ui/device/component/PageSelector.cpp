@@ -1,6 +1,6 @@
 #include "PageSelector.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 PageSelector::PageSelector(lv_obj_t *parent) : BaseSelector(parent) { setTitle("Select Page"); }
 
@@ -18,4 +18,4 @@ void PageSelector::render(const PageSelectorProps &props) {
     if (!isVisible()) show();
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

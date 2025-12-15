@@ -1,6 +1,6 @@
 #include "BaseSelector.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 BaseSelector::BaseSelector(lv_obj_t* parent) : parent_(parent), overlay_(parent) {}
 
@@ -22,4 +22,4 @@ bool BaseSelector::isVisible() const { return overlay_.isVisible(); }
 
 lv_obj_t* BaseSelector::getElement() const { return overlay_.getElement(); }
 
-}  // namespace Bitwig
+}  // namespace bitwig

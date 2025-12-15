@@ -10,7 +10,7 @@
 
 #include "state/TransportState.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 using oc::state::Subscription;
 using oc::ui::lvgl::IComponent;
@@ -73,4 +73,4 @@ private:
     void setMidiOut(bool active);
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

@@ -5,7 +5,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 ParameterButtonWidget::ParameterButtonWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                              uint8_t index)
@@ -96,4 +96,4 @@ void ParameterButtonWidget::setVisible(bool visible) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

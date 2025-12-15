@@ -10,7 +10,7 @@
 
 #include "ui/widget/TitleItem.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 struct DeviceStateBarProps {
     const char *deviceName = "";
@@ -38,4 +38,4 @@ private:
     std::unique_ptr<TitleItem> page_item_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

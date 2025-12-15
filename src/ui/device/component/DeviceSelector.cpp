@@ -7,7 +7,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 DeviceSelector::DeviceSelector(lv_obj_t *parent) : BaseSelector(parent) {
     createHeader();  // Create header first, before list
@@ -351,4 +351,4 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

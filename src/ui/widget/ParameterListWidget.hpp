@@ -10,7 +10,7 @@
 
 #include "IParameterWidget.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Parameter widget with EnumWidget + name label + value display
@@ -44,4 +44,4 @@ private:
     uint8_t current_index_ = 0;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

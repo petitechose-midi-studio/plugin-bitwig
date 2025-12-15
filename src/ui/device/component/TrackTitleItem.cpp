@@ -7,7 +7,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t barHeight)
     : parent_(parent), bar_height_(barHeight), has_mute_solo_(withMuteSolo) {
@@ -139,4 +139,4 @@ const char *TrackTitleItem::getTrackTypeIcon(uint8_t trackType) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

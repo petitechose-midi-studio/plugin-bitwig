@@ -1,5 +1,7 @@
 #include "TransportBar.hpp"
 
+#include <oc/state/Bind.hpp>
+
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
@@ -15,7 +17,7 @@ const lv_color_t COLOR_RECORD = lv_color_hex(Color::MACRO_1);
 const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
 }  // namespace
 
-namespace Bitwig {
+namespace bitwig {
 
 TransportBar::TransportBar(lv_obj_t* parent, bitwig::state::TransportState& state)
     : state_(state), parent_(parent) {
@@ -37,12 +39,13 @@ TransportBar::~TransportBar() {
 }
 
 void TransportBar::setupBindings() {
-    subs_.push_back(state_.playing.subscribe([this](bool playing) { setPlayState(playing); }));
-    subs_.push_back(
-        state_.recording.subscribe([this](bool recording) { setRecordState(recording); }));
-    subs_.push_back(state_.tempo.subscribe([this](float tempo) { setTempo(tempo); }));
-    subs_.push_back(state_.midiInActive.subscribe([this](bool active) { setMidiIn(active); }));
-    subs_.push_back(state_.midiOutActive.subscribe([this](bool active) { setMidiOut(active); }));
+    using oc::state::bind;
+    bind(subs_)
+        .on(state_.playing, [this](bool playing) { setPlayState(playing); })
+        .on(state_.recording, [this](bool recording) { setRecordState(recording); })
+        .on(state_.tempo, [this](float tempo) { setTempo(tempo); })
+        .on(state_.midiInActive, [this](bool active) { setMidiIn(active); })
+        .on(state_.midiOutActive, [this](bool active) { setMidiOut(active); });
 }
 
 void TransportBar::render() {
@@ -162,4 +165,4 @@ void TransportBar::createTempoDisplay() {
     lv_obj_set_style_text_font(bpm_label_, bitwig_fonts.page_label, LV_STATE_DEFAULT);
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

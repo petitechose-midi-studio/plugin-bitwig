@@ -76,7 +76,6 @@ private:
     // Minimal local state - everything else comes from BitwigState Signals
     uint8_t currentDeviceIndex_ = 0;  // Device being navigated (for children mode)
     bool requested_ = false;
-    bool trackListRequested_ = false;
 };
 
 }  // namespace bitwig::handler

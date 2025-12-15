@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/IComponent.hpp>
 
-namespace Bitwig {
+namespace bitwig {
 
 enum class HintBarPosition { LEFT, BOTTOM, RIGHT };
 
@@ -40,4 +40,4 @@ private:
     lv_coord_t size_ = DEFAULT_SIZE;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

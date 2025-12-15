@@ -9,7 +9,7 @@
 
 #include "IParameterWidget.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Parameter widget with KnobWidget + name label (no value text display)
@@ -38,4 +38,4 @@ private:
     uint8_t index_ = 0;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

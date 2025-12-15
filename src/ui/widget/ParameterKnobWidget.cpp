@@ -5,7 +5,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 ParameterKnobWidget::ParameterKnobWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                          uint8_t index, bool centered)
@@ -92,4 +92,4 @@ void ParameterKnobWidget::setOrigin(float origin) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

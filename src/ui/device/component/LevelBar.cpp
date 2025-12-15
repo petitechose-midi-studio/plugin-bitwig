@@ -6,7 +6,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
     : parent_(parent), width_(width), height_(height) {
@@ -43,4 +43,4 @@ void LevelBar::render(const LevelBarProps &props) {
     lv_obj_set_style_bg_opa(bar_, props.opacity, LV_PART_INDICATOR);
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

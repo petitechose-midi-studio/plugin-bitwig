@@ -42,10 +42,6 @@ public:
     // Non-copyable
     HandlerInputMacro(const HandlerInputMacro&) = delete;
     HandlerInputMacro& operator=(const HandlerInputMacro&) = delete;
-
-    /// Get encoder ID for a parameter index (static utility)
-    static Config::EncoderID getEncoderIdForParameter(uint8_t paramIndex);
-
 private:
     void setupBindings();
     void handleValueChange(uint8_t index, float value);

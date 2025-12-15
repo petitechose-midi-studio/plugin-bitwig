@@ -2,9 +2,11 @@
 
 #include <cstring>
 
+#include <ui/font/FontLoader.hpp>
+
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 using namespace oc::ui::lvgl;
 
@@ -213,6 +215,10 @@ void ListOverlay::populateList() {
         lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(label, LV_OPA_COVER, LV_STATE_FOCUSED);
 
+        if (::fonts.list_item_label) {
+            lv_obj_set_style_text_font(label, ::fonts.list_item_label, LV_STATE_DEFAULT);
+        }
+
         buttons_.push_back(btn);
     }
 
@@ -277,4 +283,4 @@ void ListOverlay::cleanup() {
     visible_ = false;
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

@@ -5,7 +5,7 @@
 
 #include <lvgl.h>
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Interface for parameter widgets (polymorphism)
@@ -35,4 +35,4 @@ public:
     virtual lv_obj_t* getContainer() const = 0;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

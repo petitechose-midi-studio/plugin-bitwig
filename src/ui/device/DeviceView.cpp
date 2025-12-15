@@ -1,7 +1,7 @@
 #include "DeviceView.hpp"
 
-#include <oc/teensy/LogOutput.hpp>
 #include <oc/log/Log.hpp>
+#include <oc/state/Bind.hpp>
 
 #include "config/App.hpp"
 #include "handler/DeviceConstants.hpp"
@@ -13,7 +13,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 // =============================================================================
 // Construction / Destruction
@@ -91,32 +91,18 @@ void DeviceView::onDeactivate() {
 // =============================================================================
 
 void DeviceView::setupBindings() {
+    using oc::state::bind;
     OC_LOG_DEBUG("[DeviceView] Setting up signal bindings...");
 
     // =========================================================================
-    // Device Info → Top Bar
+    // Device Info → Top Bar (all trigger updateDeviceInfo)
     // =========================================================================
-    // Subscribe to all device info signals - any change triggers full redraw
-    subs_.push_back(state_.device.name.subscribe([this](const char* name) {
-        OC_LOG_DEBUG("[DeviceView] signal: device.name = '{}'", name);
-        updateDeviceInfo();
-    }));
-    subs_.push_back(state_.device.pageName.subscribe([this](const char* name) {
-        OC_LOG_DEBUG("[DeviceView] signal: device.pageName = '{}'", name);
-        updateDeviceInfo();
-    }));
-    subs_.push_back(state_.device.deviceType.subscribe([this](bitwig::state::DeviceType type) {
-        OC_LOG_DEBUG("[DeviceView] signal: device.type = {}", static_cast<int>(type));
-        updateDeviceInfo();
-    }));
-    subs_.push_back(state_.device.enabled.subscribe([this](bool enabled) {
-        OC_LOG_DEBUG("[DeviceView] signal: device.enabled = {}", enabled);
-        updateDeviceInfo();
-    }));
-    subs_.push_back(state_.device.hasChildren.subscribe([this](bool has) {
-        OC_LOG_DEBUG("[DeviceView] signal: device.hasChildren = {}", has);
-        updateDeviceInfo();
-    }));
+    bind(subs_)
+        .on(state_.device.name, [this](const char*) { updateDeviceInfo(); })
+        .on(state_.device.pageName, [this](const char*) { updateDeviceInfo(); })
+        .on(state_.device.deviceType, [this](bitwig::state::DeviceType) { updateDeviceInfo(); })
+        .on(state_.device.enabled, [this](bool) { updateDeviceInfo(); })
+        .on(state_.device.hasChildren, [this](bool) { updateDeviceInfo(); });
 
     // =========================================================================
     // Parameters → Widgets (8 slots, debounced via dirty flags)
@@ -124,95 +110,61 @@ void DeviceView::setupBindings() {
     for (uint8_t i = 0; i < 8; i++) {
         auto& slot = state_.parameters.slots[i];
 
-        // Type change triggers widget creation/recreation (immediate)
-        subs_.push_back(slot.type.subscribe([this, i](bitwig::state::ParameterType type) {
-            OC_LOG_DEBUG("[DeviceView] signal: param[{}].type = {}", i, static_cast<int>(type));
+        // Type change triggers widget creation/recreation (immediate) + dirty
+        bind(subs_).on(slot.type, [this, i](bitwig::state::ParameterType) {
             ensureWidgetForType(i);
             markParameterDirty(i);
-        }));
+        });
 
-        // Value/display changes (debounced)
-        subs_.push_back(slot.value.subscribe([this, i](float) {
-            markParameterDirty(i);
-        }));
-        subs_.push_back(slot.name.subscribe([this, i](const char*) {
-            markParameterDirty(i);
-        }));
-        subs_.push_back(slot.displayValue.subscribe([this, i](const char*) {
-            markParameterDirty(i);
-        }));
-        subs_.push_back(slot.visible.subscribe([this, i](bool) {
-            markParameterDirty(i);
-        }));
-        subs_.push_back(slot.currentValueIndex.subscribe([this, i](uint8_t) {
-            markParameterDirty(i);
-        }));
-
-        // Discrete values list change (debounced)
-        subs_.push_back(slot.discreteValues.subscribe([this, i]() {
-            markParameterDirty(i);
-        }));
+        // Value/display changes (debounced via dirty flags)
+        bind(subs_)
+            .on(slot.value, [this, i](float) { markParameterDirty(i); })
+            .on(slot.name, [this, i](const char*) { markParameterDirty(i); })
+            .on(slot.displayValue, [this, i](const char*) { markParameterDirty(i); })
+            .on(slot.visible, [this, i](bool) { markParameterDirty(i); })
+            .on(slot.currentValueIndex, [this, i](uint8_t) { markParameterDirty(i); })
+            .on(slot.discreteValues, [this, i]() { markParameterDirty(i); });
     }
 
     // =========================================================================
     // Page Selector
     // =========================================================================
-    subs_.push_back(state_.pageSelector.names.subscribe([this]() {
-        OC_LOG_DEBUG("[DeviceView] signal: pageSelector.names changed");
-        updatePageSelector();
-    }));
-    subs_.push_back(state_.pageSelector.selectedIndex.subscribe([this](int8_t idx) {
-        OC_LOG_DEBUG("[DeviceView] signal: pageSelector.selectedIndex = {}", idx);
-        updatePageSelector();
-    }));
-    subs_.push_back(state_.pageSelector.visible.subscribe([this](bool vis) {
-        OC_LOG_DEBUG("[DeviceView] signal: pageSelector.visible = {}", vis);
-        updatePageSelector();
-    }));
+    bind(subs_)
+        .on(state_.pageSelector.names, [this]() { updatePageSelector(); })
+        .on(state_.pageSelector.selectedIndex, [this](int8_t) { updatePageSelector(); })
+        .on(state_.pageSelector.visible, [this](bool) { updatePageSelector(); });
 
     // =========================================================================
     // Device Selector
     // =========================================================================
-    subs_.push_back(state_.deviceSelector.names.subscribe([this]() {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.names changed");
-        updateDeviceSelector();
-    }));
-    subs_.push_back(state_.deviceSelector.visible.subscribe([this](bool vis) {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.visible = {}", vis);
-        updateDeviceSelector();
-    }));
-    subs_.push_back(state_.deviceSelector.currentIndex.subscribe([this](int8_t idx) {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.currentIndex = {}", idx);
-        updateDeviceSelector();
-    }));
-    subs_.push_back(state_.deviceSelector.showingChildren.subscribe([this](bool show) {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.showingChildren = {}", show);
-        updateDeviceSelector();
-    }));
-    subs_.push_back(state_.deviceSelector.showFooter.subscribe([this](bool show) {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.showFooter = {}", show);
-        updateDeviceSelector();
-    }));
-    subs_.push_back(state_.deviceSelector.childrenNames.subscribe([this]() {
-        OC_LOG_DEBUG("[DeviceView] signal: deviceSelector.childrenNames changed");
-        updateDeviceSelector();
-    }));
+    bind(subs_)
+        .on(state_.deviceSelector.names, [this]() { updateDeviceSelector(); })
+        .on(state_.deviceSelector.visible, [this](bool) { updateDeviceSelector(); })
+        .on(state_.deviceSelector.currentIndex, [this](int8_t) { updateDeviceSelector(); })
+        .on(state_.deviceSelector.showingChildren, [this](bool) { updateDeviceSelector(); })
+        .on(state_.deviceSelector.showFooter, [this](bool) { updateDeviceSelector(); })
+        .on(state_.deviceSelector.childrenNames, [this]() { updateDeviceSelector(); });
+
+    // Device states (individual elements)
+    for (size_t i = 0; i < state_.deviceSelector.deviceStates.size(); i++) {
+        bind(subs_).on(state_.deviceSelector.deviceStates[i],
+                       [this](bool) { updateDeviceSelector(); });
+    }
 
     // =========================================================================
     // Track Selector
     // =========================================================================
-    subs_.push_back(state_.trackSelector.names.subscribe([this]() {
-        OC_LOG_DEBUG("[DeviceView] signal: trackSelector.names changed");
-        updateTrackSelector();
-    }));
-    subs_.push_back(state_.trackSelector.visible.subscribe([this](bool vis) {
-        OC_LOG_DEBUG("[DeviceView] signal: trackSelector.visible = {}", vis);
-        updateTrackSelector();
-    }));
-    subs_.push_back(state_.trackSelector.currentIndex.subscribe([this](int8_t idx) {
-        OC_LOG_DEBUG("[DeviceView] signal: trackSelector.currentIndex = {}", idx);
-        updateTrackSelector();
-    }));
+    bind(subs_)
+        .on(state_.trackSelector.names, [this]() { updateTrackSelector(); })
+        .on(state_.trackSelector.visible, [this](bool) { updateTrackSelector(); })
+        .on(state_.trackSelector.currentIndex, [this](int8_t) { updateTrackSelector(); });
+
+    // Track mute/solo states (individual elements)
+    for (size_t i = 0; i < state_.trackSelector.muteStates.size(); i++) {
+        bind(subs_)
+            .on(state_.trackSelector.muteStates[i], [this](bool) { updateTrackSelector(); })
+            .on(state_.trackSelector.soloStates[i], [this](bool) { updateTrackSelector(); });
+    }
 
     OC_LOG_DEBUG("[DeviceView] Bound {} subscriptions", subs_.size());
 }
@@ -524,4 +476,4 @@ void DeviceView::onUpdateTimer(lv_timer_t* timer) {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

@@ -8,7 +8,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     : parent_(parent), icon_size_(iconSize) {
@@ -119,4 +119,4 @@ lv_coord_t DeviceTitleItem::getContentWidth() const {
     return width;
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

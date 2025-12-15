@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/IComponent.hpp>
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Interface for list selector components
@@ -21,4 +21,4 @@ public:
     virtual int getItemCount() const = 0;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

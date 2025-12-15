@@ -2,7 +2,7 @@
 
 #include "theme/BitwigTheme.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 ViewContainer::ViewContainer(lv_obj_t *parentScreen) {
     container_ = lv_obj_create(parentScreen);
@@ -43,4 +43,4 @@ ViewContainer::~ViewContainer() {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

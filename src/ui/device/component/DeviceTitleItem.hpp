@@ -4,7 +4,7 @@
 
 #include <lvgl.h>
 
-namespace Bitwig {
+namespace bitwig {
 
 struct DeviceTitleItemProps {
     const char *name = "";
@@ -35,4 +35,4 @@ private:
     IconSize icon_size_;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

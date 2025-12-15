@@ -1,6 +1,6 @@
 #include "TitleItem.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 TitleItem::TitleItem(lv_obj_t* parent) {
     if (!parent) return;
@@ -101,4 +101,4 @@ lv_coord_t TitleItem::getContentWidth() const {
     return lv_obj_get_width(container_);
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

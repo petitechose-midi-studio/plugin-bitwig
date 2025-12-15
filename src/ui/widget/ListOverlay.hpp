@@ -8,7 +8,7 @@
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/theme/BaseTheme.hpp>
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Pure UI widget for modal list overlay with selection
@@ -77,4 +77,4 @@ private:
     bool ui_created_ = false;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

@@ -66,10 +66,6 @@
 
 namespace bitwig {
 
-using Bitwig::DeviceView;
-using Bitwig::TransportBar;
-using Bitwig::ViewContainer;
-
 /**
  * @brief Context for Bitwig DAW control
  *
