@@ -8,7 +8,7 @@
 namespace bitwig {
 
 struct PageSelectorProps {
-    const std::vector<std::string> *names = nullptr;
+    std::vector<std::string> names;
     int selectedIndex = 0;
     bool visible = false;
 };

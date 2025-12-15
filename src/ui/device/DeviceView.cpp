@@ -283,85 +283,73 @@ void DeviceView::updateParameter(uint8_t index) {
 void DeviceView::updatePageSelector() {
     if (!initialized_ || !page_selector_) return;
 
-    bool visible = state_.pageSelector.visible.get();
-    OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={}", visible);
-
-    auto names = state_.pageSelector.names.toVector();
+    OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={}",
+                 state_.pageSelector.visible.get());
 
     page_selector_->render({
-        .names = &names,
+        .names = state_.pageSelector.names,
         .selectedIndex = state_.pageSelector.selectedIndex.get(),
-        .visible = visible
+        .visible = state_.pageSelector.visible.get()
     });
 }
 
 void DeviceView::updateDeviceSelector() {
     if (!initialized_ || !device_selector_) return;
 
-    bool visible = state_.deviceSelector.visible.get();
-    OC_LOG_DEBUG("[DeviceView] >> updateDeviceSelector() visible={}", visible);
-
-    auto names = state_.deviceSelector.names.toVector();
-    auto deviceTypes = state_.deviceSelector.deviceTypes.toVector();
-    auto hasSlots = state_.deviceSelector.hasSlots.toVector();
-    auto hasLayers = state_.deviceSelector.hasLayers.toVector();
-    auto hasDrums = state_.deviceSelector.hasDrums.toVector();
-    auto childrenNames = state_.deviceSelector.childrenNames.toVector();
-    auto childrenTypes = state_.deviceSelector.childrenTypes.toVector();
+    OC_LOG_DEBUG("[DeviceView] >> updateDeviceSelector() visible={}",
+                 state_.deviceSelector.visible.get());
 
     // Device states need special handling (array of Signals)
     std::vector<bool> deviceStates;
-    deviceStates.reserve(names.size());
-    for (size_t i = 0; i < names.size(); i++) {
+    size_t count = state_.deviceSelector.names.size();
+    deviceStates.reserve(count);
+    for (size_t i = 0; i < count; i++) {
         deviceStates.push_back(state_.deviceSelector.deviceStates[i].get());
     }
 
     device_selector_->render({
-        .names = &names,
-        .deviceTypes = &deviceTypes,
-        .deviceStates = &deviceStates,
-        .hasSlots = &hasSlots,
-        .hasLayers = &hasLayers,
-        .hasDrums = &hasDrums,
-        .childrenNames = &childrenNames,
-        .childrenTypes = &childrenTypes,
+        .names = state_.deviceSelector.names,
+        .deviceTypes = state_.deviceSelector.deviceTypes,
+        .deviceStates = std::move(deviceStates),
+        .hasSlots = state_.deviceSelector.hasSlots,
+        .hasLayers = state_.deviceSelector.hasLayers,
+        .hasDrums = state_.deviceSelector.hasDrums,
+        .childrenNames = state_.deviceSelector.childrenNames,
+        .childrenTypes = state_.deviceSelector.childrenTypes,
         .trackName = state_.currentTrack.name.get(),
         .trackColor = state_.currentTrack.color.get(),
         .trackType = static_cast<uint8_t>(state_.currentTrack.trackType.get()),
         .selectedIndex = state_.deviceSelector.currentIndex.get(),
         .showingChildren = state_.deviceSelector.showingChildren.get(),
         .showFooter = state_.deviceSelector.showFooter.get(),
-        .visible = visible
+        .visible = state_.deviceSelector.visible.get()
     });
 }
 
 void DeviceView::updateTrackSelector() {
     if (!initialized_ || !track_selector_) return;
 
-    bool visible = state_.trackSelector.visible.get();
-    OC_LOG_DEBUG("[DeviceView] >> updateTrackSelector() visible={}", visible);
-
-    auto names = state_.trackSelector.names.toVector();
-    auto trackTypes = state_.trackSelector.trackTypes.toVector();
-    auto trackColors = state_.trackSelector.trackColors.toVector();
+    OC_LOG_DEBUG("[DeviceView] >> updateTrackSelector() visible={}",
+                 state_.trackSelector.visible.get());
 
     // Mute/Solo states need special handling (array of Signals)
+    size_t count = state_.trackSelector.names.size();
     std::vector<bool> muteStates, soloStates;
-    muteStates.reserve(names.size());
-    soloStates.reserve(names.size());
-    for (size_t i = 0; i < names.size(); i++) {
+    muteStates.reserve(count);
+    soloStates.reserve(count);
+    for (size_t i = 0; i < count; i++) {
         muteStates.push_back(state_.trackSelector.muteStates[i].get());
         soloStates.push_back(state_.trackSelector.soloStates[i].get());
     }
 
     track_selector_->render({
-        .names = &names,
-        .muteStates = &muteStates,
-        .soloStates = &soloStates,
-        .trackTypes = &trackTypes,
-        .trackColors = &trackColors,
+        .names = state_.trackSelector.names,
+        .muteStates = std::move(muteStates),
+        .soloStates = std::move(soloStates),
+        .trackTypes = state_.trackSelector.trackTypes,
+        .trackColors = state_.trackSelector.trackColors,
         .selectedIndex = state_.trackSelector.currentIndex.get(),
-        .visible = visible
+        .visible = state_.trackSelector.visible.get()
     });
 }
 

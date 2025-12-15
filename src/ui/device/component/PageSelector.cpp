@@ -10,9 +10,9 @@ void PageSelector::render(const PageSelectorProps &props) {
         return;
     }
 
-    if (!props.names) return;
+    if (props.names.empty()) return;
 
-    overlay().setItems(*props.names);
+    overlay().setItems(props.names);
     overlay().setSelectedIndex(props.selectedIndex);
 
     if (!isVisible()) show();

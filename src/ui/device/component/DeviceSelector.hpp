@@ -15,16 +15,16 @@ namespace bitwig {
 
 struct DeviceSelectorProps {
     // Device list mode
-    const std::vector<std::string> *names = nullptr;
-    const std::vector<uint8_t> *deviceTypes = nullptr;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
-    const std::vector<bool> *deviceStates = nullptr;
-    const std::vector<bool> *hasSlots = nullptr;
-    const std::vector<bool> *hasLayers = nullptr;
-    const std::vector<bool> *hasDrums = nullptr;
+    std::vector<std::string> names;
+    std::vector<uint8_t> deviceTypes;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
+    std::vector<bool> deviceStates;
+    std::vector<bool> hasSlots;
+    std::vector<bool> hasLayers;
+    std::vector<bool> hasDrums;
 
     // Children mode
-    const std::vector<std::string> *childrenNames = nullptr;
-    const std::vector<uint8_t> *childrenTypes = nullptr;
+    std::vector<std::string> childrenNames;
+    std::vector<uint8_t> childrenTypes;
 
     // Track header
     const char *trackName = nullptr;

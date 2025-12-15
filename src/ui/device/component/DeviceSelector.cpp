@@ -37,9 +37,9 @@ void DeviceSelector::render(const DeviceSelectorProps &props) {
 }
 
 void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
-    if (!props.names) return;
+    if (props.names.empty()) return;
 
-    const auto &names = *props.names;
+    const auto &names = props.names;
 
     // Check if items changed
     bool items_changed = (prev_items_ != names);
@@ -71,9 +71,9 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
 }
 
 void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
-    if (!props.childrenNames) return;
+    if (props.childrenNames.empty()) return;
 
-    const auto &names = *props.childrenNames;
+    const auto &names = props.childrenNames;
 
     // Check if items changed
     bool items_changed = (prev_items_ != names);
@@ -92,8 +92,8 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
         }
 
         // Add type icons for children items
-        if (props.childrenTypes) {
-            const auto &types = *props.childrenTypes;
+        if (!props.childrenTypes.empty()) {
+            const auto &types = props.childrenTypes;
             for (size_t i = 0; i < names.size(); i++) {
                 if (i == 0 || i >= types.size()) continue;
 
@@ -153,9 +153,9 @@ void DeviceSelector::updateDeviceState(int displayIndex, bool enabled) {
 }
 
 void DeviceSelector::updateIndicatorStates(const DeviceSelectorProps &props) {
-    if (!props.deviceStates) return;
+    if (props.deviceStates.empty()) return;
 
-    const auto &states = *props.deviceStates;
+    const auto &states = props.deviceStates;
     for (size_t i = 0; i < state_icons_.size() && i < states.size(); i++) {
         if (!state_icons_[i]) continue;
 
@@ -222,10 +222,9 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
     if (!footer_) return;
 
     int idx = props.selectedIndex;
-    bool is_enabled =
-        props.deviceStates && idx >= 0 && idx < static_cast<int>(props.deviceStates->size())
-            ? (*props.deviceStates)[idx]
-            : true;
+    bool is_enabled = idx >= 0 && idx < static_cast<int>(props.deviceStates.size())
+                          ? props.deviceStates[idx]
+                          : true;
 
     // Update icon and color based on state
     if (footer_state_) {
@@ -259,10 +258,9 @@ bool DeviceSelector::isNonDeviceItem(const std::string &name) {
 }
 
 bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index) {
-    bool has_slots = props.hasSlots && index < props.hasSlots->size() && (*props.hasSlots)[index];
-    bool has_layers =
-        props.hasLayers && index < props.hasLayers->size() && (*props.hasLayers)[index];
-    bool has_drums = props.hasDrums && index < props.hasDrums->size() && (*props.hasDrums)[index];
+    bool has_slots = index < props.hasSlots.size() && props.hasSlots[index];
+    bool has_layers = index < props.hasLayers.size() && props.hasLayers[index];
+    bool has_drums = index < props.hasDrums.size() && props.hasDrums[index];
     return has_slots || has_layers || has_drums;
 }
 
@@ -293,9 +291,9 @@ lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent) {
 }
 
 void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
-    if (!props.names) return;
+    if (props.names.empty()) return;
 
-    const auto &names = *props.names;
+    const auto &names = props.names;
     size_t count = names.size();
 
     type_icons_.clear();
@@ -320,8 +318,7 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
 
         if (is_device) {
             // Create type icon first (index 0)
-            uint8_t device_type =
-                (props.deviceTypes && i < props.deviceTypes->size()) ? (*props.deviceTypes)[i] : 0;
+            uint8_t device_type = i < props.deviceTypes.size() ? props.deviceTypes[i] : 0;
             lv_obj_t *type_icon = createDeviceTypeIcon(button, device_type);
             if (type_icon) {
                 lv_obj_move_to_index(type_icon, 0);
@@ -329,8 +326,7 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
             }
 
             // Create state icon (index 1)
-            bool is_enabled =
-                props.deviceStates && i < props.deviceStates->size() && (*props.deviceStates)[i];
+            bool is_enabled = i < props.deviceStates.size() && props.deviceStates[i];
             lv_obj_t *state_icon = createDeviceStateIcon(button, is_enabled);
             lv_obj_move_to_index(state_icon, type_icon ? 1 : 0);
             state_icons_[i] = state_icon;

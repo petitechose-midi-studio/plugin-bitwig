@@ -25,9 +25,9 @@ void TrackSelector::render(const TrackSelectorProps &props) {
         return;
     }
 
-    if (!props.names) return;
+    if (props.names.empty()) return;
 
-    const auto &names = *props.names;
+    const auto &names = props.names;
 
     // Check if items changed
     bool itemsChanged = (prev_items_ != names);
@@ -102,22 +102,18 @@ void TrackSelector::createTrackItems(const std::vector<std::string> &names) {
 void TrackSelector::clearTrackItems() { track_items_.clear(); }
 
 void TrackSelector::renderTrackItems(const TrackSelectorProps &props) {
-    if (!props.names) return;
+    if (props.names.empty()) return;
 
-    const auto &names = *props.names;
+    const auto &names = props.names;
     size_t count = names.size();
 
     for (size_t i = 0; i < track_items_.size() && i < count; i++) {
         if (!track_items_[i]) continue;
 
-        bool is_muted =
-            props.muteStates && i < props.muteStates->size() ? (*props.muteStates)[i] : false;
-        bool is_soloed =
-            props.soloStates && i < props.soloStates->size() ? (*props.soloStates)[i] : false;
-        uint8_t track_type =
-            props.trackTypes && i < props.trackTypes->size() ? (*props.trackTypes)[i] : 0;
-        uint32_t track_color =
-            props.trackColors && i < props.trackColors->size() ? (*props.trackColors)[i] : 0xFFFFFF;
+        bool is_muted = i < props.muteStates.size() ? props.muteStates[i] : false;
+        bool is_soloed = i < props.soloStates.size() ? props.soloStates[i] : false;
+        uint8_t track_type = i < props.trackTypes.size() ? props.trackTypes[i] : 0;
+        uint32_t track_color = i < props.trackColors.size() ? props.trackColors[i] : 0xFFFFFF;
 
         track_items_[i]->render({.name = names[i].c_str(),
                                  .color = track_color,
@@ -132,13 +128,12 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
     if (!footer_) return;
 
     int idx = props.selectedIndex;
-    bool is_muted = props.muteStates && idx >= 0 && idx < static_cast<int>(props.muteStates->size())
-                        ? (*props.muteStates)[idx]
+    bool is_muted = idx >= 0 && idx < static_cast<int>(props.muteStates.size())
+                        ? props.muteStates[idx]
                         : false;
-    bool is_soloed =
-        props.soloStates && idx >= 0 && idx < static_cast<int>(props.soloStates->size())
-            ? (*props.soloStates)[idx]
-            : false;
+    bool is_soloed = idx >= 0 && idx < static_cast<int>(props.soloStates.size())
+                         ? props.soloStates[idx]
+                         : false;
 
     // Update opacity based on state (active = full, inactive = faded)
     if (footer_mute_)

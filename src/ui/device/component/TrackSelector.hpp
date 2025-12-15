@@ -14,11 +14,11 @@
 namespace bitwig {
 
 struct TrackSelectorProps {
-    const std::vector<std::string> *names = nullptr;
-    const std::vector<bool> *muteStates = nullptr;
-    const std::vector<bool> *soloStates = nullptr;
-    const std::vector<uint8_t> *trackTypes = nullptr;
-    const std::vector<uint32_t> *trackColors = nullptr;
+    std::vector<std::string> names;
+    std::vector<bool> muteStates;
+    std::vector<bool> soloStates;
+    std::vector<uint8_t> trackTypes;
+    std::vector<uint32_t> trackColors;
     int selectedIndex = 0;
     bool visible = false;
 };
