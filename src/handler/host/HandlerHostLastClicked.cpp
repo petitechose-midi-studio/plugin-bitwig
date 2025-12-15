@@ -1,14 +1,14 @@
 #include "HandlerHostLastClicked.hpp"
 
 #include "config/App.hpp"
-#include "handler/DeviceConstants.hpp"
 #include "protocol/struct/LastClickedUpdateMessage.hpp"
 #include "protocol/struct/LastClickedValueChangeMessage.hpp"
+#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
 using namespace Protocol;
-using namespace bitwig::Device;
+using namespace bitwig::state;
 using EncoderID = Config::EncoderID;
 
 HandlerHostLastClicked::HandlerHostLastClicked(state::BitwigState& state,

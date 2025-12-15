@@ -5,7 +5,6 @@
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
 #include "config/App.hpp"
-#include "handler/DeviceConstants.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/widget/ParameterButtonWidget.hpp"
 #include "ui/widget/ParameterKnobWidget.hpp"

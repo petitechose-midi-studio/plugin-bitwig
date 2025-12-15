@@ -21,7 +21,6 @@
 #include <oc/api/ButtonAPI.hpp>
 #include <oc/api/EncoderAPI.hpp>
 
-#include "handler/DeviceConstants.hpp"
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 

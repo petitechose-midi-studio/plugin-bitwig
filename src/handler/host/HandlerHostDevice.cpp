@@ -3,9 +3,7 @@
 #include <array>
 #include <vector>
 
-#include "handler/DeviceConstants.hpp"
 #include "handler/InputUtils.hpp"
-#include "handler/TrackConstants.hpp"
 #include "protocol/struct/DeviceChangeHeaderMessage.hpp"
 #include "protocol/struct/DeviceChildrenMessage.hpp"
 #include "protocol/struct/DeviceListMessage.hpp"
@@ -25,11 +23,8 @@
 namespace bitwig::handler {
 
 using namespace Protocol;
-using namespace bitwig::Device;
-using bitwig::state::MAX_DEVICES;
-using bitwig::state::MAX_TRACKS;
-// Both Device and Track have BACK_TO_PARENT_TEXT (same value), import one explicitly
-constexpr auto BACK_TO_PARENT = bitwig::Device::BACK_TO_PARENT_TEXT;
+using namespace bitwig::state;
+constexpr auto BACK_TO_PARENT = BACK_TO_PARENT_TEXT;
 
 HandlerHostDevice::HandlerHostDevice(state::BitwigState& state,
                                      BitwigProtocol& protocol,

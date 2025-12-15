@@ -2,7 +2,6 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "handler/DeviceConstants.hpp"
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceMacroTouchMessage.hpp"
 #include "protocol/struct/DeviceMacroValueChangeMessage.hpp"
@@ -10,7 +9,7 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using namespace bitwig::Device;
+using namespace bitwig::state;
 
 HandlerInputMacro::HandlerInputMacro(state::BitwigState& state,
                                      BitwigProtocol& protocol,
