@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <lvgl.h>
+#include <oc/ui/lvgl/IWidget.hpp>
 
 namespace bitwig {
 
@@ -15,9 +15,9 @@ namespace bitwig {
  * - ParameterListWidget (enum/list selectors)
  * - ParameterButtonWidget (toggle buttons)
  */
-class IParameterWidget {
+class IParameterWidget : public oc::ui::lvgl::IWidget {
 public:
-    virtual ~IParameterWidget() = default;
+    ~IParameterWidget() override = default;
 
     virtual void setName(const std::string& name) = 0;
     virtual void setValue(float value) = 0;
@@ -32,7 +32,6 @@ public:
     }
 
     virtual void setVisible(bool visible) = 0;
-    virtual lv_obj_t* getContainer() const = 0;
 };
 
 }  // namespace bitwig

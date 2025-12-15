@@ -236,7 +236,7 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
     if (widgets_[index]) {
         int col = index % 4;
         int row = index / 4;
-        lv_obj_set_grid_cell(widgets_[index]->getContainer(), LV_GRID_ALIGN_CENTER, col, 1,
+        lv_obj_set_grid_cell(widgets_[index]->getElement(), LV_GRID_ALIGN_CENTER, col, 1,
                              LV_GRID_ALIGN_CENTER, row, 1);
     }
 }
@@ -273,7 +273,7 @@ void DeviceView::updateParameter(uint8_t index) {
     }
 
     // Update visibility
-    lv_obj_t* container = widgets_[index]->getContainer();
+    lv_obj_t* container = widgets_[index]->getElement();
     if (container) {
         if (visible) {
             lv_obj_clear_flag(container, LV_OBJ_FLAG_HIDDEN);
