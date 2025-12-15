@@ -6,7 +6,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 TrackSelector::TrackSelector(lv_obj_t *parent) : BaseSelector(parent) {
     setTitle("Tracks");
@@ -148,4 +148,4 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
     footer_->show();
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

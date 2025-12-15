@@ -6,7 +6,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 DeviceStateBar::DeviceStateBar(lv_obj_t *parent) : parent_(parent) {
     if (!parent_) return;
@@ -72,4 +72,4 @@ lv_obj_t *DeviceStateBar::createCellWrapper(lv_obj_t *parent, lv_flex_align_t hA
     return cell;
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

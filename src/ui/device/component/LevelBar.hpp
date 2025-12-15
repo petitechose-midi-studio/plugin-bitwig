@@ -4,7 +4,7 @@
 
 #include <lvgl.h>
 
-namespace Bitwig {
+namespace bitwig {
 
 struct LevelBarProps {
     float value = 0.0f;
@@ -31,4 +31,4 @@ private:
     lv_coord_t height_ = 12;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

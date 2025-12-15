@@ -6,7 +6,7 @@
 
 #include <oc/ui/lvgl/IView.hpp>
 
-namespace Bitwig {
+namespace bitwig {
 
 using oc::ui::lvgl::IView;
 
@@ -37,4 +37,4 @@ private:
     static void fadeAnimDeletedCallback(lv_anim_t *anim);
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

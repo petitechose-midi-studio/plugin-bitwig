@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
-namespace Bitwig {
+namespace bitwig {
 
 struct TitleItemProps {
     const char* text = "";
@@ -51,4 +51,4 @@ private:
     lv_obj_t* indicator_ = nullptr;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

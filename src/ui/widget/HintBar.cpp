@@ -1,6 +1,6 @@
 #include "HintBar.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 HintBar::HintBar(lv_obj_t* parent, HintBarPosition position)
     : position_(position), parent_(parent) {
@@ -92,4 +92,4 @@ bool HintBar::isVisible() const {
     return container_ && !lv_obj_has_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

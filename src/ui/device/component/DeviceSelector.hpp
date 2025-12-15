@@ -11,7 +11,7 @@
 #include "ui/widget/HintBar.hpp"
 #include "ui/widget/BaseSelector.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 struct DeviceSelectorProps {
     // Device list mode
@@ -80,4 +80,4 @@ private:
     lv_obj_t *footer_state_ = nullptr;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

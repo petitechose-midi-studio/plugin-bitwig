@@ -188,10 +188,15 @@ void BitwigContext::createInputHandlers() {
                                                                buttons(), scopeElement);
     OC_LOG_INFO("[Context]   5.3: HandlerInputMacro DONE");
 
+    // Track: OVERLAY scope - handles track selector navigation
+    OC_LOG_INFO("[Context]   5.4: Creating HandlerInputTrack (OVERLAY scope)...");
+    inputTrack_ = std::make_unique<handler::HandlerInputTrack>(
+        state_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
+    OC_LOG_INFO("[Context]   5.4: HandlerInputTrack DONE");
+
     // DISABLED FOR NOW:
-    // inputDevicePage_, inputTrack_, inputLastClicked_
+    // inputDevicePage_, inputLastClicked_
     (void)pageSelectorOverlay;
-    (void)trackSelectorOverlay;
 }
 
 void BitwigContext::createViews() {

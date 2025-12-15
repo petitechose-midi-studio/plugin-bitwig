@@ -5,7 +5,7 @@
 
 #include "ui/widget/BaseSelector.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 struct PageSelectorProps {
     const std::vector<std::string> *names = nullptr;
@@ -23,4 +23,4 @@ public:
     int getPageCount() const { return getItemCount(); }
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

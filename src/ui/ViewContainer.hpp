@@ -8,7 +8,7 @@ namespace UI {
 class IView;
 }
 
-namespace Bitwig {
+namespace bitwig {
 
 class ViewContainer {
 public:
@@ -24,4 +24,4 @@ private:
     lv_obj_t *bottom_zone_{nullptr};
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

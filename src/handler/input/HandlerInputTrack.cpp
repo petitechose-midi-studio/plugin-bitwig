@@ -2,7 +2,7 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include "handler/InputUtils.hpp"
 #include "protocol/struct/EnterTrackGroupMessage.hpp"
 #include "protocol/struct/ExitTrackGroupMessage.hpp"
 #include "protocol/struct/RequestDeviceListMessage.hpp"
@@ -14,14 +14,6 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using ButtonID = Config::ButtonID;
-using EncoderID = Config::EncoderID;
-
-namespace {
-int wrapIndex(int value, int modulo) {
-    return ((value % modulo) + modulo) % modulo;
-}
-}  // namespace
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
                                      BitwigProtocol& protocol,
@@ -172,7 +164,7 @@ int HandlerInputTrack::getSelectedTrackIndex() {
 }
 
 int HandlerInputTrack::getAdjustedTrackIndex(int selectorIndex) const {
-    return state_.trackSelector.isNested.get() ? selectorIndex - 1 : selectorIndex;
+    return adjustIndexForNested(selectorIndex, state_.trackSelector.isNested.get());
 }
 
 }  // namespace bitwig::handler

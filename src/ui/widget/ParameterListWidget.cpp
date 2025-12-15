@@ -5,7 +5,7 @@
 
 using namespace Theme;
 
-namespace Bitwig {
+namespace bitwig {
 
 ParameterListWidget::ParameterListWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                          uint8_t index, int16_t discreteCount)
@@ -116,4 +116,4 @@ void ParameterListWidget::updateValueDisplay() {
     }
 }
 
-}  // namespace Bitwig
+}  // namespace bitwig

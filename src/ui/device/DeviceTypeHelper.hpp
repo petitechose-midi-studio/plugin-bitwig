@@ -5,7 +5,7 @@
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 /**
  * @brief Helper for device type icons and colors
@@ -43,4 +43,4 @@ inline Info get(uint8_t deviceType) {
 }
 
 }  // namespace DeviceType
-}  // namespace Bitwig
+}  // namespace bitwig

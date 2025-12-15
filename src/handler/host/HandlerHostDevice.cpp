@@ -1,12 +1,11 @@
 #include "HandlerHostDevice.hpp"
 
+#include <array>
 #include <vector>
 
-#include "config/App.hpp"
 #include "handler/DeviceConstants.hpp"
+#include "handler/InputUtils.hpp"
 #include "handler/TrackConstants.hpp"
-#include "state/Constants.hpp"
-
 #include "protocol/struct/DeviceChangeHeaderMessage.hpp"
 #include "protocol/struct/DeviceChildrenMessage.hpp"
 #include "protocol/struct/DeviceListMessage.hpp"
@@ -21,28 +20,16 @@
 #include "protocol/struct/TrackListMessage.hpp"
 #include "protocol/struct/TrackMuteMessage.hpp"
 #include "protocol/struct/TrackSoloMessage.hpp"
+#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
 using namespace Protocol;
-using namespace Bitwig::Device;
-using bitwig::state::MAX_TRACKS;
+using namespace bitwig::Device;
 using bitwig::state::MAX_DEVICES;
-using EncoderID = Config::EncoderID;
+using bitwig::state::MAX_TRACKS;
 // Both Device and Track have BACK_TO_PARENT_TEXT (same value), import one explicitly
-constexpr auto BACK_TO_PARENT = Bitwig::Device::BACK_TO_PARENT_TEXT;
-
-// Encoder ID mapping for macro parameters
-namespace {
-constexpr EncoderID MACRO_ENCODERS[] = {
-    EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
-    EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
-};
-
-EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
-    return (paramIndex < PARAMETER_COUNT) ? MACRO_ENCODERS[paramIndex] : EncoderID{0};
-}
-}  // namespace
+constexpr auto BACK_TO_PARENT = bitwig::Device::BACK_TO_PARENT_TEXT;
 
 HandlerHostDevice::HandlerHostDevice(state::BitwigState& state,
                                      BitwigProtocol& protocol,
@@ -131,7 +118,10 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         state_.trackSelector.trackColors.set(trackColors.data(), trackColors.size());
 
         state_.trackSelector.currentIndex.set(msg.isNested ? msg.trackIndex + 1 : msg.trackIndex);
-        // NOTE: visibility is controlled by input handlers, not host handlers
+
+        // Show track selector, hide device selector to prevent scope conflicts
+        state_.deviceSelector.visible.set(false);
+        state_.trackSelector.visible.set(true);
     };
 
     protocol_.onTrackMute = [this](const TrackMuteMessage& msg) {
@@ -293,8 +283,8 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
 
-        // Static buffer to avoid heap allocation per parameter
-        static std::array<std::string, state::MAX_DISCRETE_VALUES> tempDiscreteValues;
+        // Local buffer for discrete values (stack allocated, safe in single-threaded context)
+        std::array<std::string, state::MAX_DISCRETE_VALUES> tempDiscreteValues;
 
         for (uint8_t i = 0; i < PARAMETER_COUNT && i < msg.macros.size(); i++) {
             auto& slot = state_.parameters.slots[i];
@@ -367,13 +357,11 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         auto& slot = state_.parameters.slots[msg.parameterIndex];
 
-        // Static buffer to avoid heap allocation
-        static std::array<std::string, state::MAX_DISCRETE_VALUES> tempValues;
+        // Local buffer for discrete values (stack allocated, safe in single-threaded context)
+        std::array<std::string, state::MAX_DISCRETE_VALUES> tempValues;
         size_t count = 0;
         for (const auto& dv : msg.discreteValueNames) {
-            if (!dv.empty() && count < state::MAX_DISCRETE_VALUES) {
-                tempValues[count++] = dv;  // Direct assignment
-            }
+            if (!dv.empty() && count < state::MAX_DISCRETE_VALUES) { tempValues[count++] = dv; }
         }
         slot.discreteValues.set(tempValues.data(), count);
         slot.currentValueIndex.set(msg.currentValueIndex);

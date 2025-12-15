@@ -2,29 +2,15 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
 #include "handler/DeviceConstants.hpp"
+#include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceMacroTouchMessage.hpp"
 #include "protocol/struct/DeviceMacroValueChangeMessage.hpp"
 
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using namespace Bitwig::Device;
-using EncoderID = Config::EncoderID;
-using ButtonID = Config::ButtonID;
-
-namespace {
-constexpr EncoderID MACRO_ENCODERS[] = {
-    EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
-    EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
-};
-
-constexpr ButtonID MACRO_BUTTONS[] = {
-    ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
-    ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
-};
-}  // namespace
+using namespace bitwig::Device;
 
 HandlerInputMacro::HandlerInputMacro(state::BitwigState& state,
                                      BitwigProtocol& protocol,
@@ -37,10 +23,6 @@ HandlerInputMacro::HandlerInputMacro(state::BitwigState& state,
     , buttons_(buttons)
     , scopeElement_(scopeElement) {
     setupBindings();
-}
-
-EncoderID HandlerInputMacro::getEncoderIdForParameter(uint8_t paramIndex) {
-    return (paramIndex < PARAMETER_COUNT) ? MACRO_ENCODERS[paramIndex] : EncoderID{0};
 }
 
 void HandlerInputMacro::setupBindings() {

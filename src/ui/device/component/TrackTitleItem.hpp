@@ -8,7 +8,7 @@
 
 #include <lvgl.h>
 
-namespace Bitwig {
+namespace bitwig {
 
 struct TrackTitleItemProps {
     const char *name = "";
@@ -45,4 +45,4 @@ private:
     bool has_mute_solo_ = false;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

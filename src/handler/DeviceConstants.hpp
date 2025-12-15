@@ -4,7 +4,7 @@
 
 #include "ui/font/icon.hpp"
 
-namespace Bitwig::Device {
+namespace bitwig::Device {
 
 // ============================================================================
 // PARAMETER CONSTANTS
@@ -61,4 +61,4 @@ enum class ParameterType : uint8_t {
 
 constexpr const char *BACK_TO_PARENT_TEXT = Icon::ARROW_LEFT;
 
-}  // namespace Bitwig::Device
+}  // namespace bitwig::Device

@@ -1,10 +1,9 @@
 #include "HandlerInputDeviceSelector.hpp"
 
-#include <oc/teensy/LogOutput.hpp>
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceSelectByIndexMessage.hpp"
 #include "protocol/struct/DeviceStateChangeMessage.hpp"
 #include "protocol/struct/EnterDeviceChildMessage.hpp"
@@ -16,14 +15,6 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using ButtonID = Config::ButtonID;
-using EncoderID = Config::EncoderID;
-
-namespace {
-int wrapIndex(int value, int modulo) {
-    return ((value % modulo) + modulo) % modulo;
-}
-}  // namespace
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
                                                        BitwigProtocol& protocol,
@@ -224,31 +215,28 @@ void HandlerInputDeviceSelector::toggleState() {
 
 void HandlerInputDeviceSelector::requestTrackList() {
     OC_LOG_INFO("[DeviceSelectorInput] >> requestTrackList()");
-    // Skip if track list was just closed by this same press
-    if (trackListRequested_) {
-        trackListRequested_ = false;
+
+    auto& ts = state_.trackSelector;
+    auto& ds = state_.deviceSelector;
+
+    // Already visible - don't toggle (handles spurious triggers after close())
+    if (ts.visible.get()) {
+        OC_LOG_INFO("[DeviceSelectorInput] << requestTrackList() skipped (already visible)");
         return;
     }
 
-    auto& ts = state_.trackSelector;
-
-    // Show cached track list immediately if available (cache-first)
-    if (ts.names.size() > 0 && !ts.visible.get()) {
-        ts.visible.set(true);
-    }
+    // Hide device selector, show track selector
+    ds.visible.set(false);
+    ts.visible.set(true);
 
     protocol_.send(Protocol::RequestTrackListMessage{});
-    trackListRequested_ = true;
     OC_LOG_INFO("[DeviceSelectorInput] << requestTrackList() done");
 }
 
 void HandlerInputDeviceSelector::close() {
     OC_LOG_INFO("[DeviceSelectorInput] >> close()");
     // Hide track selector if visible
-    if (state_.trackSelector.visible.get()) {
-        state_.trackSelector.visible.set(false);
-        trackListRequested_ = false;
-    }
+    if (state_.trackSelector.visible.get()) { state_.trackSelector.visible.set(false); }
 
     // Hide device selector
     state_.deviceSelector.visible.set(false);
@@ -268,7 +256,7 @@ bool HandlerInputDeviceSelector::hasChildren(uint8_t deviceIndex) const {
 }
 
 int HandlerInputDeviceSelector::getAdjustedDeviceIndex(int selectorIndex) const {
-    return state_.deviceSelector.isNested.get() ? selectorIndex - 1 : selectorIndex;
+    return adjustIndexForNested(selectorIndex, state_.deviceSelector.isNested.get());
 }
 
 bool HandlerInputDeviceSelector::isShowingChildren() const {

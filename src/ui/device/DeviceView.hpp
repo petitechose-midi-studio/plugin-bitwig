@@ -28,7 +28,7 @@
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/widget/IParameterWidget.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 using oc::ui::lvgl::IView;
 
@@ -121,4 +121,4 @@ private:
     void ensureWidgetForType(uint8_t index);
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig

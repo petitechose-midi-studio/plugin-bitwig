@@ -11,7 +11,7 @@
 #include "ui/widget/HintBar.hpp"
 #include "ui/widget/BaseSelector.hpp"
 
-namespace Bitwig {
+namespace bitwig {
 
 struct TrackSelectorProps {
     const std::vector<std::string> *names = nullptr;
@@ -48,4 +48,4 @@ private:
     lv_obj_t *footer_solo_ = nullptr;
 };
 
-}  // namespace Bitwig
+}  // namespace bitwig
