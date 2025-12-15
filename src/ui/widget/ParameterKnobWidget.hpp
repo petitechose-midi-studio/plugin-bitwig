@@ -24,7 +24,7 @@ public:
     void setValue(float value) override;
     void setValueWithDisplay(float value, const char* displayValue) override;
     void setVisible(bool visible) override;
-    lv_obj_t* getContainer() const override { return container_; }
+    lv_obj_t* getElement() const override { return container_; }
 
     void setOrigin(float origin);
 

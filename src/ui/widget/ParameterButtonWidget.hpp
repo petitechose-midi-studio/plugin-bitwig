@@ -25,7 +25,7 @@ public:
     void setDiscreteMetadata(int16_t discreteCount, const std::vector<std::string>& valueNames,
                              uint8_t currentIndex) override;
     void setVisible(bool visible) override;
-    lv_obj_t* getContainer() const override { return container_; }
+    lv_obj_t* getElement() const override { return container_; }
 
 private:
     void createUI(lv_coord_t width, lv_coord_t height);
