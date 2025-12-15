@@ -11,6 +11,8 @@
 #include <array>
 #include <cstdint>
 
+#include <oc/api/EncoderAPI.hpp>
+
 #include "config/App.hpp"
 #include "state/Constants.hpp"
 
@@ -50,6 +52,27 @@ inline EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
         : EncoderID{0};
 }
 
+/**
+ * @brief Configure encoder mode based on parameter type
+ * @param encoders Encoder API reference
+ * @param encoderId Encoder to configure
+ * @param parameterType Parameter type (KNOB = continuous, else discrete)
+ * @param discreteCount Number of discrete steps (for non-KNOB types)
+ * @param value Initial encoder position
+ */
+inline void configureEncoderForParameter(oc::api::EncoderAPI& encoders,
+                                         EncoderID encoderId,
+                                         uint8_t parameterType,
+                                         uint8_t discreteCount,
+                                         float value) {
+    if (parameterType == static_cast<uint8_t>(bitwig::state::ParameterType::KNOB)) {
+        encoders.setContinuous(encoderId);
+    } else {
+        encoders.setDiscreteSteps(encoderId, discreteCount);
+    }
+    encoders.setPosition(encoderId, value);
+}
+
 // =============================================================================
 // Index Utilities
 // =============================================================================
@@ -62,16 +85,6 @@ inline EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
  */
 inline int wrapIndex(int value, int modulo) {
     return ((value % modulo) + modulo) % modulo;
-}
-
-/**
- * @brief Adjust selector index for nested mode (back button at index 0)
- * @param selectorIndex Visual index in the selector
- * @param isNested Whether the selector is showing nested items with back button
- * @return Actual item index (selectorIndex - 1 if nested, else selectorIndex)
- */
-inline int adjustIndexForNested(int selectorIndex, bool isNested) {
-    return isNested ? selectorIndex - 1 : selectorIndex;
 }
 
 }  // namespace bitwig::handler

@@ -3,6 +3,7 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
+#include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/EnterTrackGroupMessage.hpp"
 #include "protocol/struct/ExitTrackGroupMessage.hpp"
 #include "protocol/struct/RequestDeviceListMessage.hpp"
@@ -164,7 +165,7 @@ int HandlerInputTrack::getSelectedTrackIndex() {
 }
 
 int HandlerInputTrack::getAdjustedTrackIndex(int selectorIndex) const {
-    return adjustIndexForNested(selectorIndex, state_.trackSelector.isNested.get());
+    return utils::toRawIndex(selectorIndex, state_.trackSelector.isNested.get());
 }
 
 }  // namespace bitwig::handler

@@ -1,6 +1,7 @@
 #include "HandlerHostLastClicked.hpp"
 
 #include "config/App.hpp"
+#include "handler/InputUtils.hpp"
 #include "protocol/struct/LastClickedUpdateMessage.hpp"
 #include "protocol/struct/LastClickedValueChangeMessage.hpp"
 #include "state/Constants.hpp"
@@ -42,14 +43,10 @@ void HandlerHostLastClicked::handleLastClickedUpdate(const LastClickedUpdateMess
 
     if (!msg.parameterExists) return;
 
-    // Configure encoder based on parameter type
-    if (msg.parameterType == static_cast<uint8_t>(ParameterType::KNOB)) {
-        encoders_.setContinuous(EncoderID::OPT);
-    } else {
-        encoders_.setDiscreteSteps(EncoderID::OPT, msg.discreteValueCount);
-    }
-
-    encoders_.setPosition(EncoderID::OPT, msg.parameterValue);
+    configureEncoderForParameter(encoders_, EncoderID::OPT,
+                                 msg.parameterType,
+                                 msg.discreteValueCount,
+                                 msg.parameterValue);
 }
 
 void HandlerHostLastClicked::handleLastClickedValueChange(const LastClickedValueChangeMessage& msg) {
