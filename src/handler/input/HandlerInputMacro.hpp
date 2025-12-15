@@ -42,6 +42,7 @@ public:
     // Non-copyable
     HandlerInputMacro(const HandlerInputMacro&) = delete;
     HandlerInputMacro& operator=(const HandlerInputMacro&) = delete;
+
 private:
     void setupBindings();
     void handleValueChange(uint8_t index, float value);

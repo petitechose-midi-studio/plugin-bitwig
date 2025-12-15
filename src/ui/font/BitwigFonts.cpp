@@ -12,9 +12,9 @@ BitwigFonts bitwig_fonts;
 
 void bitwigFontsRegister() {
     // Register icon fonts with core's system (queued for loading)
-    ::registerFont(&bitwig_fonts.icons_12, bitwig_icons_12_bin, bitwig_icons_12_bin_len);
-    ::registerFont(&bitwig_fonts.icons_14, bitwig_icons_14_bin, bitwig_icons_14_bin_len);
-    ::registerFont(&bitwig_fonts.icons_16, bitwig_icons_16_bin, bitwig_icons_16_bin_len);
+    registerFont(&bitwig_fonts.icons_12, bitwig_icons_12_bin, bitwig_icons_12_bin_len);
+    registerFont(&bitwig_fonts.icons_14, bitwig_icons_14_bin, bitwig_icons_14_bin_len);
+    registerFont(&bitwig_fonts.icons_16, bitwig_icons_16_bin, bitwig_icons_16_bin_len);
 }
 
 void bitwigFontsLink() {

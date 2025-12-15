@@ -170,7 +170,7 @@ void DeviceSelector::createHeader() {
     // Create header container inside overlay container (participates in flex layout)
     header_ = lv_obj_create(overlay().getContainer());
     lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(header_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(header_, Opacity::HIDDEN, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(header_, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);

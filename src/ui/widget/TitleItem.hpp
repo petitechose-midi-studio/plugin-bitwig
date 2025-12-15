@@ -4,6 +4,8 @@
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
+#include "ui/theme/BitwigTheme.hpp"
+
 namespace bitwig {
 
 struct TitleItemProps {
@@ -13,8 +15,8 @@ struct TitleItemProps {
     const lv_font_t* textFont = nullptr;
     uint32_t iconColor = 0xFFFFFF;
     uint32_t textColor = 0xFFFFFF;
-    lv_opa_t textOpacity = LV_OPA_COVER;
-    lv_opa_t iconOpacity = LV_OPA_COVER;
+    lv_opa_t textOpacity = theme::Opacity::FULL;
+    lv_opa_t iconOpacity = theme::Opacity::FULL;
     bool showIndicator = false;
     const char* indicator = nullptr;
     uint32_t indicatorColor = 0x888888;
