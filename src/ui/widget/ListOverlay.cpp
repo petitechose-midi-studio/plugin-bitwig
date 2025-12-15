@@ -159,7 +159,7 @@ void ListOverlay::createList() {
     list_ = lv_list_create(container_);
     lv_obj_set_size(list_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_grow(list_, 1);
-    lv_obj_set_style_bg_opa(list_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(list_, Opacity::HIDDEN, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(list_, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_all(list_, BaseTheme::Layout::LIST_PAD, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(list_, BaseTheme::Layout::LIST_ITEM_GAP, LV_STATE_DEFAULT);
@@ -191,8 +191,8 @@ void ListOverlay::populateList() {
         lv_obj_set_width(btn, LV_PCT(100));
         lv_obj_set_height(btn, LV_SIZE_CONTENT);
 
-        lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, LV_STATE_CHECKED);
+        lv_obj_set_style_bg_opa(btn, Opacity::HIDDEN, LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(btn, Opacity::HIDDEN, LV_STATE_CHECKED);
 
         lv_obj_set_style_pad_left(btn, BaseTheme::Layout::PAD_BUTTON_H, LV_STATE_DEFAULT);
         lv_obj_set_style_pad_right(btn, BaseTheme::Layout::MARGIN_LG, LV_STATE_DEFAULT);
@@ -210,10 +210,10 @@ void ListOverlay::populateList() {
         lv_label_set_text(label, item.c_str());
 
         lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(label, LV_OPA_COVER, LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(label, Opacity::FULL, LV_STATE_DEFAULT);
 
         lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(label, LV_OPA_COVER, LV_STATE_FOCUSED);
+        lv_obj_set_style_text_opa(label, Opacity::FULL, LV_STATE_FOCUSED);
 
         if (fonts.list_item_label) {
             lv_obj_set_style_text_font(label, fonts.list_item_label, LV_STATE_DEFAULT);

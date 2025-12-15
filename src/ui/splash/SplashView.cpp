@@ -21,7 +21,7 @@ void SplashView::onActivate() {
 
     if (container_) {
         lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_set_style_opa(container_, LV_OPA_COVER,
+        lv_obj_set_style_opa(container_, Opacity::FULL,
                              LV_STATE_DEFAULT);  // Reset opacity after fadeOut
     }
 }
@@ -49,7 +49,7 @@ void SplashView::createUI() {
 
     logo_ = lv_image_create(container_);
     lv_image_set_src(logo_, &Bitwig_Logo);
-    lv_obj_set_style_img_opa(logo_, LV_OPA_COVER, LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(logo_, Opacity::FULL, LV_STATE_DEFAULT);
 
     label_ = lv_label_create(container_);
     style::apply(label_).textColor(Color::TEXT_PRIMARY);
@@ -84,7 +84,7 @@ void SplashView::fadeOut(uint32_t durationMs, std::function<void()> onComplete) 
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, container_);
     lv_anim_set_exec_cb(&anim, fadeAnimCallback);
-    lv_anim_set_values(&anim, LV_OPA_COVER, LV_OPA_TRANSP);
+    lv_anim_set_values(&anim, Opacity::FULL, Opacity::HIDDEN);
     lv_anim_set_duration(&anim, durationMs);
     lv_anim_set_path_cb(&anim, lv_anim_path_linear);
     lv_anim_set_user_data(&anim, this);

@@ -4,12 +4,14 @@
 
 #include <lvgl.h>
 
+#include "ui/theme/BitwigTheme.hpp"
+
 namespace bitwig {
 
 struct LevelBarProps {
     float value = 0.0f;
     uint32_t color = 0xFFFFFF;
-    lv_opa_t opacity = LV_OPA_50;
+    lv_opa_t opacity = theme::Opacity::DIMMED;
 };
 
 /**
