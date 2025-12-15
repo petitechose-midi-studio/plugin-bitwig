@@ -8,6 +8,7 @@
  *
  * Key Features:
  * - floatToString(): Hybrid snprintf approach for precise float formatting
+ * - g_logBuffer: Shared 32KB buffer for all toString() methods
  * - Handles edge cases: NaN, Inf, -Inf
  * - 4 decimal places precision
  * - Optimized for embedded systems (no dynamic allocation)
@@ -16,10 +17,26 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <cmath>
 
 namespace Protocol {
+
+// ============================================================================
+// Shared Log Buffer (used by all message toString() methods)
+// ============================================================================
+
+/// Size of the shared log buffer
+constexpr size_t LOG_BUFFER_SIZE = 32768;
+
+/// Shared buffer for toString() output - WARNING: not thread-safe!
+/// All toString() calls share this buffer. Log immediately after calling.
+#ifdef EXTMEM
+inline EXTMEM char g_logBuffer[LOG_BUFFER_SIZE];
+#else
+inline char g_logBuffer[LOG_BUFFER_SIZE];
+#endif
 
 /**
  * Convert float to string with 4 decimal places using hybrid approach.

@@ -18,11 +18,9 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
-#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace Protocol {
 
@@ -97,23 +95,18 @@ struct LastClickedValueChangeMessage {
 
     /**
      * Convert message to YAML format for logging
-     * 
-     * WARNING: Uses static 32KB buffer - log immediately!
+     *
+     * WARNING: Uses shared g_logBuffer - log immediately!
      * Multiple calls will overwrite previous results.
-     * 
+     *
      * @return YAML string representation
      */
     const char* toString() const {
-        #ifdef EXTMEM
-        static EXTMEM char buffer[32768];  // Use external memory on Teensy
-        #else
-        static char buffer[32768];  // Standard static buffer
-        #endif
-        char* ptr = buffer;
-        const char* end = buffer + sizeof(buffer) - 1;
-        
+        char* ptr = g_logBuffer;
+        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
+
         ptr += snprintf(ptr, end - ptr, "# LastClickedValueChange\nlastClickedValueChange:\n");
-        
+
         {
             char floatBuf_parameterValue[16];
             floatToString(floatBuf_parameterValue, sizeof(floatBuf_parameterValue), parameterValue);
@@ -121,9 +114,9 @@ struct LastClickedValueChangeMessage {
         }
         ptr += snprintf(ptr, end - ptr, "  displayValue: \"%s\"\n", displayValue.c_str());
         ptr += snprintf(ptr, end - ptr, "  isEcho: %s\n", isEcho ? "true" : "false");
-        
+
         *ptr = '\0';
-        return buffer;
+        return g_logBuffer;
     }
 
 };

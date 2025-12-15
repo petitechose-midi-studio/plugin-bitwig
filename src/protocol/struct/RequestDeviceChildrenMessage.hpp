@@ -18,11 +18,8 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
-#include <array>
 #include <cstdint>
 #include <optional>
-#include <string>
-#include <vector>
 
 namespace Protocol {
 
@@ -93,28 +90,23 @@ struct RequestDeviceChildrenMessage {
 
     /**
      * Convert message to YAML format for logging
-     * 
-     * WARNING: Uses static 32KB buffer - log immediately!
+     *
+     * WARNING: Uses shared g_logBuffer - log immediately!
      * Multiple calls will overwrite previous results.
-     * 
+     *
      * @return YAML string representation
      */
     const char* toString() const {
-        #ifdef EXTMEM
-        static EXTMEM char buffer[32768];  // Use external memory on Teensy
-        #else
-        static char buffer[32768];  // Standard static buffer
-        #endif
-        char* ptr = buffer;
-        const char* end = buffer + sizeof(buffer) - 1;
-        
+        char* ptr = g_logBuffer;
+        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
+
         ptr += snprintf(ptr, end - ptr, "# RequestDeviceChildren\nrequestDeviceChildren:\n");
-        
+
         ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
         ptr += snprintf(ptr, end - ptr, "  childType: %lu\n", (unsigned long)childType);
-        
+
         *ptr = '\0';
-        return buffer;
+        return g_logBuffer;
     }
 
 };

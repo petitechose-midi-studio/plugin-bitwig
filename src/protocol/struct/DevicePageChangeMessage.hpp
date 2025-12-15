@@ -161,23 +161,18 @@ struct DevicePageChangeMessage {
 
     /**
      * Convert message to YAML format for logging
-     * 
-     * WARNING: Uses static 32KB buffer - log immediately!
+     *
+     * WARNING: Uses shared g_logBuffer - log immediately!
      * Multiple calls will overwrite previous results.
-     * 
+     *
      * @return YAML string representation
      */
     const char* toString() const {
-        #ifdef EXTMEM
-        static EXTMEM char buffer[32768];  // Use external memory on Teensy
-        #else
-        static char buffer[32768];  // Standard static buffer
-        #endif
-        char* ptr = buffer;
-        const char* end = buffer + sizeof(buffer) - 1;
-        
+        char* ptr = g_logBuffer;
+        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
+
         ptr += snprintf(ptr, end - ptr, "# DevicePageChange\ndevicePageChange:\n");
-        
+
         ptr += snprintf(ptr, end - ptr, "  pageInfo:\n");
         ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
         ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);
@@ -211,9 +206,9 @@ struct DevicePageChangeMessage {
         }
         ptr += snprintf(ptr, end - ptr, "      currentValueIndex: %lu\n", (unsigned long)macros[i].currentValueIndex);
         }
-        
+
         *ptr = '\0';
-        return buffer;
+        return g_logBuffer;
     }
 
 };
