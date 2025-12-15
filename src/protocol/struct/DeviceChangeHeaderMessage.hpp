@@ -22,7 +22,6 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace Protocol {
 
@@ -126,23 +125,18 @@ struct DeviceChangeHeaderMessage {
 
     /**
      * Convert message to YAML format for logging
-     * 
-     * WARNING: Uses static 32KB buffer - log immediately!
+     *
+     * WARNING: Uses shared g_logBuffer - log immediately!
      * Multiple calls will overwrite previous results.
-     * 
+     *
      * @return YAML string representation
      */
     const char* toString() const {
-        #ifdef EXTMEM
-        static EXTMEM char buffer[32768];  // Use external memory on Teensy
-        #else
-        static char buffer[32768];  // Standard static buffer
-        #endif
-        char* ptr = buffer;
-        const char* end = buffer + sizeof(buffer) - 1;
-        
+        char* ptr = g_logBuffer;
+        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
+
         ptr += snprintf(ptr, end - ptr, "# DeviceChangeHeader\ndeviceChangeHeader:\n");
-        
+
         ptr += snprintf(ptr, end - ptr, "  deviceName: \"%s\"\n", deviceName.c_str());
         ptr += snprintf(ptr, end - ptr, "  isEnabled: %s\n", isEnabled ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "  deviceType: %lu\n", (unsigned long)deviceType);
@@ -159,9 +153,9 @@ struct DeviceChangeHeaderMessage {
                 ptr += snprintf(ptr, end - ptr, "    - %lu\n", (unsigned long)childrenTypes[i]);
             }
         }
-        
+
         *ptr = '\0';
-        return buffer;
+        return g_logBuffer;
     }
 
 };

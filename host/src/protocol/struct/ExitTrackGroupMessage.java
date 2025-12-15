@@ -56,40 +56,21 @@ public final class ExitTrackGroupMessage {
     public static final int MAX_PAYLOAD_SIZE = 0;
 
     /**
-     * Encode message to MIDI-safe bytes
-     *
-     * @return Encoded byte array
+     * Encode message to MIDI-safe bytes (empty message)
+     * @return Empty byte array
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-
-        return new byte[0];
-    }
+    public byte[] encode() { return new byte[0]; }
 
     // ============================================================================
     // Decoding
     // ============================================================================
 
     /**
-     * Minimum payload size in bytes (with empty strings)
+     * Decode message from MIDI-safe bytes (empty message)
+     * @param data Input buffer (unused)
+     * @return New ExitTrackGroupMessage instance
      */
-    private static final int MIN_PAYLOAD_SIZE = 0;
-
-    /**
-     * Decode message from MIDI-safe bytes
-     *
-     * @param data Input buffer with encoded data
-     * @return Decoded ExitTrackGroupMessage instance
-     * @throws IllegalArgumentException if data is invalid or insufficient
-     */
-    public static ExitTrackGroupMessage decode(byte[] data) {
-        if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for ExitTrackGroupMessage decode");
-        }
-
-
-        return new ExitTrackGroupMessage();
-    }
+    public static ExitTrackGroupMessage decode(byte[] data) { return new ExitTrackGroupMessage(); }
 
     // ============================================================================
     // Logging

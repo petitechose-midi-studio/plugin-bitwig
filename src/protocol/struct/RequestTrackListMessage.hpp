@@ -18,11 +18,8 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
-#include <array>
 #include <cstdint>
 #include <optional>
-#include <string>
-#include <vector>
 
 namespace Protocol {
 
@@ -47,59 +44,37 @@ struct RequestTrackListMessage {
     static constexpr uint16_t MIN_PAYLOAD_SIZE = 0;
 
     /**
-     * Encode struct to MIDI-safe bytes
-     *
-     * @param buffer Output buffer (must have >= MAX_PAYLOAD_SIZE bytes)
-     * @param bufferSize Size of output buffer
-     * @return Number of bytes written, or 0 if buffer too small
+     * Encode struct to MIDI-safe bytes (empty message)
+     * @return Always 0 (no payload)
      */
-    uint16_t encode(uint8_t* buffer, uint16_t bufferSize) const {
-        if (bufferSize < MAX_PAYLOAD_SIZE) return 0;
-
-
-        return 0;
-    }
+    uint16_t encode(uint8_t*, uint16_t) const { return 0; }
 
     /**
-     * Decode struct from MIDI-safe bytes
-     *
-     * @param data Input buffer with encoded data
-     * @param len Length of input buffer
-     * @return Decoded struct, or std::nullopt if invalid/insufficient data
+     * Decode struct from MIDI-safe bytes (empty message)
+     * @return Always returns empty struct
      */
-    static std::optional<RequestTrackListMessage> decode(
-        const uint8_t* data, uint16_t len) {
-
-        if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
-
-        // No fields to decode
-
+    static std::optional<RequestTrackListMessage> decode(const uint8_t*, uint16_t) {
         return RequestTrackListMessage{};
     }
 
 
     /**
      * Convert message to YAML format for logging
-     * 
-     * WARNING: Uses static 32KB buffer - log immediately!
+     *
+     * WARNING: Uses shared g_logBuffer - log immediately!
      * Multiple calls will overwrite previous results.
-     * 
+     *
      * @return YAML string representation
      */
     const char* toString() const {
-        #ifdef EXTMEM
-        static EXTMEM char buffer[32768];  // Use external memory on Teensy
-        #else
-        static char buffer[32768];  // Standard static buffer
-        #endif
-        char* ptr = buffer;
-        const char* end = buffer + sizeof(buffer) - 1;
-        
+        char* ptr = g_logBuffer;
+        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
+
         ptr += snprintf(ptr, end - ptr, "# RequestTrackList\nrequestTrackList:\n");
-        
-        
+
+
         *ptr = '\0';
-        return buffer;
+        return g_logBuffer;
     }
 
 };
