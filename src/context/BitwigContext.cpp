@@ -66,6 +66,9 @@ void BitwigContext::cleanup() {
     // Host Handlers
     hostMidi_.reset();
     hostLastClicked_.reset();
+    hostMacro_.reset();
+    hostPage_.reset();
+    hostTrack_.reset();
     hostDevice_.reset();
     hostTransport_.reset();
     hostPlugin_.reset();
@@ -103,7 +106,10 @@ void BitwigContext::createHostHandlers() {
     // Order matters: plugin handler requests host status first
     hostPlugin_ = std::make_unique<handler::HandlerHostPlugin>(state_, *protocol_);
     hostTransport_ = std::make_unique<handler::HandlerHostTransport>(state_, *protocol_);
-    hostDevice_ = std::make_unique<handler::HandlerHostDevice>(state_, *protocol_, encoders());
+    hostDevice_ = std::make_unique<handler::HandlerHostDevice>(state_, *protocol_);
+    hostTrack_ = std::make_unique<handler::HandlerHostTrack>(state_, *protocol_);
+    hostPage_ = std::make_unique<handler::HandlerHostPage>(state_, *protocol_, encoders());
+    hostMacro_ = std::make_unique<handler::HandlerHostMacro>(state_, *protocol_, encoders());
     hostLastClicked_ = std::make_unique<handler::HandlerHostLastClicked>(state_, *protocol_, encoders());
     hostMidi_ = std::make_unique<handler::HandlerHostMidi>(state_, midi());
 }

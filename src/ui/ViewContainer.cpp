@@ -6,11 +6,12 @@
 
 namespace bitwig {
 
+using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 ViewContainer::ViewContainer(lv_obj_t *parentScreen) {
     container_ = lv_obj_create(parentScreen);
-    style::apply(container_).fullSize().pad(0).bgColor(Theme::Color::BACKGROUND_FILL);
+    style::apply(container_).fullSize().pad(0).bgColor(Color::BACKGROUND_FILL);
     lv_obj_set_layout(container_, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_gap(container_, 0, LV_STATE_DEFAULT);

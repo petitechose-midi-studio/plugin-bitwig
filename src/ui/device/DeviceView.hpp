@@ -83,8 +83,8 @@ private:
     lv_obj_t* top_bar_container_{nullptr};
     lv_obj_t* body_container_{nullptr};
 
-    std::array<std::unique_ptr<IParameterWidget>, 8> widgets_;
-    std::array<bitwig::state::ParameterType, 8> widgetTypes_{};  // Track current widget types
+    std::array<std::unique_ptr<IParameterWidget>, bitwig::state::PARAMETER_COUNT> widgets_;
+    std::array<bitwig::state::ParameterType, bitwig::state::PARAMETER_COUNT> widgetTypes_{};
     std::unique_ptr<DeviceStateBar> top_bar_component_;
     std::unique_ptr<PageSelector> page_selector_;
     std::unique_ptr<DeviceSelector> device_selector_;
@@ -93,7 +93,7 @@ private:
     // =========================================================================
     // Dirty Flag System (debounces UI updates)
     // =========================================================================
-    std::array<bool, 8> paramDirty_{};  // Parameters needing update
+    std::array<bool, bitwig::state::PARAMETER_COUNT> paramDirty_{};
     lv_timer_t* updateTimer_{nullptr};  // Timer to process dirty flags
 
     void markParameterDirty(uint8_t index);

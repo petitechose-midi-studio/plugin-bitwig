@@ -10,6 +10,7 @@
 namespace bitwig {
 
 using namespace oc::ui::lvgl;
+using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 ListOverlay::ListOverlay(lv_obj_t* parent) : parent_(parent) {
@@ -117,7 +118,7 @@ void ListOverlay::setItemFont(size_t index, const lv_font_t* font) {
 void ListOverlay::createOverlay() {
     overlay_ = lv_obj_create(parent_);
     lv_obj_add_flag(overlay_, LV_OBJ_FLAG_FLOATING);
-    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, LV_OPA_90).noScroll();
+    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, Opacity::OVERLAY_BG).noScroll();
     lv_obj_align(overlay_, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_border_width(overlay_, 0, LV_STATE_DEFAULT);
 
@@ -143,6 +144,10 @@ void ListOverlay::createTitleLabel() {
     lv_obj_set_style_margin_right(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
     lv_obj_set_style_margin_top(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
 
+    if (fonts.tempo_label) {
+        lv_obj_set_style_text_font(title_label_, fonts.tempo_label, LV_STATE_DEFAULT);
+    }
+
     if (title_.empty()) {
         lv_obj_add_flag(title_label_, LV_OBJ_FLAG_HIDDEN);
     } else {
@@ -163,7 +168,7 @@ void ListOverlay::createList() {
 
     lv_obj_set_style_width(list_, BaseTheme::Layout::SCROLLBAR_WIDTH, LV_PART_SCROLLBAR);
     lv_obj_set_style_bg_color(list_, lv_color_hex(BaseTheme::Color::INACTIVE_LIGHTER), LV_PART_SCROLLBAR);
-    lv_obj_set_style_bg_opa(list_, LV_OPA_30, LV_PART_SCROLLBAR);
+    lv_obj_set_style_bg_opa(list_, Opacity::SCROLLBAR, LV_PART_SCROLLBAR);
 
     lv_obj_add_event_cb(
         list_,
@@ -210,8 +215,8 @@ void ListOverlay::populateList() {
         lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(label, LV_OPA_COVER, LV_STATE_FOCUSED);
 
-        if (::fonts.list_item_label) {
-            lv_obj_set_style_text_font(label, ::fonts.list_item_label, LV_STATE_DEFAULT);
+        if (fonts.list_item_label) {
+            lv_obj_set_style_text_font(label, fonts.list_item_label, LV_STATE_DEFAULT);
         }
 
         buttons_.push_back(btn);

@@ -20,6 +20,9 @@
  *     │   ├── HandlerHostPlugin
  *     │   ├── HandlerHostTransport
  *     │   ├── HandlerHostDevice
+ *     │   ├── HandlerHostTrack
+ *     │   ├── HandlerHostPage
+ *     │   ├── HandlerHostMacro
  *     │   ├── HandlerHostLastClicked
  *     │   └── HandlerHostMidi
  *     ├── InputHandlers (input → state + protocol)
@@ -51,8 +54,11 @@
 // Include all handlers (required for unique_ptr with make_unique in templates)
 #include "handler/host/HandlerHostDevice.hpp"
 #include "handler/host/HandlerHostLastClicked.hpp"
+#include "handler/host/HandlerHostMacro.hpp"
 #include "handler/host/HandlerHostMidi.hpp"
+#include "handler/host/HandlerHostPage.hpp"
 #include "handler/host/HandlerHostPlugin.hpp"
+#include "handler/host/HandlerHostTrack.hpp"
 #include "handler/host/HandlerHostTransport.hpp"
 #include "handler/input/HandlerInputDevicePage.hpp"
 #include "handler/input/HandlerInputDeviceSelector.hpp"
@@ -134,6 +140,9 @@ private:
     std::unique_ptr<handler::HandlerHostPlugin> hostPlugin_;
     std::unique_ptr<handler::HandlerHostTransport> hostTransport_;
     std::unique_ptr<handler::HandlerHostDevice> hostDevice_;
+    std::unique_ptr<handler::HandlerHostTrack> hostTrack_;
+    std::unique_ptr<handler::HandlerHostPage> hostPage_;
+    std::unique_ptr<handler::HandlerHostMacro> hostMacro_;
     std::unique_ptr<handler::HandlerHostLastClicked> hostLastClicked_;
     std::unique_ptr<handler::HandlerHostMidi> hostMidi_;
 
