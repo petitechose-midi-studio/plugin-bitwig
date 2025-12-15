@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "ui/font/icon.hpp"
+
 namespace bitwig::state {
 
 // =============================================================================
@@ -10,10 +12,17 @@ namespace bitwig::state {
 
 constexpr uint8_t PARAMETER_COUNT = 8;
 constexpr uint8_t MAX_DEVICES = 16;
-constexpr uint8_t MAX_TRACKS = 16;
+constexpr uint8_t MAX_TRACKS = 32;  // Fixed: was 16, must match protocol capacity
 constexpr uint8_t MAX_PAGES = 8;
 constexpr uint8_t MAX_DISCRETE_VALUES = 16;
 constexpr uint8_t MAX_CHILDREN = 8;
+constexpr uint8_t MAX_CHILD_TYPES = 4;
+
+// =============================================================================
+// UI Text Constants
+// =============================================================================
+
+constexpr const char* BACK_TO_PARENT_TEXT = Icon::ARROW_LEFT;
 
 // =============================================================================
 // Device Types
@@ -46,6 +55,26 @@ enum class ChildType : uint8_t {
     LAYERS = 2,
     DRUMS = 4
 };
+
+inline const char* getChildTypeName(ChildType type) {
+    switch (type) {
+        case ChildType::SLOTS: return "[S] Slots";
+        case ChildType::LAYERS: return "[L] Layers";
+        case ChildType::DRUMS: return "[D] Drum Pads";
+        default: return "";
+    }
+}
+
+// Converts array of child types to bitflags (SLOTS|LAYERS|DRUMS)
+template <typename ChildTypeArray>
+inline uint8_t getChildTypeFlags(const ChildTypeArray& types) {
+    uint8_t flags = 0;
+    for (uint8_t type : types) {
+        if (type == static_cast<uint8_t>(ChildType::NONE)) break;
+        flags |= type;
+    }
+    return flags;
+}
 
 // =============================================================================
 // Track Types

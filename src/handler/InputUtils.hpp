@@ -12,7 +12,7 @@
 #include <cstdint>
 
 #include "config/App.hpp"
-#include "DeviceConstants.hpp"
+#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
@@ -26,7 +26,7 @@ using ButtonID = Config::ButtonID;
 /**
  * @brief Macro encoder IDs in slot order (0-7)
  */
-inline constexpr std::array<EncoderID, bitwig::Device::PARAMETER_COUNT> MACRO_ENCODERS = {
+inline constexpr std::array<EncoderID, bitwig::state::PARAMETER_COUNT> MACRO_ENCODERS = {
     EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
     EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
 };
@@ -34,7 +34,7 @@ inline constexpr std::array<EncoderID, bitwig::Device::PARAMETER_COUNT> MACRO_EN
 /**
  * @brief Macro button IDs in slot order (0-7)
  */
-inline constexpr std::array<ButtonID, bitwig::Device::PARAMETER_COUNT> MACRO_BUTTONS = {
+inline constexpr std::array<ButtonID, bitwig::state::PARAMETER_COUNT> MACRO_BUTTONS = {
     ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
     ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
 };
@@ -45,7 +45,7 @@ inline constexpr std::array<ButtonID, bitwig::Device::PARAMETER_COUNT> MACRO_BUT
  * @return Encoder ID or EncoderID{0} if invalid
  */
 inline EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
-    return (paramIndex < bitwig::Device::PARAMETER_COUNT)
+    return (paramIndex < bitwig::state::PARAMETER_COUNT)
         ? MACRO_ENCODERS[paramIndex]
         : EncoderID{0};
 }
