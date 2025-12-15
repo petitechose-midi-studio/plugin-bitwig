@@ -265,11 +265,8 @@ void DeviceView::updateParameter(uint8_t index) {
     // Update discrete metadata for button/list widgets
     if (type == bitwig::state::ParameterType::BUTTON ||
         type == bitwig::state::ParameterType::LIST) {
-        // Convert SignalVector to std::vector for widget API
-        std::vector<std::string> discreteNames(
-            slot.discreteValues.begin(), slot.discreteValues.end());
         widgets_[index]->setDiscreteMetadata(
-            slot.discreteCount.get(), discreteNames, slot.currentValueIndex.get());
+            slot.discreteCount.get(), slot.discreteValues.toVector(), slot.currentValueIndex.get());
     }
 
     // Update visibility
@@ -289,9 +286,7 @@ void DeviceView::updatePageSelector() {
     bool visible = state_.pageSelector.visible.get();
     OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={}", visible);
 
-    // Convert SignalVector to std::vector
-    std::vector<std::string> names(
-        state_.pageSelector.names.begin(), state_.pageSelector.names.end());
+    auto names = state_.pageSelector.names.toVector();
 
     page_selector_->render({
         .names = &names,
@@ -306,21 +301,13 @@ void DeviceView::updateDeviceSelector() {
     bool visible = state_.deviceSelector.visible.get();
     OC_LOG_DEBUG("[DeviceView] >> updateDeviceSelector() visible={}", visible);
 
-    // Convert SignalVectors to std::vectors
-    std::vector<std::string> names(
-        state_.deviceSelector.names.begin(), state_.deviceSelector.names.end());
-    std::vector<uint8_t> deviceTypes(
-        state_.deviceSelector.deviceTypes.begin(), state_.deviceSelector.deviceTypes.end());
-    std::vector<bool> hasSlots(
-        state_.deviceSelector.hasSlots.begin(), state_.deviceSelector.hasSlots.end());
-    std::vector<bool> hasLayers(
-        state_.deviceSelector.hasLayers.begin(), state_.deviceSelector.hasLayers.end());
-    std::vector<bool> hasDrums(
-        state_.deviceSelector.hasDrums.begin(), state_.deviceSelector.hasDrums.end());
-    std::vector<std::string> childrenNames(
-        state_.deviceSelector.childrenNames.begin(), state_.deviceSelector.childrenNames.end());
-    std::vector<uint8_t> childrenTypes(
-        state_.deviceSelector.childrenTypes.begin(), state_.deviceSelector.childrenTypes.end());
+    auto names = state_.deviceSelector.names.toVector();
+    auto deviceTypes = state_.deviceSelector.deviceTypes.toVector();
+    auto hasSlots = state_.deviceSelector.hasSlots.toVector();
+    auto hasLayers = state_.deviceSelector.hasLayers.toVector();
+    auto hasDrums = state_.deviceSelector.hasDrums.toVector();
+    auto childrenNames = state_.deviceSelector.childrenNames.toVector();
+    auto childrenTypes = state_.deviceSelector.childrenTypes.toVector();
 
     // Device states need special handling (array of Signals)
     std::vector<bool> deviceStates;
@@ -354,13 +341,9 @@ void DeviceView::updateTrackSelector() {
     bool visible = state_.trackSelector.visible.get();
     OC_LOG_DEBUG("[DeviceView] >> updateTrackSelector() visible={}", visible);
 
-    // Convert SignalVectors to std::vectors
-    std::vector<std::string> names(
-        state_.trackSelector.names.begin(), state_.trackSelector.names.end());
-    std::vector<uint8_t> trackTypes(
-        state_.trackSelector.trackTypes.begin(), state_.trackSelector.trackTypes.end());
-    std::vector<uint32_t> trackColors(
-        state_.trackSelector.trackColors.begin(), state_.trackSelector.trackColors.end());
+    auto names = state_.trackSelector.names.toVector();
+    auto trackTypes = state_.trackSelector.trackTypes.toVector();
+    auto trackColors = state_.trackSelector.trackColors.toVector();
 
     // Mute/Solo states need special handling (array of Signals)
     std::vector<bool> muteStates, soloStates;
