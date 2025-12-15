@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
 #include <ui/font/FontLoader.hpp>
 
 #include "ui/theme/BitwigTheme.hpp"
@@ -9,6 +10,7 @@
 namespace bitwig {
 
 using namespace oc::ui::lvgl;
+namespace style = oc::ui::lvgl::style;
 
 ListOverlay::ListOverlay(lv_obj_t* parent) : parent_(parent) {
     createOverlay();
@@ -115,20 +117,13 @@ void ListOverlay::setItemFont(size_t index, const lv_font_t* font) {
 void ListOverlay::createOverlay() {
     overlay_ = lv_obj_create(parent_);
     lv_obj_add_flag(overlay_, LV_OBJ_FLAG_FLOATING);
-    lv_obj_set_size(overlay_, LV_PCT(100), LV_PCT(100));
+    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, LV_OPA_90).noScroll();
     lv_obj_align(overlay_, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(overlay_, lv_color_hex(BaseTheme::Color::BACKGROUND), LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(overlay_, LV_OPA_90, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(overlay_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(overlay_, 0, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(overlay_, LV_OBJ_FLAG_SCROLLABLE);
 
     container_ = lv_obj_create(overlay_);
-    lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
+    style::apply(container_).fullSize().transparent().noScroll();
     lv_obj_align(container_, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -143,7 +138,7 @@ void ListOverlay::createTitleLabel() {
     title_label_ = lv_label_create(container_);
     lv_obj_set_width(title_label_, lv_pct(100) - BaseTheme::Layout::MARGIN_LG);
     lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(title_label_, lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
+    style::apply(title_label_).textColor(BaseTheme::Color::TEXT_PRIMARY);
     lv_obj_set_style_margin_left(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
     lv_obj_set_style_margin_right(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
     lv_obj_set_style_margin_top(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);

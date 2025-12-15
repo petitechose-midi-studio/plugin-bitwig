@@ -1,11 +1,14 @@
 #include "DeviceSelector.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/device/DeviceTypeHelper.hpp"
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -138,16 +141,14 @@ void DeviceSelector::updateDeviceState(int displayIndex, bool enabled) {
     // Update state icon in the list
     lv_obj_t *state_icon = state_icons_[index];
     lv_label_set_text(state_icon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-    lv_obj_set_style_text_color(
-        state_icon,
-        lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+    style::apply(state_icon).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                               : Color::DEVICE_STATE_DISABLED);
 
     // Update footer if this is the selected device
     if (footer_state_ && displayIndex == overlay().getSelectedIndex()) {
         Icon::set(footer_state_, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
-        lv_obj_set_style_text_color(
-            footer_state_,
-            lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+        style::apply(footer_state_).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                                      : Color::DEVICE_STATE_DISABLED);
     }
 }
 
@@ -160,9 +161,8 @@ void DeviceSelector::updateIndicatorStates(const DeviceSelectorProps &props) {
 
         bool enabled = states[i];
         lv_label_set_text(state_icons_[i], enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-        lv_obj_set_style_text_color(
-            state_icons_[i],
-            lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED), 0);
+        style::apply(state_icons_[i]).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                                        : Color::DEVICE_STATE_DISABLED);
     }
 }
 
@@ -208,14 +208,13 @@ void DeviceSelector::createFooter() {
     // Create track icon (cell 0 = left)
     footer_track_ = lv_label_create(footer_->getElement());
     Icon::set(footer_track_, Icon::CHANNEL_LIST, Icon::Size::L);
-    lv_obj_set_style_text_color(footer_track_, lv_color_hex(Color::TEXT_LIGHT), LV_STATE_DEFAULT);
+    style::apply(footer_track_).textColor(Color::TEXT_LIGHT);
     footer_->setCell(0, footer_track_);
 
     // Create state icon (cell 1 = center) - will be updated in renderFooter
     footer_state_ = lv_label_create(footer_->getElement());
     Icon::set(footer_state_, Icon::DEVICE_ON, Icon::Size::L);
-    lv_obj_set_style_text_color(footer_state_, lv_color_hex(Color::DEVICE_STATE_ENABLED),
-                                LV_STATE_DEFAULT);
+    style::apply(footer_state_).textColor(Color::DEVICE_STATE_ENABLED);
     footer_->setCell(1, footer_state_);
 }
 
@@ -231,10 +230,8 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
     // Update icon and color based on state
     if (footer_state_) {
         Icon::set(footer_state_, is_enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
-        lv_obj_set_style_text_color(
-            footer_state_,
-            lv_color_hex(is_enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED),
-            0);
+        style::apply(footer_state_).textColor(is_enabled ? Color::DEVICE_STATE_ENABLED
+                                                         : Color::DEVICE_STATE_DISABLED);
     }
 
     footer_->show();
@@ -275,23 +272,22 @@ lv_obj_t *DeviceSelector::createDeviceTypeIcon(lv_obj_t *parent, uint8_t deviceT
 
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, info.icon);
-    lv_obj_set_style_text_color(icon, lv_color_hex(info.color), LV_STATE_DEFAULT);
+    style::apply(icon).textColor(info.color);
     return icon;
 }
 
 lv_obj_t *DeviceSelector::createDeviceStateIcon(lv_obj_t *parent, bool enabled) {
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-    lv_obj_set_style_text_color(
-        icon, lv_color_hex(enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED),
-        0);
+    style::apply(icon).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                         : Color::DEVICE_STATE_DISABLED);
     return icon;
 }
 
 lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent) {
     lv_obj_t *icon = lv_label_create(parent);
     Icon::set(icon, Icon::DIRECTORY);
-    lv_obj_set_style_text_color(icon, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+    style::apply(icon).textColor(Color::INACTIVE_LIGHTER);
     lv_obj_set_style_text_opa(icon, LV_OPA_70, LV_STATE_DEFAULT);
     return icon;
 }

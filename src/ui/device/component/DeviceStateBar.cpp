@@ -1,10 +1,12 @@
 #include "DeviceStateBar.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
-#include "ui/theme/StyleHelpers.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -16,10 +18,8 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent) : parent_(parent) {
 
     lv_obj_set_size(container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
     lv_obj_set_pos(container_, 0, 0);
-    Style::setBgColor(container_, Color::BACKGROUND_FILL);
+    style::apply(container_).bgColor(Color::BACKGROUND_FILL).padH(Layout::PAD_SM).padV(0);
     lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
-    Style::applyPadHorizontal(container_, Layout::PAD_SM);
-    Style::applyPadVertical(container_, 0);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
 
     // Grid: 2 columns (device | page)
@@ -66,9 +66,8 @@ void DeviceStateBar::render(const DeviceStateBarProps &props) {
 lv_obj_t *DeviceStateBar::createCellWrapper(lv_obj_t *parent, lv_flex_align_t hAlign) {
     lv_obj_t *cell = lv_obj_create(parent);
     lv_obj_set_size(cell, LV_PCT(100), LV_PCT(100));
-    Style::applyTransparentContainer(cell);
+    style::apply(cell).transparent().noScroll().flexRow(hAlign, Layout::GAP_MD);
     lv_obj_remove_flag(cell, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
-    Style::applyFlexRow(cell, hAlign, Layout::GAP_MD);
     return cell;
 }
 

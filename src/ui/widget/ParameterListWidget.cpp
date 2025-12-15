@@ -1,9 +1,12 @@
 #include "ParameterListWidget.hpp"
 
+#include <oc/ui/lvgl/style/StyleBuilder.hpp>
+
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace Theme;
+namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
@@ -27,10 +30,7 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     // Container with grid layout: widget row (flexible) + label row (content)
     container_ = lv_obj_create(parent_);
     lv_obj_set_size(container_, width, height);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
+    style::apply(container_).transparent().noScroll();
 
     // Grid: 1 column, 2 rows (FR(1) for widget, CONTENT for label)
     static const int32_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
@@ -49,7 +49,7 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     value_label_ = lv_label_create(enum_widget_->inner());
     lv_label_set_text(value_label_, "");
     lv_obj_set_size(value_label_, LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_set_style_text_color(value_label_, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
+    style::apply(value_label_).textColor(Color::TEXT_PRIMARY);
     lv_obj_set_style_text_align(value_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(value_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
     lv_obj_center(value_label_);
@@ -57,7 +57,7 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     // Name label - stretched width, content height
     name_label_ = lv_label_create(container_);
     lv_label_set_text(name_label_, "");
-    lv_obj_set_style_text_color(name_label_, lv_color_hex(Color::TEXT_PRIMARY), LV_STATE_DEFAULT);
+    style::apply(name_label_).textColor(Color::TEXT_PRIMARY);
     lv_obj_set_style_text_align(name_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(name_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
     lv_obj_set_grid_cell(name_label_,
