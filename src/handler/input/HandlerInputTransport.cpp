@@ -34,20 +34,20 @@ void HandlerInputTransport::setupBindings() {
     // Configure NAV encoder for Relative mode
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
-    OC_LOG_INFO("[TransportInput] Binding BOTTOM_LEFT -> togglePlay (on release)");
-    // Play/Pause - BOTTOM_LEFT (global, on release like OLD)
+    // Play/Pause
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_LEFT -> togglePlay");
     buttons_.button(ButtonID::BOTTOM_LEFT)
         .release()
         .then([this]() { togglePlay(); });
 
-    OC_LOG_INFO("[TransportInput] Binding BOTTOM_CENTER -> stop (on release)");
-    // Stop - BOTTOM_CENTER (global, on release like OLD)
+    // Stop
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_CENTER -> stop");
     buttons_.button(ButtonID::BOTTOM_CENTER)
         .release()
         .then([this]() { stop(); });
 
-    OC_LOG_INFO("[TransportInput] Binding BOTTOM_RIGHT -> toggleRecord (on release)");
-    // Record - BOTTOM_RIGHT (global, on release like OLD)
+    // Record
+    OC_LOG_INFO("[TransportInput] Binding BOTTOM_RIGHT -> toggleRecord");
     buttons_.button(ButtonID::BOTTOM_RIGHT)
         .release()
         .then([this]() { toggleRecord(); });

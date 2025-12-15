@@ -192,7 +192,7 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
     auto& slot = state_.parameters.slots[index];
     auto type = slot.type.get();
 
-    // Skip recreation if widget already exists WITH SAME TYPE (like OLD's pattern)
+    // Skip recreation if widget already exists with same type
     if (widgets_[index] && widgetTypes_[index] == type) {
         OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - same type {}, skipping", index, static_cast<int>(type));
         return;

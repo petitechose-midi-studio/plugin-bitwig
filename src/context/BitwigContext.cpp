@@ -1,6 +1,5 @@
 #include "BitwigContext.hpp"
 
-#include <Arduino.h>  // For Serial debug
 #include <oc/log/Log.hpp>
 #include <oc/teensy/LogOutput.hpp>  // Must be before Log.hpp for OC_LOG_PRINT
 #include <ui/font/FontLoader.hpp>   // Core's font system
@@ -26,10 +25,6 @@ BitwigContext::~BitwigContext() = default;
 // =============================================================================
 
 bool BitwigContext::initialize() {
-    // DEBUG: Direct serial output to diagnose OC_LOG issue
-    Serial.println(">>> BitwigContext::initialize() ENTRY <<<");
-    Serial.flush();
-
     OC_LOG_INFO("========================================");
     OC_LOG_INFO("[Context] BitwigContext::initialize() START");
     OC_LOG_INFO("========================================");
@@ -161,7 +156,6 @@ void BitwigContext::createInputHandlers() {
 
     // Get overlay elements for high-priority contextual bindings
     lv_obj_t* deviceSelectorOverlay = deviceView_ ? deviceView_->getDeviceSelectorElement() : nullptr;
-    lv_obj_t* pageSelectorOverlay = deviceView_ ? deviceView_->getPageSelectorElement() : nullptr;
     lv_obj_t* trackSelectorOverlay = deviceView_ ? deviceView_->getTrackSelectorElement() : nullptr;
 
     // Create input handlers - they set up input bindings in their constructors
@@ -194,9 +188,7 @@ void BitwigContext::createInputHandlers() {
         state_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
     OC_LOG_INFO("[Context]   5.4: HandlerInputTrack DONE");
 
-    // DISABLED FOR NOW:
-    // inputDevicePage_, inputLastClicked_
-    (void)pageSelectorOverlay;
+    // NOTE: inputDevicePage_ and inputLastClicked_ handlers are available but not enabled
 }
 
 void BitwigContext::createViews() {
