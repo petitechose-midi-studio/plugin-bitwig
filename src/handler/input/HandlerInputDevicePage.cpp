@@ -3,6 +3,7 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "config/App.hpp"
+#include "handler/InputUtils.hpp"
 #include "protocol/struct/DevicePageSelectByIndexMessage.hpp"
 #include "protocol/struct/RequestDevicePageNamesMessage.hpp"
 
@@ -11,12 +12,6 @@ namespace bitwig::handler {
 using namespace oc::ui::lvgl;
 using ButtonID = Config::ButtonID;
 using EncoderID = Config::EncoderID;
-
-namespace {
-int wrapIndex(int value, int modulo) {
-    return ((value % modulo) + modulo) % modulo;
-}
-}  // namespace
 
 HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
                                                BitwigProtocol& protocol,

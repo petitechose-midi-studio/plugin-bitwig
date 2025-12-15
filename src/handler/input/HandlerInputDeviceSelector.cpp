@@ -4,6 +4,7 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
+#include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/DeviceSelectByIndexMessage.hpp"
 #include "protocol/struct/DeviceStateChangeMessage.hpp"
 #include "protocol/struct/EnterDeviceChildMessage.hpp"
@@ -256,7 +257,7 @@ bool HandlerInputDeviceSelector::hasChildren(uint8_t deviceIndex) const {
 }
 
 int HandlerInputDeviceSelector::getAdjustedDeviceIndex(int selectorIndex) const {
-    return adjustIndexForNested(selectorIndex, state_.deviceSelector.isNested.get());
+    return utils::toRawIndex(selectorIndex, state_.deviceSelector.isNested.get());
 }
 
 bool HandlerInputDeviceSelector::isShowingChildren() const {

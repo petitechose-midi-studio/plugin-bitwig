@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "handler/InputUtils.hpp"
+#include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/DeviceChangeHeaderMessage.hpp"
 #include "protocol/struct/DeviceChildrenMessage.hpp"
 #include "protocol/struct/DeviceListMessage.hpp"
@@ -33,14 +34,6 @@ HandlerHostDevice::HandlerHostDevice(state::BitwigState& state,
     setupProtocolCallbacks();
 }
 
-int HandlerHostDevice::toDeviceDisplayIndex(int rawIndex) const {
-    return state_.deviceSelector.isNested.get() ? rawIndex + 1 : rawIndex;
-}
-
-int HandlerHostDevice::toTrackDisplayIndex(int rawIndex) const {
-    return state_.trackSelector.isNested.get() ? rawIndex + 1 : rawIndex;
-}
-
 template <typename MacroArray>
 void HandlerHostDevice::updateMacroEncoderModes(const MacroArray& macros) {
     for (uint8_t i = 0; i < PARAMETER_COUNT && i < macros.size(); i++) {
@@ -54,12 +47,10 @@ void HandlerHostDevice::updateMacroEncoderModes(const MacroArray& macros) {
         // Configure encoder mode
         auto encoderId = getEncoderIdForParameter(paramIndex);
         if (encoderId != EncoderID{0}) {
-            if (macros[i].parameterType == static_cast<uint8_t>(ParameterType::KNOB)) {
-                encoders_.setContinuous(encoderId);
-            } else {
-                encoders_.setDiscreteSteps(encoderId, macros[i].discreteValueCount);
-            }
-            encoders_.setPosition(encoderId, macros[i].parameterValue);
+            configureEncoderForParameter(encoders_, encoderId,
+                                         macros[i].parameterType,
+                                         macros[i].discreteValueCount,
+                                         macros[i].parameterValue);
         }
     }
 }
@@ -122,7 +113,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     protocol_.onTrackMute = [this](const TrackMuteMessage& msg) {
         if (!msg.fromHost) return;
 
-        int displayIndex = toTrackDisplayIndex(msg.trackIndex);
+        int displayIndex = utils::toDisplayIndex(msg.trackIndex, state_.trackSelector.isNested.get());
         if (displayIndex >= 0 && displayIndex < MAX_TRACKS) {
             state_.trackSelector.muteStates[displayIndex].set(msg.isMute);
         }
@@ -131,7 +122,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     protocol_.onTrackSolo = [this](const TrackSoloMessage& msg) {
         if (!msg.fromHost) return;
 
-        int displayIndex = toTrackDisplayIndex(msg.trackIndex);
+        int displayIndex = utils::toDisplayIndex(msg.trackIndex, state_.trackSelector.isNested.get());
         if (displayIndex >= 0 && displayIndex < MAX_TRACKS) {
             state_.trackSelector.soloStates[displayIndex].set(msg.isSolo);
         }
@@ -166,7 +157,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
             state_.device.enabled.set(msg.isEnabled);
         }
 
-        int displayIndex = toDeviceDisplayIndex(msg.deviceIndex);
+        int displayIndex = utils::toDisplayIndex(msg.deviceIndex, state_.deviceSelector.isNested.get());
         if (displayIndex >= 0 && displayIndex < MAX_DEVICES) {
             state_.deviceSelector.deviceStates[displayIndex].set(msg.isEnabled);
         }
@@ -338,12 +329,10 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         // Configure encoder
         auto encoderId = getEncoderIdForParameter(msg.parameterIndex);
         if (encoderId != EncoderID{0}) {
-            if (msg.parameterType == static_cast<uint8_t>(ParameterType::KNOB)) {
-                encoders_.setContinuous(encoderId);
-            } else {
-                encoders_.setDiscreteSteps(encoderId, msg.discreteValueCount);
-            }
-            encoders_.setPosition(encoderId, msg.parameterValue);
+            configureEncoderForParameter(encoders_, encoderId,
+                                         msg.parameterType,
+                                         msg.discreteValueCount,
+                                         msg.parameterValue);
         }
     };
 

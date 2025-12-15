@@ -44,10 +44,6 @@ private:
     template <typename MacroArray>
     void updateMacroEncoderModes(const MacroArray& macros);
 
-    // Index adjustments for nested navigation
-    int toDeviceDisplayIndex(int rawIndex) const;
-    int toTrackDisplayIndex(int rawIndex) const;
-
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
