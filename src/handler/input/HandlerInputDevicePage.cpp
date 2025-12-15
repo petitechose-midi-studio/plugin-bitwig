@@ -31,38 +31,43 @@ HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
 void HandlerInputDevicePage::setupBindings() {
     // === VIEW-LEVEL BINDINGS (scopeElement_) ===
 
-    // Open page selector (latch behavior)
+    // Open page selector (latch behavior for toggle)
     buttons_.button(ButtonID::LEFT_BOTTOM)
         .press()
         .latch()
         .scope(scope(scopeElement_))
         .then([this]() { requestPageList(); });
 
-    // Close page selector on release
+    // Close and confirm on release (long press or second toggle press)
     buttons_.button(ButtonID::LEFT_BOTTOM)
         .release()
         .scope(scope(scopeElement_))
         .then([this]() { closeSelector(); });
 
-    // Navigate pages (while LEFT_BOTTOM pressed)
+    // === OVERLAY-LEVEL BINDINGS (overlayElement_) ===
+
+    // Navigate pages (scoped to overlay - active while overlay visible)
     encoders_.encoder(EncoderID::NAV)
         .turn()
-        .when(buttons_.pressed(ButtonID::LEFT_BOTTOM))
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayElement_))
         .then([this](float delta) { navigate(delta); });
 
-    // === OVERLAY-LEVEL BINDING (overlayElement_) ===
-
-    // Confirm selection on NAV button (scoped to page selector overlay)
+    // Confirm selection on NAV button (without closing)
     buttons_.button(ButtonID::NAV)
-        .press()
+        .release()
         .scope(scope(overlayElement_))
         .then([this]() { confirmSelection(); });
+
+    // Cancel on LEFT_TOP (close without confirming)
+    buttons_.button(ButtonID::LEFT_TOP)
+        .release()
+        .scope(scope(overlayElement_))
+        .then([this]() { cancel(); });
 }
 
 void HandlerInputDevicePage::requestPageList() {
-    // Show cached page list immediately if available (cache-first)
-    if (state_.pageSelector.names.size() > 0 && !state_.pageSelector.visible.get()) {
+    // Show overlay immediately (will update when data arrives)
+    if (!state_.pageSelector.visible.get()) {
         state_.pageSelector.visible.set(true);
     }
 
@@ -104,6 +109,13 @@ void HandlerInputDevicePage::closeSelector() {
         protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
     }
 
+    requested_ = false;
+    buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
+}
+
+void HandlerInputDevicePage::cancel() {
+    // Hide page selector without confirming
+    state_.pageSelector.visible.set(false);
     requested_ = false;
     buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
 }

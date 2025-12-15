@@ -299,7 +299,7 @@ public final class DeviceChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 415;
+    private static final int MIN_PAYLOAD_SIZE = 167;
 
     /**
      * Decode message from MIDI-safe bytes

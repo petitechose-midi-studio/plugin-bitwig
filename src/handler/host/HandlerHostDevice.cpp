@@ -3,6 +3,8 @@
 #include <array>
 #include <vector>
 
+#include <oc/log/Log.hpp>
+
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/DeviceChangeHeaderMessage.hpp"
@@ -67,7 +69,6 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onTrackList = [this](const TrackListMessage& msg) {
-        OC_LOG_INFO("[SYSEX RX] TrackList count={} idx={}", msg.trackCount, msg.trackIndex);
         if (!msg.fromHost) return;
 
         // Update navigation state
@@ -133,9 +134,6 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     // =========================================================================
 
     protocol_.onDeviceChangeHeader = [this](const DeviceChangeHeaderMessage& msg) {
-        OC_LOG_INFO("[SYSEX RX] DeviceChangeHeader device='{}' type={}",
-                    msg.deviceName.c_str(), msg.deviceType);
-
         bool hasChildren = (msg.childrenTypes[0] | msg.childrenTypes[1] |
                            msg.childrenTypes[2] | msg.childrenTypes[3]) != 0;
 
@@ -164,7 +162,6 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onDeviceList = [this](const DeviceListMessage& msg) {
-        OC_LOG_INFO("[SYSEX RX] DeviceList count={} idx={}", msg.deviceCount, msg.deviceIndex);
         if (!msg.fromHost) return;
 
         // Update active device info
@@ -258,13 +255,9 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         state_.pageSelector.names.set(names.data(), names.size());
         state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
-        // NOTE: visibility is controlled by input handlers, not host handlers
     };
 
     protocol_.onDevicePageChange = [this](const DevicePageChangeMessage& msg) {
-        OC_LOG_INFO("[SYSEX RX] DevicePageChange page='{}' macros={}",
-                    msg.pageInfo.devicePageName.c_str(), msg.macros.size());
-
         updateMacroEncoderModes(msg.macros);
 
         state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
@@ -303,8 +296,6 @@ void HandlerHostDevice::setupProtocolCallbacks() {
             slot.loading.set(false);
             slot.metadataSet.set(true);
         }
-        OC_LOG_INFO("[STATE] DevicePageChange -> {} params updated",
-                    std::min(static_cast<size_t>(PARAMETER_COUNT), msg.macros.size()));
     };
 
     // =========================================================================

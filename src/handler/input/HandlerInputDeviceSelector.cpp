@@ -1,6 +1,5 @@
 #include "HandlerInputDeviceSelector.hpp"
 
-#include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
@@ -29,9 +28,7 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
     , buttons_(buttons)
     , scopeElement_(scopeElement)
     , overlayElement_(overlayElement) {
-    OC_LOG_INFO("[DeviceSelectorInput] Creating handler...");
     setupBindings();
-    OC_LOG_INFO("[DeviceSelectorInput] Bindings created");
 }
 
 void HandlerInputDeviceSelector::setupBindings() {
@@ -83,7 +80,6 @@ void HandlerInputDeviceSelector::setupBindings() {
 }
 
 void HandlerInputDeviceSelector::requestDeviceList() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> requestDeviceList()");
     auto& ds = state_.deviceSelector;
 
     // Show cached list immediately if available (cache-first)
@@ -91,15 +87,12 @@ void HandlerInputDeviceSelector::requestDeviceList() {
         ds.visible.set(true);
     }
 
-    // Set encoder to relative mode
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
-    // Always request fresh data from Bitwig
     if (!requested_) {
         protocol_.send(Protocol::RequestDeviceListMessage{});
         requested_ = true;
     }
-    OC_LOG_INFO("[DeviceSelectorInput] << requestDeviceList() done");
 }
 
 void HandlerInputDeviceSelector::navigate(float delta) {
@@ -117,7 +110,6 @@ void HandlerInputDeviceSelector::navigate(float delta) {
 }
 
 void HandlerInputDeviceSelector::selectAndDive() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> selectAndDive()");
     int index = state_.deviceSelector.currentIndex.get();
 
     if (!isShowingChildren()) {
@@ -125,31 +117,25 @@ void HandlerInputDeviceSelector::selectAndDive() {
     } else {
         enterChildAtIndex(index);
     }
-    OC_LOG_INFO("[DeviceSelectorInput] << selectAndDive() done");
 }
 
 void HandlerInputDeviceSelector::select() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> select()");
     auto& ds = state_.deviceSelector;
     int index = ds.currentIndex.get();
 
     if (!isShowingChildren()) {
-        // Handle back button in nested mode
         if (ds.isNested.get() && index == 0) {
             protocol_.send(Protocol::ExitToParentMessage{});
             return;
         }
-        // Select device directly (no dive into children)
         int deviceIndex = getAdjustedDeviceIndex(index);
         size_t count = ds.names.size();
         if (deviceIndex >= 0 && static_cast<size_t>(deviceIndex) < count) {
             protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
         }
     } else {
-        // In children mode, confirm the selected child
         enterChildAtIndex(index);
     }
-    OC_LOG_INFO("[DeviceSelectorInput] << select() done");
 }
 
 void HandlerInputDeviceSelector::enterDeviceAtIndex(int selectorIndex) {
@@ -198,10 +184,7 @@ void HandlerInputDeviceSelector::enterChildAtIndex(int selectorIndex) {
 }
 
 void HandlerInputDeviceSelector::toggleState() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> toggleState()");
     auto& ds = state_.deviceSelector;
-
-    // Only toggle state when showing devices (not children)
     if (isShowingChildren()) return;
 
     int selectorIndex = ds.currentIndex.get();
@@ -211,40 +194,26 @@ void HandlerInputDeviceSelector::toggleState() {
     if (deviceIndex >= 0 && static_cast<size_t>(deviceIndex) < count) {
         protocol_.send(Protocol::DeviceStateChangeMessage{static_cast<uint8_t>(deviceIndex), true});
     }
-    OC_LOG_INFO("[DeviceSelectorInput] << toggleState() done");
 }
 
 void HandlerInputDeviceSelector::requestTrackList() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> requestTrackList()");
-
     auto& ts = state_.trackSelector;
     auto& ds = state_.deviceSelector;
 
-    // Already visible - don't toggle (handles spurious triggers after close())
-    if (ts.visible.get()) {
-        OC_LOG_INFO("[DeviceSelectorInput] << requestTrackList() skipped (already visible)");
-        return;
-    }
+    if (ts.visible.get()) return;
 
-    // Hide device selector, show track selector
     ds.visible.set(false);
     ts.visible.set(true);
-
     protocol_.send(Protocol::RequestTrackListMessage{});
-    OC_LOG_INFO("[DeviceSelectorInput] << requestTrackList() done");
 }
 
 void HandlerInputDeviceSelector::close() {
-    OC_LOG_INFO("[DeviceSelectorInput] >> close()");
-    // Hide track selector if visible
-    if (state_.trackSelector.visible.get()) { state_.trackSelector.visible.set(false); }
-
-    // Hide device selector
+    if (state_.trackSelector.visible.get()) {
+        state_.trackSelector.visible.set(false);
+    }
     state_.deviceSelector.visible.set(false);
-
     requested_ = false;
     buttons_.setLatch(ButtonID::LEFT_CENTER, false);
-    OC_LOG_INFO("[DeviceSelectorInput] << close() done");
 }
 
 bool HandlerInputDeviceSelector::hasChildren(uint8_t deviceIndex) const {

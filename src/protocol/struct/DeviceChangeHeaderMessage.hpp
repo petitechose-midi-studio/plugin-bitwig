@@ -58,7 +58,7 @@ struct DeviceChangeHeaderMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 10;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 7;
 
     /**
      * Encode struct to MIDI-safe bytes
