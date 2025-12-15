@@ -74,22 +74,14 @@ static void initMux() {
 }
 
 static void initApp() {
-    OC_LOG_INFO("[Boot]   4.1: Building app with AppBuilder...");
     app = oc::teensy::AppBuilder()
               .midi()
               .encoders(Hardware::Encoder::ENCODERS)
               .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
               .inputConfig(Config::Input::CONFIG);
-    OC_LOG_INFO("[Boot]   4.2: AppBuilder complete");
 
-    // Register BitwigContext as the only context (first registered = default)
-    OC_LOG_INFO("[Boot]   4.3: Registering BitwigContext...");
     app->registerContext<bitwig::BitwigContext>(BitwigContextID::BITWIG, "Bitwig");
-    OC_LOG_INFO("[Boot]   4.4: Context registered");
-
-    OC_LOG_INFO("[Boot]   4.5: Calling app->begin()...");
     app->begin();
-    OC_LOG_INFO("[Boot]   4.6: app->begin() complete");
 }
 
 // =============================================================================
@@ -97,30 +89,17 @@ static void initApp() {
 // =============================================================================
 
 void setup() {
-    OC_LOG_INFO("========================================");
-    OC_LOG_INFO("MIDI Studio - Bitwig Plugin");
-    OC_LOG_INFO("App {}Hz, LVGL {}Hz", Config::Timing::APP_HZ, Config::Timing::LVGL_HZ);
-    OC_LOG_INFO("========================================");
+    // Initialize logging first (waits for Serial + configures output)
+    oc::teensy::initLogging();
 
-    OC_LOG_INFO("[Boot] Phase 1: Display init...");
+    OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
+
     initDisplay();
-    OC_LOG_INFO("[Boot] Phase 1: Display OK");
-
-    OC_LOG_INFO("[Boot] Phase 2: LVGL init...");
     initLVGL();
-    OC_LOG_INFO("[Boot] Phase 2: LVGL OK");
-
-    OC_LOG_INFO("[Boot] Phase 3: MUX init...");
     initMux();
-    OC_LOG_INFO("[Boot] Phase 3: MUX OK");
-
-    OC_LOG_INFO("[Boot] Phase 4: App init...");
     initApp();
-    OC_LOG_INFO("[Boot] Phase 4: App OK");
 
-    OC_LOG_INFO("========================================");
-    OC_LOG_INFO("[Boot] COMPLETE - System Ready");
-    OC_LOG_INFO("========================================");
+    OC_LOG_INFO("System ready");
 }
 
 // Timing constants for main loop
@@ -131,7 +110,6 @@ void loop() {
     static uint32_t lastMicros = 0;
     static uint32_t lvglAccumulator = 0;
     static uint32_t loopCount = 0;
-    static uint32_t lastHeartbeat = 0;
     static uint32_t initialFreeRAM = 0;
 
     const uint32_t now = micros();
@@ -143,19 +121,10 @@ void loop() {
     // Initialize on first loop
     if (initialFreeRAM == 0) {
         initialFreeRAM = getFreeRAM();
-        lastHeartbeat = millis();
         OC_LOG_INFO("[Loop] Initial free RAM: {} bytes", initialFreeRAM);
     }
 
     // Heartbeat every 5 seconds
-    const uint32_t nowMs = millis();
-    if (nowMs - lastHeartbeat >= 5000) {
-        lastHeartbeat = nowMs;
-        uint32_t currentFreeRAM = getFreeRAM();
-        int32_t ramDelta = static_cast<int32_t>(currentFreeRAM) - static_cast<int32_t>(initialFreeRAM);
-        OC_LOG_INFO("[Heartbeat] loops={}, uptime={}s, freeRAM={} (delta={})",
-                    loopCount, nowMs / 1000, currentFreeRAM, ramDelta);
-    }
 
     // Poll hardware and update active context
     app->update();

@@ -9,10 +9,11 @@
  * - Defines its own bindings in constructor
  *
  * Controls page navigation when PageSelector overlay is visible:
- * - LEFT_BOTTOM press (latch): open page selector
+ * - LEFT_BOTTOM press (latch): open page selector (toggle behavior)
  * - LEFT_BOTTOM release: close and confirm selection
- * - NAV encoder while LEFT_BOTTOM pressed: navigate pages
- * - NAV button: confirm selection
+ * - LEFT_TOP: close without confirming (cancel)
+ * - NAV encoder: navigate pages (scoped to overlay)
+ * - NAV button: confirm selection without closing
  */
 
 #include <lvgl.h>
@@ -54,6 +55,7 @@ private:
     void navigate(float delta);
     void confirmSelection();
     void closeSelector();
+    void cancel();
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;

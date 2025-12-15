@@ -132,7 +132,7 @@ public final class DeviceMacroDiscreteValuesMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 34;
+    private static final int MIN_PAYLOAD_SIZE = 3;
 
     /**
      * Decode message from MIDI-safe bytes

@@ -30,7 +30,6 @@
 #include <oc/api/MidiAPI.hpp>
 #include <oc/core/event/Events.hpp>
 #include <oc/core/event/IEventBus.hpp>
-#include <oc/teensy/LogOutput.hpp>
 #include <oc/log/Log.hpp>
 
 #include "DecoderRegistry.hpp"
@@ -60,8 +59,6 @@ public:
      */
     BitwigProtocol(oc::api::MidiAPI& midi, oc::core::event::IEventBus& events)
         : midi_(midi), events_(events) {
-        OC_LOG_INFO("[Protocol] Subscribing to EventBus SysEx events...");
-        // Subscribe to SysEx events from EventBus
         using namespace oc::core::event;
         subscriptionId_ = events_.on(
             EventCategory::MIDI,
@@ -70,7 +67,6 @@ public:
                 const auto& sysex = static_cast<const SysExEvent&>(evt);
                 dispatch(sysex.data, sysex.length);
             });
-        OC_LOG_INFO("[Protocol] EventBus subscription ID = {}", subscriptionId_);
     }
 
     ~BitwigProtocol() {
@@ -241,12 +237,7 @@ private:
         uint16_t payloadLen = length - MIN_MESSAGE_LENGTH;
         const uint8_t* payload = sysex + PAYLOAD_OFFSET;
 
-        OC_LOG_INFO("[Protocol] >> SysEx msgId={} payloadLen={} fromHost={}",
-                    static_cast<uint8_t>(messageId), payloadLen, fromHost);
-
         DecoderRegistry::dispatch(*this, messageId, payload, payloadLen, fromHost);
-
-        OC_LOG_INFO("[Protocol] << SysEx processed");
     }
 };
 

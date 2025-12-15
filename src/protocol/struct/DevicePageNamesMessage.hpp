@@ -46,7 +46,7 @@ struct DevicePageNamesMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 34;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 3;
 
     /**
      * Encode struct to MIDI-safe bytes

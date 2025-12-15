@@ -18,6 +18,7 @@
 #include <lvgl.h>
 
 #include <oc/state/Signal.hpp>
+#include <oc/state/SignalWatcher.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
 #include "component/DeviceSelector.hpp"
@@ -69,7 +70,8 @@ private:
     // State & Subscriptions
     // =========================================================================
     bitwig::state::BitwigState& state_;
-    std::vector<oc::state::Subscription> subs_;
+    std::vector<oc::state::Subscription> subs_;  // Individual subscriptions
+    oc::state::SignalWatcher watcher_;           // Coalesced signal groups
 
     void setupBindings();
 

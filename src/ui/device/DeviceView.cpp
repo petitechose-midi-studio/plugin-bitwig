@@ -21,8 +21,6 @@ namespace bitwig {
 
 DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
     : state_(state), zone_(zone) {
-    OC_LOG_INFO("[DeviceView] Creating...");
-
     for (auto& widget : widgets_) {
         widget = nullptr;
     }
@@ -44,8 +42,6 @@ DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
 
     setupBindings();
     initialized_ = true;
-
-    OC_LOG_INFO("[DeviceView] Created with {} subscriptions", subs_.size());
 }
 
 DeviceView::~DeviceView() {
@@ -95,17 +91,20 @@ void DeviceView::setupBindings() {
     OC_LOG_DEBUG("[DeviceView] Setting up signal bindings...");
 
     // =========================================================================
-    // Device Info → Top Bar (all trigger updateDeviceInfo)
+    // Device Info → Top Bar (coalesced: many signals → one callback)
     // =========================================================================
-    bind(subs_)
-        .on(state_.device.name, [this](const char*) { updateDeviceInfo(); })
-        .on(state_.device.pageName, [this](const char*) { updateDeviceInfo(); })
-        .on(state_.device.deviceType, [this](bitwig::state::DeviceType) { updateDeviceInfo(); })
-        .on(state_.device.enabled, [this](bool) { updateDeviceInfo(); })
-        .on(state_.device.hasChildren, [this](bool) { updateDeviceInfo(); });
+    watcher_.watchAll(
+        [this]() { updateDeviceInfo(); },
+        state_.device.name,
+        state_.device.pageName,
+        state_.device.deviceType,
+        state_.device.enabled,
+        state_.device.hasChildren
+    );
 
     // =========================================================================
     // Parameters → Widgets (8 slots, debounced via dirty flags)
+    // Each parameter slot is its own coalesced group
     // =========================================================================
     for (uint8_t i = 0; i < 8; i++) {
         auto& slot = state_.parameters.slots[i];
@@ -116,57 +115,54 @@ void DeviceView::setupBindings() {
             markParameterDirty(i);
         });
 
-        // Value/display changes (debounced via dirty flags)
-        bind(subs_)
-            .on(slot.value, [this, i](float) { markParameterDirty(i); })
-            .on(slot.name, [this, i](const char*) { markParameterDirty(i); })
-            .on(slot.displayValue, [this, i](const char*) { markParameterDirty(i); })
-            .on(slot.visible, [this, i](bool) { markParameterDirty(i); })
-            .on(slot.currentValueIndex, [this, i](uint8_t) { markParameterDirty(i); })
-            .on(slot.discreteValues, [this, i]() { markParameterDirty(i); });
+        // Value/display changes - coalesced per parameter slot
+        auto& paramGroup = watcher_.group([this, i]() { markParameterDirty(i); });
+        paramGroup.watch(slot.value);
+        paramGroup.watch(slot.name);
+        paramGroup.watch(slot.displayValue);
+        paramGroup.watch(slot.visible);
+        paramGroup.watch(slot.currentValueIndex);
+        paramGroup.watch(slot.discreteValues);
     }
 
     // =========================================================================
-    // Page Selector
+    // Page Selector (coalesced)
     // =========================================================================
-    bind(subs_)
-        .on(state_.pageSelector.names, [this]() { updatePageSelector(); })
-        .on(state_.pageSelector.selectedIndex, [this](int8_t) { updatePageSelector(); })
-        .on(state_.pageSelector.visible, [this](bool) { updatePageSelector(); });
+    watcher_.watchAll(
+        [this]() { updatePageSelector(); },
+        state_.pageSelector.names,
+        state_.pageSelector.selectedIndex,
+        state_.pageSelector.visible
+    );
 
     // =========================================================================
-    // Device Selector
+    // Device Selector (coalesced with array signals)
     // =========================================================================
-    bind(subs_)
-        .on(state_.deviceSelector.names, [this]() { updateDeviceSelector(); })
-        .on(state_.deviceSelector.visible, [this](bool) { updateDeviceSelector(); })
-        .on(state_.deviceSelector.currentIndex, [this](int8_t) { updateDeviceSelector(); })
-        .on(state_.deviceSelector.showingChildren, [this](bool) { updateDeviceSelector(); })
-        .on(state_.deviceSelector.showFooter, [this](bool) { updateDeviceSelector(); })
-        .on(state_.deviceSelector.childrenNames, [this]() { updateDeviceSelector(); });
-
-    // Device states (individual elements)
-    for (size_t i = 0; i < state_.deviceSelector.deviceStates.size(); i++) {
-        bind(subs_).on(state_.deviceSelector.deviceStates[i],
-                       [this](bool) { updateDeviceSelector(); });
+    auto& deviceSelectorGroup = watcher_.group([this]() { updateDeviceSelector(); });
+    deviceSelectorGroup.watch(state_.deviceSelector.names);
+    deviceSelectorGroup.watch(state_.deviceSelector.visible);
+    deviceSelectorGroup.watch(state_.deviceSelector.currentIndex);
+    deviceSelectorGroup.watch(state_.deviceSelector.showingChildren);
+    deviceSelectorGroup.watch(state_.deviceSelector.showFooter);
+    deviceSelectorGroup.watch(state_.deviceSelector.childrenNames);
+    for (auto& s : state_.deviceSelector.deviceStates) {
+        deviceSelectorGroup.watch(s);
     }
 
     // =========================================================================
-    // Track Selector
+    // Track Selector (coalesced with array signals)
     // =========================================================================
-    bind(subs_)
-        .on(state_.trackSelector.names, [this]() { updateTrackSelector(); })
-        .on(state_.trackSelector.visible, [this](bool) { updateTrackSelector(); })
-        .on(state_.trackSelector.currentIndex, [this](int8_t) { updateTrackSelector(); });
-
-    // Track mute/solo states (individual elements)
+    auto& trackSelectorGroup = watcher_.group([this]() { updateTrackSelector(); });
+    trackSelectorGroup.watch(state_.trackSelector.names);
+    trackSelectorGroup.watch(state_.trackSelector.visible);
+    trackSelectorGroup.watch(state_.trackSelector.currentIndex);
     for (size_t i = 0; i < state_.trackSelector.muteStates.size(); i++) {
-        bind(subs_)
-            .on(state_.trackSelector.muteStates[i], [this](bool) { updateTrackSelector(); })
-            .on(state_.trackSelector.soloStates[i], [this](bool) { updateTrackSelector(); });
+        trackSelectorGroup.watch(state_.trackSelector.muteStates[i]);
+        trackSelectorGroup.watch(state_.trackSelector.soloStates[i]);
     }
 
-    OC_LOG_DEBUG("[DeviceView] Bound {} subscriptions", subs_.size());
+    OC_LOG_DEBUG("[DeviceView] Bound {} subscriptions ({} coalesced groups)",
+                 subs_.size() + watcher_.subscriptionCount(), watcher_.groupCount());
 }
 
 // =============================================================================
@@ -256,8 +252,6 @@ void DeviceView::updateParameter(uint8_t index) {
     auto type = slot.type.get();
     bool visible = slot.visible.get();
 
-    OC_LOG_INFO("[UI] updateParameter({}) name='{}'", index, slot.name.get());
-
     // Update name and value
     widgets_[index]->setName(slot.name.get());
     widgets_[index]->setValueWithDisplay(slot.value.get(), slot.displayValue.get());
@@ -283,8 +277,8 @@ void DeviceView::updateParameter(uint8_t index) {
 void DeviceView::updatePageSelector() {
     if (!initialized_ || !page_selector_) return;
 
-    OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={}",
-                 state_.pageSelector.visible.get());
+    OC_LOG_DEBUG("[DeviceView] >> updatePageSelector() visible={} names.size()={}",
+                 state_.pageSelector.visible.get(), state_.pageSelector.names.size());
 
     page_selector_->render({
         .names = state_.pageSelector.names,
