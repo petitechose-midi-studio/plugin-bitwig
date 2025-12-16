@@ -7,18 +7,18 @@
 
 namespace bitwig {
 
-struct PageSelectorProps {
+struct RemoteControlsPageSelectorProps {
     std::vector<std::string> names;
     int selectedIndex = 0;
     bool visible = false;
 };
 
-class PageSelector : public BaseSelector {
+class RemoteControlsPageSelector : public BaseSelector {
 public:
-    explicit PageSelector(lv_obj_t *parent);
-    ~PageSelector() override = default;
+    explicit RemoteControlsPageSelector(lv_obj_t *parent);
+    ~RemoteControlsPageSelector() override = default;
 
-    void render(const PageSelectorProps &props);
+    void render(const RemoteControlsPageSelectorProps &props);
 
     int getPageCount() const { return getItemCount(); }
 };

@@ -60,7 +60,7 @@ void BitwigContext::cleanup() {
     inputTransport_.reset();
 
     transportBar_.reset();
-    deviceView_.reset();
+    remoteControlsView_.reset();
     viewContainer_.reset();
 
     // Host Handlers
@@ -116,10 +116,10 @@ void BitwigContext::createHostHandlers() {
 
 void BitwigContext::createInputHandlers() {
     // Scope hierarchy: overlay > view > global
-    lv_obj_t* scopeElement = deviceView_ ? deviceView_->getElement() : lv_screen_active();
-    lv_obj_t* deviceSelectorOverlay = deviceView_ ? deviceView_->getDeviceSelectorElement() : nullptr;
-    lv_obj_t* trackSelectorOverlay = deviceView_ ? deviceView_->getTrackSelectorElement() : nullptr;
-    lv_obj_t* pageSelectorOverlay = deviceView_ ? deviceView_->getPageSelectorElement() : nullptr;
+    lv_obj_t* scopeElement = remoteControlsView_ ? remoteControlsView_->getElement() : lv_screen_active();
+    lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
+    lv_obj_t* trackSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getTrackSelectorElement() : nullptr;
+    lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
 
     // Global scope
     inputTransport_ = std::make_unique<handler::HandlerInputTransport>(
@@ -142,8 +142,8 @@ void BitwigContext::createInputHandlers() {
 
 void BitwigContext::createViews() {
     viewContainer_ = std::make_unique<ViewContainer>(lv_screen_active());
-    deviceView_ = std::make_unique<DeviceView>(viewContainer_->getMainZone(), state_);
-    deviceView_->onActivate();
+    remoteControlsView_ = std::make_unique<RemoteControlsView>(viewContainer_->getMainZone(), state_);
+    remoteControlsView_->onActivate();
     transportBar_ = std::make_unique<TransportBar>(viewContainer_->getBottomZone(), state_.transport);
     lv_obj_clear_flag(viewContainer_->getContainer(), LV_OBJ_FLAG_HIDDEN);
 }

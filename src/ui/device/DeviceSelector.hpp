@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TrackTitleItem.hpp"
+#include "ui/track/TrackTitleItem.hpp"
 
 #include <cstdint>
 

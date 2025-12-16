@@ -33,7 +33,7 @@
  *     │   ├── HandlerInputTrack
  *     │   └── HandlerInputLastClicked
  *     └── Views (subscribe to state)
- *         └── DeviceView, TransportBar, etc.
+ *         └── RemoteControlsView, TransportBar, etc.
  * ```
  *
  * The context itself is thin - handlers and views do the work.
@@ -66,7 +66,7 @@
 #include "handler/input/HandlerInputRemoteControl.hpp"
 #include "handler/input/HandlerInputTrack.hpp"
 #include "handler/input/HandlerInputTransport.hpp"
-#include "ui/device/DeviceView.hpp"
+#include "ui/remotecontrols/RemoteControlsView.hpp"
 #include "ui/transportbar/TransportBar.hpp"
 #include "ui/ViewContainer.hpp"
 
@@ -158,7 +158,7 @@ private:
     std::unique_ptr<ViewContainer> viewContainer_;
 
     // Views (subscribe to state in their constructors)
-    std::unique_ptr<DeviceView> deviceView_;
+    std::unique_ptr<RemoteControlsView> remoteControlsView_;
     std::unique_ptr<TransportBar> transportBar_;
 };
 
