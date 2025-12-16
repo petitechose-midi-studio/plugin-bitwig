@@ -1,4 +1,4 @@
-#include "DeviceView.hpp"
+#include "RemoteControlsView.hpp"
 
 #include <oc/log/Log.hpp>
 #include <oc/state/Bind.hpp>
@@ -21,7 +21,7 @@ namespace bitwig {
 // Construction / Destruction
 // =============================================================================
 
-DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
+RemoteControlsView::RemoteControlsView(lv_obj_t* zone, bitwig::state::BitwigState& state)
     : state_(state), zone_(zone) {
     for (auto& widget : widgets_) {
         widget = nullptr;
@@ -46,7 +46,7 @@ DeviceView::DeviceView(lv_obj_t* zone, bitwig::state::BitwigState& state)
     initialized_ = true;
 }
 
-DeviceView::~DeviceView() {
+RemoteControlsView::~RemoteControlsView() {
     // Delete update timer
     if (updateTimer_) {
         lv_timer_delete(updateTimer_);
@@ -74,12 +74,12 @@ DeviceView::~DeviceView() {
 // IView Lifecycle
 // =============================================================================
 
-void DeviceView::onActivate() {
+void RemoteControlsView::onActivate() {
     if (top_bar_container_) lv_obj_clear_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
     if (body_container_) lv_obj_clear_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
 }
 
-void DeviceView::onDeactivate() {
+void RemoteControlsView::onDeactivate() {
     if (top_bar_container_) lv_obj_add_flag(top_bar_container_, LV_OBJ_FLAG_HIDDEN);
     if (body_container_) lv_obj_add_flag(body_container_, LV_OBJ_FLAG_HIDDEN);
 }
@@ -100,10 +100,10 @@ void DeviceView::onDeactivate() {
 //
 // =============================================================================
 
-void DeviceView::setupBindings() {
+void RemoteControlsView::setupBindings() {
     using oc::state::bind;
     using state::PARAMETER_COUNT;
-    OC_LOG_DEBUG("[DeviceView] Setting up signal bindings...");
+    OC_LOG_DEBUG("[RemoteControlsView] Setting up signal bindings...");
 
     // =========================================================================
     // Device Info → Top Bar (coalesced: many signals → one callback)
@@ -177,7 +177,7 @@ void DeviceView::setupBindings() {
         trackSelectorGroup.watch(state_.trackSelector.soloStates[i]);
     }
 
-    OC_LOG_DEBUG("[DeviceView] Bound {} subscriptions ({} coalesced groups)",
+    OC_LOG_DEBUG("[RemoteControlsView] Bound {} subscriptions ({} coalesced groups)",
                  subs_.size() + watcher_.subscriptionCount(), watcher_.groupCount());
 }
 
@@ -185,10 +185,10 @@ void DeviceView::setupBindings() {
 // Update Helpers (called by subscription callbacks)
 // =============================================================================
 
-void DeviceView::updateDeviceInfo() {
+void RemoteControlsView::updateDeviceInfo() {
     if (!initialized_ || !top_bar_component_) return;
 
-    OC_LOG_DEBUG("[DeviceView] >> updateDeviceInfo()");
+    OC_LOG_DEBUG("[RemoteControlsView] >> updateDeviceInfo()");
     top_bar_component_->render({
         .deviceName = state_.device.name.get(),
         .deviceType = static_cast<uint8_t>(state_.device.deviceType.get()),
@@ -198,7 +198,7 @@ void DeviceView::updateDeviceInfo() {
     });
 }
 
-void DeviceView::ensureWidgetForType(uint8_t index) {
+void RemoteControlsView::ensureWidgetForType(uint8_t index) {
     if (index >= state::PARAMETER_COUNT || !body_container_) return;
 
     auto& slot = state_.parameters.slots[index];
@@ -206,18 +206,18 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
 
     // Skip recreation if widget already exists with same type
     if (widgets_[index] && widgetTypes_[index] == type) {
-        OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - same type {}, skipping", index, static_cast<int>(type));
+        OC_LOG_DEBUG("[RemoteControlsView] ensureWidgetForType({}) - same type {}, skipping", index, static_cast<int>(type));
         return;
     }
 
     // Destroy existing widget if type changed
     if (widgets_[index]) {
-        OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - type changed {} -> {}, recreating",
+        OC_LOG_DEBUG("[RemoteControlsView] ensureWidgetForType({}) - type changed {} -> {}, recreating",
                      index, static_cast<int>(widgetTypes_[index]), static_cast<int>(type));
         widgets_[index].reset();
     }
 
-    OC_LOG_DEBUG("[DeviceView] ensureWidgetForType({}) - creating type={}", index, static_cast<int>(type));
+    OC_LOG_DEBUG("[RemoteControlsView] ensureWidgetForType({}) - creating type={}", index, static_cast<int>(type));
     widgetTypes_[index] = type;  // Track the new type
 
     switch (type) {
@@ -253,14 +253,14 @@ void DeviceView::ensureWidgetForType(uint8_t index) {
     }
 }
 
-void DeviceView::updateParameter(uint8_t index) {
+void RemoteControlsView::updateParameter(uint8_t index) {
     if (!initialized_ || index >= state::PARAMETER_COUNT) {
-        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (init={} idx>=PARAMETER_COUNT={})",
+        OC_LOG_DEBUG("[RemoteControlsView] updateParameter({}) - skipped (init={} idx>=PARAMETER_COUNT={})",
                      index, initialized_, index >= state::PARAMETER_COUNT);
         return;
     }
     if (!widgets_[index]) {
-        OC_LOG_DEBUG("[DeviceView] updateParameter({}) - skipped (no widget)", index);
+        OC_LOG_DEBUG("[RemoteControlsView] updateParameter({}) - skipped (no widget)", index);
         return;
     }
 
@@ -291,7 +291,7 @@ void DeviceView::updateParameter(uint8_t index) {
     }
 }
 
-void DeviceView::updatePageSelector() {
+void RemoteControlsView::updatePageSelector() {
     if (!initialized_ || !page_selector_) return;
 
     bool visible = state_.pageSelector.visible.get();
@@ -307,7 +307,7 @@ void DeviceView::updatePageSelector() {
     });
 }
 
-void DeviceView::updateDeviceSelector() {
+void RemoteControlsView::updateDeviceSelector() {
     if (!initialized_ || !device_selector_) return;
 
     bool visible = state_.deviceSelector.visible.get();
@@ -338,7 +338,7 @@ void DeviceView::updateDeviceSelector() {
     });
 }
 
-void DeviceView::updateTrackSelector() {
+void RemoteControlsView::updateTrackSelector() {
     if (!initialized_ || !track_selector_) return;
 
     bool visible = state_.trackSelector.visible.get();
@@ -365,7 +365,7 @@ void DeviceView::updateTrackSelector() {
 // UI Creation
 // =============================================================================
 
-void DeviceView::createUI() {
+void RemoteControlsView::createUI() {
     top_bar_container_ = lv_obj_create(zone_);
     lv_obj_set_size(top_bar_container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
     style::apply(top_bar_container_).transparent().noScroll();
@@ -381,7 +381,7 @@ void DeviceView::createUI() {
     setupLayout();
 }
 
-void DeviceView::setupLayout() {
+void RemoteControlsView::setupLayout() {
     if (!body_container_) return;
 
     static const lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1),
@@ -392,7 +392,7 @@ void DeviceView::setupLayout() {
     lv_obj_set_grid_dsc_array(body_container_, col_dsc, row_dsc);
 }
 
-void DeviceView::createDeviceStateBar() {
+void RemoteControlsView::createDeviceStateBar() {
     if (!top_bar_container_) return;
 
     top_bar_component_ = std::make_unique<DeviceStateBar>(top_bar_container_);
@@ -405,7 +405,7 @@ void DeviceView::createDeviceStateBar() {
         .pageName = ""
     });
 
-    page_selector_ = std::make_unique<PageSelector>(zone_);
+    page_selector_ = std::make_unique<RemoteControlsPageSelector>(zone_);
     device_selector_ = std::make_unique<DeviceSelector>(zone_);
     track_selector_ = std::make_unique<TrackSelector>(zone_);
 }
@@ -414,17 +414,17 @@ void DeviceView::createDeviceStateBar() {
 // Overlay Element Accessors
 // =============================================================================
 
-lv_obj_t* DeviceView::getPageSelectorElement() const {
+lv_obj_t* RemoteControlsView::getPageSelectorElement() const {
     if (!page_selector_) return nullptr;
     return page_selector_->getElement();
 }
 
-lv_obj_t* DeviceView::getDeviceSelectorElement() const {
+lv_obj_t* RemoteControlsView::getDeviceSelectorElement() const {
     if (!device_selector_) return nullptr;
     return device_selector_->getElement();
 }
 
-lv_obj_t* DeviceView::getTrackSelectorElement() const {
+lv_obj_t* RemoteControlsView::getTrackSelectorElement() const {
     if (!track_selector_) return nullptr;
     return track_selector_->getElement();
 }
@@ -433,13 +433,13 @@ lv_obj_t* DeviceView::getTrackSelectorElement() const {
 // Dirty Flag System (Debounced Updates)
 // =============================================================================
 
-void DeviceView::markParameterDirty(uint8_t index) {
+void RemoteControlsView::markParameterDirty(uint8_t index) {
     if (index < state::PARAMETER_COUNT) {
         paramDirty_[index] = true;
     }
 }
 
-void DeviceView::processDirtyParameters() {
+void RemoteControlsView::processDirtyParameters() {
     for (uint8_t i = 0; i < state::PARAMETER_COUNT; i++) {
         if (paramDirty_[i]) {
             paramDirty_[i] = false;
@@ -448,8 +448,8 @@ void DeviceView::processDirtyParameters() {
     }
 }
 
-void DeviceView::onUpdateTimer(lv_timer_t* timer) {
-    auto* self = static_cast<DeviceView*>(lv_timer_get_user_data(timer));
+void RemoteControlsView::onUpdateTimer(lv_timer_t* timer) {
+    auto* self = static_cast<RemoteControlsView*>(lv_timer_get_user_data(timer));
     if (self) {
         self->processDirtyParameters();
     }

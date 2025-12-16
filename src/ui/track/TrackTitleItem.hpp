@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LevelBar.hpp"
+#include "ui/device/LevelBar.hpp"
 
 #include <cstdint>
 
