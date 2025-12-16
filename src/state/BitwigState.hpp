@@ -39,6 +39,7 @@
 #include "DeviceInfoState.hpp"
 #include "HostState.hpp"
 #include "LastClickedState.hpp"
+#include "OverlayManager.hpp"
 #include "ParameterState.hpp"
 #include "SelectorState.hpp"
 #include "TransportState.hpp"
@@ -85,10 +86,20 @@ struct BitwigState {
     CurrentTrackState currentTrack;
 
     // =========================================================================
+    // Overlay Manager (centralized visibility control)
+    // =========================================================================
+    OverlayManager overlays;
+
+    // =========================================================================
     // Lifecycle
     // =========================================================================
 
-    BitwigState() = default;
+    BitwigState() {
+        // Register overlays for centralized management
+        overlays.registerOverlay(OverlayType::PAGE_SELECTOR, pageSelector.visible);
+        overlays.registerOverlay(OverlayType::DEVICE_SELECTOR, deviceSelector.visible);
+        overlays.registerOverlay(OverlayType::TRACK_SELECTOR, trackSelector.visible);
+    }
 
     // Non-copyable, non-movable
     BitwigState(const BitwigState&) = delete;
@@ -111,6 +122,7 @@ struct BitwigState {
         deviceSelector.reset();
         trackSelector.reset();
         currentTrack.reset();
+        overlays.hideAll();
     }
 };
 

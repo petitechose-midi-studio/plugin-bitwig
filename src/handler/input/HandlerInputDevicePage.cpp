@@ -12,6 +12,7 @@ namespace bitwig::handler {
 using namespace oc::ui::lvgl;
 using ButtonID = Config::ButtonID;
 using EncoderID = Config::EncoderID;
+using OverlayType = state::OverlayType;
 
 HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
                                                BitwigProtocol& protocol,
@@ -66,9 +67,9 @@ void HandlerInputDevicePage::setupBindings() {
 }
 
 void HandlerInputDevicePage::requestPageList() {
-    // Show overlay immediately (will update when data arrives)
+    // Show overlay (OverlayManager handles exclusive visibility)
     if (!state_.pageSelector.visible.get()) {
-        state_.pageSelector.visible.set(true);
+        state_.overlays.show(OverlayType::PAGE_SELECTOR, false);
     }
 
     // Set encoder to relative mode for navigation
@@ -101,8 +102,8 @@ void HandlerInputDevicePage::confirmSelection() {
 void HandlerInputDevicePage::closeSelector() {
     int index = state_.pageSelector.selectedIndex.get();
 
-    // Hide page selector
-    state_.pageSelector.visible.set(false);
+    // Hide page selector via OverlayManager
+    state_.overlays.hide();
 
     // Confirm selection on close
     if (index >= 0) {
@@ -114,8 +115,8 @@ void HandlerInputDevicePage::closeSelector() {
 }
 
 void HandlerInputDevicePage::cancel() {
-    // Hide page selector without confirming
-    state_.pageSelector.visible.set(false);
+    // Hide page selector via OverlayManager (no confirmation)
+    state_.overlays.hide();
     requested_ = false;
     buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
 }

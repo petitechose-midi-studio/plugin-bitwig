@@ -134,6 +134,10 @@ void BitwigContext::createInputHandlers() {
         state_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
     inputDevicePage_ = std::make_unique<handler::HandlerInputDevicePage>(
         state_, *protocol_, encoders(), buttons(), scopeElement, pageSelectorOverlay);
+
+    // LastClicked: OPT encoder for adjusting last clicked parameter
+    inputLastClicked_ = std::make_unique<handler::HandlerInputLastClicked>(
+        state_, *protocol_, encoders(), scopeElement);
 }
 
 void BitwigContext::createViews() {

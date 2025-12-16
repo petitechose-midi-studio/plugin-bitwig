@@ -1,5 +1,6 @@
 #include "HandlerInputMacro.hpp"
 
+#include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"

@@ -3,22 +3,33 @@ package handler.host;
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import protocol.struct.*;
+import handler.controller.LastClickedController;
 
 /**
  * LastClickedHost - Observes last clicked parameter in Bitwig and sends updates TO controller
  *
  * RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
- * - Observes last clicked parameter changes
- * - Sends protocol messages when parameter changes
+ * - Observes parameter changes (via name() observer)
+ * - Sends full update when different param clicked
+ * - Observes value changes and sends ValueChange with echo detection
  * - NEVER receives protocol callbacks (that's LastClickedController's job)
  */
 public class LastClickedHost {
+    private final ControllerHost host;
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;
+    private LastClickedController lastClickedController;
+
+    private String lastParamName = "";
 
     public LastClickedHost(ControllerHost host, Protocol protocol) {
+        this.host = host;
         this.protocol = protocol;
         this.lastClicked = host.createLastClickedParameter("last_clicked", "Last Clicked");
+    }
+
+    public void setLastClickedController(LastClickedController controller) {
+        this.lastClickedController = controller;
     }
 
     /**
@@ -35,9 +46,34 @@ public class LastClickedHost {
         lastClicked.parameter().displayedValue().markInterested();
         lastClicked.parameter().exists().markInterested();
 
-        // Observer: when parameter changes (different param clicked in Bitwig)
+        // Observer: when exists changes (parameter selected/deselected)
+        // Using exists() as primary trigger like the original working version
         lastClicked.parameter().exists().addValueObserver(exists -> {
-            sendLastClickedUpdate();
+            String name = lastClicked.parameter().name().get();
+
+            host.println("[LASTCLICKED HOST] exists observer: exists=" + exists + " name='" + name + "' lastParamName='" + lastParamName + "'");
+
+            if (!exists) {
+                // Parameter cleared - only if we had a param before
+                if (!lastParamName.isEmpty()) {
+                    lastParamName = "";
+                    sendLastClickedCleared();
+                }
+            } else if (!name.isEmpty()) {
+                // Parameter selected with valid name
+                lastParamName = name;
+                sendLastClickedUpdate();
+            }
+        });
+
+        // Value observer: send value changes to controller with echo detection
+        // Only send for host-initiated changes (not echoes from controller)
+        lastClicked.parameter().displayedValue().addValueObserver(displayValue -> {
+            if (!lastClicked.parameter().exists().get()) return;
+            if (lastClickedController != null && lastClickedController.consumeEcho()) return;
+
+            double value = lastClicked.parameter().value().get();
+            protocol.send(new LastClickedValueChangeMessage((float) value, displayValue, false));
         });
     }
 
@@ -46,6 +82,7 @@ public class LastClickedHost {
      */
     public void sendInitialState() {
         if (lastClicked.parameter().exists().get()) {
+            lastParamName = lastClicked.parameter().name().get();
             sendLastClickedUpdate();
         }
     }
@@ -81,6 +118,8 @@ public class LastClickedHost {
 
         final int currentValueIndex = discreteCount > 0 ? (int)(value * discreteCount) : 0;
 
+        host.println("[LASTCLICKED HOST] Update: name='" + name + "' value=" + value);
+
         protocol.send(new LastClickedUpdateMessage(
             name,
             (float) value,
@@ -90,6 +129,24 @@ public class LastClickedHost {
             (byte) paramType,
             (short) discreteCount,
             (byte) currentValueIndex
+        ));
+    }
+
+    /**
+     * Send cleared message (when parameter deselected)
+     */
+    private void sendLastClickedCleared() {
+        host.println("[LASTCLICKED HOST] Cleared");
+
+        protocol.send(new LastClickedUpdateMessage(
+            "",
+            0.0f,
+            "",
+            0.0f,
+            false,
+            (byte) 0,
+            (short) 0,
+            (byte) 0
         ));
     }
 }

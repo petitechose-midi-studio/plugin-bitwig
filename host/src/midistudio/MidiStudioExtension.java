@@ -70,8 +70,9 @@ public class MidiStudioExtension extends ControllerExtension {
 
       // LastClicked: Host (observers) + Controller (protocol callbacks)
       LastClickedHost lastClickedHost = new LastClickedHost(host, protocol);
-      LastClickedController lastClickedController = new LastClickedController(protocol);
+      LastClickedController lastClickedController = new LastClickedController(host, protocol);
       lastClickedController.setLastClickedHost(lastClickedHost);
+      lastClickedHost.setLastClickedController(lastClickedController);
       lastClickedHost.setupObservers();
 
       // HostStatus: Handles resync requests and initial state

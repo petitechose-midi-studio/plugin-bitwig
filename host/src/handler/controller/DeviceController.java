@@ -79,10 +79,6 @@ public class DeviceController {
     /**
      * Check if this callback is within the echo timeout window.
      * Returns true if callback arrived within ECHO_TIMEOUT_MS of last controller change.
-     * Returns false if no recent controller change (host-initiated).
-     *
-     * This handles Bitwig sending multiple callbacks per param.set() - all callbacks
-     * within the timeout window are considered echoes.
      */
     public boolean consumeEcho(int paramIndex) {
         if (paramIndex >= 0 && paramIndex < BitwigConfig.MAX_PARAMETERS) {
@@ -142,22 +138,33 @@ public class DeviceController {
             if (msg.fromHost) return;
 
             int paramIndex = msg.getParameterIndex();
-            if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) return;
+            host.println("[TOUCH] Received: param=" + paramIndex + " touched=" + msg.isTouched());
+
+            if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) {
+                host.println("[TOUCH] ✗ Invalid param index");
+                return;
+            }
 
             boolean isTouched = msg.isTouched();
-            if (touchState[paramIndex] == isTouched) return;  // Debounce
+            if (touchState[paramIndex] == isTouched) {
+                host.println("[TOUCH] ✗ Debounced (same state)");
+                return;
+            }
 
             touchState[paramIndex] = isTouched;
             RemoteControl param = remoteControls.getParameter(paramIndex);
 
             if (isTouched) {
+                host.println("[TOUCH] ▶ Press: enabling automation write + touch(true)");
                 transport.isClipLauncherAutomationWriteEnabled().set(true);
                 param.touch(true);
                 lastPressTime[paramIndex] = System.currentTimeMillis();
             } else {
+                host.println("[TOUCH] ◀ Release: touch(false) + scheduling automation disable");
                 param.touch(false);
                 lastReleaseTime[paramIndex] = System.currentTimeMillis();
                 host.scheduleTask(() -> {
+                    host.println("[TOUCH] ⏱ Delayed: disabling automation write");
                     transport.isClipLauncherAutomationWriteEnabled().set(false);
                 }, BitwigConfig.TOUCH_RELEASE_GRACE_MS);
             }
