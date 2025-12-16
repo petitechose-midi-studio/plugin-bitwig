@@ -57,41 +57,6 @@ public class DecoderRegistry {
                     callbacks.onDeviceList.handle(msg);
                 }
                 break;
-            case DEVICE_MACRO_DISCRETE_VALUES:
-                if (callbacks.onDeviceMacroDiscreteValues != null) {
-                    DeviceMacroDiscreteValuesMessage msg = DeviceMacroDiscreteValuesMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroDiscreteValues.handle(msg);
-                }
-                break;
-            case DEVICE_MACRO_NAME_CHANGE:
-                if (callbacks.onDeviceMacroNameChange != null) {
-                    DeviceMacroNameChangeMessage msg = DeviceMacroNameChangeMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroNameChange.handle(msg);
-                }
-                break;
-            case DEVICE_MACRO_TOUCH:
-                if (callbacks.onDeviceMacroTouch != null) {
-                    DeviceMacroTouchMessage msg = DeviceMacroTouchMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroTouch.handle(msg);
-                }
-                break;
-            case DEVICE_MACRO_UPDATE:
-                if (callbacks.onDeviceMacroUpdate != null) {
-                    DeviceMacroUpdateMessage msg = DeviceMacroUpdateMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroUpdate.handle(msg);
-                }
-                break;
-            case DEVICE_MACRO_VALUE_CHANGE:
-                if (callbacks.onDeviceMacroValueChange != null) {
-                    DeviceMacroValueChangeMessage msg = DeviceMacroValueChangeMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroValueChange.handle(msg);
-                }
-                break;
             case DEVICE_PAGE_CHANGE:
                 if (callbacks.onDevicePageChange != null) {
                     DevicePageChangeMessage msg = DevicePageChangeMessage.decode(payload);
@@ -111,6 +76,41 @@ public class DecoderRegistry {
                     DevicePageSelectByIndexMessage msg = DevicePageSelectByIndexMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onDevicePageSelectByIndex.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_DISCRETE_VALUES:
+                if (callbacks.onDeviceRemoteControlDiscreteValues != null) {
+                    DeviceRemoteControlDiscreteValuesMessage msg = DeviceRemoteControlDiscreteValuesMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlDiscreteValues.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_NAME_CHANGE:
+                if (callbacks.onDeviceRemoteControlNameChange != null) {
+                    DeviceRemoteControlNameChangeMessage msg = DeviceRemoteControlNameChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlNameChange.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_TOUCH:
+                if (callbacks.onDeviceRemoteControlTouch != null) {
+                    DeviceRemoteControlTouchMessage msg = DeviceRemoteControlTouchMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlTouch.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_UPDATE:
+                if (callbacks.onDeviceRemoteControlUpdate != null) {
+                    DeviceRemoteControlUpdateMessage msg = DeviceRemoteControlUpdateMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlUpdate.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_VALUE_CHANGE:
+                if (callbacks.onDeviceRemoteControlValueChange != null) {
+                    DeviceRemoteControlValueChangeMessage msg = DeviceRemoteControlValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlValueChange.handle(msg);
                 }
                 break;
             case DEVICE_SELECT_BY_INDEX:

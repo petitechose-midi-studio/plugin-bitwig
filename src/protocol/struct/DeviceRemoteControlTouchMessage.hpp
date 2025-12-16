@@ -1,10 +1,10 @@
 /**
- * DeviceMacroTouchMessage.hpp - Auto-generated Protocol Struct
+ * DeviceRemoteControlTouchMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_TOUCH message
+ * Description: DEVICE_REMOTE_CONTROL_TOUCH message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -25,11 +25,11 @@ namespace Protocol {
 
 
 
-struct DeviceMacroTouchMessage {
+struct DeviceRemoteControlTouchMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_TOUCH;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_TOUCH;
 
-    uint8_t parameterIndex;
+    uint8_t remoteControlIndex;
     bool isTouched;
 
     // Origin tracking (set by DecoderRegistry during decode)
@@ -57,7 +57,7 @@ struct DeviceMacroTouchMessage {
 
         uint8_t* ptr = buffer;
 
-        encodeUint8(ptr, parameterIndex);
+        encodeUint8(ptr, remoteControlIndex);
         encodeBool(ptr, isTouched);
 
         return ptr - buffer;
@@ -70,7 +70,7 @@ struct DeviceMacroTouchMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DeviceMacroTouchMessage> decode(
+    static std::optional<DeviceRemoteControlTouchMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -79,12 +79,12 @@ struct DeviceMacroTouchMessage {
         size_t remaining = len;
 
         // Decode fields
-        uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
+        uint8_t remoteControlIndex;
+        if (!decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
         bool isTouched;
         if (!decodeBool(ptr, remaining, isTouched)) return std::nullopt;
 
-        return DeviceMacroTouchMessage{parameterIndex, isTouched};
+        return DeviceRemoteControlTouchMessage{remoteControlIndex, isTouched};
     }
 
 
@@ -100,9 +100,9 @@ struct DeviceMacroTouchMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DeviceMacroTouch\ndeviceMacroTouch:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlTouch\ndeviceRemoteControlTouch:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  parameterIndex: %lu\n", (unsigned long)parameterIndex);
+        ptr += snprintf(ptr, end - ptr, "  remoteControlIndex: %lu\n", (unsigned long)remoteControlIndex);
         ptr += snprintf(ptr, end - ptr, "  isTouched: %s\n", isTouched ? "true" : "false");
 
         *ptr = '\0';

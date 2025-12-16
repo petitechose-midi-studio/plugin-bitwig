@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @file HandlerInputMacro.hpp
- * @brief Handles macro encoder input -> sends protocol messages
+ * @file HandlerInputRemoteControl.hpp
+ * @brief Handles remote control encoder input -> sends protocol messages
  *
  * InputHandler pattern:
  * - Receives APIs from context
@@ -10,7 +10,7 @@
  * - Sends protocol messages on input events
  * - Does optimistic state updates
  *
- * Controls the 8 macro parameter encoders:
+ * Controls the 8 remote control parameter encoders:
  * - Encoder turns: value changes (optimistic UI + protocol)
  * - Encoder buttons: touch messages for automation
  */
@@ -27,21 +27,21 @@
 namespace bitwig::handler {
 
 /**
- * @brief Macro encoder input handler (Input -> Protocol)
+ * @brief Remote control encoder input handler (Input -> Protocol)
  */
-class HandlerInputMacro {
+class HandlerInputRemoteControl {
 public:
-    HandlerInputMacro(state::BitwigState& state,
-                      BitwigProtocol& protocol,
-                      oc::api::EncoderAPI& encoders,
-                      oc::api::ButtonAPI& buttons,
-                      lv_obj_t* scopeElement);
+    HandlerInputRemoteControl(state::BitwigState& state,
+                              BitwigProtocol& protocol,
+                              oc::api::EncoderAPI& encoders,
+                              oc::api::ButtonAPI& buttons,
+                              lv_obj_t* scopeElement);
 
-    ~HandlerInputMacro() = default;
+    ~HandlerInputRemoteControl() = default;
 
     // Non-copyable
-    HandlerInputMacro(const HandlerInputMacro&) = delete;
-    HandlerInputMacro& operator=(const HandlerInputMacro&) = delete;
+    HandlerInputRemoteControl(const HandlerInputRemoteControl&) = delete;
+    HandlerInputRemoteControl& operator=(const HandlerInputRemoteControl&) = delete;
 
 private:
     void setupBindings();

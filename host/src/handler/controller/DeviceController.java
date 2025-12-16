@@ -90,13 +90,13 @@ public class DeviceController {
     }
 
     private void setupProtocolCallbacks() {
-        protocol.onDeviceMacroValueChange = msg -> {
+        protocol.onDeviceRemoteControlValueChange = msg -> {
             if (msg.fromHost) {
-                host.println("[DEVICE CTRL] Feedback from host: param=" + msg.getParameterIndex() + " value=" + msg.getParameterValue());
+                host.println("[DEVICE CTRL] Feedback from host: param=" + msg.getRemoteControlIndex() + " value=" + msg.getParameterValue());
                 return;
             }
 
-            int index = msg.getParameterIndex();
+            int index = msg.getRemoteControlIndex();
             if (index < 0 || index >= BitwigConfig.MAX_PARAMETERS) return;
 
             long now = System.currentTimeMillis();
@@ -134,10 +134,10 @@ public class DeviceController {
             }
         };
 
-        protocol.onDeviceMacroTouch = msg -> {
+        protocol.onDeviceRemoteControlTouch = msg -> {
             if (msg.fromHost) return;
 
-            int paramIndex = msg.getParameterIndex();
+            int paramIndex = msg.getRemoteControlIndex();
             host.println("[TOUCH] Received: param=" + paramIndex + " touched=" + msg.isTouched());
 
             if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) {

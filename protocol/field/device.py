@@ -3,12 +3,12 @@ from field.parameter import *  # Import generic parameter fields
 from field.color import color_rgb
 
 # ============================================================================
-# DEVICE-SPECIFIC FIELDS
+# DEVICE REMOTE CONTROLS FIELDS
 # ============================================================================
-# Fields that are specific to device macros (not generic to all parameters)
+# Fields that are specific to device remote controls (not generic to all parameters)
 
-# Device macro index (0-7) - DEVICE SPECIFIC
-macro_index = PrimitiveField('parameterIndex', type_name=Type.UINT8)
+# Remote control index (0-7) - identifies which remote control slot
+remote_control_index = PrimitiveField('remoteControlIndex', type_name=Type.UINT8)
 
 # Device context fields
 device_state = PrimitiveField('isEnabled', type_name=Type.BOOL)
@@ -21,17 +21,18 @@ device_page_count = PrimitiveField('devicePageCount', type_name=Type.UINT8)
 device_page_name = PrimitiveField('devicePageName', type_name=Type.STRING)
 
 # ============================================================================
-# PARAMETER INFO (Composite Struct - Array[8])
+# REMOTE CONTROL INFO (Composite Struct - Array[8])
 # ============================================================================
-# Device macro = index (device-specific) + parameter fields (generic)
+# RemoteControl = index (0-7) + parameter fields (generic)
+# Aligned with Bitwig API: RemoteControl extends Parameter
 #
 # parameterType interpretation (from parameter.py):
 # - 0: Knob (continuous or unrecognized discrete)
 # - 1: Button (discreteCount == 2 AND values are On/Off)
 # - 2: List (discreteCount > 2)
 
-macro = [
-    macro_index,                        # DEVICE SPECIFIC: Parameter index (0-7)
+remote_control = [
+    remote_control_index,               # Remote control slot index (0-7)
     parameter_value,                    # GENERIC: Normalized value (0.0-1.0)
     parameter_name,                     # GENERIC: Parameter name (max 16 chars)
     parameter_origin,                   # GENERIC: Origin value (0.0 or 0.5)
@@ -56,9 +57,10 @@ page_info = CompositeField('pageInfo', fields=[
 ])
 
 
-# Array of 8 parameters (maps to MACRO_1-8 encoders)
-# Generated C++ type: etl::array<Macro, 8>
-macros = CompositeField('macros', fields=macro, array=8)
+# Array of 8 remote controls (maps to encoders 1-8)
+# Aligned with Bitwig API: RemoteControlsPage contains N RemoteControl parameters
+# Generated C++ type: etl::array<RemoteControl, 8>
+remote_controls = CompositeField('remoteControls', fields=remote_control, array=8)
 
 # ============================================================================
 # PAGE NAVIGATION FIELDS

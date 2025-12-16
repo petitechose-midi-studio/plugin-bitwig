@@ -6,19 +6,19 @@ from protocol_codegen.core.message import Message
 # ============================================================================
 
 DEVICE_CHANGE = Message(
-    description='Complete device state (name, enabled, page, 8 parameters)',
+    description='Complete device state (name, enabled, page, 8 remote controls)',
     fields=[
         device_track_name,  # STRING (max 16 chars)
         device_name,        # STRING (max 16 chars)
         device_state,       # BOOL
         page_info,          # PageInfo struct { uint8, string16, uint8 }
-        macros              # Parameter[8] array of structs
+        remote_controls     # RemoteControl[8] array of structs
     ]
 )
 
 DEVICE_PAGE_CHANGE = Message(
-    description='Page change with new parameter set',
-    fields=[page_info,macros]
+    description='Page change with new remote controls set',
+    fields=[page_info, remote_controls]
 )
 
 # ============================================================================
@@ -37,10 +37,10 @@ DEVICE_CHANGE_HEADER = Message(
     ]
 )
 
-DEVICE_MACRO_UPDATE = Message(
-    description='Complete macro parameter update - sent individually per parameter (8x after header)',
+DEVICE_REMOTE_CONTROL_UPDATE = Message(
+    description='Complete remote control update - sent individually per parameter (8x after header)',
     fields=[
-        macro_index,                    # UINT8 (0-7) - device specific
+        remote_control_index,           # UINT8 (0-7) - remote control slot
         parameter_name,                 # STRING (max 16 chars) - generic
         parameter_value,                # FLOAT32 (normalized 0.0-1.0) - generic
         parameter_display_value,        # STRING (formatted: "50%", "Saw", etc.) - generic
@@ -52,28 +52,28 @@ DEVICE_MACRO_UPDATE = Message(
     ]
 )
 
-DEVICE_MACRO_DISCRETE_VALUES = Message(
+DEVICE_REMOTE_CONTROL_DISCRETE_VALUES = Message(
     description='Full list of discrete values for List parameters (lazy-loaded on demand)',
     fields=[
-        macro_index,                        # UINT8 (0-7) - device specific
+        remote_control_index,               # UINT8 (0-7) - remote control slot
         parameter_discrete_value_names,     # STRING[32] dynamic array - generic
         parameter_current_value_index       # UINT8 (current position) - generic
     ]
 )
 
-DEVICE_MACRO_VALUE_CHANGE = Message(
-    description='Single parameter value update with echo flag for optimistic updates',
-    fields=[macro_index, parameter_value, parameter_display_value, parameter_is_echo]
+DEVICE_REMOTE_CONTROL_VALUE_CHANGE = Message(
+    description='Single remote control value update with echo flag for optimistic updates',
+    fields=[remote_control_index, parameter_value, parameter_display_value, parameter_is_echo]
 )
 
-DEVICE_MACRO_NAME_CHANGE = Message(
-    description='Single parameter name change',
-    fields=[macro_index, parameter_name]
+DEVICE_REMOTE_CONTROL_NAME_CHANGE = Message(
+    description='Single remote control name change',
+    fields=[remote_control_index, parameter_name]
 )
 
-DEVICE_MACRO_TOUCH = Message(
-    description='Touch automation start/stop for macro parameter',
-    fields=[macro_index, parameter_touched]
+DEVICE_REMOTE_CONTROL_TOUCH = Message(
+    description='Touch automation start/stop for remote control parameter',
+    fields=[remote_control_index, parameter_touched]
 )
 
 DEVICE_STATE_CHANGE = Message(

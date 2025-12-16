@@ -56,7 +56,7 @@ void BitwigContext::cleanup() {
     inputTrack_.reset();
     inputDeviceSelector_.reset();
     inputDevicePage_.reset();
-    inputMacro_.reset();
+    inputRemoteControl_.reset();
     inputTransport_.reset();
 
     transportBar_.reset();
@@ -66,7 +66,7 @@ void BitwigContext::cleanup() {
     // Host Handlers
     hostMidi_.reset();
     hostLastClicked_.reset();
-    hostMacro_.reset();
+    hostRemoteControl_.reset();
     hostPage_.reset();
     hostTrack_.reset();
     hostDevice_.reset();
@@ -109,7 +109,7 @@ void BitwigContext::createHostHandlers() {
     hostDevice_ = std::make_unique<handler::HandlerHostDevice>(state_, *protocol_);
     hostTrack_ = std::make_unique<handler::HandlerHostTrack>(state_, *protocol_);
     hostPage_ = std::make_unique<handler::HandlerHostPage>(state_, *protocol_, encoders());
-    hostMacro_ = std::make_unique<handler::HandlerHostMacro>(state_, *protocol_, encoders());
+    hostRemoteControl_ = std::make_unique<handler::HandlerHostRemoteControl>(state_, *protocol_, encoders());
     hostLastClicked_ = std::make_unique<handler::HandlerHostLastClicked>(state_, *protocol_, encoders());
     hostMidi_ = std::make_unique<handler::HandlerHostMidi>(state_, midi());
 }
@@ -128,7 +128,7 @@ void BitwigContext::createInputHandlers() {
     // View + overlay scopes
     inputDeviceSelector_ = std::make_unique<handler::HandlerInputDeviceSelector>(
         state_, *protocol_, encoders(), buttons(), scopeElement, deviceSelectorOverlay);
-    inputMacro_ = std::make_unique<handler::HandlerInputMacro>(
+    inputRemoteControl_ = std::make_unique<handler::HandlerInputRemoteControl>(
         state_, *protocol_, encoders(), buttons(), scopeElement);
     inputTrack_ = std::make_unique<handler::HandlerInputTrack>(
         state_, *protocol_, encoders(), buttons(), trackSelectorOverlay);

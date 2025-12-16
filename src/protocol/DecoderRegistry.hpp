@@ -78,56 +78,6 @@ public:
                 }
             }
             break;
-        case MessageID::DEVICE_MACRO_DISCRETE_VALUES:
-            if (callbacks.onDeviceMacroDiscreteValues) {
-                auto decoded = DeviceMacroDiscreteValuesMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroDiscreteValues(msg);
-                }
-            }
-            break;
-        case MessageID::DEVICE_MACRO_NAME_CHANGE:
-            if (callbacks.onDeviceMacroNameChange) {
-                auto decoded = DeviceMacroNameChangeMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroNameChange(msg);
-                }
-            }
-            break;
-        case MessageID::DEVICE_MACRO_TOUCH:
-            if (callbacks.onDeviceMacroTouch) {
-                auto decoded = DeviceMacroTouchMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroTouch(msg);
-                }
-            }
-            break;
-        case MessageID::DEVICE_MACRO_UPDATE:
-            if (callbacks.onDeviceMacroUpdate) {
-                auto decoded = DeviceMacroUpdateMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroUpdate(msg);
-                }
-            }
-            break;
-        case MessageID::DEVICE_MACRO_VALUE_CHANGE:
-            if (callbacks.onDeviceMacroValueChange) {
-                auto decoded = DeviceMacroValueChangeMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceMacroValueChange(msg);
-                }
-            }
-            break;
         case MessageID::DEVICE_PAGE_CHANGE:
             if (callbacks.onDevicePageChange) {
                 auto decoded = DevicePageChangeMessage::decode(payload, payloadLen);
@@ -155,6 +105,56 @@ public:
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onDevicePageSelectByIndex(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_DISCRETE_VALUES:
+            if (callbacks.onDeviceRemoteControlDiscreteValues) {
+                auto decoded = DeviceRemoteControlDiscreteValuesMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlDiscreteValues(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_NAME_CHANGE:
+            if (callbacks.onDeviceRemoteControlNameChange) {
+                auto decoded = DeviceRemoteControlNameChangeMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlNameChange(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_TOUCH:
+            if (callbacks.onDeviceRemoteControlTouch) {
+                auto decoded = DeviceRemoteControlTouchMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlTouch(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_UPDATE:
+            if (callbacks.onDeviceRemoteControlUpdate) {
+                auto decoded = DeviceRemoteControlUpdateMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlUpdate(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_VALUE_CHANGE:
+            if (callbacks.onDeviceRemoteControlValueChange) {
+                auto decoded = DeviceRemoteControlValueChangeMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlValueChange(msg);
                 }
             }
             break;

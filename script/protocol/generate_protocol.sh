@@ -59,7 +59,7 @@ echo ""
 
 # Run protocol-codegen via uvx from GitHub
 # This will download and cache the package automatically
-uvx --python python3.13 --from git+https://github.com/petitechose-audio/protocol-codegen \
+uvx --python python3.13 --from git+https://github.com/open-control/protocol-codegen \
     protocol-codegen generate \
     --method sysex \
     --messages "protocol/message" \

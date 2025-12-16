@@ -17,18 +17,18 @@ public enum MessageID {
     // Protocol Messages
     // ========================================
 
-    DEVICE_CHANGE(0x00),  // Complete device state (name, enabled, page, 8 parameters)
+    DEVICE_CHANGE(0x00),  // Complete device state (name, enabled, page, 8 remote controls)
     DEVICE_CHANGE_HEADER(0x01),  // Device change header - lightweight message with device identity only (sent first)
     DEVICE_CHILDREN(0x02),  // List of children for a device of specific type
     DEVICE_LIST(0x03),  // List of devices in current chain with context
-    DEVICE_MACRO_DISCRETE_VALUES(0x04),  // Full list of discrete values for List parameters (lazy-loaded on demand)
-    DEVICE_MACRO_NAME_CHANGE(0x05),  // Single parameter name change
-    DEVICE_MACRO_TOUCH(0x06),  // Touch automation start/stop for macro parameter
-    DEVICE_MACRO_UPDATE(0x07),  // Complete macro parameter update - sent individually per parameter (8x after header)
-    DEVICE_MACRO_VALUE_CHANGE(0x08),  // Single parameter value update with echo flag for optimistic updates
-    DEVICE_PAGE_CHANGE(0x09),  // Page change with new parameter set
-    DEVICE_PAGE_NAMES(0x0A),  // List of all available page names
-    DEVICE_PAGE_SELECT_BY_INDEX(0x0B),  // Select device page by index (modulo pageCount)
+    DEVICE_PAGE_CHANGE(0x04),  // Page change with new remote controls set
+    DEVICE_PAGE_NAMES(0x05),  // List of all available page names
+    DEVICE_PAGE_SELECT_BY_INDEX(0x06),  // Select device page by index (modulo pageCount)
+    DEVICE_REMOTE_CONTROL_DISCRETE_VALUES(0x07),  // Full list of discrete values for List parameters (lazy-loaded on demand)
+    DEVICE_REMOTE_CONTROL_NAME_CHANGE(0x08),  // Single remote control name change
+    DEVICE_REMOTE_CONTROL_TOUCH(0x09),  // Touch automation start/stop for remote control parameter
+    DEVICE_REMOTE_CONTROL_UPDATE(0x0A),  // Complete remote control update - sent individually per parameter (8x after header)
+    DEVICE_REMOTE_CONTROL_VALUE_CHANGE(0x0B),  // Single remote control value update with echo flag for optimistic updates
     DEVICE_SELECT_BY_INDEX(0x0C),  // Select device by index in current chain
     DEVICE_STATE_CHANGE(0x0D),  // Toggle device enabled/bypassed by index
     ENTER_DEVICE_CHILD(0x0E),  // Navigate into a child (slot/layer/drum pad)

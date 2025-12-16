@@ -3,26 +3,27 @@ package protocol.struct;
 import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
+import protocol.ProtocolConstants;
 
 /**
- * DeviceMacroTouchMessage - Auto-generated Protocol Message
+ * DeviceRemoteControlNameChangeMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_TOUCH message
+ * Description: DEVICE_REMOTE_CONTROL_NAME_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class DeviceMacroTouchMessage {
+public final class DeviceRemoteControlNameChangeMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_MACRO_TOUCH;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_NAME_CHANGE;
 
 
     // ============================================================================
@@ -32,22 +33,22 @@ public final class DeviceMacroTouchMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int parameterIndex;
-    private final boolean isTouched;
+    private final int remoteControlIndex;
+    private final String parameterName;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new DeviceMacroTouchMessage
+     * Construct a new DeviceRemoteControlNameChangeMessage
      *
-     * @param parameterIndex The parameterIndex value
-     * @param isTouched The isTouched value
+     * @param remoteControlIndex The remoteControlIndex value
+     * @param parameterName The parameterName value
      */
-    public DeviceMacroTouchMessage(int parameterIndex, boolean isTouched) {
-        this.parameterIndex = parameterIndex;
-        this.isTouched = isTouched;
+    public DeviceRemoteControlNameChangeMessage(int remoteControlIndex, String parameterName) {
+        this.remoteControlIndex = remoteControlIndex;
+        this.parameterName = parameterName;
     }
 
     // ============================================================================
@@ -55,21 +56,21 @@ public final class DeviceMacroTouchMessage {
     // ============================================================================
 
     /**
-     * Get the parameterIndex value
+     * Get the remoteControlIndex value
      *
-     * @return parameterIndex
+     * @return remoteControlIndex
      */
-    public int getParameterIndex() {
-        return parameterIndex;
+    public int getRemoteControlIndex() {
+        return remoteControlIndex;
     }
 
     /**
-     * Get the isTouched value
+     * Get the parameterName value
      *
-     * @return isTouched
+     * @return parameterName
      */
-    public boolean isTouched() {
-        return isTouched;
+    public String getParameterName() {
+        return parameterName;
     }
 
     // ============================================================================
@@ -79,7 +80,7 @@ public final class DeviceMacroTouchMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 2;
+    public static final int MAX_PAYLOAD_SIZE = 34;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -90,12 +91,12 @@ public final class DeviceMacroTouchMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] parameterIndex_encoded = Encoder.encodeUint8(parameterIndex);
-        System.arraycopy(parameterIndex_encoded, 0, buffer, offset, parameterIndex_encoded.length);
-        offset += parameterIndex_encoded.length;
-        byte[] isTouched_encoded = Encoder.encodeBool(isTouched);
-        System.arraycopy(isTouched_encoded, 0, buffer, offset, isTouched_encoded.length);
-        offset += isTouched_encoded.length;
+        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
+        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
+        offset += remoteControlIndex_encoded.length;
+        byte[] parameterName_encoded = Encoder.encodeString(parameterName, ProtocolConstants.STRING_MAX_LENGTH);
+        System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
+        offset += parameterName_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -113,22 +114,22 @@ public final class DeviceMacroTouchMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceMacroTouchMessage instance
+     * @return Decoded DeviceRemoteControlNameChangeMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceMacroTouchMessage decode(byte[] data) {
+    public static DeviceRemoteControlNameChangeMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceMacroTouchMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlNameChangeMessage decode");
         }
 
         int offset = 0;
 
-        int parameterIndex = Decoder.decodeUint8(data, offset);
+        int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
-        boolean isTouched = Decoder.decodeBool(data, offset);
-        offset += 1;
+        String parameterName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += 1 + parameterName.length();
 
-        return new DeviceMacroTouchMessage(parameterIndex, isTouched);
+        return new DeviceRemoteControlNameChangeMessage(remoteControlIndex, parameterName);
     }
 
     // ============================================================================
@@ -143,10 +144,10 @@ public final class DeviceMacroTouchMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceMacroTouch\n");
-        sb.append("deviceMacroTouch:\n");
-        sb.append("  parameterIndex: ").append(getParameterIndex()).append("\n");
-        sb.append("  isTouched: ").append(isTouched() ? "true" : "false").append("\n");
+        sb.append("# DeviceRemoteControlNameChange\n");
+        sb.append("deviceRemoteControlNameChange:\n");
+        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
+        sb.append("  parameterName: \"").append(getParameterName()).append("\"\n");
         return sb.toString();
     }
 }  // class Message

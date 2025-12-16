@@ -38,11 +38,11 @@ struct PageInfo {
 
 #endif // PROTOCOL_PAGEINFO_STRUCT
 
-#ifndef PROTOCOL_MACROS_STRUCT
-#define PROTOCOL_MACROS_STRUCT
+#ifndef PROTOCOL_REMOTECONTROLS_STRUCT
+#define PROTOCOL_REMOTECONTROLS_STRUCT
 
-struct Macros {
-    uint8_t parameterIndex;
+struct RemoteControls {
+    uint8_t remoteControlIndex;
     float parameterValue;
     std::string parameterName;
     float parameterOrigin;
@@ -54,14 +54,14 @@ struct Macros {
     uint8_t currentValueIndex;
 };
 
-#endif // PROTOCOL_MACROS_STRUCT
+#endif // PROTOCOL_REMOTECONTROLS_STRUCT
 
 struct DevicePageChangeMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_PAGE_CHANGE;
 
     PageInfo pageInfo;
-    std::array<Macros, 8> macros;
+    std::array<RemoteControls, 8> remoteControls;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -91,9 +91,9 @@ struct DevicePageChangeMessage {
         encodeUint8(ptr, pageInfo.devicePageIndex);
         encodeUint8(ptr, pageInfo.devicePageCount);
         encodeString(ptr, pageInfo.devicePageName);
-        encodeUint8(ptr, macros.size());
-        for (const auto& item : macros) {
-            encodeUint8(ptr, item.parameterIndex);
+        encodeUint8(ptr, remoteControls.size());
+        for (const auto& item : remoteControls) {
+            encodeUint8(ptr, item.remoteControlIndex);
             encodeFloat32(ptr, item.parameterValue);
             encodeString(ptr, item.parameterName);
             encodeFloat32(ptr, item.parameterOrigin);
@@ -131,12 +131,12 @@ struct DevicePageChangeMessage {
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
         if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
-        uint8_t count_macros;
-        if (!decodeUint8(ptr, remaining, count_macros)) return std::nullopt;
-        std::array<Macros, 8> macros_data;
-        for (uint8_t i = 0; i < count_macros && i < 8; ++i) {
-            Macros item;
-            if (!decodeUint8(ptr, remaining, item.parameterIndex)) return std::nullopt;
+        uint8_t count_remoteControls;
+        if (!decodeUint8(ptr, remaining, count_remoteControls)) return std::nullopt;
+        std::array<RemoteControls, 8> remoteControls_data;
+        for (uint8_t i = 0; i < count_remoteControls && i < 8; ++i) {
+            RemoteControls item;
+            if (!decodeUint8(ptr, remaining, item.remoteControlIndex)) return std::nullopt;
             if (!decodeFloat32(ptr, remaining, item.parameterValue)) return std::nullopt;
             if (!decodeString(ptr, remaining, item.parameterName)) return std::nullopt;
             if (!decodeFloat32(ptr, remaining, item.parameterOrigin)) return std::nullopt;
@@ -152,10 +152,10 @@ struct DevicePageChangeMessage {
                 item.discreteValueNames.push_back(temp_discreteValueNames);
             }
             if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
-            macros_data[i] = item;
+            remoteControls_data[i] = item;
         }
 
-        return DevicePageChangeMessage{pageInfo_data, macros_data};
+        return DevicePageChangeMessage{pageInfo_data, remoteControls_data};
     }
 
 
@@ -177,34 +177,34 @@ struct DevicePageChangeMessage {
         ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
         ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);
         ptr += snprintf(ptr, end - ptr, "    devicePageName: \"%s\"\n", pageInfo.devicePageName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  macros:\n");
-        for (size_t i = 0; i < macros.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - parameterIndex: %lu\n", (unsigned long)macros[i].parameterIndex);
+        ptr += snprintf(ptr, end - ptr, "  remoteControls:\n");
+        for (size_t i = 0; i < remoteControls.size(); ++i) {
+            ptr += snprintf(ptr, end - ptr, "    - remoteControlIndex: %lu\n", (unsigned long)remoteControls[i].remoteControlIndex);
         {
-            char floatBuf_macros_i_parameterValue[16];
-            floatToString(floatBuf_macros_i_parameterValue, sizeof(floatBuf_macros_i_parameterValue), macros[i].parameterValue);
-            ptr += snprintf(ptr, end - ptr, "      parameterValue: %s\n", floatBuf_macros_i_parameterValue);
+            char floatBuf_remoteControls_i_parameterValue[16];
+            floatToString(floatBuf_remoteControls_i_parameterValue, sizeof(floatBuf_remoteControls_i_parameterValue), remoteControls[i].parameterValue);
+            ptr += snprintf(ptr, end - ptr, "      parameterValue: %s\n", floatBuf_remoteControls_i_parameterValue);
         }
-        ptr += snprintf(ptr, end - ptr, "      parameterName: \"%s\"\n", macros[i].parameterName.c_str());
+        ptr += snprintf(ptr, end - ptr, "      parameterName: \"%s\"\n", remoteControls[i].parameterName.c_str());
         {
-            char floatBuf_macros_i_parameterOrigin[16];
-            floatToString(floatBuf_macros_i_parameterOrigin, sizeof(floatBuf_macros_i_parameterOrigin), macros[i].parameterOrigin);
-            ptr += snprintf(ptr, end - ptr, "      parameterOrigin: %s\n", floatBuf_macros_i_parameterOrigin);
+            char floatBuf_remoteControls_i_parameterOrigin[16];
+            floatToString(floatBuf_remoteControls_i_parameterOrigin, sizeof(floatBuf_remoteControls_i_parameterOrigin), remoteControls[i].parameterOrigin);
+            ptr += snprintf(ptr, end - ptr, "      parameterOrigin: %s\n", floatBuf_remoteControls_i_parameterOrigin);
         }
-        ptr += snprintf(ptr, end - ptr, "      parameterExists: %s\n", macros[i].parameterExists ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      discreteValueCount: %ld\n", (long)macros[i].discreteValueCount);
-        ptr += snprintf(ptr, end - ptr, "      displayValue: \"%s\"\n", macros[i].displayValue.c_str());
-        ptr += snprintf(ptr, end - ptr, "      parameterType: %lu\n", (unsigned long)macros[i].parameterType);
+        ptr += snprintf(ptr, end - ptr, "      parameterExists: %s\n", remoteControls[i].parameterExists ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "      discreteValueCount: %ld\n", (long)remoteControls[i].discreteValueCount);
+        ptr += snprintf(ptr, end - ptr, "      displayValue: \"%s\"\n", remoteControls[i].displayValue.c_str());
+        ptr += snprintf(ptr, end - ptr, "      parameterType: %lu\n", (unsigned long)remoteControls[i].parameterType);
         ptr += snprintf(ptr, end - ptr, "      discreteValueNames:");
-        if (macros[i].discreteValueNames.size() == 0) {
+        if (remoteControls[i].discreteValueNames.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");
         } else {
             ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t j = 0; j < macros[i].discreteValueNames.size(); ++j) {
-                ptr += snprintf(ptr, end - ptr, "        - \"%s\"\n", macros[i].discreteValueNames[j].c_str());
+            for (size_t j = 0; j < remoteControls[i].discreteValueNames.size(); ++j) {
+                ptr += snprintf(ptr, end - ptr, "        - \"%s\"\n", remoteControls[i].discreteValueNames[j].c_str());
             }
         }
-        ptr += snprintf(ptr, end - ptr, "      currentValueIndex: %lu\n", (unsigned long)macros[i].currentValueIndex);
+        ptr += snprintf(ptr, end - ptr, "      currentValueIndex: %lu\n", (unsigned long)remoteControls[i].currentValueIndex);
         }
 
         *ptr = '\0';

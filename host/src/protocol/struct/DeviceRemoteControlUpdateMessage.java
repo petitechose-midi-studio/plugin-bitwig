@@ -6,24 +6,24 @@ import protocol.Decoder;
 import protocol.ProtocolConstants;
 
 /**
- * DeviceMacroUpdateMessage - Auto-generated Protocol Message
+ * DeviceRemoteControlUpdateMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_UPDATE message
+ * Description: DEVICE_REMOTE_CONTROL_UPDATE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class DeviceMacroUpdateMessage {
+public final class DeviceRemoteControlUpdateMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_MACRO_UPDATE;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_UPDATE;
 
 
     // ============================================================================
@@ -33,7 +33,7 @@ public final class DeviceMacroUpdateMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int parameterIndex;
+    private final int remoteControlIndex;
     private final String parameterName;
     private final float parameterValue;
     private final String displayValue;
@@ -48,9 +48,9 @@ public final class DeviceMacroUpdateMessage {
     // ============================================================================
 
     /**
-     * Construct a new DeviceMacroUpdateMessage
+     * Construct a new DeviceRemoteControlUpdateMessage
      *
-     * @param parameterIndex The parameterIndex value
+     * @param remoteControlIndex The remoteControlIndex value
      * @param parameterName The parameterName value
      * @param parameterValue The parameterValue value
      * @param displayValue The displayValue value
@@ -60,8 +60,8 @@ public final class DeviceMacroUpdateMessage {
      * @param discreteValueCount The discreteValueCount value
      * @param currentValueIndex The currentValueIndex value
      */
-    public DeviceMacroUpdateMessage(int parameterIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
-        this.parameterIndex = parameterIndex;
+    public DeviceRemoteControlUpdateMessage(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
+        this.remoteControlIndex = remoteControlIndex;
         this.parameterName = parameterName;
         this.parameterValue = parameterValue;
         this.displayValue = displayValue;
@@ -77,12 +77,12 @@ public final class DeviceMacroUpdateMessage {
     // ============================================================================
 
     /**
-     * Get the parameterIndex value
+     * Get the remoteControlIndex value
      *
-     * @return parameterIndex
+     * @return remoteControlIndex
      */
-    public int getParameterIndex() {
-        return parameterIndex;
+    public int getRemoteControlIndex() {
+        return remoteControlIndex;
     }
 
     /**
@@ -175,9 +175,9 @@ public final class DeviceMacroUpdateMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] parameterIndex_encoded = Encoder.encodeUint8(parameterIndex);
-        System.arraycopy(parameterIndex_encoded, 0, buffer, offset, parameterIndex_encoded.length);
-        offset += parameterIndex_encoded.length;
+        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
+        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
+        offset += remoteControlIndex_encoded.length;
         byte[] parameterName_encoded = Encoder.encodeString(parameterName, ProtocolConstants.STRING_MAX_LENGTH);
         System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
         offset += parameterName_encoded.length;
@@ -219,17 +219,17 @@ public final class DeviceMacroUpdateMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceMacroUpdateMessage instance
+     * @return Decoded DeviceRemoteControlUpdateMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceMacroUpdateMessage decode(byte[] data) {
+    public static DeviceRemoteControlUpdateMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceMacroUpdateMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlUpdateMessage decode");
         }
 
         int offset = 0;
 
-        int parameterIndex = Decoder.decodeUint8(data, offset);
+        int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         String parameterName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + parameterName.length();
@@ -248,7 +248,7 @@ public final class DeviceMacroUpdateMessage {
         int currentValueIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new DeviceMacroUpdateMessage(parameterIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex);
+        return new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex);
     }
 
     // ============================================================================
@@ -275,9 +275,9 @@ public final class DeviceMacroUpdateMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceMacroUpdate\n");
-        sb.append("deviceMacroUpdate:\n");
-        sb.append("  parameterIndex: ").append(getParameterIndex()).append("\n");
+        sb.append("# DeviceRemoteControlUpdate\n");
+        sb.append("deviceRemoteControlUpdate:\n");
+        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
         sb.append("  parameterName: \"").append(getParameterName()).append("\"\n");
         sb.append("  parameterValue: ").append(formatFloat(getParameterValue())).append("\n");
         sb.append("  displayValue: \"").append(getDisplayValue()).append("\"\n");
