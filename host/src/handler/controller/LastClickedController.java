@@ -3,6 +3,7 @@ package handler.controller;
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
 import handler.host.LastClickedHost;
+import config.BitwigConfig;
 
 /**
  * LastClickedController - Handles LastClicked commands FROM controller
@@ -10,13 +11,19 @@ import handler.host.LastClickedHost;
  * RESPONSIBILITY: Controller → Bitwig (Last Clicked Parameter)
  * - Receives protocol callbacks (protocol.onLastClickedValueChange)
  * - Applies value changes to the parameter
+ * - Tracks echo timing for value changes
  * - NEVER observes Bitwig API directly (that's LastClickedHost's job)
  */
 public class LastClickedController {
+    private final ControllerHost host;
     private final Protocol protocol;
     private LastClickedHost lastClickedHost;
 
-    public LastClickedController(Protocol protocol) {
+    // Echo tracking: timestamp of last controller change
+    private long lastControllerChangeTime = 0;
+
+    public LastClickedController(ControllerHost host, Protocol protocol) {
+        this.host = host;
         this.protocol = protocol;
         setupProtocolCallbacks();
     }
@@ -25,9 +32,28 @@ public class LastClickedController {
         this.lastClickedHost = lastClickedHost;
     }
 
+    /**
+     * Mark timestamp when controller sends a value change.
+     * Called before applying value to Bitwig.
+     */
+    private void markControllerChange() {
+        lastControllerChangeTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Check if this callback is within the echo timeout window.
+     * Returns true if callback arrived within ECHO_TIMEOUT_MS of last controller change.
+     */
+    public boolean consumeEcho() {
+        long now = System.currentTimeMillis();
+        long timeSinceChange = now - lastControllerChangeTime;
+        return timeSinceChange < BitwigConfig.ECHO_TIMEOUT_MS;
+    }
+
     private void setupProtocolCallbacks() {
         protocol.onLastClickedValueChange = msg -> {
             if (msg.fromHost) return;
+            markControllerChange();
             handleValueChange(msg.getParameterValue());
         };
     }

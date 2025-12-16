@@ -22,15 +22,13 @@ HandlerInputLastClicked::HandlerInputLastClicked(state::BitwigState& state,
 }
 
 void HandlerInputLastClicked::setupBindings() {
-    encoders_.encoder(EncoderID::OPT)
-        .turn()
-        .scope(scope(scopeElement_))
-        .then([this](float value) { handleEncoderTurn(value); });
+    // Scoped binding to deviceView
+    encoders_.encoder(EncoderID::OPT).turn().scope(scope(scopeElement_)).then([this](float value) {
+        handleEncoderTurn(value);
+    });
 }
 
 void HandlerInputLastClicked::handleEncoderTurn(float value) {
-    if (!state_.lastClicked.exists.get()) return;
-
     // Optimistic update
     state_.lastClicked.value.set(value);
 

@@ -15,6 +15,7 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
+using OverlayType = state::OverlayType;
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
                                                        BitwigProtocol& protocol,
@@ -54,6 +55,12 @@ void HandlerInputDeviceSelector::setupBindings() {
     // === OVERLAY-LEVEL BINDINGS (overlayElement_) ===
     // These have higher priority and only fire when overlay is visible
 
+    // Cancel on LEFT_TOP (close without confirming)
+    buttons_.button(ButtonID::LEFT_TOP)
+        .release()
+        .scope(scope(overlayElement_))
+        .then([this]() { close(); });
+
     // Navigate devices with NAV encoder (scoped to overlay)
     encoders_.encoder(EncoderID::NAV)
         .turn()
@@ -84,7 +91,7 @@ void HandlerInputDeviceSelector::requestDeviceList() {
 
     // Show cached list immediately if available (cache-first)
     if (ds.names.size() > 0 && !ds.visible.get()) {
-        ds.visible.set(true);
+        state_.overlays.show(OverlayType::DEVICE_SELECTOR, false);
     }
 
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
@@ -198,20 +205,17 @@ void HandlerInputDeviceSelector::toggleState() {
 
 void HandlerInputDeviceSelector::requestTrackList() {
     auto& ts = state_.trackSelector;
-    auto& ds = state_.deviceSelector;
 
     if (ts.visible.get()) return;
 
-    ds.visible.set(false);
-    ts.visible.set(true);
+    // Show track selector (pushes device selector to stack for restoration)
+    state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
     protocol_.send(Protocol::RequestTrackListMessage{});
 }
 
 void HandlerInputDeviceSelector::close() {
-    if (state_.trackSelector.visible.get()) {
-        state_.trackSelector.visible.set(false);
-    }
-    state_.deviceSelector.visible.set(false);
+    // Hide all overlays via OverlayManager
+    state_.overlays.hideAll();
     requested_ = false;
     buttons_.setLatch(ButtonID::LEFT_CENTER, false);
 }

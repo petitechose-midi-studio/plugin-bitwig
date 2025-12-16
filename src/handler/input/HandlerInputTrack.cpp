@@ -103,17 +103,13 @@ void HandlerInputTrack::select() {
 
 void HandlerInputTrack::close() {
     auto& ts = state_.trackSelector;
-    auto& ds = state_.deviceSelector;
 
     if (!ts.visible.get()) return;
 
-    // Hide track selector
-    ts.visible.set(false);
+    // Hide track selector via OverlayManager (restores device selector from stack)
+    state_.overlays.hide();
 
-    // Show device selector
-    ds.visible.set(true);
-
-    // Request fresh device list
+    // Request fresh device list for restored overlay
     protocol_.send(Protocol::RequestDeviceListMessage{});
 }
 

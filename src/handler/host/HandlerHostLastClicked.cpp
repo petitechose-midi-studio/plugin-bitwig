@@ -52,6 +52,11 @@ void HandlerHostLastClicked::handleLastClickedUpdate(const LastClickedUpdateMess
 void HandlerHostLastClicked::handleLastClickedValueChange(const LastClickedValueChangeMessage& msg) {
     auto& lc = state_.lastClicked;
 
+    // Skip echo updates (value changes from controller reflected back)
+    if (msg.isEcho) {
+        return;
+    }
+
     lc.value.set(msg.parameterValue);
     lc.displayValue.set(std::string(msg.displayValue.data()));
 
