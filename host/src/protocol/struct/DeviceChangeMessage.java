@@ -57,11 +57,11 @@ public final class DeviceChangeMessage {
     }
 
     // ============================================================================
-    // Inner Class: Macros
+    // Inner Class: RemoteControls
     // ============================================================================
 
-    public static final class Macros {
-        private final int parameterIndex;
+    public static final class RemoteControls {
+        private final int remoteControlIndex;
         private final float parameterValue;
         private final String parameterName;
         private final float parameterOrigin;
@@ -72,8 +72,8 @@ public final class DeviceChangeMessage {
         private final String[] discreteValueNames;
         private final int currentValueIndex;
 
-        public Macros(int parameterIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex) {
-            this.parameterIndex = parameterIndex;
+        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex) {
+            this.remoteControlIndex = remoteControlIndex;
             this.parameterValue = parameterValue;
             this.parameterName = parameterName;
             this.parameterOrigin = parameterOrigin;
@@ -85,8 +85,8 @@ public final class DeviceChangeMessage {
             this.currentValueIndex = currentValueIndex;
         }
 
-        public int getParameterIndex() {
-            return parameterIndex;
+        public int getRemoteControlIndex() {
+            return remoteControlIndex;
         }
 
         public float getParameterValue() {
@@ -138,7 +138,7 @@ public final class DeviceChangeMessage {
     private final String deviceName;
     private final boolean isEnabled;
     private final PageInfo pageInfo;
-    private final List<Macros> macros;
+    private final List<RemoteControls> remoteControls;
 
     // ============================================================================
     // Constructor
@@ -151,14 +151,14 @@ public final class DeviceChangeMessage {
      * @param deviceName The deviceName value
      * @param isEnabled The isEnabled value
      * @param pageInfo The pageInfo value
-     * @param macros The macros value
+     * @param remoteControls The remoteControls value
      */
-    public DeviceChangeMessage(String deviceTrackName, String deviceName, boolean isEnabled, PageInfo pageInfo, List<Macros> macros) {
+    public DeviceChangeMessage(String deviceTrackName, String deviceName, boolean isEnabled, PageInfo pageInfo, List<RemoteControls> remoteControls) {
         this.deviceTrackName = deviceTrackName;
         this.deviceName = deviceName;
         this.isEnabled = isEnabled;
         this.pageInfo = pageInfo;
-        this.macros = macros;
+        this.remoteControls = remoteControls;
     }
 
     // ============================================================================
@@ -202,12 +202,12 @@ public final class DeviceChangeMessage {
     }
 
     /**
-     * Get the macros value
+     * Get the remoteControls value
      *
-     * @return macros
+     * @return remoteControls
      */
-    public List<Macros> getMacros() {
-        return macros;
+    public List<RemoteControls> getRemoteControls() {
+        return remoteControls;
     }
 
     // ============================================================================
@@ -246,14 +246,14 @@ public final class DeviceChangeMessage {
         byte[] pageInfo_devicePageName_encoded = Encoder.encodeString(pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
         System.arraycopy(pageInfo_devicePageName_encoded, 0, buffer, offset, pageInfo_devicePageName_encoded.length);
         offset += pageInfo_devicePageName_encoded.length;
-        byte[] macros_count = Encoder.encodeUint8(macros.size());
-        System.arraycopy(macros_count, 0, buffer, offset, 1);
+        byte[] remoteControls_count = Encoder.encodeUint8(remoteControls.size());
+        System.arraycopy(remoteControls_count, 0, buffer, offset, 1);
         offset += 1;
 
-        for (Macros item : macros) {
-    byte[] item_parameterIndex_encoded = Encoder.encodeUint8(item.getParameterIndex());
-            System.arraycopy(item_parameterIndex_encoded, 0, buffer, offset, item_parameterIndex_encoded.length);
-            offset += item_parameterIndex_encoded.length;
+        for (RemoteControls item : remoteControls) {
+    byte[] item_remoteControlIndex_encoded = Encoder.encodeUint8(item.getRemoteControlIndex());
+            System.arraycopy(item_remoteControlIndex_encoded, 0, buffer, offset, item_remoteControlIndex_encoded.length);
+            offset += item_remoteControlIndex_encoded.length;
     byte[] item_parameterValue_encoded = Encoder.encodeFloat32(item.getParameterValue());
             System.arraycopy(item_parameterValue_encoded, 0, buffer, offset, item_parameterValue_encoded.length);
             offset += item_parameterValue_encoded.length;
@@ -329,12 +329,12 @@ public final class DeviceChangeMessage {
         offset += 1 + pageInfo_devicePageName.length();
         PageInfo pageInfo = new PageInfo(pageInfo_devicePageIndex, pageInfo_devicePageCount, pageInfo_devicePageName);
 
-        int count_macros = Decoder.decodeUint8(data, offset);
+        int count_remoteControls = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Macros> macros_list = new ArrayList<>();
-        for (int i = 0; i < count_macros; i++) {
-    int item_parameterIndex = Decoder.decodeUint8(data, offset);
+        List<RemoteControls> remoteControls_list = new ArrayList<>();
+        for (int i = 0; i < count_remoteControls; i++) {
+    int item_remoteControlIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
     float item_parameterValue = Decoder.decodeFloat32(data, offset);
             offset += 5;
@@ -360,11 +360,11 @@ public final class DeviceChangeMessage {
             }
     int item_currentValueIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
-            macros_list.add(new Macros(item_parameterIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex));
+            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex));
         }
 
 
-        return new DeviceChangeMessage(deviceTrackName, deviceName, isEnabled, pageInfo, macros_list);
+        return new DeviceChangeMessage(deviceTrackName, deviceName, isEnabled, pageInfo, remoteControls_list);
     }
 
     // ============================================================================
@@ -400,9 +400,9 @@ public final class DeviceChangeMessage {
         sb.append("    devicePageIndex: ").append(getPageInfo().getDevicePageIndex()).append("\n");
         sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");
         sb.append("    devicePageName: \"").append(getPageInfo().getDevicePageName()).append("\"\n");
-        sb.append("  macros:\n");
-        for (Macros item : getMacros()) {
-            sb.append("    - parameterIndex: ").append(item.getParameterIndex()).append("\n");
+        sb.append("  remoteControls:\n");
+        for (RemoteControls item : getRemoteControls()) {
+            sb.append("    - remoteControlIndex: ").append(item.getRemoteControlIndex()).append("\n");
             sb.append("      parameterValue: ").append(formatFloat(item.getParameterValue())).append("\n");
             sb.append("      parameterName: \"").append(item.getParameterName()).append("\"\n");
             sb.append("      parameterOrigin: ").append(formatFloat(item.getParameterOrigin())).append("\n");

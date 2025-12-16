@@ -10,7 +10,7 @@
  * - Page changes (initializes all 8 parameter slots)
  *
  * @see HandlerHostDevice for device list/info
- * @see HandlerHostMacro for individual parameter updates
+ * @see HandlerHostRemoteControl for individual parameter updates
  */
 
 #include <oc/api/EncoderAPI.hpp>
@@ -41,8 +41,8 @@ private:
     void setupProtocolCallbacks();
 
     // Encoder configuration based on parameter types (called on page change)
-    template <typename MacroArray>
-    void updateMacroEncoderModes(const MacroArray& macros);
+    template <typename RemoteControlArray>
+    void updateRemoteControlEncoderModes(const RemoteControlArray& remoteControls);
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;

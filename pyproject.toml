@@ -10,7 +10,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "protocol-codegen @ git+https://github.com/petitechose-audio/protocol-codegen.git",
+    "protocol-codegen @ git+https://github.com/open-control/protocol-codegen.git",
     "fonttools>=4.47.0",
     "svgpathtools>=1.6.0",
 ]

@@ -1,10 +1,10 @@
 /**
- * DeviceMacroValueChangeMessage.hpp - Auto-generated Protocol Struct
+ * DeviceRemoteControlNameChangeMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_VALUE_CHANGE message
+ * Description: DEVICE_REMOTE_CONTROL_NAME_CHANGE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -26,14 +26,12 @@ namespace Protocol {
 
 
 
-struct DeviceMacroValueChangeMessage {
+struct DeviceRemoteControlNameChangeMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_VALUE_CHANGE;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_NAME_CHANGE;
 
-    uint8_t parameterIndex;
-    float parameterValue;
-    std::string displayValue;
-    bool isEcho;
+    uint8_t remoteControlIndex;
+    std::string parameterName;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +39,12 @@ struct DeviceMacroValueChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 40;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 34;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 8;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 2;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -60,10 +58,8 @@ struct DeviceMacroValueChangeMessage {
 
         uint8_t* ptr = buffer;
 
-        encodeUint8(ptr, parameterIndex);
-        encodeFloat32(ptr, parameterValue);
-        encodeString(ptr, displayValue);
-        encodeBool(ptr, isEcho);
+        encodeUint8(ptr, remoteControlIndex);
+        encodeString(ptr, parameterName);
 
         return ptr - buffer;
     }
@@ -75,7 +71,7 @@ struct DeviceMacroValueChangeMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DeviceMacroValueChangeMessage> decode(
+    static std::optional<DeviceRemoteControlNameChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -84,16 +80,12 @@ struct DeviceMacroValueChangeMessage {
         size_t remaining = len;
 
         // Decode fields
-        uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
-        float parameterValue;
-        if (!decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
-        std::string displayValue;
-        if (!decodeString(ptr, remaining, displayValue)) return std::nullopt;
-        bool isEcho;
-        if (!decodeBool(ptr, remaining, isEcho)) return std::nullopt;
+        uint8_t remoteControlIndex;
+        if (!decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
+        std::string parameterName;
+        if (!decodeString(ptr, remaining, parameterName)) return std::nullopt;
 
-        return DeviceMacroValueChangeMessage{parameterIndex, parameterValue, displayValue, isEcho};
+        return DeviceRemoteControlNameChangeMessage{remoteControlIndex, parameterName};
     }
 
 
@@ -109,16 +101,10 @@ struct DeviceMacroValueChangeMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DeviceMacroValueChange\ndeviceMacroValueChange:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlNameChange\ndeviceRemoteControlNameChange:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  parameterIndex: %lu\n", (unsigned long)parameterIndex);
-        {
-            char floatBuf_parameterValue[16];
-            floatToString(floatBuf_parameterValue, sizeof(floatBuf_parameterValue), parameterValue);
-            ptr += snprintf(ptr, end - ptr, "  parameterValue: %s\n", floatBuf_parameterValue);
-        }
-        ptr += snprintf(ptr, end - ptr, "  displayValue: \"%s\"\n", displayValue.c_str());
-        ptr += snprintf(ptr, end - ptr, "  isEcho: %s\n", isEcho ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  remoteControlIndex: %lu\n", (unsigned long)remoteControlIndex);
+        ptr += snprintf(ptr, end - ptr, "  parameterName: \"%s\"\n", parameterName.c_str());
 
         *ptr = '\0';
         return g_logBuffer;

@@ -1,10 +1,10 @@
 /**
- * DeviceMacroDiscreteValuesMessage.hpp - Auto-generated Protocol Struct
+ * DeviceRemoteControlDiscreteValuesMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_DISCRETE_VALUES message
+ * Description: DEVICE_REMOTE_CONTROL_DISCRETE_VALUES message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -27,11 +27,11 @@ namespace Protocol {
 
 
 
-struct DeviceMacroDiscreteValuesMessage {
+struct DeviceRemoteControlDiscreteValuesMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_MACRO_DISCRETE_VALUES;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_DISCRETE_VALUES;
 
-    uint8_t parameterIndex;
+    uint8_t remoteControlIndex;
     std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
 
@@ -60,7 +60,7 @@ struct DeviceMacroDiscreteValuesMessage {
 
         uint8_t* ptr = buffer;
 
-        encodeUint8(ptr, parameterIndex);
+        encodeUint8(ptr, remoteControlIndex);
         encodeUint8(ptr, discreteValueNames.size());
         for (const auto& item : discreteValueNames) {
             encodeString(ptr, item);
@@ -77,7 +77,7 @@ struct DeviceMacroDiscreteValuesMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DeviceMacroDiscreteValuesMessage> decode(
+    static std::optional<DeviceRemoteControlDiscreteValuesMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -86,8 +86,8 @@ struct DeviceMacroDiscreteValuesMessage {
         size_t remaining = len;
 
         // Decode fields
-        uint8_t parameterIndex;
-        if (!decodeUint8(ptr, remaining, parameterIndex)) return std::nullopt;
+        uint8_t remoteControlIndex;
+        if (!decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
         uint8_t count_discreteValueNames;
         if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
         std::vector<std::string> discreteValueNames_data;
@@ -99,7 +99,7 @@ struct DeviceMacroDiscreteValuesMessage {
         uint8_t currentValueIndex;
         if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
 
-        return DeviceMacroDiscreteValuesMessage{parameterIndex, discreteValueNames_data, currentValueIndex};
+        return DeviceRemoteControlDiscreteValuesMessage{remoteControlIndex, discreteValueNames_data, currentValueIndex};
     }
 
 
@@ -115,9 +115,9 @@ struct DeviceMacroDiscreteValuesMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DeviceMacroDiscreteValues\ndeviceMacroDiscreteValues:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlDiscreteValues\ndeviceRemoteControlDiscreteValues:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  parameterIndex: %lu\n", (unsigned long)parameterIndex);
+        ptr += snprintf(ptr, end - ptr, "  remoteControlIndex: %lu\n", (unsigned long)remoteControlIndex);
         ptr += snprintf(ptr, end - ptr, "  discreteValueNames:");
         if (discreteValueNames.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");

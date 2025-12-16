@@ -148,12 +148,12 @@ public class DeviceHost {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all values
                 double value = param.value().get();
                 boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
-                protocol.send(new DeviceMacroValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
+                protocol.send(new DeviceRemoteControlValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
             });
 
             param.name().addValueObserver(name -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all names
-                protocol.send(new DeviceMacroNameChangeMessage(paramIndex, name));
+                protocol.send(new DeviceRemoteControlNameChangeMessage(paramIndex, name));
             });
         }
     }
@@ -466,11 +466,11 @@ public class DeviceHost {
         final int pageIndex = remoteControls.selectedPageIndex().get();
         final int pageCount = remoteControls.pageCount().get();
         final String pageName = remoteControls.getName().get();
-        final List<DevicePageChangeMessage.Macros> macrosList = buildMacrosListForPageChange();
+        final List<DevicePageChangeMessage.RemoteControls> remoteControlsList = buildRemoteControlsListForPageChange();
 
         protocol.send(new DevicePageChangeMessage(
             new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
-            macrosList
+            remoteControlsList
         ));
 
         // Resume individual observers
@@ -487,13 +487,13 @@ public class DeviceHost {
         return "";
     }
 
-    private List<DevicePageChangeMessage.Macros> buildMacrosListForPageChange() {
-        List<DevicePageChangeMessage.Macros> macrosList = new ArrayList<>();
+    private List<DevicePageChangeMessage.RemoteControls> buildRemoteControlsListForPageChange() {
+        List<DevicePageChangeMessage.RemoteControls> remoteControlsList = new ArrayList<>();
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             RemoteControl param = remoteControls.getParameter(i);
             ParameterData data = captureParameterData(param, i);
 
-            macrosList.add(new DevicePageChangeMessage.Macros(
+            remoteControlsList.add(new DevicePageChangeMessage.RemoteControls(
                 i,
                 data.value,
                 data.name,
@@ -506,7 +506,7 @@ public class DeviceHost {
                 data.typeInfo.currentValueIndex
             ));
         }
-        return macrosList;
+        return remoteControlsList;
     }
 
     private static class ParameterTypeInfo {

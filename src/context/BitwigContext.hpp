@@ -22,12 +22,12 @@
  *     │   ├── HandlerHostDevice
  *     │   ├── HandlerHostTrack
  *     │   ├── HandlerHostPage
- *     │   ├── HandlerHostMacro
+ *     │   ├── HandlerHostRemoteControl
  *     │   ├── HandlerHostLastClicked
  *     │   └── HandlerHostMidi
  *     ├── InputHandlers (input → state + protocol)
  *     │   ├── HandlerInputTransport
- *     │   ├── HandlerInputMacro
+ *     │   ├── HandlerInputRemoteControl
  *     │   ├── HandlerInputDevicePage
  *     │   ├── HandlerInputDeviceSelector
  *     │   ├── HandlerInputTrack
@@ -54,7 +54,7 @@
 // Include all handlers (required for unique_ptr with make_unique in templates)
 #include "handler/host/HandlerHostDevice.hpp"
 #include "handler/host/HandlerHostLastClicked.hpp"
-#include "handler/host/HandlerHostMacro.hpp"
+#include "handler/host/HandlerHostRemoteControl.hpp"
 #include "handler/host/HandlerHostMidi.hpp"
 #include "handler/host/HandlerHostPage.hpp"
 #include "handler/host/HandlerHostPlugin.hpp"
@@ -63,7 +63,7 @@
 #include "handler/input/HandlerInputDevicePage.hpp"
 #include "handler/input/HandlerInputDeviceSelector.hpp"
 #include "handler/input/HandlerInputLastClicked.hpp"
-#include "handler/input/HandlerInputMacro.hpp"
+#include "handler/input/HandlerInputRemoteControl.hpp"
 #include "handler/input/HandlerInputTrack.hpp"
 #include "handler/input/HandlerInputTransport.hpp"
 #include "ui/device/DeviceView.hpp"
@@ -142,13 +142,13 @@ private:
     std::unique_ptr<handler::HandlerHostDevice> hostDevice_;
     std::unique_ptr<handler::HandlerHostTrack> hostTrack_;
     std::unique_ptr<handler::HandlerHostPage> hostPage_;
-    std::unique_ptr<handler::HandlerHostMacro> hostMacro_;
+    std::unique_ptr<handler::HandlerHostRemoteControl> hostRemoteControl_;
     std::unique_ptr<handler::HandlerHostLastClicked> hostLastClicked_;
     std::unique_ptr<handler::HandlerHostMidi> hostMidi_;
 
     // Input Handlers (input → state + protocol)
     std::unique_ptr<handler::HandlerInputTransport> inputTransport_;
-    std::unique_ptr<handler::HandlerInputMacro> inputMacro_;
+    std::unique_ptr<handler::HandlerInputRemoteControl> inputRemoteControl_;
     std::unique_ptr<handler::HandlerInputDevicePage> inputDevicePage_;
     std::unique_ptr<handler::HandlerInputDeviceSelector> inputDeviceSelector_;
     std::unique_ptr<handler::HandlerInputTrack> inputTrack_;

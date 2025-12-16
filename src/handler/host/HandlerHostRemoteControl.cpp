@@ -1,12 +1,12 @@
-#include "HandlerHostMacro.hpp"
+#include "HandlerHostRemoteControl.hpp"
 
 #include <array>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/DeviceMacroDiscreteValuesMessage.hpp"
-#include "protocol/struct/DeviceMacroNameChangeMessage.hpp"
-#include "protocol/struct/DeviceMacroUpdateMessage.hpp"
-#include "protocol/struct/DeviceMacroValueChangeMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlUpdateMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -14,18 +14,18 @@ namespace bitwig::handler {
 using namespace Protocol;
 using namespace bitwig::state;
 
-HandlerHostMacro::HandlerHostMacro(state::BitwigState& state,
-                                   BitwigProtocol& protocol,
-                                   oc::api::EncoderAPI& encoders)
+HandlerHostRemoteControl::HandlerHostRemoteControl(state::BitwigState& state,
+                                                   BitwigProtocol& protocol,
+                                                   oc::api::EncoderAPI& encoders)
     : state_(state), protocol_(protocol), encoders_(encoders) {
     setupProtocolCallbacks();
 }
 
-void HandlerHostMacro::setupProtocolCallbacks() {
-    protocol_.onDeviceMacroUpdate = [this](const DeviceMacroUpdateMessage& msg) {
-        if (msg.parameterIndex >= PARAMETER_COUNT) return;
+void HandlerHostRemoteControl::setupProtocolCallbacks() {
+    protocol_.onDeviceRemoteControlUpdate = [this](const DeviceRemoteControlUpdateMessage& msg) {
+        if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
 
-        auto& slot = state_.parameters.slots[msg.parameterIndex];
+        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
 
         slot.type.set(static_cast<state::ParameterType>(msg.parameterType));
         slot.discreteCount.set(msg.discreteValueCount);
@@ -38,7 +38,7 @@ void HandlerHostMacro::setupProtocolCallbacks() {
         slot.loading.set(false);
 
         // Configure encoder
-        auto encoderId = getEncoderIdForParameter(msg.parameterIndex);
+        auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
         if (encoderId != EncoderID{0}) {
             configureEncoderForParameter(encoders_, encoderId,
                                          msg.parameterType,
@@ -47,10 +47,10 @@ void HandlerHostMacro::setupProtocolCallbacks() {
         }
     };
 
-    protocol_.onDeviceMacroDiscreteValues = [this](const DeviceMacroDiscreteValuesMessage& msg) {
-        if (msg.parameterIndex >= PARAMETER_COUNT) return;
+    protocol_.onDeviceRemoteControlDiscreteValues = [this](const DeviceRemoteControlDiscreteValuesMessage& msg) {
+        if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
 
-        auto& slot = state_.parameters.slots[msg.parameterIndex];
+        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
 
         // Local buffer for discrete values (stack allocated, safe in single-threaded context)
         std::array<std::string, state::MAX_DISCRETE_VALUES> tempValues;
@@ -64,13 +64,13 @@ void HandlerHostMacro::setupProtocolCallbacks() {
         slot.currentValueIndex.set(msg.currentValueIndex);
     };
 
-    protocol_.onDeviceMacroValueChange = [this](const DeviceMacroValueChangeMessage& msg) {
+    protocol_.onDeviceRemoteControlValueChange = [this](const DeviceRemoteControlValueChangeMessage& msg) {
         if (!msg.fromHost) { return; }
-        if (msg.parameterIndex >= PARAMETER_COUNT) { return; }
+        if (msg.remoteControlIndex >= PARAMETER_COUNT) { return; }
 
-        auto& slot = state_.parameters.slots[msg.parameterIndex];
+        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
         auto currentType = slot.type.get();
-        auto encoderId = getEncoderIdForParameter(msg.parameterIndex);
+        auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
 
         if (msg.isEcho) {
             // Echo: only update display value for non-knob parameters
@@ -89,9 +89,9 @@ void HandlerHostMacro::setupProtocolCallbacks() {
         }
     };
 
-    protocol_.onDeviceMacroNameChange = [this](const DeviceMacroNameChangeMessage& msg) {
-        if (msg.parameterIndex >= PARAMETER_COUNT) return;
-        state_.parameters.slots[msg.parameterIndex].name.set(msg.parameterName.c_str());
+    protocol_.onDeviceRemoteControlNameChange = [this](const DeviceRemoteControlNameChangeMessage& msg) {
+        if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
+        state_.parameters.slots[msg.remoteControlIndex].name.set(msg.parameterName.c_str());
     };
 }
 

@@ -11,7 +11,7 @@
  *
  * @see HandlerHostTrack for track-related messages
  * @see HandlerHostPage for page names and changes
- * @see HandlerHostMacro for macro parameter updates
+ * @see HandlerHostRemoteControl for remote control parameter updates
  */
 
 #include "protocol/BitwigProtocol.hpp"

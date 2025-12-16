@@ -8,24 +8,24 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * DeviceMacroDiscreteValuesMessage - Auto-generated Protocol Message
+ * DeviceRemoteControlDiscreteValuesMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_DISCRETE_VALUES message
+ * Description: DEVICE_REMOTE_CONTROL_DISCRETE_VALUES message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class DeviceMacroDiscreteValuesMessage {
+public final class DeviceRemoteControlDiscreteValuesMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_MACRO_DISCRETE_VALUES;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_DISCRETE_VALUES;
 
 
     // ============================================================================
@@ -35,7 +35,7 @@ public final class DeviceMacroDiscreteValuesMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int parameterIndex;
+    private final int remoteControlIndex;
     private final List<String> discreteValueNames;
     private final int currentValueIndex;
 
@@ -44,14 +44,14 @@ public final class DeviceMacroDiscreteValuesMessage {
     // ============================================================================
 
     /**
-     * Construct a new DeviceMacroDiscreteValuesMessage
+     * Construct a new DeviceRemoteControlDiscreteValuesMessage
      *
-     * @param parameterIndex The parameterIndex value
+     * @param remoteControlIndex The remoteControlIndex value
      * @param discreteValueNames The discreteValueNames value
      * @param currentValueIndex The currentValueIndex value
      */
-    public DeviceMacroDiscreteValuesMessage(int parameterIndex, List<String> discreteValueNames, int currentValueIndex) {
-        this.parameterIndex = parameterIndex;
+    public DeviceRemoteControlDiscreteValuesMessage(int remoteControlIndex, List<String> discreteValueNames, int currentValueIndex) {
+        this.remoteControlIndex = remoteControlIndex;
         this.discreteValueNames = discreteValueNames;
         this.currentValueIndex = currentValueIndex;
     }
@@ -61,12 +61,12 @@ public final class DeviceMacroDiscreteValuesMessage {
     // ============================================================================
 
     /**
-     * Get the parameterIndex value
+     * Get the remoteControlIndex value
      *
-     * @return parameterIndex
+     * @return remoteControlIndex
      */
-    public int getParameterIndex() {
-        return parameterIndex;
+    public int getRemoteControlIndex() {
+        return remoteControlIndex;
     }
 
     /**
@@ -105,9 +105,9 @@ public final class DeviceMacroDiscreteValuesMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] parameterIndex_encoded = Encoder.encodeUint8(parameterIndex);
-        System.arraycopy(parameterIndex_encoded, 0, buffer, offset, parameterIndex_encoded.length);
-        offset += parameterIndex_encoded.length;
+        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
+        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
+        offset += remoteControlIndex_encoded.length;
         byte[] discreteValueNames_count = Encoder.encodeUint8(discreteValueNames.size());
         System.arraycopy(discreteValueNames_count, 0, buffer, offset, 1);
         offset += 1;
@@ -138,17 +138,17 @@ public final class DeviceMacroDiscreteValuesMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceMacroDiscreteValuesMessage instance
+     * @return Decoded DeviceRemoteControlDiscreteValuesMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceMacroDiscreteValuesMessage decode(byte[] data) {
+    public static DeviceRemoteControlDiscreteValuesMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceMacroDiscreteValuesMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlDiscreteValuesMessage decode");
         }
 
         int offset = 0;
 
-        int parameterIndex = Decoder.decodeUint8(data, offset);
+        int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         int count_discreteValueNames = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -163,7 +163,7 @@ public final class DeviceMacroDiscreteValuesMessage {
         int currentValueIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new DeviceMacroDiscreteValuesMessage(parameterIndex, discreteValueNames_list, currentValueIndex);
+        return new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames_list, currentValueIndex);
     }
 
     // ============================================================================
@@ -178,9 +178,9 @@ public final class DeviceMacroDiscreteValuesMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceMacroDiscreteValues\n");
-        sb.append("deviceMacroDiscreteValues:\n");
-        sb.append("  parameterIndex: ").append(getParameterIndex()).append("\n");
+        sb.append("# DeviceRemoteControlDiscreteValues\n");
+        sb.append("deviceRemoteControlDiscreteValues:\n");
+        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
         sb.append("  discreteValueNames:");
         if (getDiscreteValueNames().isEmpty()) {
             sb.append(" []\n");

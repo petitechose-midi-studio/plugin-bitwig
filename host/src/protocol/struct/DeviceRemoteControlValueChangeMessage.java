@@ -6,24 +6,24 @@ import protocol.Decoder;
 import protocol.ProtocolConstants;
 
 /**
- * DeviceMacroValueChangeMessage - Auto-generated Protocol Message
+ * DeviceRemoteControlValueChangeMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_MACRO_VALUE_CHANGE message
+ * Description: DEVICE_REMOTE_CONTROL_VALUE_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class DeviceMacroValueChangeMessage {
+public final class DeviceRemoteControlValueChangeMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_MACRO_VALUE_CHANGE;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_VALUE_CHANGE;
 
 
     // ============================================================================
@@ -33,7 +33,7 @@ public final class DeviceMacroValueChangeMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int parameterIndex;
+    private final int remoteControlIndex;
     private final float parameterValue;
     private final String displayValue;
     private final boolean isEcho;
@@ -43,15 +43,15 @@ public final class DeviceMacroValueChangeMessage {
     // ============================================================================
 
     /**
-     * Construct a new DeviceMacroValueChangeMessage
+     * Construct a new DeviceRemoteControlValueChangeMessage
      *
-     * @param parameterIndex The parameterIndex value
+     * @param remoteControlIndex The remoteControlIndex value
      * @param parameterValue The parameterValue value
      * @param displayValue The displayValue value
      * @param isEcho The isEcho value
      */
-    public DeviceMacroValueChangeMessage(int parameterIndex, float parameterValue, String displayValue, boolean isEcho) {
-        this.parameterIndex = parameterIndex;
+    public DeviceRemoteControlValueChangeMessage(int remoteControlIndex, float parameterValue, String displayValue, boolean isEcho) {
+        this.remoteControlIndex = remoteControlIndex;
         this.parameterValue = parameterValue;
         this.displayValue = displayValue;
         this.isEcho = isEcho;
@@ -62,12 +62,12 @@ public final class DeviceMacroValueChangeMessage {
     // ============================================================================
 
     /**
-     * Get the parameterIndex value
+     * Get the remoteControlIndex value
      *
-     * @return parameterIndex
+     * @return remoteControlIndex
      */
-    public int getParameterIndex() {
-        return parameterIndex;
+    public int getRemoteControlIndex() {
+        return remoteControlIndex;
     }
 
     /**
@@ -115,9 +115,9 @@ public final class DeviceMacroValueChangeMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] parameterIndex_encoded = Encoder.encodeUint8(parameterIndex);
-        System.arraycopy(parameterIndex_encoded, 0, buffer, offset, parameterIndex_encoded.length);
-        offset += parameterIndex_encoded.length;
+        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
+        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
+        offset += remoteControlIndex_encoded.length;
         byte[] parameterValue_encoded = Encoder.encodeFloat32(parameterValue);
         System.arraycopy(parameterValue_encoded, 0, buffer, offset, parameterValue_encoded.length);
         offset += parameterValue_encoded.length;
@@ -144,17 +144,17 @@ public final class DeviceMacroValueChangeMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceMacroValueChangeMessage instance
+     * @return Decoded DeviceRemoteControlValueChangeMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceMacroValueChangeMessage decode(byte[] data) {
+    public static DeviceRemoteControlValueChangeMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceMacroValueChangeMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlValueChangeMessage decode");
         }
 
         int offset = 0;
 
-        int parameterIndex = Decoder.decodeUint8(data, offset);
+        int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         float parameterValue = Decoder.decodeFloat32(data, offset);
         offset += 5;
@@ -163,7 +163,7 @@ public final class DeviceMacroValueChangeMessage {
         boolean isEcho = Decoder.decodeBool(data, offset);
         offset += 1;
 
-        return new DeviceMacroValueChangeMessage(parameterIndex, parameterValue, displayValue, isEcho);
+        return new DeviceRemoteControlValueChangeMessage(remoteControlIndex, parameterValue, displayValue, isEcho);
     }
 
     // ============================================================================
@@ -190,9 +190,9 @@ public final class DeviceMacroValueChangeMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceMacroValueChange\n");
-        sb.append("deviceMacroValueChange:\n");
-        sb.append("  parameterIndex: ").append(getParameterIndex()).append("\n");
+        sb.append("# DeviceRemoteControlValueChange\n");
+        sb.append("deviceRemoteControlValueChange:\n");
+        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
         sb.append("  parameterValue: ").append(formatFloat(getParameterValue())).append("\n");
         sb.append("  displayValue: \"").append(getDisplayValue()).append("\"\n");
         sb.append("  isEcho: ").append(isEcho() ? "true" : "false").append("\n");

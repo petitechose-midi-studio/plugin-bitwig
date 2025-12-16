@@ -35,11 +35,11 @@ void BitwigProtocol::selectTrack(uint8_t index) {
 }
 
 void BitwigProtocol::sendParameterValue(uint8_t paramIndex, float value) {
-    send(DeviceMacroValueChangeMessage{paramIndex, value});
+    send(DeviceRemoteControlValueChangeMessage{paramIndex, value});
 }
 
 void BitwigProtocol::sendParameterTouch(uint8_t paramIndex, bool touched) {
-    send(DeviceMacroTouchMessage{paramIndex, touched});
+    send(DeviceRemoteControlTouchMessage{paramIndex, touched});
 }
 
 void BitwigProtocol::togglePlay() {

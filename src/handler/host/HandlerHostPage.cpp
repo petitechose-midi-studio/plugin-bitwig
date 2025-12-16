@@ -20,23 +20,23 @@ HandlerHostPage::HandlerHostPage(state::BitwigState& state,
     setupProtocolCallbacks();
 }
 
-template <typename MacroArray>
-void HandlerHostPage::updateMacroEncoderModes(const MacroArray& macros) {
-    for (uint8_t i = 0; i < PARAMETER_COUNT && i < macros.size(); i++) {
-        uint8_t paramIndex = macros[i].parameterIndex;
+template <typename RemoteControlArray>
+void HandlerHostPage::updateRemoteControlEncoderModes(const RemoteControlArray& remoteControls) {
+    for (uint8_t i = 0; i < PARAMETER_COUNT && i < remoteControls.size(); i++) {
+        uint8_t paramIndex = remoteControls[i].remoteControlIndex;
         if (paramIndex >= PARAMETER_COUNT) continue;
 
         // Update parameter type in state
         state_.parameters.slots[paramIndex].type.set(
-            static_cast<state::ParameterType>(macros[i].parameterType));
+            static_cast<state::ParameterType>(remoteControls[i].parameterType));
 
         // Configure encoder mode
         auto encoderId = getEncoderIdForParameter(paramIndex);
         if (encoderId != EncoderID{0}) {
             configureEncoderForParameter(encoders_, encoderId,
-                                         macros[i].parameterType,
-                                         macros[i].discreteValueCount,
-                                         macros[i].parameterValue);
+                                         remoteControls[i].parameterType,
+                                         remoteControls[i].discreteValueCount,
+                                         remoteControls[i].parameterValue);
         }
     }
 }
@@ -55,27 +55,27 @@ void HandlerHostPage::setupProtocolCallbacks() {
     };
 
     protocol_.onDevicePageChange = [this](const DevicePageChangeMessage& msg) {
-        updateMacroEncoderModes(msg.macros);
+        updateRemoteControlEncoderModes(msg.remoteControls);
 
         state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
 
         // Local buffer for discrete values (stack allocated, safe in single-threaded context)
         std::array<std::string, state::MAX_DISCRETE_VALUES> tempDiscreteValues;
 
-        for (uint8_t i = 0; i < PARAMETER_COUNT && i < msg.macros.size(); i++) {
+        for (uint8_t i = 0; i < PARAMETER_COUNT && i < msg.remoteControls.size(); i++) {
             auto& slot = state_.parameters.slots[i];
-            const auto& macro = msg.macros[i];
+            const auto& rc = msg.remoteControls[i];
 
             // IMPORTANT: Set metadata BEFORE type!
             // When type changes, ensureWidgetForType() reads these values to create the widget.
             // If type is set first, discreteCount would still have old/default value.
-            slot.discreteCount.set(macro.discreteValueCount);
-            slot.currentValueIndex.set(macro.currentValueIndex);
-            slot.origin.set(macro.parameterOrigin);
+            slot.discreteCount.set(rc.discreteValueCount);
+            slot.currentValueIndex.set(rc.currentValueIndex);
+            slot.origin.set(rc.parameterOrigin);
 
             // Update discrete values BEFORE type (needed for LIST widgets)
             size_t count = 0;
-            for (const auto& dv : macro.discreteValueNames) {
+            for (const auto& dv : rc.discreteValueNames) {
                 if (!dv.empty() && count < state::MAX_DISCRETE_VALUES) {
                     tempDiscreteValues[count++] = dv;
                 }
@@ -83,13 +83,13 @@ void HandlerHostPage::setupProtocolCallbacks() {
             slot.discreteValues.set(tempDiscreteValues.data(), count);
 
             // NOW set type - this triggers widget creation with correct metadata
-            slot.type.set(static_cast<state::ParameterType>(macro.parameterType));
+            slot.type.set(static_cast<state::ParameterType>(rc.parameterType));
 
             // Set remaining display properties
-            slot.displayValue.set(macro.displayValue.c_str());
-            slot.value.set(macro.parameterValue);
-            slot.name.set(macro.parameterName.c_str());
-            slot.visible.set(macro.parameterExists);
+            slot.displayValue.set(rc.displayValue.c_str());
+            slot.value.set(rc.parameterValue);
+            slot.name.set(rc.parameterName.c_str());
+            slot.visible.set(rc.parameterExists);
             slot.loading.set(false);
             slot.metadataSet.set(true);
         }
