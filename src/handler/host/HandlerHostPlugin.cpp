@@ -26,6 +26,20 @@ void HandlerHostPlugin::setupProtocolCallbacks() {
         state_.host.connected.set(msg.isHostActive);
 
         if (msg.isHostActive) {
+            // Reset all selector caches for fresh windowed loading
+            state_.deviceSelector.names.clear();
+            state_.deviceSelector.totalCount.set(0);
+            state_.deviceSelector.loadedUpTo.set(0);
+
+            state_.pageSelector.names.clear();
+            state_.pageSelector.totalCount.set(0);
+            state_.pageSelector.loadedUpTo.set(0);
+
+            state_.trackSelector.names.clear();
+            state_.trackSelector.totalCount.set(0);
+            state_.trackSelector.loadedUpTo.set(0);
+
+            // Request initial windows (uses windowed loading internally)
             protocol_.requestDeviceList();
             protocol_.requestPageNames();
             protocol_.requestTrackList();

@@ -33,8 +33,10 @@ public class ProtocolCallbacks {
     public MessageHandler<DeviceChangeHeaderMessage> onDeviceChangeHeader;
     public MessageHandler<DeviceChildrenMessage> onDeviceChildren;
     public MessageHandler<DeviceListMessage> onDeviceList;
+    public MessageHandler<DeviceListWindowMessage> onDeviceListWindow;
     public MessageHandler<DevicePageChangeMessage> onDevicePageChange;
     public MessageHandler<DevicePageNamesMessage> onDevicePageNames;
+    public MessageHandler<DevicePageNamesWindowMessage> onDevicePageNamesWindow;
     public MessageHandler<DevicePageSelectByIndexMessage> onDevicePageSelectByIndex;
     public MessageHandler<DeviceRemoteControlDiscreteValuesMessage> onDeviceRemoteControlDiscreteValues;
     public MessageHandler<DeviceRemoteControlHasAutomationChangeMessage> onDeviceRemoteControlHasAutomationChange;
@@ -49,7 +51,9 @@ public class ProtocolCallbacks {
     public MessageHandler<ExitToParentMessage> onExitToParent;
     public MessageHandler<RequestDeviceChildrenMessage> onRequestDeviceChildren;
     public MessageHandler<RequestDeviceListMessage> onRequestDeviceList;
+    public MessageHandler<RequestDeviceListWindowMessage> onRequestDeviceListWindow;
     public MessageHandler<RequestDevicePageNamesMessage> onRequestDevicePageNames;
+    public MessageHandler<RequestDevicePageNamesWindowMessage> onRequestDevicePageNamesWindow;
     public MessageHandler<LastClickedTouchMessage> onLastClickedTouch;
     public MessageHandler<LastClickedUpdateMessage> onLastClickedUpdate;
     public MessageHandler<LastClickedValueChangeMessage> onLastClickedValueChange;
@@ -58,12 +62,17 @@ public class ProtocolCallbacks {
     public MessageHandler<RequestHostStatusMessage> onRequestHostStatus;
     public MessageHandler<EnterTrackGroupMessage> onEnterTrackGroup;
     public MessageHandler<ExitTrackGroupMessage> onExitTrackGroup;
+    public MessageHandler<RequestSendDestinationsMessage> onRequestSendDestinations;
     public MessageHandler<RequestTrackListMessage> onRequestTrackList;
+    public MessageHandler<RequestTrackListWindowMessage> onRequestTrackListWindow;
     public MessageHandler<RequestTrackSendListMessage> onRequestTrackSendList;
+    public MessageHandler<SelectMixSendMessage> onSelectMixSend;
+    public MessageHandler<SendDestinationsListMessage> onSendDestinationsList;
     public MessageHandler<TrackActivateMessage> onTrackActivate;
     public MessageHandler<TrackArmChangeMessage> onTrackArmChange;
     public MessageHandler<TrackChangeMessage> onTrackChange;
     public MessageHandler<TrackListMessage> onTrackList;
+    public MessageHandler<TrackListWindowMessage> onTrackListWindow;
     public MessageHandler<TrackMuteMessage> onTrackMute;
     public MessageHandler<TrackMutedBySoloChangeMessage> onTrackMutedBySoloChange;
     public MessageHandler<TrackPanChangeMessage> onTrackPanChange;

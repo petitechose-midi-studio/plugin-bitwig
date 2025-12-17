@@ -116,9 +116,16 @@ public final class BitwigConfig {
     /** Number of remote control parameters per page */
     public static final int MAX_PARAMETERS = 8;
 
-    /** Maximum tracks/devices in a bank */
-    public static final int MAX_BANK_SIZE = 32;
+    /** Maximum tracks/devices in a bank (increased for large projects) */
+    public static final int MAX_BANK_SIZE = 64;
 
     /** Maximum device children (slots + layers + drums) */
     public static final int MAX_CHILDREN = 16;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // WINDOWED LIST LOADING
+    // ═══════════════════════════════════════════════════════════════════
+
+    /** Window size for lazy-loading large lists (devices, tracks, pages) */
+    public static final int LIST_WINDOW_SIZE = 16;
 }

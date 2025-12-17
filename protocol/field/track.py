@@ -79,4 +79,18 @@ track_info = [
 
 # Array of tracks (max 32 in bank window)
 # Memory impact: 32 tracks * ~40 bytes = 1280 bytes (acceptable for Teensy)
+# DEPRECATED: Use track_list_window instead for windowed loading
 track_list = CompositeField('tracks', fields=track_info, array=32)
+
+# ============================================================================
+# WINDOWED TRACK LIST FIELDS (New)
+# ============================================================================
+# For lazy-loading large track lists (>16 tracks)
+# Pattern: REQUEST_XXX_WINDOW(startIndex) -> XXX_WINDOW(total, start, current, items[16])
+
+# Start index for windowed requests
+track_start_index = PrimitiveField('trackStartIndex', type_name=Type.UINT8)
+
+# Array of 16 tracks (one window)
+# Memory impact: 16 tracks * ~40 bytes = 640 bytes per message
+track_list_window = CompositeField('tracks', fields=track_info, array=16)

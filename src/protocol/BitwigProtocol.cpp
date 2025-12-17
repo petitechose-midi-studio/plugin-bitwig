@@ -11,15 +11,18 @@ void BitwigProtocol::requestHostStatus() {
 }
 
 void BitwigProtocol::requestDeviceList() {
-    send(RequestDeviceListMessage{});
+    // Use windowed loading for device list
+    send(RequestDeviceListWindowMessage{0});
 }
 
 void BitwigProtocol::requestPageNames() {
-    send(RequestDevicePageNamesMessage{});
+    // Use windowed loading for page names
+    send(RequestDevicePageNamesWindowMessage{0});
 }
 
 void BitwigProtocol::requestTrackList() {
-    send(RequestTrackListMessage{});
+    // Use windowed loading for track list
+    send(RequestTrackListWindowMessage{0});
 }
 
 void BitwigProtocol::selectDevice(uint8_t index) {

@@ -2,6 +2,7 @@ package midistudio;
 
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.ControllerExtension;
+import config.BitwigConfig;
 import protocol.Protocol;
 import protocol.struct.HostDeactivatedMessage;
 import handler.controller.*;
@@ -38,8 +39,9 @@ public class MidiStudioExtension extends ControllerExtension {
       CursorRemoteControlsPage remoteControls = cursorDevice.createCursorRemoteControlsPage(8);
       remoteControls.setHardwareLayout(HardwareControlType.ENCODER, 8);
 
-      DeviceBank deviceBank = cursorDevice.deviceChain().createDeviceBank(32);
-      TrackBank trackBank = host.createTrackBank(32, 0, 0, false);
+      DeviceBank deviceBank = cursorDevice.deviceChain().createDeviceBank(BitwigConfig.MAX_BANK_SIZE);
+      TrackBank trackBank = host.createTrackBank(BitwigConfig.MAX_BANK_SIZE, 8, 0, false);  // 8 sends for MixView
+      TrackBank effectTrackBank = host.createEffectTrackBank(8, 0); // For send destination names
 
       protocol = new Protocol(
             host,
@@ -59,7 +61,7 @@ public class MidiStudioExtension extends ControllerExtension {
       deviceController.setDeviceHost(deviceHost);
       deviceHost.setDeviceController(deviceController);
 
-      TrackHost trackHost = new TrackHost(host, protocol, cursorTrack, trackBank);
+      TrackHost trackHost = new TrackHost(host, protocol, cursorTrack, trackBank, effectTrackBank);
       trackHost.setupObservers();
 
       TrackController trackController = new TrackController(host, cursorTrack, trackBank, cursorDevice, deviceBank,

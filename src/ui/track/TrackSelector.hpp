@@ -3,13 +3,16 @@
 #include "TrackTitleItem.hpp"
 
 #include <cstdint>
-
 #include <memory>
 #include <string>
 #include <vector>
 
+#include <lvgl.h>
+
+#include <oc/ui/lvgl/IComponent.hpp>
+
 #include "ui/widget/HintBar.hpp"
-#include "ui/widget/BaseSelector.hpp"
+#include "ui/widget/VirtualList.hpp"
 
 namespace bitwig {
 
@@ -25,27 +28,62 @@ struct TrackSelectorProps {
 
 /**
  * Track list selector with mute/solo indicators.
+ * Uses VirtualList for O(1) rendering of large track lists.
  * Stateless - all data comes from props.
  */
-class TrackSelector : public BaseSelector {
+class TrackSelector : public oc::ui::lvgl::IComponent {
 public:
     explicit TrackSelector(lv_obj_t *parent);
     ~TrackSelector() override;
 
+    TrackSelector(const TrackSelector &) = delete;
+    TrackSelector &operator=(const TrackSelector &) = delete;
+
     void render(const TrackSelectorProps &props);
+
+    // IComponent
+    void show() override;
+    void hide() override;
+    bool isVisible() const override { return visible_; }
+    lv_obj_t *getElement() const override { return overlay_; }
+    lv_obj_t *getContainer() const { return container_; }
+
 private:
+    // Overlay structure
+    void createOverlay();
+    void createHeader();
     void createFooter();
-    void createTrackItems(const std::vector<std::string> &names);
-    void clearTrackItems();
-    void renderTrackItems(const TrackSelectorProps &props);
     void renderFooter(const TrackSelectorProps &props);
 
-    std::vector<std::string> prev_items_;  // Cache for itemsChanged detection
-    std::vector<std::unique_ptr<TrackTitleItem>> track_items_;
+    // VirtualList callbacks
+    void bindSlot(ui::VirtualSlot &slot, int index, bool isSelected);
+    void updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected);
+    void ensureSlotWidgets(int slotIndex);
 
+    // Highlight
+    void applyHighlightStyle(int slotIndex, bool isSelected);
+
+    // Overlay
+    lv_obj_t *parent_ = nullptr;
+    lv_obj_t *overlay_ = nullptr;
+    lv_obj_t *container_ = nullptr;
+
+    // Header
+    lv_obj_t *header_ = nullptr;
+    lv_obj_t *header_label_ = nullptr;
+
+    // Virtual list
+    std::unique_ptr<ui::VirtualList> list_;
+    std::vector<std::unique_ptr<TrackTitleItem>> slotItems_;
+
+    // Footer
     std::unique_ptr<HintBar> footer_;
     lv_obj_t *footer_mute_ = nullptr;
     lv_obj_t *footer_solo_ = nullptr;
+
+    // State
+    TrackSelectorProps currentProps_;
+    bool visible_ = false;
 };
 
 }  // namespace bitwig

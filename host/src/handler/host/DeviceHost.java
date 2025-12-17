@@ -155,6 +155,17 @@ public class DeviceHost {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all names
                 protocol.send(new DeviceRemoteControlNameChangeMessage(paramIndex, name));
             });
+
+            // Automation observers - granular updates
+            param.hasAutomation().addValueObserver(hasAutomation -> {
+                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain automation state
+                protocol.send(new DeviceRemoteControlHasAutomationChangeMessage(paramIndex, hasAutomation));
+            });
+
+            param.modulatedValue().addValueObserver(modulatedValue -> {
+                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain modulated values
+                protocol.send(new DeviceRemoteControlModulatedValueChangeMessage(paramIndex, (float) modulatedValue));
+            });
         }
     }
 
@@ -167,7 +178,7 @@ public class DeviceHost {
         // Observer for device count changes (add/remove device)
         deviceBank.itemCount().addValueObserver(count -> {
             host.println("[DEVICE HOST] Device count changed: " + count);
-            sendDeviceList();
+            sendDeviceListWindow(0);  // Use windowed loading
         });
 
         // All devices in bank
@@ -221,6 +232,9 @@ public class DeviceHost {
         host.scheduleTask(action, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
+    /**
+     * @deprecated Use sendPageNamesWindow instead for windowed loading
+     */
     public void sendPageNames() {
         // Delay to let Bitwig API update values
         host.scheduleTask(() -> {
@@ -241,6 +255,54 @@ public class DeviceHost {
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
+    private static final int PAGE_WINDOW_SIZE = 16;
+
+    /**
+     * Send windowed page names starting at requestedStartIndex.
+     * Implements lazy-loading pattern: sends 16 items per request.
+     * Clamps startIndex if out of range.
+     *
+     * @param requestedStartIndex Start index requested by controller
+     */
+    public void sendPageNamesWindow(int requestedStartIndex) {
+        host.scheduleTask(() -> {
+            final int totalCount = remoteControls.pageCount().get();
+            final int currentIndex = remoteControls.selectedPageIndex().get();
+            final String[] pageNamesArray = remoteControls.pageNames().get();
+
+            // Clamp startIndex if out of range
+            int startIndex = requestedStartIndex;
+            if (startIndex >= totalCount) {
+                startIndex = Math.max(0, totalCount - PAGE_WINDOW_SIZE);
+            }
+            if (startIndex < 0) {
+                startIndex = 0;
+            }
+
+            // Build window of up to 16 items
+            final List<String> windowNames = new ArrayList<>();
+            for (int i = 0; i < PAGE_WINDOW_SIZE && (startIndex + i) < totalCount; i++) {
+                int idx = startIndex + i;
+                if (pageNamesArray != null && idx < pageNamesArray.length) {
+                    windowNames.add(pageNamesArray[idx]);
+                } else {
+                    windowNames.add("");
+                }
+            }
+
+            protocol.send(new DevicePageNamesWindowMessage(
+                totalCount,     // Total pages (absolute)
+                startIndex,     // Actual start index (may be clamped)
+                currentIndex,   // Currently selected page
+                windowNames     // This window's page names (up to 16)
+            ));
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
+    }
+
+    /**
+     * @deprecated Use sendDeviceListWindow() for windowed loading
+     */
+    @Deprecated
     public void sendDeviceList() {
         // Debounce: skip if already pending
         if (deviceListPending) return;
@@ -264,6 +326,66 @@ public class DeviceHost {
                 devicesList
             ));
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
+    }
+
+    /**
+     * Send a windowed portion of the device list (16 items max per window).
+     * Used for lazy-loading large device chains.
+     *
+     * @param requestedStartIndex The starting index requested by the controller
+     */
+    public void sendDeviceListWindow(int requestedStartIndex) {
+        host.scheduleTask(() -> {
+            final int totalDeviceCount = deviceBank.itemCount().get();
+            final int currentDevicePosition = cursorDevice.position().get();
+            final boolean isNested = cursorDevice.isNested().get();
+            final String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
+
+            // Clamp startIndex if out of range
+            int startIndex = requestedStartIndex;
+            if (startIndex >= totalDeviceCount) {
+                startIndex = Math.max(0, totalDeviceCount - BitwigConfig.LIST_WINDOW_SIZE);
+            }
+            if (startIndex < 0) {
+                startIndex = 0;
+            }
+
+            // Build windowed device list
+            final List<DeviceListWindowMessage.Devices> windowDevices = buildDevicesListWindow(startIndex);
+
+            protocol.send(new DeviceListWindowMessage(
+                totalDeviceCount,
+                startIndex,
+                currentDevicePosition,
+                isNested,
+                parentName,
+                windowDevices
+            ));
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
+    }
+
+    private List<DeviceListWindowMessage.Devices> buildDevicesListWindow(int startIndex) {
+        List<DeviceListWindowMessage.Devices> list = new ArrayList<>();
+        int bankSize = deviceBank.getSizeOfBank();
+        int endIndex = Math.min(startIndex + BitwigConfig.LIST_WINDOW_SIZE, bankSize);
+
+        for (int i = startIndex; i < endIndex; i++) {
+            Device device = deviceBank.getItemAt(i);
+            if (!device.exists().get()) continue;
+
+            String deviceTypeRaw = device.deviceType().get();
+            int deviceTypeInt = DeviceTypeUtils.toInt(deviceTypeRaw);
+
+            list.add(new DeviceListWindowMessage.Devices(
+                device.position().get(),
+                device.name().get(),
+                device.isEnabled().get(),
+                deviceTypeInt,
+                getDeviceChildrenTypes(device)
+            ));
+        }
+
+        return list;
     }
 
     private List<DeviceListMessage.Devices> buildDevicesList() {
@@ -503,7 +625,9 @@ public class DeviceHost {
                 data.displayedValue,
                 data.typeInfo.parameterType,
                 data.typeInfo.discreteValueNames,
-                data.typeInfo.currentValueIndex
+                data.typeInfo.currentValueIndex,
+                data.hasAutomation,
+                data.modulatedValue
             ));
         }
         return remoteControlsList;
@@ -529,9 +653,12 @@ public class DeviceHost {
         final boolean exists;
         final int discreteCount;
         final ParameterTypeInfo typeInfo;
+        final boolean hasAutomation;
+        final float modulatedValue;
 
         ParameterData(String name, float value, String displayedValue, float origin,
-                     boolean exists, int discreteCount, ParameterTypeInfo typeInfo) {
+                     boolean exists, int discreteCount, ParameterTypeInfo typeInfo,
+                     boolean hasAutomation, float modulatedValue) {
             this.name = name;
             this.value = value;
             this.displayedValue = displayedValue;
@@ -539,6 +666,8 @@ public class DeviceHost {
             this.exists = exists;
             this.discreteCount = discreteCount;
             this.typeInfo = typeInfo;
+            this.hasAutomation = hasAutomation;
+            this.modulatedValue = modulatedValue;
         }
     }
 
@@ -549,6 +678,8 @@ public class DeviceHost {
         String displayedValue = param.value().displayedValue().get();
         float origin = (float) param.value().getOrigin().get();
         boolean exists = param.exists().get();
+        boolean hasAutomation = param.hasAutomation().get();
+        float modulatedValue = (float) param.modulatedValue().get();
 
         if (deviceController != null) {
             deviceController.updateParameterMetadata(paramIndex, discreteCount);
@@ -556,7 +687,7 @@ public class DeviceHost {
 
         ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
 
-        return new ParameterData(name, value, displayedValue, origin, exists, discreteCount, typeInfo);
+        return new ParameterData(name, value, displayedValue, origin, exists, discreteCount, typeInfo, hasAutomation, modulatedValue);
     }
 
     private ParameterTypeInfo detectParameterType(RemoteControl param, int discreteCount) {
@@ -613,6 +744,7 @@ public class DeviceHost {
         param.name().markInterested();
         param.value().getOrigin().markInterested();
         param.hasAutomation().markInterested();
+        param.modulatedValue().markInterested();
         param.value().discreteValueCount().markInterested();
         param.value().displayedValue().markInterested();
         param.value().discreteValueNames().markInterested();

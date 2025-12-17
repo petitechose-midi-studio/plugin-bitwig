@@ -32,8 +32,10 @@ public:
     std::function<void(const DeviceChangeHeaderMessage&)> onDeviceChangeHeader;
     std::function<void(const DeviceChildrenMessage&)> onDeviceChildren;
     std::function<void(const DeviceListMessage&)> onDeviceList;
+    std::function<void(const DeviceListWindowMessage&)> onDeviceListWindow;
     std::function<void(const DevicePageChangeMessage&)> onDevicePageChange;
     std::function<void(const DevicePageNamesMessage&)> onDevicePageNames;
+    std::function<void(const DevicePageNamesWindowMessage&)> onDevicePageNamesWindow;
     std::function<void(const DevicePageSelectByIndexMessage&)> onDevicePageSelectByIndex;
     std::function<void(const DeviceRemoteControlDiscreteValuesMessage&)> onDeviceRemoteControlDiscreteValues;
     std::function<void(const DeviceRemoteControlHasAutomationChangeMessage&)> onDeviceRemoteControlHasAutomationChange;
@@ -48,7 +50,9 @@ public:
     std::function<void(const ExitToParentMessage&)> onExitToParent;
     std::function<void(const RequestDeviceChildrenMessage&)> onRequestDeviceChildren;
     std::function<void(const RequestDeviceListMessage&)> onRequestDeviceList;
+    std::function<void(const RequestDeviceListWindowMessage&)> onRequestDeviceListWindow;
     std::function<void(const RequestDevicePageNamesMessage&)> onRequestDevicePageNames;
+    std::function<void(const RequestDevicePageNamesWindowMessage&)> onRequestDevicePageNamesWindow;
     std::function<void(const LastClickedTouchMessage&)> onLastClickedTouch;
     std::function<void(const LastClickedUpdateMessage&)> onLastClickedUpdate;
     std::function<void(const LastClickedValueChangeMessage&)> onLastClickedValueChange;
@@ -57,12 +61,17 @@ public:
     std::function<void(const RequestHostStatusMessage&)> onRequestHostStatus;
     std::function<void(const EnterTrackGroupMessage&)> onEnterTrackGroup;
     std::function<void(const ExitTrackGroupMessage&)> onExitTrackGroup;
+    std::function<void(const RequestSendDestinationsMessage&)> onRequestSendDestinations;
     std::function<void(const RequestTrackListMessage&)> onRequestTrackList;
+    std::function<void(const RequestTrackListWindowMessage&)> onRequestTrackListWindow;
     std::function<void(const RequestTrackSendListMessage&)> onRequestTrackSendList;
+    std::function<void(const SelectMixSendMessage&)> onSelectMixSend;
+    std::function<void(const SendDestinationsListMessage&)> onSendDestinationsList;
     std::function<void(const TrackActivateMessage&)> onTrackActivate;
     std::function<void(const TrackArmChangeMessage&)> onTrackArmChange;
     std::function<void(const TrackChangeMessage&)> onTrackChange;
     std::function<void(const TrackListMessage&)> onTrackList;
+    std::function<void(const TrackListWindowMessage&)> onTrackListWindow;
     std::function<void(const TrackMuteMessage&)> onTrackMute;
     std::function<void(const TrackMutedBySoloChangeMessage&)> onTrackMutedBySoloChange;
     std::function<void(const TrackPanChangeMessage&)> onTrackPanChange;

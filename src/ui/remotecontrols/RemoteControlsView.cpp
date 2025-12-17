@@ -332,6 +332,8 @@ void RemoteControlsView::updateDeviceSelector() {
         .trackColor = state_.currentTrack.color.get(),
         .trackType = static_cast<uint8_t>(state_.currentTrack.trackType.get()),
         .selectedIndex = state_.deviceSelector.currentIndex.get(),
+        .totalCount = state_.deviceSelector.totalCount.get(),
+        .isNested = state_.deviceSelector.isNested.get(),
         .showingChildren = state_.deviceSelector.showingChildren.get(),
         .showFooter = state_.deviceSelector.showFooter.get(),
         .visible = true

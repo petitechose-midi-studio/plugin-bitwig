@@ -99,12 +99,14 @@ DEVICE_STATE_CHANGE = Message(
 )
 
 # ============================================================================
-# PAGE NAVIGATION MESSAGES (New)
+# PAGE NAVIGATION MESSAGES (Legacy - DEPRECATED)
 # ============================================================================
+# These messages are deprecated. Use windowed versions below for large lists.
 
 # Controller → Host: Request full list of page names
+# DEPRECATED: Use REQUEST_DEVICE_PAGE_NAMES_WINDOW instead
 REQUEST_DEVICE_PAGE_NAMES = Message(
-    description='Request list of all available page names',
+    description='[DEPRECATED] Request list of all available page names',
     fields=[]  # Empty request message
 )
 
@@ -115,36 +117,96 @@ DEVICE_PAGE_SELECT_BY_INDEX = Message(
 )
 
 # Host → Controller: Full list of available pages
+# DEPRECATED: Use DEVICE_PAGE_NAMES_WINDOW instead
 DEVICE_PAGE_NAMES = Message(
-    description='List of all available page names',
+    description='[DEPRECATED] List of all available page names',
     fields=[
         device_page_count,      # Total number of pages (uint8)
         device_page_index,      # Current selected page index (uint8)
-        page_names              # Array of page names (String[16])
+        page_names              # Array of page names (String[32])
+    ]
+)
+
+# ============================================================================
+# PAGE NAVIGATION MESSAGES (Windowed - New)
+# ============================================================================
+# Windowed loading pattern for large page lists (>16 pages)
+# Pattern: REQUEST(startIndex) -> RESPONSE(total, start, current, items[16])
+# - Firmware requests 16 items at a time starting from startIndex
+# - Host responds with actual startIndex (clamped if out of range)
+# - Firmware accumulates in local cache, prefetches when cursor approaches end
+# - Selection always uses absolute index
+
+# Controller → Host: Request windowed page names
+REQUEST_DEVICE_PAGE_NAMES_WINDOW = Message(
+    description='Request page names starting at index (windowed, 16 items)',
+    fields=[device_page_start_index]  # UINT8: start index for window
+)
+
+# Host → Controller: Windowed page names response
+DEVICE_PAGE_NAMES_WINDOW = Message(
+    description='Windowed page names response (16 items max)',
+    fields=[
+        device_page_count,        # UINT8: total pages (absolute)
+        device_page_start_index,  # UINT8: actual start index (may be clamped)
+        device_page_index,        # UINT8: currently selected page index
+        page_names_window         # String[16]: this window's page names
     ]
 )
 
 # NOTE: DEVICE_PAGE_CHANGE already exists above and handles page change notification
 
 # ============================================================================
-# DEVICE NAVIGATION MESSAGES (Hierarchical Navigation)
+# DEVICE NAVIGATION MESSAGES (Legacy - DEPRECATED)
 # ============================================================================
+# These messages are deprecated. Use windowed versions below for large lists.
 
 # Controller → Host: Request list of devices in current chain context
+# DEPRECATED: Use REQUEST_DEVICE_LIST_WINDOW instead
 REQUEST_DEVICE_LIST = Message(
-    description='Request list of devices in current device chain',
+    description='[DEPRECATED] Request list of devices in current device chain',
     fields=[]
 )
 
 # Host → Controller: Device list response with navigation context
+# DEPRECATED: Use DEVICE_LIST_WINDOW instead
 DEVICE_LIST = Message(
-    description='List of devices in current chain with context',
+    description='[DEPRECATED] List of devices in current chain with context',
     fields=[
         device_count,          # Total devices in bank window (uint8)
         device_index,          # Currently selected device index (uint8)
         device_is_nested,      # Are we in nested chain? (bool)
         parent_name,           # Parent name if nested (string)
-        device_list            # Array[16] of DeviceInfo
+        device_list            # Array[32] of DeviceInfo
+    ]
+)
+
+# ============================================================================
+# DEVICE NAVIGATION MESSAGES (Windowed - New)
+# ============================================================================
+# Windowed loading pattern for large device lists (>16 devices)
+# Pattern: REQUEST(startIndex) -> RESPONSE(total, start, current, items[16])
+# - Firmware requests 16 items at a time starting from startIndex
+# - Host responds with actual startIndex (clamped if out of range)
+# - Firmware accumulates in local cache, prefetches when cursor approaches end
+# - Selection always uses absolute index
+
+# Controller → Host: Request windowed device list
+REQUEST_DEVICE_LIST_WINDOW = Message(
+    description='Request device list starting at index (windowed, 16 items)',
+    fields=[device_start_index]  # UINT8: start index for window
+)
+
+# Host → Controller: Windowed device list response
+DEVICE_LIST_WINDOW = Message(
+    description='Windowed device list response (16 items max)',
+    fields=[
+        device_count,          # UINT8: total devices (absolute)
+        device_start_index,    # UINT8: actual start index (may be clamped)
+        device_index,          # UINT8: currently selected device index
+        device_is_nested,      # Are we in nested chain? (bool)
+        parent_name,           # Parent name if nested (string) - sent on every window for simplicity
+        device_list_window     # Array[16] of DeviceInfo: this window's devices
     ]
 )
 

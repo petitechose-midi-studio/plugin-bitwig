@@ -23,8 +23,9 @@ is_arranger_automation_write_enabled = PrimitiveField('isArrangerAutomationWrite
 # isClipLauncherAutomationWriteEnabled() - clip launcher automation write armed
 is_clip_launcher_automation_write_enabled = PrimitiveField('isClipLauncherAutomationWriteEnabled', type_name=Type.BOOL)
 
-# automationWriteMode() - "latch", "touch", "write"
-automation_write_mode = PrimitiveField('automationWriteMode', type_name=Type.STRING)
+# automationWriteMode() - 0=latch, 1=touch, 2=write
+# Converted from Bitwig API string enum to UINT8 for efficiency
+automation_write_mode = PrimitiveField('automationWriteMode', type_name=Type.UINT8)
 
 # ============================================================================
 # TRANSPORT OVERDUB FIELDS (Bidirectional)

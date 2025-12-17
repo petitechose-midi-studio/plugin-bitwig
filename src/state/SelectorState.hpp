@@ -30,16 +30,27 @@ using oc::state::SignalVector;
 
 /**
  * @brief State for page (parameter bank) selection
+ *
+ * Supports windowed loading for large page lists (>16 pages):
+ * - names: accumulated cache of page names (up to MAX_PAGES)
+ * - totalCount: absolute total number of pages from host
+ * - loadedUpTo: highest index loaded so far (for prefetch trigger)
  */
 struct PageSelectorState {
-    SignalVector<std::string, MAX_PAGES> names;
+    SignalVector<std::string, MAX_PAGES> names;  // Accumulated cache
     Signal<int8_t> selectedIndex{0};
     Signal<bool> visible{false};
+
+    // Windowed loading state
+    Signal<uint8_t> totalCount{0};   // Total pages (absolute, from host)
+    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
 
     void reset() {
         names.clear();
         selectedIndex.set(0);
         visible.set(false);
+        totalCount.set(0);
+        loadedUpTo.set(0);
     }
 };
 
@@ -49,9 +60,14 @@ struct PageSelectorState {
 
 /**
  * @brief State for device chain selection
+ *
+ * Supports windowed loading for large device lists (>16 devices):
+ * - names: accumulated cache of device names (up to MAX_DEVICES)
+ * - totalCount: absolute total number of devices from host
+ * - loadedUpTo: highest index loaded so far (for prefetch trigger)
  */
 struct DeviceSelectorState {
-    // Bulk-replaced lists (SignalVector)
+    // Bulk-replaced lists (SignalVector) - accumulated cache for windowed loading
     SignalVector<std::string, MAX_DEVICES> names;
     SignalVector<uint8_t, MAX_DEVICES> deviceTypes;
     SignalVector<bool, MAX_DEVICES> hasSlots;
@@ -72,6 +88,10 @@ struct DeviceSelectorState {
     Signal<bool> showFooter{false};
     Signal<bool> visible{false};
 
+    // Windowed loading state
+    Signal<uint8_t> totalCount{0};   // Total devices (absolute, from host)
+    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
+
     void reset() {
         names.clear();
         deviceTypes.clear();
@@ -87,6 +107,8 @@ struct DeviceSelectorState {
         showingChildren.set(false);
         showFooter.set(false);
         visible.set(false);
+        totalCount.set(0);
+        loadedUpTo.set(0);
     }
 };
 
@@ -96,9 +118,14 @@ struct DeviceSelectorState {
 
 /**
  * @brief State for track selection
+ *
+ * Supports windowed loading for large track lists (>16 tracks):
+ * - names: accumulated cache of track names (up to MAX_TRACKS)
+ * - totalCount: absolute total number of tracks from host
+ * - loadedUpTo: highest index loaded so far (for prefetch trigger)
  */
 struct TrackSelectorState {
-    // Bulk-replaced lists (SignalVector)
+    // Bulk-replaced lists (SignalVector) - accumulated cache for windowed loading
     SignalVector<std::string, MAX_TRACKS> names;
     SignalVector<uint8_t, MAX_TRACKS> trackTypes;
     SignalVector<uint32_t, MAX_TRACKS> trackColors;
@@ -112,6 +139,10 @@ struct TrackSelectorState {
     Signal<bool> isNested{false};
     Signal<bool> visible{false};
 
+    // Windowed loading state
+    Signal<uint8_t> totalCount{0};   // Total tracks (absolute, from host)
+    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
+
     void reset() {
         names.clear();
         trackTypes.clear();
@@ -122,6 +153,8 @@ struct TrackSelectorState {
         activeTrackIndex.set(0);
         isNested.set(false);
         visible.set(false);
+        totalCount.set(0);
+        loadedUpTo.set(0);
     }
 };
 

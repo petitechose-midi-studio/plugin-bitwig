@@ -1,17 +1,19 @@
 #include "HandlerInputDeviceSelector.hpp"
 
+#include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/DeviceSelectByIndexMessage.hpp"
+#include "state/Constants.hpp"
 #include "protocol/struct/DeviceStateChangeMessage.hpp"
 #include "protocol/struct/EnterDeviceChildMessage.hpp"
 #include "protocol/struct/ExitToParentMessage.hpp"
 #include "protocol/struct/RequestDeviceChildrenMessage.hpp"
-#include "protocol/struct/RequestDeviceListMessage.hpp"
-#include "protocol/struct/RequestTrackListMessage.hpp"
+#include "protocol/struct/RequestDeviceListWindowMessage.hpp"
+#include "protocol/struct/RequestTrackListWindowMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -110,23 +112,58 @@ void HandlerInputDeviceSelector::requestDeviceList() {
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
     if (!requested_) {
-        protocol_.send(Protocol::RequestDeviceListMessage{});
+        // Reset cache for fresh load
+        ds.names.clear();
+        ds.totalCount.set(0);
+        ds.loadedUpTo.set(0);
+        // Request first window (windowed loading)
+        protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
         requested_ = true;
     }
 }
 
 void HandlerInputDeviceSelector::navigate(float delta) {
     auto& ds = state_.deviceSelector;
-    int itemCount = isShowingChildren()
-        ? static_cast<int>(ds.childrenNames.size())
-        : static_cast<int>(ds.names.size());
 
-    if (itemCount == 0) return;
+    // When showing children, no windowed loading (children are loaded all at once)
+    if (isShowingChildren()) {
+        int itemCount = static_cast<int>(ds.childrenNames.size());
+        if (itemCount == 0) return;
+
+        int currentIndex = ds.currentIndex.get();
+        int newIndex = currentIndex + static_cast<int>(delta);
+        newIndex = wrapIndex(newIndex, itemCount);
+        ds.currentIndex.set(newIndex);
+        return;
+    }
+
+    // Device list navigation with windowed loading
+    uint8_t totalCount = ds.totalCount.get();
+    // Account for back button in nested mode
+    int displayCount = ds.isNested.get() ? totalCount + 1 : totalCount;
+    if (displayCount == 0) {
+        // Fallback to names.size() for legacy/compatibility
+        displayCount = static_cast<int>(ds.names.size());
+    }
+    if (displayCount == 0) return;
 
     int currentIndex = ds.currentIndex.get();
     int newIndex = currentIndex + static_cast<int>(delta);
-    newIndex = wrapIndex(newIndex, itemCount);
+    newIndex = wrapIndex(newIndex, displayCount);
     ds.currentIndex.set(newIndex);
+
+    // Prefetch next window if approaching end of loaded data
+    uint8_t loadedUpTo = ds.loadedUpTo.get();
+    // Convert display index to device index (for nested, display 0 is back button)
+    int deviceIndex = ds.isNested.get() ? newIndex - 1 : newIndex;
+
+    // Only prefetch if we have a valid device index approaching the loaded boundary
+    if (deviceIndex >= 0 &&
+        loadedUpTo > state::PREFETCH_THRESHOLD &&
+        static_cast<uint8_t>(deviceIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
+        loadedUpTo < totalCount) {
+        protocol_.send(Protocol::RequestDeviceListWindowMessage{loadedUpTo});
+    }
 }
 
 void HandlerInputDeviceSelector::selectAndDive() {
@@ -185,8 +222,11 @@ void HandlerInputDeviceSelector::enterChildAtIndex(int selectorIndex) {
     auto& ds = state_.deviceSelector;
 
     if (selectorIndex == 0) {
-        // Back to device list - request fresh list (host will set showingChildren=false)
-        protocol_.send(Protocol::RequestDeviceListMessage{});
+        // Back to device list - reset cache and request fresh windowed list
+        ds.names.clear();
+        ds.totalCount.set(0);
+        ds.loadedUpTo.set(0);
+        protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
         return;
     }
 
@@ -221,9 +261,15 @@ void HandlerInputDeviceSelector::requestTrackList() {
 
     if (ts.visible.get()) return;
 
+    // Reset track cache for fresh load
+    ts.names.clear();
+    ts.totalCount.set(0);
+    ts.loadedUpTo.set(0);
+
     // Show track selector (pushes device selector to stack for restoration)
     state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
-    protocol_.send(Protocol::RequestTrackListMessage{});
+    // Request first window (windowed loading)
+    protocol_.send(Protocol::RequestTrackListWindowMessage{0});
 }
 
 void HandlerInputDeviceSelector::close() {

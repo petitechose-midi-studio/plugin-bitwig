@@ -170,11 +170,19 @@ public class DeviceController {
             }
         };
 
-        // Request page names list FROM controller
+        // Request page names list FROM controller (DEPRECATED - use windowed version)
         protocol.onRequestDevicePageNames = msg -> {
             if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.sendPageNames();
+            }
+        };
+
+        // Request windowed page names FROM controller (new)
+        protocol.onRequestDevicePageNamesWindow = msg -> {
+            if (msg.fromHost) return;
+            if (deviceHost != null) {
+                deviceHost.sendPageNamesWindow(msg.getPageStartIndex());
             }
         };
 
@@ -194,11 +202,19 @@ public class DeviceController {
         // Hierarchical Device Navigation Callbacks
         // ========================================================================
 
-        // Request device list FROM controller
+        // Request device list FROM controller (legacy - redirect to windowed)
         protocol.onRequestDeviceList = msg -> {
             if (msg.fromHost) return;
             if (deviceHost != null) {
-                deviceHost.sendDeviceList();
+                deviceHost.sendDeviceListWindow(0);  // Redirect legacy to windowed
+            }
+        };
+
+        // Request windowed device list FROM controller (new)
+        protocol.onRequestDeviceListWindow = msg -> {
+            if (msg.fromHost) return;
+            if (deviceHost != null) {
+                deviceHost.sendDeviceListWindow(msg.getDeviceStartIndex());
             }
         };
 
