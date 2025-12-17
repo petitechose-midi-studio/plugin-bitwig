@@ -34,6 +34,15 @@ struct TrackChangeMessage {
     uint32_t color;
     uint8_t trackIndex;
     uint8_t trackType;
+    bool isActivated;
+    bool isMute;
+    bool isSolo;
+    bool isMutedBySolo;
+    bool isArm;
+    float volume;
+    std::string volumeDisplay;
+    float pan;
+    std::string panDisplay;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +50,12 @@ struct TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 40;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 121;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 8;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 25;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -64,6 +73,15 @@ struct TrackChangeMessage {
         encodeUint32(ptr, color);
         encodeUint8(ptr, trackIndex);
         encodeUint8(ptr, trackType);
+        encodeBool(ptr, isActivated);
+        encodeBool(ptr, isMute);
+        encodeBool(ptr, isSolo);
+        encodeBool(ptr, isMutedBySolo);
+        encodeBool(ptr, isArm);
+        encodeFloat32(ptr, volume);
+        encodeString(ptr, volumeDisplay);
+        encodeFloat32(ptr, pan);
+        encodeString(ptr, panDisplay);
 
         return ptr - buffer;
     }
@@ -92,8 +110,26 @@ struct TrackChangeMessage {
         if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         uint8_t trackType;
         if (!decodeUint8(ptr, remaining, trackType)) return std::nullopt;
+        bool isActivated;
+        if (!decodeBool(ptr, remaining, isActivated)) return std::nullopt;
+        bool isMute;
+        if (!decodeBool(ptr, remaining, isMute)) return std::nullopt;
+        bool isSolo;
+        if (!decodeBool(ptr, remaining, isSolo)) return std::nullopt;
+        bool isMutedBySolo;
+        if (!decodeBool(ptr, remaining, isMutedBySolo)) return std::nullopt;
+        bool isArm;
+        if (!decodeBool(ptr, remaining, isArm)) return std::nullopt;
+        float volume;
+        if (!decodeFloat32(ptr, remaining, volume)) return std::nullopt;
+        std::string volumeDisplay;
+        if (!decodeString(ptr, remaining, volumeDisplay)) return std::nullopt;
+        float pan;
+        if (!decodeFloat32(ptr, remaining, pan)) return std::nullopt;
+        std::string panDisplay;
+        if (!decodeString(ptr, remaining, panDisplay)) return std::nullopt;
 
-        return TrackChangeMessage{trackName, color, trackIndex, trackType};
+        return TrackChangeMessage{trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay};
     }
 
 
@@ -115,6 +151,23 @@ struct TrackChangeMessage {
         ptr += snprintf(ptr, end - ptr, "  color: %lu\n", (unsigned long)color);
         ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
         ptr += snprintf(ptr, end - ptr, "  trackType: %lu\n", (unsigned long)trackType);
+        ptr += snprintf(ptr, end - ptr, "  isActivated: %s\n", isActivated ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  isMute: %s\n", isMute ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  isSolo: %s\n", isSolo ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  isMutedBySolo: %s\n", isMutedBySolo ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  isArm: %s\n", isArm ? "true" : "false");
+        {
+            char floatBuf_volume[16];
+            floatToString(floatBuf_volume, sizeof(floatBuf_volume), volume);
+            ptr += snprintf(ptr, end - ptr, "  volume: %s\n", floatBuf_volume);
+        }
+        ptr += snprintf(ptr, end - ptr, "  volumeDisplay: \"%s\"\n", volumeDisplay.c_str());
+        {
+            char floatBuf_pan[16];
+            floatToString(floatBuf_pan, sizeof(floatBuf_pan), pan);
+            ptr += snprintf(ptr, end - ptr, "  pan: %s\n", floatBuf_pan);
+        }
+        ptr += snprintf(ptr, end - ptr, "  panDisplay: \"%s\"\n", panDisplay.c_str());
 
         *ptr = '\0';
         return g_logBuffer;

@@ -1,18 +1,29 @@
 from field.track import *
+from field.send import *
 from protocol_codegen.core.message import Message
 
 # ============================================================================
-# TRACK CHANGE NOTIFICATION
+# TRACK CHANGE NOTIFICATION (Composite - Full State)
 # ============================================================================
 
 # Host → Controller: Track context changed (cursor track selection)
+# Includes all channel parameters for the selected track
 TRACK_CHANGE = Message(
-    description='Track context change notification',
+    description='Track context change notification with full channel state',
     fields=[
         track_name,            # STRING (max 16 chars)
         track_color,           # UINT32 (0xRRGGBB)
         track_index,           # UINT8 (current track position)
-        track_type             # UINT8 (0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master)
+        track_type,            # UINT8 (0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master)
+        track_is_activated,    # BOOL
+        track_is_mute,         # BOOL
+        track_is_solo,         # BOOL
+        track_is_muted_by_solo,# BOOL (read-only)
+        track_is_arm,          # BOOL
+        track_volume,          # FLOAT32 (0.0-1.0)
+        track_volume_display,  # STRING ("0 dB", "-inf")
+        track_pan,             # FLOAT32 (0.0-1.0, center=0.5)
+        track_pan_display      # STRING ("L50", "C", "R25")
     ]
 )
 
@@ -83,5 +94,204 @@ TRACK_ACTIVATE = Message(
     description='Toggle track activated/deactivated state',
     fields=[
         track_index            # Track index (uint8)
+    ]
+)
+
+# ============================================================================
+# TRACK CHANNEL PARAMETER MESSAGES (Granular - Frequent Updates)
+# ============================================================================
+# Aligned with Bitwig API Channel.java naming
+# These messages are for individual parameter updates (like remote control granular messages)
+
+# Bidirectional: Track volume change with echo flag for optimistic updates
+TRACK_VOLUME_CHANGE = Message(
+    description='Track volume change (bidirectional with echo)',
+    fields=[
+        track_index,           # Track index (uint8)
+        track_volume,          # Volume value (float32, 0.0-1.0)
+        track_volume_display,  # Display value (string, "0 dB", "-inf")
+        parameter_is_echo      # Echo flag for optimistic updates (bool)
+    ]
+)
+
+# Bidirectional: Track pan change with echo flag for optimistic updates
+TRACK_PAN_CHANGE = Message(
+    description='Track pan change (bidirectional with echo)',
+    fields=[
+        track_index,           # Track index (uint8)
+        track_pan,             # Pan value (float32, 0.0-1.0, center=0.5)
+        track_pan_display,     # Display value (string, "L50", "C", "R25")
+        parameter_is_echo      # Echo flag for optimistic updates (bool)
+    ]
+)
+
+# Bidirectional: Track record arm toggle
+TRACK_ARM_CHANGE = Message(
+    description='Track record arm state change (bidirectional)',
+    fields=[
+        track_index,           # Track index (uint8)
+        track_is_arm           # Arm state (bool)
+    ]
+)
+
+# Host → Controller: Track muted by solo state (read-only notification)
+TRACK_MUTED_BY_SOLO_CHANGE = Message(
+    description='Track muted by solo state changed (Host → Controller only)',
+    fields=[
+        track_index,           # Track index (uint8)
+        track_is_muted_by_solo # Muted by solo state (bool)
+    ]
+)
+
+# ============================================================================
+# TRACK PARAMETER AUTOMATION MESSAGES (Granular)
+# ============================================================================
+# Touch for automation recording, hasAutomation/modulatedValue for display
+
+# Bidirectional: Touch automation for track volume
+TRACK_VOLUME_TOUCH = Message(
+    description='Touch automation start/stop for track volume',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_touched      # Touch state (bool)
+    ]
+)
+
+# Bidirectional: Touch automation for track pan
+TRACK_PAN_TOUCH = Message(
+    description='Touch automation start/stop for track pan',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_touched      # Touch state (bool)
+    ]
+)
+
+# Host → Controller: Track volume has automation state changed
+TRACK_VOLUME_HAS_AUTOMATION_CHANGE = Message(
+    description='Track volume hasAutomation() state changed',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_has_automation  # Has automation (bool)
+    ]
+)
+
+# Host → Controller: Track pan has automation state changed
+TRACK_PAN_HAS_AUTOMATION_CHANGE = Message(
+    description='Track pan hasAutomation() state changed',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_has_automation  # Has automation (bool)
+    ]
+)
+
+# Host → Controller: Track volume modulated value changed
+TRACK_VOLUME_MODULATED_VALUE_CHANGE = Message(
+    description='Track volume modulatedValue() changed (automation/modulation applied)',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_modulated_value  # Modulated value (float32)
+    ]
+)
+
+# Host → Controller: Track pan modulated value changed
+TRACK_PAN_MODULATED_VALUE_CHANGE = Message(
+    description='Track pan modulatedValue() changed (automation/modulation applied)',
+    fields=[
+        track_index,           # Track index (uint8)
+        parameter_modulated_value  # Modulated value (float32)
+    ]
+)
+
+# ============================================================================
+# TRACK SEND MESSAGES (Composite + Granular)
+# ============================================================================
+# Aligned with Bitwig API Send.java (extends Parameter)
+# Each track can send audio to effect return tracks
+
+# Controller → Host: Request sends list for current track
+REQUEST_TRACK_SEND_LIST = Message(
+    description='Request list of sends for current track',
+    fields=[]
+)
+
+# Host → Controller: Send list for current track (composite)
+TRACK_SEND_LIST = Message(
+    description='List of sends for current track',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_count,            # Total sends available (uint8)
+        send_list              # Array[8] of SendInfo
+    ]
+)
+
+# Bidirectional: Send value change with echo flag for optimistic updates
+TRACK_SEND_VALUE_CHANGE = Message(
+    description='Track send value change (bidirectional with echo)',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        send_value,            # Send value (float32, 0.0-1.0)
+        send_display_value,    # Display value (string, "0 dB", "-inf")
+        parameter_is_echo      # Echo flag for optimistic updates (bool)
+    ]
+)
+
+# Bidirectional: Send enabled state change
+TRACK_SEND_ENABLED_CHANGE = Message(
+    description='Track send enabled state change (bidirectional)',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        send_is_enabled        # Enabled state (bool)
+    ]
+)
+
+# Bidirectional: Send mode change (AUTO, PRE, POST)
+TRACK_SEND_MODE_CHANGE = Message(
+    description='Track send mode change (bidirectional)',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        send_mode              # Send mode (string: "AUTO", "PRE", "POST")
+    ]
+)
+
+# Host → Controller: Send pre-fader state changed (read-only, derived from mode)
+TRACK_SEND_PRE_FADER_CHANGE = Message(
+    description='Track send pre-fader state changed (Host → Controller only)',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        send_is_pre_fader      # Pre-fader state (bool)
+    ]
+)
+
+# Bidirectional: Touch automation for send
+TRACK_SEND_TOUCH = Message(
+    description='Touch automation start/stop for track send',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        parameter_touched      # Touch state (bool)
+    ]
+)
+
+# Host → Controller: Send has automation state changed
+TRACK_SEND_HAS_AUTOMATION_CHANGE = Message(
+    description='Track send hasAutomation() state changed',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        parameter_has_automation  # Has automation (bool)
+    ]
+)
+
+# Host → Controller: Send modulated value changed
+TRACK_SEND_MODULATED_VALUE_CHANGE = Message(
+    description='Track send modulatedValue() changed (automation/modulation applied)',
+    fields=[
+        track_index,           # Track index (uint8)
+        send_index,            # Send index (uint8)
+        parameter_modulated_value  # Modulated value (float32)
     ]
 )

@@ -42,6 +42,8 @@ public final class DeviceRemoteControlUpdateMessage {
     private final int parameterType;
     private final short discreteValueCount;
     private final int currentValueIndex;
+    private final boolean hasAutomation;
+    private final float modulatedValue;
 
     // ============================================================================
     // Constructor
@@ -59,8 +61,10 @@ public final class DeviceRemoteControlUpdateMessage {
      * @param parameterType The parameterType value
      * @param discreteValueCount The discreteValueCount value
      * @param currentValueIndex The currentValueIndex value
+     * @param hasAutomation The hasAutomation value
+     * @param modulatedValue The modulatedValue value
      */
-    public DeviceRemoteControlUpdateMessage(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
+    public DeviceRemoteControlUpdateMessage(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
         this.remoteControlIndex = remoteControlIndex;
         this.parameterName = parameterName;
         this.parameterValue = parameterValue;
@@ -70,6 +74,8 @@ public final class DeviceRemoteControlUpdateMessage {
         this.parameterType = parameterType;
         this.discreteValueCount = discreteValueCount;
         this.currentValueIndex = currentValueIndex;
+        this.hasAutomation = hasAutomation;
+        this.modulatedValue = modulatedValue;
     }
 
     // ============================================================================
@@ -157,6 +163,24 @@ public final class DeviceRemoteControlUpdateMessage {
         return currentValueIndex;
     }
 
+    /**
+     * Get the hasAutomation value
+     *
+     * @return hasAutomation
+     */
+    public boolean getHasAutomation() {
+        return hasAutomation;
+    }
+
+    /**
+     * Get the modulatedValue value
+     *
+     * @return modulatedValue
+     */
+    public float getModulatedValue() {
+        return modulatedValue;
+    }
+
     // ============================================================================
     // Encoding
     // ============================================================================
@@ -164,7 +188,7 @@ public final class DeviceRemoteControlUpdateMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 83;
+    public static final int MAX_PAYLOAD_SIZE = 89;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -202,6 +226,12 @@ public final class DeviceRemoteControlUpdateMessage {
         byte[] currentValueIndex_encoded = Encoder.encodeUint8(currentValueIndex);
         System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
         offset += currentValueIndex_encoded.length;
+        byte[] hasAutomation_encoded = Encoder.encodeBool(hasAutomation);
+        System.arraycopy(hasAutomation_encoded, 0, buffer, offset, hasAutomation_encoded.length);
+        offset += hasAutomation_encoded.length;
+        byte[] modulatedValue_encoded = Encoder.encodeFloat32(modulatedValue);
+        System.arraycopy(modulatedValue_encoded, 0, buffer, offset, modulatedValue_encoded.length);
+        offset += modulatedValue_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -213,7 +243,7 @@ public final class DeviceRemoteControlUpdateMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 19;
+    private static final int MIN_PAYLOAD_SIZE = 25;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -247,8 +277,12 @@ public final class DeviceRemoteControlUpdateMessage {
         offset += 3;
         int currentValueIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
+        boolean hasAutomation = Decoder.decodeBool(data, offset);
+        offset += 1;
+        float modulatedValue = Decoder.decodeFloat32(data, offset);
+        offset += 5;
 
-        return new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex);
+        return new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue);
     }
 
     // ============================================================================
@@ -286,6 +320,8 @@ public final class DeviceRemoteControlUpdateMessage {
         sb.append("  parameterType: ").append(getParameterType()).append("\n");
         sb.append("  discreteValueCount: ").append(getDiscreteValueCount()).append("\n");
         sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
+        sb.append("  hasAutomation: ").append(getHasAutomation() ? "true" : "false").append("\n");
+        sb.append("  modulatedValue: ").append(formatFloat(getModulatedValue())).append("\n");
         return sb.toString();
     }
 }  // class Message

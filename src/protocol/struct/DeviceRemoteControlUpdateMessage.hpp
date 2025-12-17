@@ -39,6 +39,8 @@ struct DeviceRemoteControlUpdateMessage {
     uint8_t parameterType;
     int16_t discreteValueCount;
     uint8_t currentValueIndex;
+    bool hasAutomation;
+    float modulatedValue;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -46,12 +48,12 @@ struct DeviceRemoteControlUpdateMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 83;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 89;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 19;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 25;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -74,6 +76,8 @@ struct DeviceRemoteControlUpdateMessage {
         encodeUint8(ptr, parameterType);
         encodeInt16(ptr, discreteValueCount);
         encodeUint8(ptr, currentValueIndex);
+        encodeBool(ptr, hasAutomation);
+        encodeFloat32(ptr, modulatedValue);
 
         return ptr - buffer;
     }
@@ -112,8 +116,12 @@ struct DeviceRemoteControlUpdateMessage {
         if (!decodeInt16(ptr, remaining, discreteValueCount)) return std::nullopt;
         uint8_t currentValueIndex;
         if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
+        bool hasAutomation;
+        if (!decodeBool(ptr, remaining, hasAutomation)) return std::nullopt;
+        float modulatedValue;
+        if (!decodeFloat32(ptr, remaining, modulatedValue)) return std::nullopt;
 
-        return DeviceRemoteControlUpdateMessage{remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex};
+        return DeviceRemoteControlUpdateMessage{remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue};
     }
 
 
@@ -148,6 +156,12 @@ struct DeviceRemoteControlUpdateMessage {
         ptr += snprintf(ptr, end - ptr, "  parameterType: %lu\n", (unsigned long)parameterType);
         ptr += snprintf(ptr, end - ptr, "  discreteValueCount: %ld\n", (long)discreteValueCount);
         ptr += snprintf(ptr, end - ptr, "  currentValueIndex: %lu\n", (unsigned long)currentValueIndex);
+        ptr += snprintf(ptr, end - ptr, "  hasAutomation: %s\n", hasAutomation ? "true" : "false");
+        {
+            char floatBuf_modulatedValue[16];
+            floatToString(floatBuf_modulatedValue, sizeof(floatBuf_modulatedValue), modulatedValue);
+            ptr += snprintf(ptr, end - ptr, "  modulatedValue: %s\n", floatBuf_modulatedValue);
+        }
 
         *ptr = '\0';
         return g_logBuffer;

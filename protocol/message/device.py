@@ -48,7 +48,9 @@ DEVICE_REMOTE_CONTROL_UPDATE = Message(
         parameter_exists,               # BOOL - generic
         parameter_type,                 # UINT8 (0=Knob, 1=Button, 2=List) - generic
         parameter_discrete_count,       # INT16 (-1=continuous, 2=button, N=list) - generic
-        parameter_current_value_index   # UINT8 (current index for encoder navigation) - generic
+        parameter_current_value_index,  # UINT8 (current index for encoder navigation) - generic
+        parameter_has_automation,       # BOOL - hasAutomation() from Bitwig API
+        parameter_modulated_value       # FLOAT32 - modulatedValue() from Bitwig API
     ]
 )
 
@@ -74,6 +76,21 @@ DEVICE_REMOTE_CONTROL_NAME_CHANGE = Message(
 DEVICE_REMOTE_CONTROL_TOUCH = Message(
     description='Touch automation start/stop for remote control parameter',
     fields=[remote_control_index, parameter_touched]
+)
+
+# ============================================================================
+# REMOTE CONTROL AUTOMATION MESSAGES (Granular - Host → Controller)
+# ============================================================================
+# Aligned with Bitwig API Parameter.java naming
+
+DEVICE_REMOTE_CONTROL_HAS_AUTOMATION_CHANGE = Message(
+    description='hasAutomation() state changed for remote control',
+    fields=[remote_control_index, parameter_has_automation]
+)
+
+DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE = Message(
+    description='modulatedValue() changed for remote control (automation/modulation applied)',
+    fields=[remote_control_index, parameter_modulated_value]
 )
 
 DEVICE_STATE_CHANGE = Message(

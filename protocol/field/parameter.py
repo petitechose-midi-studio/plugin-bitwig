@@ -30,3 +30,14 @@ parameter_type = PrimitiveField('parameterType', type_name=Type.UINT8)
 parameter_discrete_count = PrimitiveField('discreteValueCount', type_name=Type.INT16)
 parameter_discrete_value_names = PrimitiveField('discreteValueNames', type_name=Type.STRING, array=32, dynamic=True)
 parameter_current_value_index = PrimitiveField('currentValueIndex', type_name=Type.UINT8)
+
+# ============================================================================
+# PARAMETER AUTOMATION FIELDS
+# ============================================================================
+# Aligned with Bitwig API Parameter.java naming
+
+# hasAutomation() - true if parameter has automation data
+parameter_has_automation = PrimitiveField('hasAutomation', type_name=Type.BOOL)
+
+# modulatedValue() - value after automation/modulation applied (0.0-1.0)
+parameter_modulated_value = PrimitiveField('modulatedValue', type_name=Type.FLOAT32)
