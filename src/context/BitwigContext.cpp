@@ -57,9 +57,18 @@ void BitwigContext::cleanup() {
     inputDeviceSelector_.reset();
     inputDevicePage_.reset();
     inputRemoteControl_.reset();
+    inputViewSwitcher_.reset();
     inputTransport_.reset();
 
+    // Global overlays (subscriptions first, then widget)
+    viewSelectorSubs_.clear();
+    viewSelector_.reset();
+
+    // Views (reset ViewManager first to deactivate, then destroy)
+    state_.views.reset();
     transportBar_.reset();
+    clipView_.reset();
+    mixView_.reset();
     remoteControlsView_.reset();
     viewContainer_.reset();
 
@@ -116,14 +125,20 @@ void BitwigContext::createHostHandlers() {
 
 void BitwigContext::createInputHandlers() {
     // Scope hierarchy: overlay > view > global
+    lv_obj_t* mainZone = viewContainer_->getMainZone();
     lv_obj_t* scopeElement = remoteControlsView_ ? remoteControlsView_->getElement() : lv_screen_active();
     lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
     lv_obj_t* trackSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getTrackSelectorElement() : nullptr;
     lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
+    lv_obj_t* viewSelectorOverlay = viewSelector_ ? viewSelector_->getElement() : nullptr;
 
-    // Global scope
+    // Global scope (lowest priority)
     inputTransport_ = std::make_unique<handler::HandlerInputTransport>(
         state_, *protocol_, encoders(), buttons());
+
+    // ViewSwitcher: scope = mainZone (parent of all views), overlay = ViewSelector
+    inputViewSwitcher_ = std::make_unique<handler::HandlerInputViewSwitcher>(
+        state_, encoders(), buttons(), mainZone, viewSelectorOverlay);
 
     // View + overlay scopes
     inputDeviceSelector_ = std::make_unique<handler::HandlerInputDeviceSelector>(
@@ -141,10 +156,45 @@ void BitwigContext::createInputHandlers() {
 }
 
 void BitwigContext::createViews() {
+    using state::ViewType;
+
     viewContainer_ = std::make_unique<ViewContainer>(lv_screen_active());
-    remoteControlsView_ = std::make_unique<RemoteControlsView>(viewContainer_->getMainZone(), state_);
-    remoteControlsView_->onActivate();
+    lv_obj_t* mainZone = viewContainer_->getMainZone();
+
+    // Create all views (they start hidden)
+    remoteControlsView_ = std::make_unique<RemoteControlsView>(mainZone, state_);
+    mixView_ = std::make_unique<MixView>(mainZone);
+    clipView_ = std::make_unique<ClipView>(mainZone);
+
+    // Register views with ViewManager
+    state_.views.registerView(ViewType::REMOTE_CONTROLS, remoteControlsView_.get());
+    state_.views.registerView(ViewType::MIX, mixView_.get());
+    state_.views.registerView(ViewType::CLIP, clipView_.get());
+
+    // Initialize ViewManager (activates first registered view)
+    state_.views.initialize();
+
+    // Persistent UI (always visible)
     transportBar_ = std::make_unique<TransportBar>(viewContainer_->getBottomZone(), state_.transport);
+
+    // Global overlay: ViewSelector (parent = mainZone so it covers views but not TransportBar)
+    viewSelector_ = std::make_unique<ViewSelector>(mainZone);
+
+    // Setup bindings for ViewSelector rendering
+    auto renderViewSelector = [this]() {
+        static const std::vector<std::string> VIEW_NAMES = {"Remote Controls", "Mix", "Clip"};
+        viewSelector_->render({
+            VIEW_NAMES,
+            state_.viewSelector.selectedIndex.get(),
+            state_.viewSelector.visible.get()
+        });
+    };
+
+    viewSelectorSubs_.push_back(state_.viewSelector.visible.subscribe(
+        [renderViewSelector](bool) { renderViewSelector(); }));
+    viewSelectorSubs_.push_back(state_.viewSelector.selectedIndex.subscribe(
+        [renderViewSelector](int) { renderViewSelector(); }));
+
     lv_obj_clear_flag(viewContainer_->getContainer(), LV_OBJ_FLAG_HIDDEN);
 }
 

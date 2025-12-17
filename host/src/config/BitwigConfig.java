@@ -101,7 +101,7 @@ public final class BitwigConfig {
      * Window for detecting echo callbacks from controller changes.
      * Callbacks within this window are considered echoes (not sent to controller).
      */
-    public static final int ECHO_TIMEOUT_MS = STANDARD_DELAY_MS / 4;
+    public static final int ECHO_TIMEOUT_MS = STANDARD_DELAY_MS;
 
     /**
      * Timeout for mute/solo toggle confirmation.

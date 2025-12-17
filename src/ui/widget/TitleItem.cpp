@@ -25,8 +25,10 @@ TitleItem::TitleItem(lv_obj_t* parent) {
     lv_obj_add_flag(icon_, LV_OBJ_FLAG_HIDDEN);
     lv_label_set_text(icon_, "");
 
-    label_ = lv_label_create(container_);
-    lv_label_set_text(label_, "");
+    // Use framework Label widget with auto-scroll for overflow text
+    label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
+    label_->alignment(LV_TEXT_ALIGN_LEFT)
+           .ownsLvglObjects(false);
 
     indicator_ = lv_label_create(container_);
     lv_obj_add_flag(indicator_, LV_OBJ_FLAG_HIDDEN);
@@ -34,11 +36,11 @@ TitleItem::TitleItem(lv_obj_t* parent) {
 }
 
 TitleItem::~TitleItem() {
+    // label_ is unique_ptr with ownsLvglObjects(false) - container deletion handles LVGL cleanup
     if (container_) {
         lv_obj_delete(container_);
         container_ = nullptr;
         icon_ = nullptr;
-        label_ = nullptr;
         indicator_ = nullptr;
     }
 }
@@ -72,13 +74,13 @@ void TitleItem::applyProps(const TitleItemProps& props) {
 
     // Label
     if (label_) {
-        lv_label_set_text(label_, props.text ? props.text : "");
-        style::apply(label_).textColor(props.textColor);
-        lv_obj_set_style_text_opa(label_, props.textOpacity, LV_STATE_DEFAULT);
+        label_->setText(props.text ? props.text : "");
+        label_->color(props.textColor);
+        lv_obj_set_style_text_opa(label_->getLabel(), props.textOpacity, LV_STATE_DEFAULT);
         if (props.textFont) {
-            lv_obj_set_style_text_font(label_, props.textFont, LV_STATE_DEFAULT);
+            label_->font(props.textFont);
         }
-        lv_obj_clear_flag(label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(label_->getElement(), LV_OBJ_FLAG_HIDDEN);
     }
 
     // Indicator

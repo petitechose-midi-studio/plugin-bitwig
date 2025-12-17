@@ -2,6 +2,7 @@
 
 #include <oc/state/Bind.hpp>
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
@@ -72,7 +73,9 @@ void TransportBar::setRecordState(bool recording) {
 }
 
 void TransportBar::setTempo(float tempo) {
-    if (bpm_label_) { lv_label_set_text_fmt(bpm_label_, "%.2f", static_cast<double>(tempo)); }
+    if (bpm_label_) {
+        bpm_label_->setText(tempo, 2);
+    }
 }
 
 void TransportBar::setMidiIn(bool active) {
@@ -157,11 +160,15 @@ void TransportBar::createTransportControls() {
 }
 
 void TransportBar::createTempoDisplay() {
-    bpm_label_ = lv_label_create(container_);
-    lv_obj_set_grid_cell(bpm_label_, LV_GRID_ALIGN_END, 2, 1, LV_GRID_ALIGN_CENTER, 0, 1);
-    lv_label_set_text(bpm_label_, "120.00");
-    style::apply(bpm_label_).textColor(Color::TEXT_LIGHT);
-    lv_obj_set_style_text_font(bpm_label_, bitwig_fonts.page_label, LV_STATE_DEFAULT);
+    bpm_label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
+    bpm_label_->alignment(LV_TEXT_ALIGN_RIGHT)
+              .gridCell(2, 1, 0, 1)
+              .autoScroll(false)  // Désactiver auto-scroll pour debug
+              .color(Color::TEXT_LIGHT)
+              .font(bitwig_fonts.page_label)
+              .ownsLvglObjects(false);
+
+    bpm_label_->setText("120.00");
 }
 
 }  // namespace bitwig

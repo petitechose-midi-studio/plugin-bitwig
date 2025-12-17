@@ -5,7 +5,6 @@
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DevicePageSelectByIndexMessage.hpp"
-#include "protocol/struct/RequestDevicePageNamesMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -27,6 +26,13 @@ HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
     , scopeElement_(scopeElement)
     , overlayElement_(overlayElement) {
     setupBindings();
+
+    // Auto-reset latch when overlay hidden externally (by OverlayManager)
+    visibleSub_ = state_.pageSelector.visible.subscribe([this](bool visible) {
+        if (!visible) {
+            buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
+        }
+    });
 }
 
 void HandlerInputDevicePage::setupBindings() {
@@ -37,7 +43,7 @@ void HandlerInputDevicePage::setupBindings() {
         .press()
         .latch()
         .scope(scope(scopeElement_))
-        .then([this]() { requestPageList(); });
+        .then([this]() { openSelector(); });
 
     // Close and confirm on release (long press or second toggle press)
     buttons_.button(ButtonID::LEFT_BOTTOM)
@@ -66,20 +72,15 @@ void HandlerInputDevicePage::setupBindings() {
         .then([this]() { cancel(); });
 }
 
-void HandlerInputDevicePage::requestPageList() {
+void HandlerInputDevicePage::openSelector() {
     // Show overlay (OverlayManager handles exclusive visibility)
+    // Page names are preloaded by HandlerHostDevice on device change
     if (!state_.pageSelector.visible.get()) {
         state_.overlays.show(OverlayType::PAGE_SELECTOR, false);
     }
 
     // Set encoder to relative mode for navigation
     encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
-
-    // Always request fresh data from Bitwig
-    if (!requested_) {
-        protocol_.send(Protocol::RequestDevicePageNamesMessage{});
-        requested_ = true;
-    }
 }
 
 void HandlerInputDevicePage::navigate(float delta) {
@@ -102,23 +103,18 @@ void HandlerInputDevicePage::confirmSelection() {
 void HandlerInputDevicePage::closeSelector() {
     int index = state_.pageSelector.selectedIndex.get();
 
-    // Hide page selector via OverlayManager
-    state_.overlays.hide();
-
     // Confirm selection on close
     if (index >= 0) {
         protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
     }
 
-    requested_ = false;
-    buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
+    // Hide page selector via OverlayManager (subscription handles latch reset)
+    state_.overlays.hide();
 }
 
 void HandlerInputDevicePage::cancel() {
-    // Hide page selector via OverlayManager (no confirmation)
+    // Hide page selector via OverlayManager (subscription handles latch reset)
     state_.overlays.hide();
-    requested_ = false;
-    buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
 }
 
 }  // namespace bitwig::handler

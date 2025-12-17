@@ -144,4 +144,18 @@ struct CurrentTrackState {
     }
 };
 
+
+/**
+ * @brief State for view selector overlay
+ */
+struct ViewSelectorState {
+    Signal<int> selectedIndex{0};
+    Signal<bool> visible{false};
+
+    void reset() {
+        selectedIndex.set(0);
+        visible.set(false);
+    }
+};
+
 }  // namespace bitwig::state

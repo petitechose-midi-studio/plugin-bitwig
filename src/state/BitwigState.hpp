@@ -43,6 +43,7 @@
 #include "ParameterState.hpp"
 #include "SelectorState.hpp"
 #include "TransportState.hpp"
+#include "ViewManager.hpp"
 
 namespace bitwig::state {
 
@@ -83,12 +84,18 @@ struct BitwigState {
     PageSelectorState pageSelector;
     DeviceSelectorState deviceSelector;
     TrackSelectorState trackSelector;
+    ViewSelectorState viewSelector;
     CurrentTrackState currentTrack;
 
     // =========================================================================
     // Overlay Manager (centralized visibility control)
     // =========================================================================
     OverlayManager overlays;
+
+    // =========================================================================
+    // View Manager (handles view switching)
+    // =========================================================================
+    ViewManager views;
 
     // =========================================================================
     // Lifecycle
@@ -99,6 +106,7 @@ struct BitwigState {
         overlays.registerOverlay(OverlayType::PAGE_SELECTOR, pageSelector.visible);
         overlays.registerOverlay(OverlayType::DEVICE_SELECTOR, deviceSelector.visible);
         overlays.registerOverlay(OverlayType::TRACK_SELECTOR, trackSelector.visible);
+        overlays.registerOverlay(OverlayType::VIEW_SELECTOR, viewSelector.visible);
     }
 
     // Non-copyable, non-movable
@@ -121,6 +129,7 @@ struct BitwigState {
         pageSelector.reset();
         deviceSelector.reset();
         trackSelector.reset();
+        viewSelector.reset();
         currentTrack.reset();
         overlays.hideAll();
     }

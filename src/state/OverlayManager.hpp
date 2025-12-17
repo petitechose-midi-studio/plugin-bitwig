@@ -29,6 +29,7 @@ enum class OverlayType : uint8_t {
     PAGE_SELECTOR,
     DEVICE_SELECTOR,
     TRACK_SELECTOR,
+    VIEW_SELECTOR,
     COUNT  // Must be last
 };
 

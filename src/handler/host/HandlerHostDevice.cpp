@@ -10,6 +10,7 @@
 #include "protocol/struct/DeviceChildrenMessage.hpp"
 #include "protocol/struct/DeviceListMessage.hpp"
 #include "protocol/struct/DeviceStateChangeMessage.hpp"
+#include "protocol/struct/RequestDevicePageNamesMessage.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -42,6 +43,9 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         for (uint8_t i = 0; i < PARAMETER_COUNT; i++) {
             state_.parameters.slots[i].loading.set(true);
         }
+
+        // Preload page names for immediate availability in PageSelector
+        protocol_.send(RequestDevicePageNamesMessage{});
     };
 
     protocol_.onDeviceStateChange = [this](const DeviceStateChangeMessage& msg) {
@@ -132,6 +136,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         state_.deviceSelector.childrenNames.set(names.data(), names.size());
         state_.deviceSelector.childrenTypes.set(types.data(), types.size());
+        state_.deviceSelector.currentIndex.set(1);  // Reset to first child (index 0 = back button)
         state_.deviceSelector.showingChildren.set(true);
         // NOTE: visibility is controlled by input handlers, not host handlers
     };

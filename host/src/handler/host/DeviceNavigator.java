@@ -1,6 +1,7 @@
 package handler.host;
 
 import com.bitwig.extension.controller.api.*;
+import config.BitwigConfig;
 
 /**
  * DeviceNavigator - Handles device hierarchy navigation
@@ -30,13 +31,6 @@ public class DeviceNavigator {
         this.layerBank = layerBank;
     }
 
-    /**
-     * Enter device child (slot/layer/drum pad)
-     *
-     * @param deviceIndex Index of device in deviceBank
-     * @param itemType 0=slot, 1=layer, 2=drum pad
-     * @param childIndex Index of child to enter
-     */
     public void enterDeviceChild(int deviceIndex, int itemType, int childIndex) {
         Device device = deviceBank.getItemAt(deviceIndex);
         if (!device.exists().get()) {
@@ -51,25 +45,32 @@ public class DeviceNavigator {
         // Select the device first
         cursorDevice.selectDevice(device);
 
-        // Navigate into child based on type
-        switch (itemType) {
-            case 0: // Slot
-                String[] slotNames = device.slotNames().get();
-                if (childIndex >= 0 && childIndex < slotNames.length) {
-                    cursorDevice.selectFirstInSlot(slotNames[childIndex]);
-                }
-                break;
-            case 1: // Layer
-                DeviceLayer layer = layerBank.getItemAt(childIndex);
-                if (layer.exists().get()) {
-                    layer.selectInEditor();
-                    cursorDevice.selectFirstInChannel(layer);
-                }
-                break;
-            case 2: // Drum pad
-                cursorDevice.selectFirstInKeyPad(childIndex);
-                break;
-        }
+        // Schedule child navigation AFTER device selection completes (async operation)
+        // Without this delay, selectFirstInSlot/Channel/KeyPad operates on the PREVIOUS device
+        host.scheduleTask(() -> {
+            // Navigate into child based on type
+            switch (itemType) {
+                case 0: // Slot
+                    String[] slotNames = device.slotNames().get();
+                    if (childIndex >= 0 && childIndex < slotNames.length) {
+                        host.println("[DEVICE NAV] → selectFirstInSlot: " + slotNames[childIndex]);
+                        cursorDevice.selectFirstInSlot(slotNames[childIndex]);
+                    }
+                    break;
+                case 1: // Layer
+                    DeviceLayer layer = layerBank.getItemAt(childIndex);
+                    if (layer.exists().get()) {
+                        host.println("[DEVICE NAV] → selectFirstInChannel: layer " + childIndex);
+                        layer.selectInEditor();
+                        cursorDevice.selectFirstInChannel(layer);
+                    }
+                    break;
+                case 2: // Drum pad
+                    host.println("[DEVICE NAV] → selectFirstInKeyPad: " + childIndex);
+                    cursorDevice.selectFirstInKeyPad(childIndex);
+                    break;
+            }
+        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
         // itemCount observer will trigger sendDeviceList() with debounce
     }
 

@@ -20,6 +20,7 @@
 
 #include <oc/api/ButtonAPI.hpp>
 #include <oc/api/EncoderAPI.hpp>
+#include <oc/state/Signal.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -61,7 +62,7 @@ private:
     void requestTrackList();
     void close();
 
-    bool hasChildren(uint8_t deviceIndex) const;
+    bool hasChildrenAtDisplayIndex(int displayIndex) const;
     int getAdjustedDeviceIndex(int selectorIndex) const;
     bool isShowingChildren() const;
 
@@ -75,6 +76,9 @@ private:
     // Minimal local state - everything else comes from BitwigState Signals
     uint8_t currentDeviceIndex_ = 0;  // Device being navigated (for children mode)
     bool requested_ = false;
+
+    // Auto-reset latch when overlay hidden externally (by OverlayManager)
+    oc::state::Subscription visibleSub_;
 };
 
 }  // namespace bitwig::handler

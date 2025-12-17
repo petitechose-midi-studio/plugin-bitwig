@@ -77,6 +77,13 @@ public class TrackHost {
         cursorTrack.isActivated().markInterested();
         cursorTrack.mute().markInterested();
         cursorTrack.solo().markInterested();
+        cursorTrack.isMutedBySolo().markInterested();
+        cursorTrack.arm().markInterested();
+        // Cursor track channel parameters
+        cursorTrack.volume().value().markInterested();
+        cursorTrack.volume().displayedValue().markInterested();
+        cursorTrack.pan().value().markInterested();
+        cursorTrack.pan().displayedValue().markInterested();
 
         // Mark main track bank observables as interested
         mainTrackBank.itemCount().markInterested();
@@ -154,8 +161,15 @@ public class TrackHost {
         track.isActivated().markInterested();
         track.mute().markInterested();
         track.solo().markInterested();
+        track.isMutedBySolo().markInterested();
+        track.arm().markInterested();
         track.isGroup().markInterested();
         track.trackType().markInterested();
+        // Channel parameters (volume, pan)
+        track.volume().value().markInterested();
+        track.volume().displayedValue().markInterested();
+        track.pan().value().markInterested();
+        track.pan().displayedValue().markInterested();
     }
 
     /**
@@ -241,8 +255,12 @@ public class TrackHost {
                     track.isActivated().get(),
                     track.mute().get(),
                     track.solo().get(),
+                    track.isMutedBySolo().get(),
+                    track.arm().get(),
                     track.isGroup().get(),
-                    TrackTypeUtils.toInt(track.trackType().get())
+                    TrackTypeUtils.toInt(track.trackType().get()),
+                    (float) track.volume().value().get(),
+                    (float) track.pan().value().get()
                 ));
             }
         }
@@ -259,7 +277,7 @@ public class TrackHost {
     }
 
     /**
-     * Send current track info (name, color, position, type)
+     * Send current track info (name, color, position, type, channel params)
      * Called when cursor track changes
      */
     private void sendTrackChange() {
@@ -267,8 +285,21 @@ public class TrackHost {
         final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
         final int trackPosition = cursorTrack.position().get();
         final int trackType = TrackTypeUtils.toInt(cursorTrack.trackType().get());
+        final boolean isActivated = cursorTrack.isActivated().get();
+        final boolean isMute = cursorTrack.mute().get();
+        final boolean isSolo = cursorTrack.solo().get();
+        final boolean isMutedBySolo = cursorTrack.isMutedBySolo().get();
+        final boolean isArm = cursorTrack.arm().get();
+        final float volume = (float) cursorTrack.volume().value().get();
+        final String volumeDisplay = cursorTrack.volume().displayedValue().get();
+        final float pan = (float) cursorTrack.pan().value().get();
+        final String panDisplay = cursorTrack.pan().displayedValue().get();
 
-        protocol.send(new TrackChangeMessage(trackName, trackColor, trackPosition, trackType));
+        protocol.send(new TrackChangeMessage(
+            trackName, trackColor, trackPosition, trackType,
+            isActivated, isMute, isSolo, isMutedBySolo, isArm,
+            volume, volumeDisplay, pan, panDisplay
+        ));
     }
 
     /**

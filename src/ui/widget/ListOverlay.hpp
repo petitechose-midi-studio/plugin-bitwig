@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -7,6 +8,7 @@
 
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/theme/BaseTheme.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 namespace bitwig {
 
@@ -46,7 +48,9 @@ public:
     int getItemCount() const;
 
     lv_obj_t* getButton(size_t index) const;
+    oc::ui::lvgl::Label* getLabel(size_t index) const;
     void setItemFont(size_t index, const lv_font_t* font);
+    void removeLabel(size_t index);
 
     lv_obj_t* getElement() const override { return overlay_; }
     lv_obj_t* getContainer() const { return container_; }
@@ -66,10 +70,11 @@ private:
     lv_obj_t* parent_ = nullptr;
     lv_obj_t* overlay_ = nullptr;
     lv_obj_t* container_ = nullptr;
-    lv_obj_t* title_label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> title_label_;
     lv_obj_t* list_ = nullptr;
 
     std::vector<lv_obj_t*> buttons_;
+    std::vector<std::unique_ptr<oc::ui::lvgl::Label>> labels_;
     std::vector<std::string> items_;
     std::string title_;
     int selected_index_ = 0;
