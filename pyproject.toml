@@ -16,7 +16,8 @@ dev = [
 ]
 
 [tool.pyright]
-include = ["sysex_protocol", "tools"]
+include = ["protocol"]
+extraPaths = ["protocol"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 venvPath = "."
