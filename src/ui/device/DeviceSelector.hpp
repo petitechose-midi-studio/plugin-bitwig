@@ -10,11 +10,17 @@
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
 
+#include <oc/ui/lvgl/widget/VirtualList.hpp>
+
 #include "ui/track/TrackTitleItem.hpp"
 #include "ui/widget/HintBar.hpp"
-#include "ui/widget/VirtualList.hpp"
 
 namespace bitwig {
+
+// Import VirtualList types from shared component
+using oc::ui::lvgl::widget::VirtualList;
+using oc::ui::lvgl::widget::VirtualSlot;
+using oc::ui::lvgl::widget::ScrollMode;
 
 struct DeviceSelectorProps {
     // Device list mode
@@ -90,9 +96,9 @@ private:
     void renderFooter(const DeviceSelectorProps &props);
 
     // VirtualList callbacks
-    void bindSlot(ui::VirtualSlot &slot, int index, bool isSelected);
-    void updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected);
-    void ensureSlotWidgets(ui::VirtualSlot &slot, int slotIndex);
+    void bindSlot(VirtualSlot &slot, int index, bool isSelected);
+    void updateSlotHighlight(VirtualSlot &slot, bool isSelected);
+    void ensureSlotWidgets(VirtualSlot &slot, int slotIndex);
 
     // Slot population
     void populateSlotForDevice(DeviceSlotWidgets &widgets, int index);
@@ -116,7 +122,7 @@ private:
     lv_obj_t *container_ = nullptr;
 
     // Virtual list
-    std::unique_ptr<ui::VirtualList> list_;
+    std::unique_ptr<VirtualList> list_;
     std::vector<DeviceSlotWidgets> slotWidgets_;
 
     // Header
