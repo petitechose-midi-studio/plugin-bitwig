@@ -28,14 +28,16 @@ TrackSelector::TrackSelector(lv_obj_t *parent) : parent_(parent) {
     createOverlay();
     createHeader();
 
-    // Create virtual list
-    list_ = std::make_unique<ui::VirtualList>(container_, VISIBLE_SLOTS, ITEM_HEIGHT);
-    list_->setOnBindSlot([this](ui::VirtualSlot &slot, int index, bool isSelected) {
-        bindSlot(slot, index, isSelected);
-    });
-    list_->setOnUpdateHighlight([this](ui::VirtualSlot &slot, bool isSelected) {
-        updateSlotHighlight(slot, isSelected);
-    });
+    // Create virtual list with fluent API
+    list_ = std::make_unique<VirtualList>(container_);
+    list_->visibleCount(VISIBLE_SLOTS)
+        .itemHeight(ITEM_HEIGHT)
+        .onBindSlot([this](VirtualSlot &slot, int index, bool isSelected) {
+            bindSlot(slot, index, isSelected);
+        })
+        .onUpdateHighlight([this](VirtualSlot &slot, bool isSelected) {
+            updateSlotHighlight(slot, isSelected);
+        });
 
     // Pre-allocate slot items
     slotItems_.resize(VISIBLE_SLOTS);
@@ -184,7 +186,7 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
 // VirtualList Callbacks
 // ══════════════════════════════════════════════════════════════════
 
-void TrackSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected) {
+void TrackSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
     int slotIndex = index - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
@@ -222,7 +224,7 @@ void TrackSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected) 
     });
 }
 
-void TrackSelector::updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected) {
+void TrackSelector::updateSlotHighlight(VirtualSlot &slot, bool isSelected) {
     int slotIndex = slot.boundIndex - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 

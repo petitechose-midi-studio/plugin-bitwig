@@ -10,11 +10,16 @@
 #include <lvgl.h>
 
 #include <oc/ui/lvgl/IComponent.hpp>
+#include <oc/ui/lvgl/widget/VirtualList.hpp>
 
 #include "ui/widget/HintBar.hpp"
-#include "ui/widget/VirtualList.hpp"
 
 namespace bitwig {
+
+// Import VirtualList types from shared component
+using oc::ui::lvgl::widget::VirtualList;
+using oc::ui::lvgl::widget::VirtualSlot;
+using oc::ui::lvgl::widget::ScrollMode;
 
 struct TrackSelectorProps {
     std::vector<std::string> names;
@@ -56,8 +61,8 @@ private:
     void renderFooter(const TrackSelectorProps &props);
 
     // VirtualList callbacks
-    void bindSlot(ui::VirtualSlot &slot, int index, bool isSelected);
-    void updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected);
+    void bindSlot(VirtualSlot &slot, int index, bool isSelected);
+    void updateSlotHighlight(VirtualSlot &slot, bool isSelected);
     void ensureSlotWidgets(int slotIndex);
 
     // Highlight
@@ -73,7 +78,7 @@ private:
     lv_obj_t *header_label_ = nullptr;
 
     // Virtual list
-    std::unique_ptr<ui::VirtualList> list_;
+    std::unique_ptr<VirtualList> list_;
     std::vector<std::unique_ptr<TrackTitleItem>> slotItems_;
 
     // Footer

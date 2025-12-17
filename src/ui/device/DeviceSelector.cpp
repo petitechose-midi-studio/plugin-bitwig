@@ -27,16 +27,18 @@ constexpr int ITEM_HEIGHT = 32;
 DeviceSelector::DeviceSelector(lv_obj_t *parent) : parent_(parent) {
     createOverlay();
 
-    list_ = std::make_unique<ui::VirtualList>(container_, VISIBLE_SLOTS, ITEM_HEIGHT);
+    list_ = std::make_unique<VirtualList>(container_);
+    list_->visibleCount(VISIBLE_SLOTS)
+        .itemHeight(ITEM_HEIGHT)
+        .scrollMode(ScrollMode::CenterLocked)
+        .onBindSlot([this](VirtualSlot &slot, int index, bool isSelected) {
+            bindSlot(slot, index, isSelected);
+        })
+        .onUpdateHighlight([this](VirtualSlot &slot, bool isSelected) {
+            updateSlotHighlight(slot, isSelected);
+        });
+
     slotWidgets_.resize(VISIBLE_SLOTS);
-
-    list_->setOnBindSlot([this](ui::VirtualSlot &slot, int index, bool isSelected) {
-        bindSlot(slot, index, isSelected);
-    });
-
-    list_->setOnUpdateHighlight([this](ui::VirtualSlot &slot, bool isSelected) {
-        updateSlotHighlight(slot, isSelected);
-    });
 
     createHeader();
     createFooter();
@@ -203,18 +205,12 @@ void DeviceSelector::renderHeader(const DeviceSelectorProps &props) {
                            .highlighted = true,
                            .hideIndicators = false});
 
-    // Update page indicator: "currentPage/totalPages"
+    // Update total count indicator
     if (page_label_) {
         int total = props.totalCount;
-        // Account for back button in display
-        int displayTotal = props.isNested ? total + 1 : total;
-
-        if (displayTotal > 0) {
-            // Calculate page numbers (1-based for display)
-            int currentPage = (props.selectedIndex / VISIBLE_SLOTS) + 1;
-            int totalPages = (displayTotal + VISIBLE_SLOTS - 1) / VISIBLE_SLOTS;
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%d/%d", currentPage, totalPages);
+        if (total > 0) {
+            char buf[24];
+            snprintf(buf, sizeof(buf), "%d items", total);
             page_label_->setText(buf);
         } else {
             page_label_->setText("");
@@ -258,7 +254,7 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
 // VirtualList Callbacks
 // ══════════════════════════════════════════════════════════════════
 
-void DeviceSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected) {
+void DeviceSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
     // slotIndex = position dans la fenêtre visible (0 à 5)
     int slotIndex = index - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
@@ -277,7 +273,7 @@ void DeviceSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected)
     applyHighlightStyle(widgets, isSelected);
 }
 
-void DeviceSelector::updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected) {
+void DeviceSelector::updateSlotHighlight(VirtualSlot &slot, bool isSelected) {
     // Utilise boundIndex pour trouver le slotIndex
     int slotIndex = slot.boundIndex - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
@@ -286,7 +282,7 @@ void DeviceSelector::updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected)
     applyHighlightStyle(widgets, isSelected);
 }
 
-void DeviceSelector::ensureSlotWidgets(ui::VirtualSlot &slot, int slotIndex) {
+void DeviceSelector::ensureSlotWidgets(VirtualSlot &slot, int slotIndex) {
     auto &widgets = slotWidgets_[slotIndex];
 
     if (widgets.created) return;
@@ -364,30 +360,31 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
         lv_obj_move_to_index(widgets.stateIcon, 1);
     }
 
-    // Folder icon (index 2) - only if has children
-    if (widgets.folderIcon && hasFolder) {
+    // Folder icon (index 2) - always reserve space for alignment
+    if (widgets.folderIcon) {
         Icon::set(widgets.folderIcon, Icon::BROWSER_DIRECTORY);
         style::apply(widgets.folderIcon).textColor(Color::INACTIVE_LIGHTER);
-        lv_obj_set_style_text_opa(widgets.folderIcon, Opacity::SUBTLE, LV_STATE_DEFAULT);
+        // Visible with opacity when has children, invisible (0 opacity) otherwise to reserve space
+        lv_obj_set_style_text_opa(widgets.folderIcon, hasFolder ? Opacity::SUBTLE : Opacity::HIDDEN,
+                                  LV_STATE_DEFAULT);
         lv_obj_clear_flag(widgets.folderIcon, LV_OBJ_FLAG_HIDDEN);
         lv_obj_move_to_index(widgets.folderIcon, 2);
     }
 
-    // Label (index 3 or 2 if no folder)
-    int labelPosition = hasFolder ? 3 : 2;
+    // Label (index 3) - fixed position for alignment
     if (widgets.label) {
-        lv_obj_move_to_index(widgets.label, labelPosition);
+        lv_obj_move_to_index(widgets.label, 3);
     }
 
     // Index label (always last) - show 1-based device index
     if (widgets.indexLabel && isDevice) {
         // Calculate real device index (excluding back button)
         int deviceIndex = currentProps_.isNested ? index : index + 1;
-        char buf[8];
+        char buf[12];
         snprintf(buf, sizeof(buf), "%d", deviceIndex);
         lv_label_set_text(widgets.indexLabel, buf);
         lv_obj_clear_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_to_index(widgets.indexLabel, labelPosition + 1);
+        lv_obj_move_to_index(widgets.indexLabel, 4);
     }
 }
 
@@ -436,7 +433,7 @@ void DeviceSelector::populateSlotForChild(DeviceSlotWidgets &widgets, int index)
 
     // Index label (always last) - show 1-based child index
     if (widgets.indexLabel) {
-        char buf[8];
+        char buf[12];
         snprintf(buf, sizeof(buf), "%d", index);  // index 1 = child 1 (back button is 0)
         lv_label_set_text(widgets.indexLabel, buf);
         lv_obj_clear_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
