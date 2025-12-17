@@ -25,14 +25,16 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     folder_icon_ = lv_label_create(parent_);
     if (folder_icon_) lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
 
-    label_ = lv_label_create(parent_);
-    if (label_) {
-        style::apply(label_).textColor(Color::TEXT_LIGHT);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
-    }
+    // Use framework Label widget with auto-scroll for overflow text
+    label_ = std::make_unique<oc::ui::lvgl::Label>(parent_);
+    label_->alignment(LV_TEXT_ALIGN_LEFT)
+           .color(Color::TEXT_LIGHT)
+           .font(bitwig_fonts.device_label)
+           .ownsLvglObjects(false);
 }
 
 DeviceTitleItem::~DeviceTitleItem() {
+    // label_ is unique_ptr with ownsLvglObjects(false) - LVGL parent handles cleanup
     if (type_icon_) {
         lv_obj_delete(type_icon_);
         type_icon_ = nullptr;
@@ -45,16 +47,12 @@ DeviceTitleItem::~DeviceTitleItem() {
         lv_obj_delete(folder_icon_);
         folder_icon_ = nullptr;
     }
-    if (label_) {
-        lv_obj_delete(label_);
-        label_ = nullptr;
-    }
 }
 
 void DeviceTitleItem::render(const DeviceTitleItemProps &props) {
     if (label_) {
-        lv_label_set_text(label_, props.name ? props.name : "");
-        lv_obj_set_style_text_opa(label_, props.enabled ? Opacity::FULL : Opacity::DIMMED,
+        label_->setText(props.name ? props.name : "");
+        lv_obj_set_style_text_opa(label_->getLabel(), props.enabled ? Opacity::FULL : Opacity::DIMMED,
                                   LV_STATE_DEFAULT);
     }
 
@@ -93,7 +91,7 @@ void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
     if (!folder_icon_) return;
 
     Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
-    Icon::set(folder_icon_, Icon::DIRECTORY, size);
+    Icon::set(folder_icon_, Icon::BROWSER_DIRECTORY, size);
 
     style::apply(folder_icon_).textColor(Color::INACTIVE_LIGHTER);
     lv_obj_set_style_text_opa(folder_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
@@ -116,7 +114,7 @@ lv_coord_t DeviceTitleItem::getContentWidth() const {
     if (folder_icon_ && !lv_obj_has_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN))
         width += Layout::GAP_MD + lv_obj_get_width(folder_icon_);
 
-    if (label_) width += Layout::GAP_MD + lv_obj_get_width(label_);
+    if (label_) width += Layout::GAP_MD + lv_obj_get_width(label_->getElement());
 
     return width;
 }
