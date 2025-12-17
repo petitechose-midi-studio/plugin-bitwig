@@ -17,18 +17,27 @@ import java.util.stream.IntStream;
  * 1. Observe track changes (name, color, mute, solo) → send protocol messages
  * 2. Execute mute/solo toggles with observer-based confirmation
  * 3. Send track lists on request
+ * 4. MixView support: Volume/Pan/Sends for 4 tracks with send filtering
  *
  * DELEGATES TO:
  * - TrackNavigator: Group navigation (enter/exit)
  */
 public class TrackHost {
+    // MixView constants
+    private static final int MAX_MIX_TRACKS = 4;
+    private static final int MAX_SENDS = 8;
+
     private final ControllerHost host;
     private final Protocol protocol;
     private final CursorTrack cursorTrack;
     private final TrackBank mainTrackBank;
+    private final TrackBank effectTrackBank;  // For send destination names
     private final TrackBank siblingTrackBank;  // Tracks at same level as cursor track
     private final Track parentTrack;  // Parent track for navigation
     private final TrackNavigator navigator;
+
+    // MixView: selected send index for filtering (-1 = none, 0-7 = send index)
+    private int selectedMixSendIndex = -1;
 
     // Cache for change detection
     private String lastTrackName = "";
@@ -47,15 +56,18 @@ public class TrackHost {
         ControllerHost host,
         Protocol protocol,
         CursorTrack cursorTrack,
-        TrackBank mainTrackBank
+        TrackBank mainTrackBank,
+        TrackBank effectTrackBank
     ) {
         this.host = host;
         this.protocol = protocol;
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
+        this.effectTrackBank = effectTrackBank;
 
         // Create a TrackBank for sibling tracks (same level as cursor track)
-        this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(BitwigConfig.MAX_BANK_SIZE, 0, 0, true, false);
+        // Note: 8 sends to match mainTrackBank configuration for send bank access
+        this.siblingTrackBank = cursorTrack.createSiblingsTrackBank(BitwigConfig.MAX_BANK_SIZE, MAX_SENDS, 0, true, false);
 
         // Create parent track object to detect if cursor track has a parent
         this.parentTrack = cursorTrack.createParentTrack(0, 0);
@@ -94,7 +106,7 @@ public class TrackHost {
         // Observer for track count changes (add/remove track)
         mainTrackBank.itemCount().addValueObserver(count -> {
             host.println("[TRACK HOST] Main bank track count changed: " + count);
-            sendTrackList();
+            sendTrackListWindow(0);  // Use windowed loading
         });
 
         // Mark all tracks in bank as interested + add observers
@@ -115,7 +127,7 @@ public class TrackHost {
         // Observer for sibling track count changes (add/remove track in group)
         siblingTrackBank.itemCount().addValueObserver(count -> {
             host.println("[TRACK HOST] Sibling bank track count changed: " + count);
-            sendTrackList();
+            sendTrackListWindow(0);  // Use windowed loading
         });
         for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
             final int trackIndex = i;
@@ -139,6 +151,117 @@ public class TrackHost {
                 sendTrackChange();
             }
         });
+
+        // Effect track bank for send destination names
+        for (int i = 0; i < MAX_SENDS; i++) {
+            Track effectTrack = effectTrackBank.getItemAt(i);
+            effectTrack.exists().markInterested();
+            effectTrack.name().markInterested();
+        }
+
+        // MixView observers (first MAX_MIX_TRACKS tracks)
+        setupMixViewObservers();
+    }
+
+    /**
+     * Setup observers for MixView: Volume/Pan/Arm with automation + Sends with filtering
+     */
+    private void setupMixViewObservers() {
+        for (int t = 0; t < MAX_MIX_TRACKS; t++) {
+            final int trackIndex = t;
+            Track track = mainTrackBank.getItemAt(t);
+
+            // Volume observers
+            track.volume().displayedValue().addValueObserver(display -> {
+                if (!track.exists().get()) return;
+                float value = (float) track.volume().value().get();
+                protocol.send(new TrackVolumeChangeMessage(trackIndex, value, display, false));
+            });
+
+            track.volume().hasAutomation().addValueObserver(hasAuto -> {
+                if (!track.exists().get()) return;
+                protocol.send(new TrackVolumeHasAutomationChangeMessage(trackIndex, hasAuto));
+            });
+
+            track.volume().modulatedValue().addValueObserver(modVal -> {
+                if (!track.exists().get()) return;
+                protocol.send(new TrackVolumeModulatedValueChangeMessage(trackIndex, (float) modVal));
+            });
+
+            // Pan observers
+            track.pan().displayedValue().addValueObserver(display -> {
+                if (!track.exists().get()) return;
+                float value = (float) track.pan().value().get();
+                protocol.send(new TrackPanChangeMessage(trackIndex, value, display, false));
+            });
+
+            track.pan().hasAutomation().addValueObserver(hasAuto -> {
+                if (!track.exists().get()) return;
+                protocol.send(new TrackPanHasAutomationChangeMessage(trackIndex, hasAuto));
+            });
+
+            track.pan().modulatedValue().addValueObserver(modVal -> {
+                if (!track.exists().get()) return;
+                protocol.send(new TrackPanModulatedValueChangeMessage(trackIndex, (float) modVal));
+            });
+
+            // Arm observer
+            track.arm().addValueObserver(isArm -> {
+                if (!track.exists().get()) return;
+                protocol.send(new TrackArmChangeMessage(trackIndex, isArm));
+            });
+
+            // Send observers with filtering
+            setupSendObservers(track, trackIndex);
+        }
+    }
+
+    /**
+     * Setup send observers for a track with selectedMixSendIndex filtering
+     */
+    private void setupSendObservers(Track track, int trackIndex) {
+        SendBank sendBank = track.sendBank();
+
+        for (int s = 0; s < MAX_SENDS; s++) {
+            final int sendIndex = s;
+            Send send = sendBank.getItemAt(s);
+
+            // Value - FILTERED by selectedMixSendIndex
+            send.displayedValue().addValueObserver(display -> {
+                if (sendIndex != selectedMixSendIndex) return;
+                if (!track.exists().get() || !send.exists().get()) return;
+                float value = (float) send.value().get();
+                protocol.send(new TrackSendValueChangeMessage(trackIndex, sendIndex, value, display, false));
+            });
+
+            // Has automation - FILTERED
+            send.hasAutomation().addValueObserver(hasAuto -> {
+                if (sendIndex != selectedMixSendIndex) return;
+                if (!track.exists().get() || !send.exists().get()) return;
+                protocol.send(new TrackSendHasAutomationChangeMessage(trackIndex, sendIndex, hasAuto));
+            });
+
+            // Modulated value - FILTERED
+            send.modulatedValue().addValueObserver(modVal -> {
+                if (sendIndex != selectedMixSendIndex) return;
+                if (!track.exists().get() || !send.exists().get()) return;
+                protocol.send(new TrackSendModulatedValueChangeMessage(trackIndex, sendIndex, (float) modVal));
+            });
+
+            // Enabled - FILTERED
+            send.isEnabled().addValueObserver(isEnabled -> {
+                if (sendIndex != selectedMixSendIndex) return;
+                if (!track.exists().get() || !send.exists().get()) return;
+                protocol.send(new TrackSendEnabledChangeMessage(trackIndex, sendIndex, isEnabled));
+            });
+
+            // Pre-fader - FILTERED
+            send.isPreFader().addValueObserver(isPreFader -> {
+                if (sendIndex != selectedMixSendIndex) return;
+                if (!track.exists().get() || !send.exists().get()) return;
+                protocol.send(new TrackSendPreFaderChangeMessage(trackIndex, sendIndex, isPreFader));
+            });
+        }
     }
 
     /**
@@ -146,7 +269,7 @@ public class TrackHost {
      */
     public void sendInitialState() {
         sendTrackChange();
-        sendTrackList();
+        sendTrackListWindow(0);  // Use windowed loading
     }
 
     /**
@@ -170,6 +293,25 @@ public class TrackHost {
         track.volume().displayedValue().markInterested();
         track.pan().value().markInterested();
         track.pan().displayedValue().markInterested();
+        // Automation for volume/pan
+        track.volume().modulatedValue().markInterested();
+        track.volume().hasAutomation().markInterested();
+        track.pan().modulatedValue().markInterested();
+        track.pan().hasAutomation().markInterested();
+        // Sends
+        SendBank sendBank = track.sendBank();
+        for (int s = 0; s < MAX_SENDS; s++) {
+            Send send = sendBank.getItemAt(s);
+            send.exists().markInterested();
+            send.name().markInterested();
+            send.value().markInterested();
+            send.displayedValue().markInterested();
+            send.isEnabled().markInterested();
+            send.sendMode().markInterested();
+            send.isPreFader().markInterested();
+            send.modulatedValue().markInterested();
+            send.hasAutomation().markInterested();
+        }
     }
 
     /**
@@ -219,7 +361,9 @@ public class TrackHost {
 
     /**
      * Send track list to controller
+     * @deprecated Use sendTrackListWindow() for windowed loading
      */
+    @Deprecated
     public void sendTrackList() {
         // Debounce: skip if already pending
         if (trackListPending) return;
@@ -240,6 +384,70 @@ public class TrackHost {
             host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
             protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
         }, BitwigConfig.TRACK_SELECT_DELAY_MS);
+    }
+
+    /**
+     * Send a windowed portion of the track list (16 items max per window).
+     * Used for lazy-loading large track lists.
+     *
+     * @param requestedStartIndex The starting index requested by the controller
+     */
+    public void sendTrackListWindow(int requestedStartIndex) {
+        host.scheduleTask(() -> {
+            final TrackBank bank = getCurrentBank();
+            final int totalTrackCount = bank.itemCount().get();
+            final int cursorPosition = cursorTrack.position().get();
+            final boolean hasParent = hasParentGroup();
+            final String parentName = hasParent ? parentTrack.name().get() : "";
+
+            // Clamp startIndex if out of range
+            int startIndex = requestedStartIndex;
+            if (startIndex >= totalTrackCount) {
+                startIndex = Math.max(0, totalTrackCount - BitwigConfig.LIST_WINDOW_SIZE);
+            }
+            if (startIndex < 0) {
+                startIndex = 0;
+            }
+
+            // Build windowed track list
+            final List<TrackListWindowMessage.Tracks> windowTracks = buildTrackListWindow(bank, startIndex);
+
+            protocol.send(new TrackListWindowMessage(
+                totalTrackCount,
+                startIndex,
+                cursorPosition,
+                hasParent,
+                parentName,
+                windowTracks
+            ));
+        }, BitwigConfig.TRACK_SELECT_DELAY_MS);
+    }
+
+    private List<TrackListWindowMessage.Tracks> buildTrackListWindow(TrackBank bank, int startIndex) {
+        final List<TrackListWindowMessage.Tracks> tracks = new ArrayList<>();
+        int endIndex = Math.min(startIndex + BitwigConfig.LIST_WINDOW_SIZE, bank.getSizeOfBank());
+
+        for (int i = startIndex; i < endIndex; i++) {
+            Track track = bank.getItemAt(i);
+            if (track.exists().get()) {
+                tracks.add(new TrackListWindowMessage.Tracks(
+                    track.position().get(),
+                    track.name().get(),
+                    ColorUtils.toUint32Hex(track.color().get()),
+                    track.isActivated().get(),
+                    track.mute().get(),
+                    track.solo().get(),
+                    track.isMutedBySolo().get(),
+                    track.arm().get(),
+                    track.isGroup().get(),
+                    TrackTypeUtils.toInt(track.trackType().get()),
+                    (float) track.volume().value().get(),
+                    (float) track.pan().value().get()
+                ));
+            }
+        }
+
+        return tracks;
     }
 
     private List<TrackListMessage.Tracks> buildTrackList(TrackBank bank) {
@@ -307,7 +515,7 @@ public class TrackHost {
      * Delegates to TrackNavigator
      */
     public void enterTrackGroup(int trackIndex) {
-        navigator.enterTrackGroup(trackIndex, this::sendTrackList);
+        navigator.enterTrackGroup(trackIndex, () -> sendTrackListWindow(0));
     }
 
     /**
@@ -315,7 +523,7 @@ public class TrackHost {
      * Delegates to TrackNavigator
      */
     public void exitTrackGroup() {
-        navigator.exitTrackGroup(this::sendTrackList);
+        navigator.exitTrackGroup(() -> sendTrackListWindow(0));
     }
 
     /**
@@ -362,5 +570,66 @@ public class TrackHost {
             track.solo().set(!currentState);
             // Observer (addTrackObservers) will send TrackSoloMessage confirmation
         }
+    }
+
+    // =========================================================================
+    // MixView: Send Selection & Destinations
+    // =========================================================================
+
+    /**
+     * Set selected send index for MixView filtering
+     * Called when controller sends SELECT_MIX_SEND
+     */
+    public void setSelectedMixSend(int sendIndex) {
+        this.selectedMixSendIndex = sendIndex;
+        if (sendIndex >= 0 && sendIndex < MAX_SENDS) {
+            sendCurrentMixSendValues();
+        }
+    }
+
+    /**
+     * Send current values for the selected send across all MixView tracks
+     * Called after changing selectedMixSendIndex
+     */
+    private void sendCurrentMixSendValues() {
+        if (selectedMixSendIndex < 0) return;
+
+        for (int t = 0; t < MAX_MIX_TRACKS; t++) {
+            Track track = mainTrackBank.getItemAt(t);
+            if (!track.exists().get()) continue;
+
+            SendBank sendBank = track.sendBank();
+            Send send = sendBank.getItemAt(selectedMixSendIndex);
+
+            if (send.exists().get()) {
+                float value = (float) send.value().get();
+                String display = send.displayedValue().get();
+                protocol.send(new TrackSendValueChangeMessage(t, selectedMixSendIndex, value, display, false));
+                protocol.send(new TrackSendHasAutomationChangeMessage(t, selectedMixSendIndex, send.hasAutomation().get()));
+                protocol.send(new TrackSendModulatedValueChangeMessage(t, selectedMixSendIndex, (float) send.modulatedValue().get()));
+                protocol.send(new TrackSendEnabledChangeMessage(t, selectedMixSendIndex, send.isEnabled().get()));
+                protocol.send(new TrackSendPreFaderChangeMessage(t, selectedMixSendIndex, send.isPreFader().get()));
+            }
+        }
+    }
+
+    /**
+     * Send list of send destination names (effect track names)
+     * Called when controller sends REQUEST_SEND_DESTINATIONS
+     */
+    public void sendSendDestinations() {
+        List<SendDestinationsListMessage.SendDestinations> destinations = new ArrayList<>();
+
+        for (int i = 0; i < MAX_SENDS; i++) {
+            Track effectTrack = effectTrackBank.getItemAt(i);
+            if (effectTrack.exists().get()) {
+                destinations.add(new SendDestinationsListMessage.SendDestinations(
+                    i,
+                    effectTrack.name().get()
+                ));
+            }
+        }
+
+        protocol.send(new SendDestinationsListMessage(destinations.size(), destinations));
     }
 }

@@ -43,3 +43,20 @@ send_info = [
 
 # Array of sends (max 8 sends per track, typical for most DAWs)
 send_list = CompositeField('sends', fields=send_info, array=8)
+
+# ============================================================================
+# SEND DESTINATION FIELDS (for MixView send selection)
+# ============================================================================
+# Effect track names for the UI to show which sends are available
+
+# Send destination name (effect track name: "Reverb", "Delay", etc.)
+send_destination_name = PrimitiveField('sendDestinationName', type_name=Type.STRING)
+
+# Send destination info: just index + name for the list
+send_destination_info = [
+    send_index,              # UINT8 (0-7)
+    send_destination_name    # STRING (effect track name)
+]
+
+# Array of send destinations (max 8)
+send_destination_list = CompositeField('sendDestinations', fields=send_destination_info, array=8)

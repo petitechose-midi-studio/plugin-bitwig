@@ -40,6 +40,17 @@ public:
     void setItems(const std::vector<std::string>& items);
     void setSelectedIndex(int index);
 
+    /**
+     * @brief Append new items to the list without destroying existing ones
+     *
+     * Optimized for windowed loading where items are added incrementally.
+     * Only creates new LVGL objects for the appended items.
+     *
+     * @param items Full list including existing + new items
+     * @return Number of new items appended (0 if full rebuild was needed)
+     */
+    size_t appendItemsIfPossible(const std::vector<std::string>& items);
+
     void show() override;
     void hide() override;
     bool isVisible() const override;
@@ -78,6 +89,7 @@ private:
     std::vector<std::string> items_;
     std::string title_;
     int selected_index_ = 0;
+    int previous_index_ = -1;  // Track previous selection for optimized highlight updates
     bool visible_ = false;
     bool ui_created_ = false;
 };

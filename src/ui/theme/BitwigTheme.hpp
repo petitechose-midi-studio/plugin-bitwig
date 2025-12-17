@@ -98,6 +98,7 @@ constexpr int16_t GAP_LG = 10;
 constexpr int16_t OVERLAY_PAD_H = 16;       // Horizontal padding for overlay headers
 constexpr int16_t OVERLAY_PAD_TOP = 8;      // Top padding for overlay headers
 constexpr int16_t OVERLAY_PAD_BOTTOM = 4;   // Bottom padding for overlay headers
+constexpr int16_t OVERLAY_HEADER_HEIGHT = 20;  // Fixed height for overlay headers
 
 // HintBar edge padding
 constexpr int16_t HINT_BAR_EDGE_PAD = 24;   // Padding from screen edges for hint cells

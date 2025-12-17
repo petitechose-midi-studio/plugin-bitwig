@@ -53,12 +53,20 @@ public class TrackController {
     }
 
     private void setupProtocolCallbacks() {
-        // Request track list FROM controller
+        // Request track list FROM controller (legacy - redirect to windowed)
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;
-            host.println("\n[TRACK CTRL] → Requesting track list\n");
+            host.println("\n[TRACK CTRL] → Requesting track list (redirected to windowed)\n");
             if (trackHost != null) {
-                trackHost.sendTrackList();
+                trackHost.sendTrackListWindow(0);  // Redirect legacy to windowed
+            }
+        };
+
+        // Request windowed track list FROM controller (new)
+        protocol.onRequestTrackListWindow = msg -> {
+            if (msg.fromHost) return;
+            if (trackHost != null) {
+                trackHost.sendTrackListWindow(msg.getTrackStartIndex());
             }
         };
 
@@ -132,6 +140,119 @@ public class TrackController {
 
             if (track != null && track.exists().get()) {
                 track.isActivated().toggle();
+            }
+        };
+
+        // =====================================================================
+        // MixView: Volume/Pan/Arm/Sends
+        // =====================================================================
+
+        // Select which send to observe for MixView
+        protocol.onSelectMixSend = msg -> {
+            if (msg.fromHost) return;
+            if (trackHost != null) {
+                trackHost.setSelectedMixSend(msg.getSendIndex());
+            }
+        };
+
+        // Request send destinations (effect track names)
+        protocol.onRequestSendDestinations = msg -> {
+            if (msg.fromHost) return;
+            if (trackHost != null) {
+                trackHost.sendSendDestinations();
+            }
+        };
+
+        // Volume change FROM controller
+        protocol.onTrackVolumeChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                track.volume().value().set(msg.getVolume());
+            }
+        };
+
+        // Volume touch FROM controller
+        protocol.onTrackVolumeTouch = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                track.volume().touch(msg.isTouched());
+            }
+        };
+
+        // Pan change FROM controller
+        protocol.onTrackPanChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                track.pan().value().set(msg.getPan());
+            }
+        };
+
+        // Pan touch FROM controller
+        protocol.onTrackPanTouch = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                track.pan().touch(msg.isTouched());
+            }
+        };
+
+        // Arm change FROM controller
+        protocol.onTrackArmChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                track.arm().set(msg.isArm());
+            }
+        };
+
+        // Send value change FROM controller
+        protocol.onTrackSendValueChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                Send send = track.sendBank().getItemAt(msg.getSendIndex());
+                if (send.exists().get()) {
+                    send.value().set(msg.getSendValue());
+                }
+            }
+        };
+
+        // Send touch FROM controller
+        protocol.onTrackSendTouch = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                Send send = track.sendBank().getItemAt(msg.getSendIndex());
+                if (send.exists().get()) {
+                    send.touch(msg.isTouched());
+                }
+            }
+        };
+
+        // Send enabled change FROM controller
+        protocol.onTrackSendEnabledChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                Send send = track.sendBank().getItemAt(msg.getSendIndex());
+                if (send.exists().get()) {
+                    send.isEnabled().set(msg.getSendIsEnabled());
+                }
+            }
+        };
+
+        // Send mode change FROM controller
+        protocol.onTrackSendModeChange = msg -> {
+            if (msg.fromHost) return;
+            Track track = trackBank.getItemAt(msg.getTrackIndex());
+            if (track != null && track.exists().get()) {
+                Send send = track.sendBank().getItemAt(msg.getSendIndex());
+                if (send.exists().get()) {
+                    send.sendMode().set(msg.getSendMode());
+                }
             }
         };
     }

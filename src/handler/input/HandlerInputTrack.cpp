@@ -1,13 +1,15 @@
 #include "HandlerInputTrack.hpp"
 
+#include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/EnterTrackGroupMessage.hpp"
+#include "state/Constants.hpp"
 #include "protocol/struct/ExitTrackGroupMessage.hpp"
-#include "protocol/struct/RequestDeviceListMessage.hpp"
-#include "protocol/struct/RequestTrackListMessage.hpp"
+#include "protocol/struct/RequestDeviceListWindowMessage.hpp"
+#include "protocol/struct/RequestTrackListWindowMessage.hpp"
 #include "protocol/struct/TrackMuteMessage.hpp"
 #include "protocol/struct/TrackSelectByIndexMessage.hpp"
 #include "protocol/struct/TrackSoloMessage.hpp"
@@ -77,13 +79,34 @@ void HandlerInputTrack::setupBindings() {
 
 void HandlerInputTrack::navigate(float delta) {
     auto& ts = state_.trackSelector;
-    int itemCount = static_cast<int>(ts.names.size());
-    if (itemCount == 0) return;
+
+    // Use totalCount for navigation (windowed loading)
+    uint8_t totalCount = ts.totalCount.get();
+    // Account for back button in nested mode
+    int displayCount = ts.isNested.get() ? totalCount + 1 : totalCount;
+    if (displayCount == 0) {
+        // Fallback to names.size() for legacy/compatibility
+        displayCount = static_cast<int>(ts.names.size());
+    }
+    if (displayCount == 0) return;
 
     int currentIndex = ts.currentIndex.get();
     int newIndex = currentIndex + static_cast<int>(delta);
-    newIndex = wrapIndex(newIndex, itemCount);
+    newIndex = wrapIndex(newIndex, displayCount);
     ts.currentIndex.set(newIndex);
+
+    // Prefetch next window if approaching end of loaded data
+    uint8_t loadedUpTo = ts.loadedUpTo.get();
+    // Convert display index to track index (for nested, display 0 is back button)
+    int trackIndex = ts.isNested.get() ? newIndex - 1 : newIndex;
+
+    // Only prefetch if we have a valid track index approaching the loaded boundary
+    if (trackIndex >= 0 &&
+        loadedUpTo > state::PREFETCH_THRESHOLD &&
+        static_cast<uint8_t>(trackIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
+        loadedUpTo < totalCount) {
+        protocol_.send(Protocol::RequestTrackListWindowMessage{loadedUpTo});
+    }
 }
 
 void HandlerInputTrack::select() {
@@ -109,8 +132,12 @@ void HandlerInputTrack::close() {
     // Hide track selector via OverlayManager (restores device selector from stack)
     state_.overlays.hide();
 
-    // Request fresh device list for restored overlay
-    protocol_.send(Protocol::RequestDeviceListMessage{});
+    // Reset device cache and request fresh windowed device list for restored overlay
+    auto& ds = state_.deviceSelector;
+    ds.names.clear();
+    ds.totalCount.set(0);
+    ds.loadedUpTo.set(0);
+    protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
 }
 
 void HandlerInputTrack::selectAndDive() {
@@ -131,8 +158,11 @@ void HandlerInputTrack::selectAndDive() {
         }
     }
 
-    // Refresh track list (will show children if we entered a group)
-    protocol_.send(Protocol::RequestTrackListMessage{});
+    // Reset cache and refresh track list (will show children if we entered a group)
+    ts.names.clear();
+    ts.totalCount.set(0);
+    ts.loadedUpTo.set(0);
+    protocol_.send(Protocol::RequestTrackListWindowMessage{0});
 }
 
 void HandlerInputTrack::toggleMute() {

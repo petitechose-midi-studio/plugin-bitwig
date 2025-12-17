@@ -57,6 +57,13 @@ public class DecoderRegistry {
                     callbacks.onDeviceList.handle(msg);
                 }
                 break;
+            case DEVICE_LIST_WINDOW:
+                if (callbacks.onDeviceListWindow != null) {
+                    DeviceListWindowMessage msg = DeviceListWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceListWindow.handle(msg);
+                }
+                break;
             case DEVICE_PAGE_CHANGE:
                 if (callbacks.onDevicePageChange != null) {
                     DevicePageChangeMessage msg = DevicePageChangeMessage.decode(payload);
@@ -69,6 +76,13 @@ public class DecoderRegistry {
                     DevicePageNamesMessage msg = DevicePageNamesMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onDevicePageNames.handle(msg);
+                }
+                break;
+            case DEVICE_PAGE_NAMES_WINDOW:
+                if (callbacks.onDevicePageNamesWindow != null) {
+                    DevicePageNamesWindowMessage msg = DevicePageNamesWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDevicePageNamesWindow.handle(msg);
                 }
                 break;
             case DEVICE_PAGE_SELECT_BY_INDEX:
@@ -169,11 +183,25 @@ public class DecoderRegistry {
                     callbacks.onRequestDeviceList.handle(msg);
                 }
                 break;
+            case REQUEST_DEVICE_LIST_WINDOW:
+                if (callbacks.onRequestDeviceListWindow != null) {
+                    RequestDeviceListWindowMessage msg = RequestDeviceListWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onRequestDeviceListWindow.handle(msg);
+                }
+                break;
             case REQUEST_DEVICE_PAGE_NAMES:
                 if (callbacks.onRequestDevicePageNames != null) {
                     RequestDevicePageNamesMessage msg = RequestDevicePageNamesMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onRequestDevicePageNames.handle(msg);
+                }
+                break;
+            case REQUEST_DEVICE_PAGE_NAMES_WINDOW:
+                if (callbacks.onRequestDevicePageNamesWindow != null) {
+                    RequestDevicePageNamesWindowMessage msg = RequestDevicePageNamesWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onRequestDevicePageNamesWindow.handle(msg);
                 }
                 break;
             case LAST_CLICKED_TOUCH:
@@ -232,6 +260,13 @@ public class DecoderRegistry {
                     callbacks.onExitTrackGroup.handle(msg);
                 }
                 break;
+            case REQUEST_SEND_DESTINATIONS:
+                if (callbacks.onRequestSendDestinations != null) {
+                    RequestSendDestinationsMessage msg = RequestSendDestinationsMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onRequestSendDestinations.handle(msg);
+                }
+                break;
             case REQUEST_TRACK_LIST:
                 if (callbacks.onRequestTrackList != null) {
                     RequestTrackListMessage msg = RequestTrackListMessage.decode(payload);
@@ -239,11 +274,32 @@ public class DecoderRegistry {
                     callbacks.onRequestTrackList.handle(msg);
                 }
                 break;
+            case REQUEST_TRACK_LIST_WINDOW:
+                if (callbacks.onRequestTrackListWindow != null) {
+                    RequestTrackListWindowMessage msg = RequestTrackListWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onRequestTrackListWindow.handle(msg);
+                }
+                break;
             case REQUEST_TRACK_SEND_LIST:
                 if (callbacks.onRequestTrackSendList != null) {
                     RequestTrackSendListMessage msg = RequestTrackSendListMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onRequestTrackSendList.handle(msg);
+                }
+                break;
+            case SELECT_MIX_SEND:
+                if (callbacks.onSelectMixSend != null) {
+                    SelectMixSendMessage msg = SelectMixSendMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onSelectMixSend.handle(msg);
+                }
+                break;
+            case SEND_DESTINATIONS_LIST:
+                if (callbacks.onSendDestinationsList != null) {
+                    SendDestinationsListMessage msg = SendDestinationsListMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onSendDestinationsList.handle(msg);
                 }
                 break;
             case TRACK_ACTIVATE:
@@ -272,6 +328,13 @@ public class DecoderRegistry {
                     TrackListMessage msg = TrackListMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onTrackList.handle(msg);
+                }
+                break;
+            case TRACK_LIST_WINDOW:
+                if (callbacks.onTrackListWindow != null) {
+                    TrackListWindowMessage msg = TrackListWindowMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackListWindow.handle(msg);
                 }
                 break;
             case TRACK_MUTE:

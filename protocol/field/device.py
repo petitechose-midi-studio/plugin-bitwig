@@ -41,7 +41,9 @@ remote_control = [
     parameter_display_value,            # GENERIC: Formatted display value from Bitwig
     parameter_type,                     # GENERIC: Detected parameter type (0=Knob, 1=Button, 2=List)
     parameter_discrete_value_names,     # GENERIC: Array of discrete value names
-    parameter_current_value_index       # GENERIC: Current index in discreteValueNames array
+    parameter_current_value_index,      # GENERIC: Current index in discreteValueNames array
+    parameter_has_automation,           # GENERIC: Has automation data (from Bitwig API)
+    parameter_modulated_value           # GENERIC: Value after automation/modulation applied
 ]
 
 # ============================================================================
@@ -75,7 +77,21 @@ page_name = PrimitiveField('pageName', type_name=Type.STRING)
 # Generated C++ type: etl::array<etl::string<16>, 32>
 # Generated Java type: List<String>
 # Memory impact: 32 * 17 bytes = 544 bytes (acceptable for Teensy)
+# DEPRECATED: Use page_names_window instead for windowed loading
 page_names = PrimitiveField('pageNames', type_name=Type.STRING, array=32)
+
+# ============================================================================
+# WINDOWED PAGE NAVIGATION FIELDS (New)
+# ============================================================================
+# For lazy-loading large page lists (>16 pages)
+# Pattern: REQUEST_XXX_WINDOW(startIndex) -> XXX_WINDOW(total, start, current, items[16])
+
+# Start index for windowed requests
+device_page_start_index = PrimitiveField('pageStartIndex', type_name=Type.UINT8)
+
+# Array of 16 page names (one window)
+# Memory impact: 16 * 17 bytes = 272 bytes per message
+page_names_window = PrimitiveField('pageNames', type_name=Type.STRING, array=16)
 
 # ============================================================================
 # DEVICE NAVIGATION FIELDS (Hierarchical Navigation)
@@ -121,7 +137,21 @@ device_info = [
 
 # Array of devices (max 32 in bank window)
 # Memory impact: 32 devices * ~25 bytes = 800 bytes (acceptable for Teensy)
+# DEPRECATED: Use device_list_window instead for windowed loading
 device_list = CompositeField('devices', fields=device_info, array=32)
+
+# ============================================================================
+# WINDOWED DEVICE LIST FIELDS (New)
+# ============================================================================
+# For lazy-loading large device lists (>16 devices)
+# Pattern: REQUEST_XXX_WINDOW(startIndex) -> XXX_WINDOW(total, start, current, items[16])
+
+# Start index for windowed requests
+device_start_index = PrimitiveField('deviceStartIndex', type_name=Type.UINT8)
+
+# Array of 16 devices (one window)
+# Memory impact: 16 devices * ~25 bytes = 400 bytes per message
+device_list_window = CompositeField('devices', fields=device_info, array=16)
 
 # ChildInfo: Information about a child (slot/layer/pad) with type
 child_info = [

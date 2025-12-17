@@ -5,24 +5,24 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * TransportAutomationWriteModeChangeMessage - Auto-generated Protocol Message
+ * RequestDevicePageNamesWindowMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE message
+ * Description: REQUEST_DEVICE_PAGE_NAMES_WINDOW message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class TransportAutomationWriteModeChangeMessage {
+public final class RequestDevicePageNamesWindowMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE;
+    public static final MessageID MESSAGE_ID = MessageID.REQUEST_DEVICE_PAGE_NAMES_WINDOW;
 
 
     // ============================================================================
@@ -32,19 +32,19 @@ public final class TransportAutomationWriteModeChangeMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int automationWriteMode;
+    private final int pageStartIndex;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new TransportAutomationWriteModeChangeMessage
+     * Construct a new RequestDevicePageNamesWindowMessage
      *
-     * @param automationWriteMode The automationWriteMode value
+     * @param pageStartIndex The pageStartIndex value
      */
-    public TransportAutomationWriteModeChangeMessage(int automationWriteMode) {
-        this.automationWriteMode = automationWriteMode;
+    public RequestDevicePageNamesWindowMessage(int pageStartIndex) {
+        this.pageStartIndex = pageStartIndex;
     }
 
     // ============================================================================
@@ -52,12 +52,12 @@ public final class TransportAutomationWriteModeChangeMessage {
     // ============================================================================
 
     /**
-     * Get the automationWriteMode value
+     * Get the pageStartIndex value
      *
-     * @return automationWriteMode
+     * @return pageStartIndex
      */
-    public int getAutomationWriteMode() {
-        return automationWriteMode;
+    public int getPageStartIndex() {
+        return pageStartIndex;
     }
 
     // ============================================================================
@@ -78,9 +78,9 @@ public final class TransportAutomationWriteModeChangeMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] automationWriteMode_encoded = Encoder.encodeUint8(automationWriteMode);
-        System.arraycopy(automationWriteMode_encoded, 0, buffer, offset, automationWriteMode_encoded.length);
-        offset += automationWriteMode_encoded.length;
+        byte[] pageStartIndex_encoded = Encoder.encodeUint8(pageStartIndex);
+        System.arraycopy(pageStartIndex_encoded, 0, buffer, offset, pageStartIndex_encoded.length);
+        offset += pageStartIndex_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -98,20 +98,20 @@ public final class TransportAutomationWriteModeChangeMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded TransportAutomationWriteModeChangeMessage instance
+     * @return Decoded RequestDevicePageNamesWindowMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static TransportAutomationWriteModeChangeMessage decode(byte[] data) {
+    public static RequestDevicePageNamesWindowMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for TransportAutomationWriteModeChangeMessage decode");
+            throw new IllegalArgumentException("Insufficient data for RequestDevicePageNamesWindowMessage decode");
         }
 
         int offset = 0;
 
-        int automationWriteMode = Decoder.decodeUint8(data, offset);
+        int pageStartIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new TransportAutomationWriteModeChangeMessage(automationWriteMode);
+        return new RequestDevicePageNamesWindowMessage(pageStartIndex);
     }
 
     // ============================================================================
@@ -126,9 +126,9 @@ public final class TransportAutomationWriteModeChangeMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# TransportAutomationWriteModeChange\n");
-        sb.append("transportAutomationWriteModeChange:\n");
-        sb.append("  automationWriteMode: ").append(getAutomationWriteMode()).append("\n");
+        sb.append("# RequestDevicePageNamesWindow\n");
+        sb.append("requestDevicePageNamesWindow:\n");
+        sb.append("  pageStartIndex: ").append(getPageStartIndex()).append("\n");
         return sb.toString();
     }
 }  // class Message

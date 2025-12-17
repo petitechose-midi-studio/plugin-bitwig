@@ -71,8 +71,10 @@ public final class DevicePageChangeMessage {
         private final int parameterType;
         private final String[] discreteValueNames;
         private final int currentValueIndex;
+        private final boolean hasAutomation;
+        private final float modulatedValue;
 
-        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex) {
+        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
             this.remoteControlIndex = remoteControlIndex;
             this.parameterValue = parameterValue;
             this.parameterName = parameterName;
@@ -83,6 +85,8 @@ public final class DevicePageChangeMessage {
             this.parameterType = parameterType;
             this.discreteValueNames = discreteValueNames;
             this.currentValueIndex = currentValueIndex;
+            this.hasAutomation = hasAutomation;
+            this.modulatedValue = modulatedValue;
         }
 
         public int getRemoteControlIndex() {
@@ -123,6 +127,14 @@ public final class DevicePageChangeMessage {
 
         public int getCurrentValueIndex() {
             return currentValueIndex;
+        }
+
+        public boolean getHasAutomation() {
+            return hasAutomation;
+        }
+
+        public float getModulatedValue() {
+            return modulatedValue;
         }
 
     }
@@ -181,7 +193,7 @@ public final class DevicePageChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 9148;
+    public static final int MAX_PAYLOAD_SIZE = 9196;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -241,6 +253,12 @@ public final class DevicePageChangeMessage {
     byte[] item_currentValueIndex_encoded = Encoder.encodeUint8(item.getCurrentValueIndex());
             System.arraycopy(item_currentValueIndex_encoded, 0, buffer, offset, item_currentValueIndex_encoded.length);
             offset += item_currentValueIndex_encoded.length;
+    byte[] item_hasAutomation_encoded = Encoder.encodeBool(item.getHasAutomation());
+            System.arraycopy(item_hasAutomation_encoded, 0, buffer, offset, item_hasAutomation_encoded.length);
+            offset += item_hasAutomation_encoded.length;
+    byte[] item_modulatedValue_encoded = Encoder.encodeFloat32(item.getModulatedValue());
+            System.arraycopy(item_modulatedValue_encoded, 0, buffer, offset, item_modulatedValue_encoded.length);
+            offset += item_modulatedValue_encoded.length;
         }
 
 
@@ -254,7 +272,7 @@ public final class DevicePageChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 164;
+    private static final int MIN_PAYLOAD_SIZE = 212;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -309,7 +327,11 @@ public final class DevicePageChangeMessage {
             }
     int item_currentValueIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
-            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex));
+    boolean item_hasAutomation = Decoder.decodeBool(data, offset);
+            offset += 1;
+    float item_modulatedValue = Decoder.decodeFloat32(data, offset);
+            offset += 5;
+            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue));
         }
 
 
@@ -357,6 +379,8 @@ public final class DevicePageChangeMessage {
             sb.append("      displayValue: \"").append(item.getDisplayValue()).append("\"\n");
             sb.append("      parameterType: ").append(item.getParameterType()).append("\n");
             sb.append("      currentValueIndex: ").append(item.getCurrentValueIndex()).append("\n");
+            sb.append("      hasAutomation: ").append(item.getHasAutomation() ? "true" : "false").append("\n");
+            sb.append("      modulatedValue: ").append(formatFloat(item.getModulatedValue())).append("\n");
         }
         return sb.toString();
     }

@@ -28,24 +28,56 @@ TRACK_CHANGE = Message(
 )
 
 # ============================================================================
-# TRACK NAVIGATION MESSAGES (Hierarchical Navigation)
+# TRACK NAVIGATION MESSAGES (Legacy - DEPRECATED)
 # ============================================================================
+# These messages are deprecated. Use windowed versions below for large lists.
 
 # Controller → Host: Request list of tracks in current context
+# DEPRECATED: Use REQUEST_TRACK_LIST_WINDOW instead
 REQUEST_TRACK_LIST = Message(
-    description='Request list of tracks in current context',
+    description='[DEPRECATED] Request list of tracks in current context',
     fields=[]
 )
 
 # Host → Controller: Track list response with navigation context
+# DEPRECATED: Use TRACK_LIST_WINDOW instead
 TRACK_LIST = Message(
-    description='List of tracks in current context with navigation info',
+    description='[DEPRECATED] List of tracks in current context with navigation info',
     fields=[
         track_count,           # Total tracks in bank window (uint8)
         track_index,           # Currently selected track index (uint8)
         track_is_nested,       # Are we in a group? (bool)
         parent_group_name,     # Parent group name if nested (string)
         track_list             # Array[32] of TrackInfo
+    ]
+)
+
+# ============================================================================
+# TRACK NAVIGATION MESSAGES (Windowed - New)
+# ============================================================================
+# Windowed loading pattern for large track lists (>16 tracks)
+# Pattern: REQUEST(startIndex) -> RESPONSE(total, start, current, items[16])
+# - Firmware requests 16 items at a time starting from startIndex
+# - Host responds with actual startIndex (clamped if out of range)
+# - Firmware accumulates in local cache, prefetches when cursor approaches end
+# - Selection always uses absolute index
+
+# Controller → Host: Request windowed track list
+REQUEST_TRACK_LIST_WINDOW = Message(
+    description='Request track list starting at index (windowed, 16 items)',
+    fields=[track_start_index]  # UINT8: start index for window
+)
+
+# Host → Controller: Windowed track list response
+TRACK_LIST_WINDOW = Message(
+    description='Windowed track list response (16 items max)',
+    fields=[
+        track_count,           # UINT8: total tracks (absolute)
+        track_start_index,     # UINT8: actual start index (may be clamped)
+        track_index,           # UINT8: currently selected track index
+        track_is_nested,       # Are we in a group? (bool)
+        parent_group_name,     # Parent group name if nested (string) - sent on every window
+        track_list_window      # Array[16] of TrackInfo: this window's tracks
     ]
 )
 
@@ -293,5 +325,36 @@ TRACK_SEND_MODULATED_VALUE_CHANGE = Message(
         track_index,           # Track index (uint8)
         send_index,            # Send index (uint8)
         parameter_modulated_value  # Modulated value (float32)
+    ]
+)
+
+# ============================================================================
+# MIX VIEW SEND SELECTION MESSAGES
+# ============================================================================
+# These messages support the MixView feature where 4 tracks share a single
+# selected send that can be controlled. The controller selects which send
+# to observe/control across all 4 tracks.
+
+# Controller → Host: Select which send to observe for MixView
+# Send index 0-7 to select a send, or 255 for none
+SELECT_MIX_SEND = Message(
+    description='Select which send to observe for MixView (Controller → Host)',
+    fields=[
+        send_index             # UINT8 (0-7, or 255 for none)
+    ]
+)
+
+# Controller → Host: Request list of send destination names (effect tracks)
+REQUEST_SEND_DESTINATIONS = Message(
+    description='Request list of send destination names (Controller → Host)',
+    fields=[]
+)
+
+# Host → Controller: List of send destination names
+SEND_DESTINATIONS_LIST = Message(
+    description='List of send destination names (effect track names)',
+    fields=[
+        send_count,            # UINT8 - number of send destinations available
+        send_destination_list  # Array[8] of {sendIndex, sendDestinationName}
     ]
 )

@@ -1,6 +1,8 @@
 #include "DeviceSelector.hpp"
 
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
+#include <oc/ui/lvgl/theme/BaseTheme.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "ui/device/DeviceTypeHelper.hpp"
 #include "ui/font/BitwigFonts.hpp"
@@ -8,19 +10,50 @@
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
+using namespace oc::ui::lvgl;
 namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
-DeviceSelector::DeviceSelector(lv_obj_t *parent) : BaseSelector(parent) {
-    createHeader();  // Create header first, before list
-    createFooter();  // Create footer once, after list - ensures correct flex order
+namespace {
+constexpr int VISIBLE_SLOTS = 5;
+constexpr int ITEM_HEIGHT = 32;
+}  // namespace
+
+// ══════════════════════════════════════════════════════════════════
+// Construction
+// ══════════════════════════════════════════════════════════════════
+
+DeviceSelector::DeviceSelector(lv_obj_t *parent) : parent_(parent) {
+    createOverlay();
+
+    list_ = std::make_unique<ui::VirtualList>(container_, VISIBLE_SLOTS, ITEM_HEIGHT);
+    slotWidgets_.resize(VISIBLE_SLOTS);
+
+    list_->setOnBindSlot([this](ui::VirtualSlot &slot, int index, bool isSelected) {
+        bindSlot(slot, index, isSelected);
+    });
+
+    list_->setOnUpdateHighlight([this](ui::VirtualSlot &slot, bool isSelected) {
+        updateSlotHighlight(slot, isSelected);
+    });
+
+    createHeader();
+    createFooter();
+
+    lv_obj_add_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
 }
 
 DeviceSelector::~DeviceSelector() {
     track_header_.reset();
+    page_label_.reset();
     footer_.reset();
+    list_.reset();
 }
+
+// ══════════════════════════════════════════════════════════════════
+// Public API
+// ══════════════════════════════════════════════════════════════════
 
 void DeviceSelector::render(const DeviceSelectorProps &props) {
     if (!props.visible) {
@@ -29,6 +62,9 @@ void DeviceSelector::render(const DeviceSelectorProps &props) {
         return;
     }
 
+    currentProps_ = props;
+    showingChildren_ = props.showingChildren;
+
     if (props.showingChildren) {
         renderChildren(props);
     } else {
@@ -36,32 +72,50 @@ void DeviceSelector::render(const DeviceSelectorProps &props) {
     }
 }
 
+void DeviceSelector::updateDeviceState(int displayIndex, bool enabled) {
+    if (displayIndex >= 0 && displayIndex < static_cast<int>(currentProps_.deviceStates.size())) {
+        currentProps_.deviceStates[displayIndex] = enabled;
+    }
+
+    list_->invalidateIndex(displayIndex);
+
+    if (footer_state_ && displayIndex == currentProps_.selectedIndex) {
+        Icon::set(footer_state_, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
+        style::apply(footer_state_).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                                       : Color::DEVICE_STATE_DISABLED);
+    }
+}
+
+void DeviceSelector::show() {
+    if (overlay_) {
+        lv_obj_clear_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
+        visible_ = true;
+        list_->show();
+    }
+}
+
+void DeviceSelector::hide() {
+    if (overlay_) {
+        lv_obj_add_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
+        visible_ = false;
+        list_->hide();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Render Modes
+// ══════════════════════════════════════════════════════════════════
+
 void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
     if (props.names.empty()) return;
 
-    const auto &names = props.names;
-
-    // Check if items changed
-    bool items_changed = (prev_items_ != names);
-
-    if (items_changed) {
-        clearIndicators();
-        prev_items_ = names;
-    }
-
-    overlay().setItems(names);
-    overlay().setSelectedIndex(props.selectedIndex);
-
-    if (items_changed) {
-        createIndicators(props);
-    } else {
-        // Update states for existing indicators (names didn't change but states might have)
-        updateIndicatorStates(props);
-    }
+    list_->setTotalCount(static_cast<int>(props.names.size()));
+    list_->setSelectedIndex(props.selectedIndex);
+    list_->invalidate();  // Force rebind to pick up state changes
 
     renderHeader(props);
 
-    if (!isVisible()) show();
+    if (!visible_) show();
 
     if (props.showFooter) {
         renderFooter(props);
@@ -73,121 +127,71 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
 void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
     if (props.childrenNames.empty()) return;
 
-    const auto &names = props.childrenNames;
-
-    // Check if items changed
-    bool items_changed = (prev_items_ != names);
-
-    if (items_changed) {
-        clearIndicators();
-        prev_items_ = names;
-    }
-
-    overlay().setItems(names);
-
-    if (items_changed) {
-        // Apply icon font to Back button (index 0)
-        if (!names.empty() && names[0] == Icon::UI_ARROW_LEFT) {
-            overlay().setItemFont(0, bitwig_fonts.icons_14);
-        }
-
-        // Add type icons for children items
-        if (!props.childrenTypes.empty()) {
-            const auto &types = props.childrenTypes;
-            for (size_t i = 0; i < names.size(); i++) {
-                if (i == 0 || i >= types.size()) continue;
-
-                lv_obj_t *btn = overlay().getButton(i);
-                if (!btn) continue;
-
-                const char *icon_symbol = nullptr;
-                switch (types[i]) {
-                    case 0: icon_symbol = Icon::UI_SLIDER; break;
-                    case 1: icon_symbol = Icon::BROWSER_LAYER; break;
-                    case 2: icon_symbol = Icon::DEVICE_DRUM_PAD; break;
-                }
-
-                if (icon_symbol) {
-                    lv_obj_t *icon_lbl = lv_label_create(btn);
-                    Icon::set(icon_lbl, icon_symbol);
-                    lv_obj_set_style_text_color(icon_lbl, lv_color_hex(Color::INACTIVE_LIGHTER),
-                                                LV_STATE_DEFAULT);
-                    lv_obj_set_style_text_color(icon_lbl, lv_color_hex(Color::TEXT_PRIMARY),
-                                                LV_STATE_FOCUSED);
-                    lv_obj_set_style_text_color(icon_lbl, lv_color_hex(Color::TEXT_PRIMARY),
-                                                LV_STATE_PRESSED);
-                    lv_obj_set_style_text_color(icon_lbl, lv_color_hex(Color::INACTIVE_LIGHTER),
-                                                LV_STATE_DISABLED);
-                    lv_obj_set_style_text_opa(icon_lbl, Opacity::DIMMED, LV_STATE_DISABLED);
-                    lv_obj_move_to_index(icon_lbl, 0);
-                }
-            }
-        }
-    }
-
-    overlay().setSelectedIndex(props.selectedIndex);
+    list_->setTotalCount(static_cast<int>(props.childrenNames.size()));
+    list_->setSelectedIndex(props.selectedIndex);
+    list_->invalidate();  // Force rebind to pick up any changes
 
     renderHeader(props);
 
-    if (!isVisible()) show();
+    if (!visible_) show();
 
     if (footer_) footer_->hide();
 }
 
-void DeviceSelector::updateDeviceState(int displayIndex, bool enabled) {
-    size_t index = static_cast<size_t>(displayIndex);
-    if (index >= state_icons_.size() || !state_icons_[index]) return;
+// ══════════════════════════════════════════════════════════════════
+// Overlay Structure
+// ══════════════════════════════════════════════════════════════════
 
-    // Update state icon in the list
-    lv_obj_t *state_icon = state_icons_[index];
-    lv_label_set_text(state_icon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-    style::apply(state_icon).textColor(enabled ? Color::DEVICE_STATE_ENABLED
-                                               : Color::DEVICE_STATE_DISABLED);
+void DeviceSelector::createOverlay() {
+    overlay_ = lv_obj_create(parent_);
+    lv_obj_add_flag(overlay_, LV_OBJ_FLAG_FLOATING);
+    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, Opacity::OVERLAY_BG).noScroll();
+    lv_obj_align(overlay_, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_border_width(overlay_, 0, LV_STATE_DEFAULT);
 
-    // Update footer if this is the selected device
-    if (footer_state_ && displayIndex == overlay().getSelectedIndex()) {
-        Icon::set(footer_state_, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
-        style::apply(footer_state_).textColor(enabled ? Color::DEVICE_STATE_ENABLED
-                                                      : Color::DEVICE_STATE_DISABLED);
-    }
-}
+    container_ = lv_obj_create(overlay_);
+    style::apply(container_).fullSize().transparent().noScroll();
+    lv_obj_align(container_, LV_ALIGN_CENTER, 0, 0);
 
-void DeviceSelector::updateIndicatorStates(const DeviceSelectorProps &props) {
-    if (props.deviceStates.empty()) return;
-
-    const auto &states = props.deviceStates;
-    for (size_t i = 0; i < state_icons_.size() && i < states.size(); i++) {
-        if (!state_icons_[i]) continue;
-
-        bool enabled = states[i];
-        lv_label_set_text(state_icons_[i], enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-        style::apply(state_icons_[i]).textColor(enabled ? Color::DEVICE_STATE_ENABLED
-                                                        : Color::DEVICE_STATE_DISABLED);
-    }
+    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(container_, BaseTheme::Layout::ROW_GAP_MD, LV_STATE_DEFAULT);
 }
 
 void DeviceSelector::createHeader() {
-    // Create header container inside overlay container (participates in flex layout)
-    header_ = lv_obj_create(overlay().getContainer());
-    lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
+    // Fixed height header with grid layout - no padding (handled by cells)
+    header_ = lv_obj_create(container_);
+    lv_obj_set_size(header_, LV_PCT(100), Layout::OVERLAY_HEADER_HEIGHT);
     lv_obj_set_style_bg_opa(header_, Opacity::HIDDEN, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(header_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(header_, Layout::OVERLAY_PAD_TOP, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(header_, Layout::OVERLAY_PAD_BOTTOM, LV_STATE_DEFAULT);
-    lv_obj_clear_flag(header_, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_pad_all(header_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_scrollbar_mode(header_, LV_SCROLLBAR_MODE_OFF);
 
-    // Flex row for track title items
-    lv_obj_set_flex_flow(header_, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(header_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(header_, Layout::OVERLAY_PAD_TOP, LV_STATE_DEFAULT);
+    // Grid: 2 columns (Title | Page indicator)
+    static const lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    static const lv_coord_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    lv_obj_set_layout(header_, LV_LAYOUT_GRID);
+    lv_obj_set_grid_dsc_array(header_, col_dsc, row_dsc);
 
-    // Move header to position 1 (after hidden title, before list)
-    lv_obj_move_to_index(header_, 1);
+    lv_obj_move_to_index(header_, 0);
 
-    // Create TrackTitleItem
-    track_header_ = std::make_unique<TrackTitleItem>(header_, false, 16);
+    // Left cell: Title container with TrackTitleItem (centered vertically)
+    lv_obj_t* title_container = lv_obj_create(header_);
+    lv_obj_set_grid_cell(title_container, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 0, 1);
+    lv_obj_set_style_pad_all(title_container, 0, LV_STATE_DEFAULT);
+    style::apply(title_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_START, Layout::GAP_SM);
+    track_header_ = std::make_unique<TrackTitleItem>(title_container, false, LV_PCT(100));
+
+    // Right cell: Page indicator (with right padding)
+    page_label_ = std::make_unique<oc::ui::lvgl::Label>(header_);
+    page_label_->alignment(LV_TEXT_ALIGN_RIGHT)
+               .gridCell(1, 1, 0, 1)
+               .autoScroll(false)
+               .color(Color::DATA_INACTIVE)
+               .font(bitwig_fonts.device_label)
+               .ownsLvglObjects(false);
+    lv_obj_set_style_pad_right(page_label_->getElement(), Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
+    page_label_->setText("");
 }
 
 void DeviceSelector::renderHeader(const DeviceSelectorProps &props) {
@@ -198,20 +202,35 @@ void DeviceSelector::renderHeader(const DeviceSelectorProps &props) {
                            .trackType = props.trackType,
                            .highlighted = true,
                            .hideIndicators = false});
+
+    // Update page indicator: "currentPage/totalPages"
+    if (page_label_) {
+        int total = props.totalCount;
+        // Account for back button in display
+        int displayTotal = props.isNested ? total + 1 : total;
+
+        if (displayTotal > 0) {
+            // Calculate page numbers (1-based for display)
+            int currentPage = (props.selectedIndex / VISIBLE_SLOTS) + 1;
+            int totalPages = (displayTotal + VISIBLE_SLOTS - 1) / VISIBLE_SLOTS;
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%d/%d", currentPage, totalPages);
+            page_label_->setText(buf);
+        } else {
+            page_label_->setText("");
+        }
+    }
 }
 
 void DeviceSelector::createFooter() {
-    // Create footer inside overlay container (participates in flex layout)
-    footer_ = std::make_unique<HintBar>(overlay().getContainer(), HintBarPosition::BOTTOM);
+    footer_ = std::make_unique<HintBar>(container_, HintBarPosition::BOTTOM);
     footer_->setSize(Layout::HINT_BAR_HEIGHT);
 
-    // Create track icon (cell 0 = left)
     footer_track_ = lv_label_create(footer_->getElement());
     Icon::set(footer_track_, Icon::CHANNEL_LIST, Icon::Size::L);
     style::apply(footer_track_).textColor(Color::TEXT_LIGHT);
     footer_->setCell(0, footer_track_);
 
-    // Create state icon (cell 1 = center) - will be updated in renderFooter
     footer_state_ = lv_label_create(footer_->getElement());
     Icon::set(footer_state_, Icon::DEVICE_ON, Icon::Size::L);
     style::apply(footer_state_).textColor(Color::DEVICE_STATE_ENABLED);
@@ -226,7 +245,6 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
                           ? props.deviceStates[idx]
                           : true;
 
-    // Update icon and color based on state
     if (footer_state_) {
         Icon::set(footer_state_, is_enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
         style::apply(footer_state_).textColor(is_enabled ? Color::DEVICE_STATE_ENABLED
@@ -236,111 +254,255 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
     footer_->show();
 }
 
-void DeviceSelector::clearIndicators() {
-    for (auto *icon : type_icons_) {
-        if (icon) lv_obj_delete(icon);
-    }
-    type_icons_.clear();
+// ══════════════════════════════════════════════════════════════════
+// VirtualList Callbacks
+// ══════════════════════════════════════════════════════════════════
 
-    for (auto *icon : state_icons_) {
-        if (icon) lv_obj_delete(icon);
-    }
-    state_icons_.clear();
+void DeviceSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected) {
+    // slotIndex = position dans la fenêtre visible (0 à 5)
+    int slotIndex = index - list_->getWindowStart();
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
-    for (auto *icon : folder_icons_) {
-        if (icon) lv_obj_delete(icon);
+    ensureSlotWidgets(slot, slotIndex);
+
+    auto &widgets = slotWidgets_[slotIndex];
+    hideAllWidgets(widgets);
+
+    if (showingChildren_) {
+        populateSlotForChild(widgets, index);
+    } else {
+        populateSlotForDevice(widgets, index);
     }
-    folder_icons_.clear();
+
+    applyHighlightStyle(widgets, isSelected);
 }
+
+void DeviceSelector::updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected) {
+    // Utilise boundIndex pour trouver le slotIndex
+    int slotIndex = slot.boundIndex - list_->getWindowStart();
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
+
+    auto &widgets = slotWidgets_[slotIndex];
+    applyHighlightStyle(widgets, isSelected);
+}
+
+void DeviceSelector::ensureSlotWidgets(ui::VirtualSlot &slot, int slotIndex) {
+    auto &widgets = slotWidgets_[slotIndex];
+
+    if (widgets.created) return;
+
+    // Crée tous les widgets possibles (cachés par défaut)
+    widgets.typeIcon = createIcon(slot.container);
+    widgets.stateIcon = createIcon(slot.container);
+    widgets.label = createLabel(slot.container);
+    widgets.folderIcon = createIcon(slot.container);
+
+    // Index label (fixed width, right-aligned, always last)
+    widgets.indexLabel = lv_label_create(slot.container);
+    lv_label_set_text(widgets.indexLabel, "");
+    lv_obj_set_style_text_color(widgets.indexLabel, lv_color_hex(Color::DATA_INACTIVE), LV_STATE_DEFAULT);
+    if (bitwig_fonts.device_label) {
+        lv_obj_set_style_text_font(widgets.indexLabel, bitwig_fonts.device_label, LV_STATE_DEFAULT);
+    }
+    lv_obj_set_width(widgets.indexLabel, 24);
+    lv_obj_set_style_text_align(widgets.indexLabel, LV_TEXT_ALIGN_RIGHT, LV_STATE_DEFAULT);
+    lv_obj_add_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
+
+    widgets.created = true;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Slot Population
+// ══════════════════════════════════════════════════════════════════
+
+void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index) {
+    const auto &names = currentProps_.names;
+    if (index < 0 || index >= static_cast<int>(names.size())) return;
+
+    const std::string &name = names[index];
+    bool isBack = (index == 0) && (name == Icon::UI_ARROW_LEFT);
+
+    // Label (toujours visible) - will be moved to correct position below
+    if (widgets.label) {
+        lv_obj_clear_flag(widgets.label, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(widgets.label, name.c_str());
+        lv_obj_set_style_text_font(widgets.label,
+                                   isBack ? bitwig_fonts.icons_14 : bitwig_fonts.device_label,
+                                   LV_STATE_DEFAULT);
+    }
+
+    if (isBack) return;
+
+    bool isDevice = !isNonDeviceItem(name);
+    bool hasFolder = hasChildren(currentProps_, index);
+
+    // Order: type(0) → state(1) → folder(2) → label(3) → indexLabel(4)
+
+    // Type icon (index 0)
+    if (isDevice && widgets.typeIcon) {
+        uint8_t deviceType = index < static_cast<int>(currentProps_.deviceTypes.size())
+                                 ? currentProps_.deviceTypes[index]
+                                 : 0;
+        auto info = DeviceType::get(deviceType);
+        if (info.visible) {
+            Icon::set(widgets.typeIcon, info.icon);
+            style::apply(widgets.typeIcon).textColor(info.color);
+            lv_obj_clear_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_move_to_index(widgets.typeIcon, 0);
+        }
+    }
+
+    // State icon (index 1)
+    if (isDevice && widgets.stateIcon) {
+        bool enabled = index < static_cast<int>(currentProps_.deviceStates.size())
+                           ? currentProps_.deviceStates[index]
+                           : true;
+        Icon::set(widgets.stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+        style::apply(widgets.stateIcon).textColor(enabled ? Color::DEVICE_STATE_ENABLED
+                                                           : Color::DEVICE_STATE_DISABLED);
+        lv_obj_clear_flag(widgets.stateIcon, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_to_index(widgets.stateIcon, 1);
+    }
+
+    // Folder icon (index 2) - only if has children
+    if (widgets.folderIcon && hasFolder) {
+        Icon::set(widgets.folderIcon, Icon::BROWSER_DIRECTORY);
+        style::apply(widgets.folderIcon).textColor(Color::INACTIVE_LIGHTER);
+        lv_obj_set_style_text_opa(widgets.folderIcon, Opacity::SUBTLE, LV_STATE_DEFAULT);
+        lv_obj_clear_flag(widgets.folderIcon, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_to_index(widgets.folderIcon, 2);
+    }
+
+    // Label (index 3 or 2 if no folder)
+    int labelPosition = hasFolder ? 3 : 2;
+    if (widgets.label) {
+        lv_obj_move_to_index(widgets.label, labelPosition);
+    }
+
+    // Index label (always last) - show 1-based device index
+    if (widgets.indexLabel && isDevice) {
+        // Calculate real device index (excluding back button)
+        int deviceIndex = currentProps_.isNested ? index : index + 1;
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", deviceIndex);
+        lv_label_set_text(widgets.indexLabel, buf);
+        lv_obj_clear_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_to_index(widgets.indexLabel, labelPosition + 1);
+    }
+}
+
+void DeviceSelector::populateSlotForChild(DeviceSlotWidgets &widgets, int index) {
+    const auto &names = currentProps_.childrenNames;
+    if (index < 0 || index >= static_cast<int>(names.size())) return;
+
+    const std::string &name = names[index];
+    bool isBack = (index == 0) && (name == Icon::UI_ARROW_LEFT);
+
+    // Label (toujours visible)
+    if (widgets.label) {
+        lv_obj_clear_flag(widgets.label, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(widgets.label, name.c_str());
+        lv_obj_set_style_text_font(widgets.label,
+                                   isBack ? bitwig_fonts.icons_14 : bitwig_fonts.device_label,
+                                   LV_STATE_DEFAULT);
+    }
+
+    if (isBack) return;
+
+    // Child type icon (position 0)
+    bool hasTypeIcon = false;
+    if (widgets.typeIcon && index < static_cast<int>(currentProps_.childrenTypes.size())) {
+        uint8_t type = currentProps_.childrenTypes[index];
+        const char *iconSymbol = nullptr;
+        switch (type) {
+            case 0: iconSymbol = Icon::UI_SLIDER; break;
+            case 1: iconSymbol = Icon::BROWSER_LAYER; break;
+            case 2: iconSymbol = Icon::DEVICE_DRUM_PAD; break;
+        }
+        if (iconSymbol) {
+            Icon::set(widgets.typeIcon, iconSymbol);
+            style::apply(widgets.typeIcon).textColor(Color::INACTIVE_LIGHTER);
+            lv_obj_clear_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_move_to_index(widgets.typeIcon, 0);
+            hasTypeIcon = true;
+        }
+    }
+
+    // Label position
+    int labelPosition = hasTypeIcon ? 1 : 0;
+    if (widgets.label) {
+        lv_obj_move_to_index(widgets.label, labelPosition);
+    }
+
+    // Index label (always last) - show 1-based child index
+    if (widgets.indexLabel) {
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", index);  // index 1 = child 1 (back button is 0)
+        lv_label_set_text(widgets.indexLabel, buf);
+        lv_obj_clear_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_to_index(widgets.indexLabel, labelPosition + 1);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Highlight
+// ══════════════════════════════════════════════════════════════════
+
+void DeviceSelector::applyHighlightStyle(DeviceSlotWidgets &widgets, bool isSelected) {
+    uint32_t textColor = isSelected ? Color::TEXT_PRIMARY : Color::INACTIVE_LIGHTER;
+
+    if (widgets.label) {
+        lv_obj_set_style_text_color(widgets.label, lv_color_hex(textColor), LV_STATE_DEFAULT);
+    }
+
+    // Children type icons change color with selection
+    if (showingChildren_ && widgets.typeIcon && !lv_obj_has_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN)) {
+        lv_obj_set_style_text_color(widgets.typeIcon, lv_color_hex(textColor), LV_STATE_DEFAULT);
+    }
+}
+
+void DeviceSelector::hideAllWidgets(DeviceSlotWidgets &widgets) {
+    if (widgets.typeIcon) lv_obj_add_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN);
+    if (widgets.stateIcon) lv_obj_add_flag(widgets.stateIcon, LV_OBJ_FLAG_HIDDEN);
+    if (widgets.label) lv_obj_add_flag(widgets.label, LV_OBJ_FLAG_HIDDEN);
+    if (widgets.folderIcon) lv_obj_add_flag(widgets.folderIcon, LV_OBJ_FLAG_HIDDEN);
+    if (widgets.indexLabel) lv_obj_add_flag(widgets.indexLabel, LV_OBJ_FLAG_HIDDEN);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Widget Creation
+// ══════════════════════════════════════════════════════════════════
+
+lv_obj_t *DeviceSelector::createIcon(lv_obj_t *parent) {
+    lv_obj_t *icon = lv_label_create(parent);
+    lv_obj_add_flag(icon, LV_OBJ_FLAG_HIDDEN);
+    return icon;
+}
+
+lv_obj_t *DeviceSelector::createLabel(lv_obj_t *parent) {
+    lv_obj_t *label = lv_label_create(parent);
+    lv_label_set_text(label, "");
+    lv_obj_set_style_text_color(label, lv_color_hex(Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
+    if (bitwig_fonts.device_label) {
+        lv_obj_set_style_text_font(label, bitwig_fonts.device_label, LV_STATE_DEFAULT);
+    }
+    lv_obj_set_flex_grow(label, 1);
+    return label;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Static Helpers
+// ══════════════════════════════════════════════════════════════════
 
 bool DeviceSelector::isNonDeviceItem(const std::string &name) {
     return name == Icon::UI_ARROW_LEFT || (!name.empty() && name[0] == '[');
 }
 
 bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index) {
-    bool has_slots = index < props.hasSlots.size() && props.hasSlots[index];
-    bool has_layers = index < props.hasLayers.size() && props.hasLayers[index];
-    bool has_drums = index < props.hasDrums.size() && props.hasDrums[index];
-    return has_slots || has_layers || has_drums;
-}
-
-lv_obj_t *DeviceSelector::createDeviceTypeIcon(lv_obj_t *parent, uint8_t deviceType) {
-    auto info = DeviceType::get(deviceType);
-    if (!info.visible) return nullptr;
-
-    lv_obj_t *icon = lv_label_create(parent);
-    Icon::set(icon, info.icon);
-    style::apply(icon).textColor(info.color);
-    return icon;
-}
-
-lv_obj_t *DeviceSelector::createDeviceStateIcon(lv_obj_t *parent, bool enabled) {
-    lv_obj_t *icon = lv_label_create(parent);
-    Icon::set(icon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
-    style::apply(icon).textColor(enabled ? Color::DEVICE_STATE_ENABLED
-                                         : Color::DEVICE_STATE_DISABLED);
-    return icon;
-}
-
-lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent) {
-    lv_obj_t *icon = lv_label_create(parent);
-    Icon::set(icon, Icon::BROWSER_DIRECTORY);
-    style::apply(icon).textColor(Color::INACTIVE_LIGHTER);
-    lv_obj_set_style_text_opa(icon, Opacity::SUBTLE, LV_STATE_DEFAULT);
-    return icon;
-}
-
-void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
-    if (props.names.empty()) return;
-
-    const auto &names = props.names;
-    size_t count = names.size();
-
-    type_icons_.clear();
-    type_icons_.resize(count, nullptr);
-    state_icons_.clear();
-    state_icons_.resize(count, nullptr);
-    folder_icons_.clear();
-    folder_icons_.resize(count, nullptr);
-
-    for (size_t i = 0; i < count; i++) {
-        lv_obj_t *button = overlay().getButton(i);
-        if (!button) continue;
-
-        bool is_back_item = (i == 0) && (names[i] == Icon::UI_ARROW_LEFT);
-
-        if (is_back_item) {
-            overlay().setItemFont(i, bitwig_fonts.icons_14);
-            continue;
-        }
-
-        bool is_device = !isNonDeviceItem(names[i]);
-
-        if (is_device) {
-            // Create type icon first (index 0)
-            uint8_t device_type = i < props.deviceTypes.size() ? props.deviceTypes[i] : 0;
-            lv_obj_t *type_icon = createDeviceTypeIcon(button, device_type);
-            if (type_icon) {
-                lv_obj_move_to_index(type_icon, 0);
-                type_icons_[i] = type_icon;
-            }
-
-            // Create state icon (index 1)
-            bool is_enabled = i < props.deviceStates.size() && props.deviceStates[i];
-            lv_obj_t *state_icon = createDeviceStateIcon(button, is_enabled);
-            lv_obj_move_to_index(state_icon, type_icon ? 1 : 0);
-            state_icons_[i] = state_icon;
-        }
-
-        // Create folder icon (index 2 or less if no type/state)
-        bool is_folder = hasChildren(props, i);
-        lv_obj_t *folder_icon = createFolderIcon(button);
-        int folder_index = (type_icons_[i] ? 1 : 0) + (state_icons_[i] ? 1 : 0);
-        lv_obj_move_to_index(folder_icon, folder_index);
-        folder_icons_[i] = folder_icon;
-
-        if (!is_folder) lv_obj_add_flag(folder_icon, LV_OBJ_FLAG_HIDDEN);
-    }
+    bool hasSlots = index < props.hasSlots.size() && props.hasSlots[index];
+    bool hasLayers = index < props.hasLayers.size() && props.hasLayers[index];
+    bool hasDrums = index < props.hasDrums.size() && props.hasDrums[index];
+    return hasSlots || hasLayers || hasDrums;
 }
 
 }  // namespace bitwig

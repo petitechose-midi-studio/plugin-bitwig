@@ -199,6 +199,7 @@ void ListOverlay::populateList() {
 
     buttons_.clear();
     labels_.clear();
+    previous_index_ = -1;  // Reset for optimized highlight tracking
 
     for (const auto& item : items_) {
         lv_obj_t* btn = lv_obj_create(list_);
@@ -266,11 +267,15 @@ void ListOverlay::updateHighlight() {
         return;
     }
 
-    for (size_t i = 0; i < buttons_.size(); i++) {
-        applyStateRecursive(buttons_[i], LV_STATE_FOCUSED, false);
+    // Optimization: Only update the items that changed (previous and current)
+    // instead of iterating all buttons
+    if (previous_index_ >= 0 && previous_index_ < static_cast<int>(buttons_.size()) &&
+        previous_index_ != selected_index_) {
+        applyStateRecursive(buttons_[previous_index_], LV_STATE_FOCUSED, false);
     }
 
     applyStateRecursive(buttons_[selected_index_], LV_STATE_FOCUSED, true);
+    previous_index_ = selected_index_;
 }
 
 void ListOverlay::scrollToSelected(bool animate) {

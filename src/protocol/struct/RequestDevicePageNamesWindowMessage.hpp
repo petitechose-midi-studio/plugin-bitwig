@@ -1,10 +1,10 @@
 /**
- * TransportAutomationWriteModeChangeMessage.hpp - Auto-generated Protocol Struct
+ * RequestDevicePageNamesWindowMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE message
+ * Description: REQUEST_DEVICE_PAGE_NAMES_WINDOW message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -25,11 +25,11 @@ namespace Protocol {
 
 
 
-struct TransportAutomationWriteModeChangeMessage {
+struct RequestDevicePageNamesWindowMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE;
+    static constexpr MessageID MESSAGE_ID = MessageID::REQUEST_DEVICE_PAGE_NAMES_WINDOW;
 
-    uint8_t automationWriteMode;
+    uint8_t pageStartIndex;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -56,7 +56,7 @@ struct TransportAutomationWriteModeChangeMessage {
 
         uint8_t* ptr = buffer;
 
-        encodeUint8(ptr, automationWriteMode);
+        encodeUint8(ptr, pageStartIndex);
 
         return ptr - buffer;
     }
@@ -68,7 +68,7 @@ struct TransportAutomationWriteModeChangeMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<TransportAutomationWriteModeChangeMessage> decode(
+    static std::optional<RequestDevicePageNamesWindowMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -77,10 +77,10 @@ struct TransportAutomationWriteModeChangeMessage {
         size_t remaining = len;
 
         // Decode fields
-        uint8_t automationWriteMode;
-        if (!decodeUint8(ptr, remaining, automationWriteMode)) return std::nullopt;
+        uint8_t pageStartIndex;
+        if (!decodeUint8(ptr, remaining, pageStartIndex)) return std::nullopt;
 
-        return TransportAutomationWriteModeChangeMessage{automationWriteMode};
+        return RequestDevicePageNamesWindowMessage{pageStartIndex};
     }
 
 
@@ -96,9 +96,9 @@ struct TransportAutomationWriteModeChangeMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# TransportAutomationWriteModeChange\ntransportAutomationWriteModeChange:\n");
+        ptr += snprintf(ptr, end - ptr, "# RequestDevicePageNamesWindow\nrequestDevicePageNamesWindow:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  automationWriteMode: %lu\n", (unsigned long)automationWriteMode);
+        ptr += snprintf(ptr, end - ptr, "  pageStartIndex: %lu\n", (unsigned long)pageStartIndex);
 
         *ptr = '\0';
         return g_logBuffer;

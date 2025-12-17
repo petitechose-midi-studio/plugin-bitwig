@@ -6,6 +6,7 @@
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DevicePageChangeMessage.hpp"
 #include "protocol/struct/DevicePageNamesMessage.hpp"
+#include "protocol/struct/DevicePageNamesWindowMessage.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -42,6 +43,7 @@ void HandlerHostPage::updateRemoteControlEncoderModes(const RemoteControlArray& 
 }
 
 void HandlerHostPage::setupProtocolCallbacks() {
+    // DEPRECATED: Legacy full page names (use windowed version)
     protocol_.onDevicePageNames = [this](const DevicePageNamesMessage& msg) {
         if (!msg.fromHost) return;
 
@@ -52,6 +54,42 @@ void HandlerHostPage::setupProtocolCallbacks() {
 
         state_.pageSelector.names.set(names.data(), names.size());
         state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
+        // Legacy: also update totalCount for compatibility
+        state_.pageSelector.totalCount.set(msg.devicePageCount);
+        state_.pageSelector.loadedUpTo.set(msg.devicePageCount);
+    };
+
+    // NEW: Windowed page names (accumulates in cache)
+    protocol_.onDevicePageNamesWindow = [this](const DevicePageNamesWindowMessage& msg) {
+        if (!msg.fromHost) return;
+
+        // Update total count
+        state_.pageSelector.totalCount.set(msg.devicePageCount);
+
+        // Accumulate names at absolute indices
+        uint8_t startIdx = msg.pageStartIndex;
+        for (uint8_t i = 0; i < msg.pageNames.size(); i++) {
+            if (msg.pageNames[i].empty()) break;  // End of valid data
+            uint8_t absoluteIdx = startIdx + i;
+            if (absoluteIdx < MAX_PAGES) {
+                state_.pageSelector.names.setAt(absoluteIdx, msg.pageNames[i]);
+            }
+        }
+
+        // Update loadedUpTo (highest index we've received)
+        uint8_t newLoadedUpTo = startIdx + LIST_WINDOW_SIZE;
+        if (newLoadedUpTo > msg.devicePageCount) {
+            newLoadedUpTo = msg.devicePageCount;  // Cap at total
+        }
+        if (newLoadedUpTo > state_.pageSelector.loadedUpTo.get()) {
+            state_.pageSelector.loadedUpTo.set(newLoadedUpTo);
+        }
+
+        // Update selected index ONLY on first window (not on prefetch)
+        // This prevents cursor jumps when user is navigating
+        if (startIdx == 0) {
+            state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
+        }
     };
 
     protocol_.onDevicePageChange = [this](const DevicePageChangeMessage& msg) {

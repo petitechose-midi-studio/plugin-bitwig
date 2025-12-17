@@ -5,6 +5,8 @@
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DevicePageSelectByIndexMessage.hpp"
+#include "protocol/struct/RequestDevicePageNamesWindowMessage.hpp"
+#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
@@ -84,13 +86,27 @@ void HandlerInputDevicePage::openSelector() {
 }
 
 void HandlerInputDevicePage::navigate(float delta) {
-    size_t count = state_.pageSelector.names.size();
-    if (count == 0) return;
+    // Use totalCount for navigation (windowed loading)
+    uint8_t totalCount = state_.pageSelector.totalCount.get();
+    if (totalCount == 0) {
+        // Fallback to names.size() for legacy/compatibility
+        totalCount = static_cast<uint8_t>(state_.pageSelector.names.size());
+    }
+    if (totalCount == 0) return;
 
     int currentIndex = state_.pageSelector.selectedIndex.get();
     int newIndex = currentIndex + static_cast<int>(delta);
-    newIndex = wrapIndex(newIndex, static_cast<int>(count));
+    newIndex = wrapIndex(newIndex, static_cast<int>(totalCount));
     state_.pageSelector.selectedIndex.set(newIndex);
+
+    // Prefetch next window if approaching end of loaded data
+    uint8_t loadedUpTo = state_.pageSelector.loadedUpTo.get();
+    if (newIndex >= 0 &&
+        static_cast<uint8_t>(newIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
+        loadedUpTo < totalCount) {
+        // Request next window starting at loadedUpTo
+        protocol_.send(Protocol::RequestDevicePageNamesWindowMessage{loadedUpTo});
+    }
 }
 
 void HandlerInputDevicePage::confirmSelection() {

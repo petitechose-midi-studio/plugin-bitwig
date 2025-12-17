@@ -5,24 +5,24 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * TransportAutomationWriteModeChangeMessage - Auto-generated Protocol Message
+ * RequestTrackListWindowMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE message
+ * Description: REQUEST_TRACK_LIST_WINDOW message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class TransportAutomationWriteModeChangeMessage {
+public final class RequestTrackListWindowMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE;
+    public static final MessageID MESSAGE_ID = MessageID.REQUEST_TRACK_LIST_WINDOW;
 
 
     // ============================================================================
@@ -32,19 +32,19 @@ public final class TransportAutomationWriteModeChangeMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int automationWriteMode;
+    private final int trackStartIndex;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new TransportAutomationWriteModeChangeMessage
+     * Construct a new RequestTrackListWindowMessage
      *
-     * @param automationWriteMode The automationWriteMode value
+     * @param trackStartIndex The trackStartIndex value
      */
-    public TransportAutomationWriteModeChangeMessage(int automationWriteMode) {
-        this.automationWriteMode = automationWriteMode;
+    public RequestTrackListWindowMessage(int trackStartIndex) {
+        this.trackStartIndex = trackStartIndex;
     }
 
     // ============================================================================
@@ -52,12 +52,12 @@ public final class TransportAutomationWriteModeChangeMessage {
     // ============================================================================
 
     /**
-     * Get the automationWriteMode value
+     * Get the trackStartIndex value
      *
-     * @return automationWriteMode
+     * @return trackStartIndex
      */
-    public int getAutomationWriteMode() {
-        return automationWriteMode;
+    public int getTrackStartIndex() {
+        return trackStartIndex;
     }
 
     // ============================================================================
@@ -78,9 +78,9 @@ public final class TransportAutomationWriteModeChangeMessage {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
 
-        byte[] automationWriteMode_encoded = Encoder.encodeUint8(automationWriteMode);
-        System.arraycopy(automationWriteMode_encoded, 0, buffer, offset, automationWriteMode_encoded.length);
-        offset += automationWriteMode_encoded.length;
+        byte[] trackStartIndex_encoded = Encoder.encodeUint8(trackStartIndex);
+        System.arraycopy(trackStartIndex_encoded, 0, buffer, offset, trackStartIndex_encoded.length);
+        offset += trackStartIndex_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -98,20 +98,20 @@ public final class TransportAutomationWriteModeChangeMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded TransportAutomationWriteModeChangeMessage instance
+     * @return Decoded RequestTrackListWindowMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static TransportAutomationWriteModeChangeMessage decode(byte[] data) {
+    public static RequestTrackListWindowMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for TransportAutomationWriteModeChangeMessage decode");
+            throw new IllegalArgumentException("Insufficient data for RequestTrackListWindowMessage decode");
         }
 
         int offset = 0;
 
-        int automationWriteMode = Decoder.decodeUint8(data, offset);
+        int trackStartIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new TransportAutomationWriteModeChangeMessage(automationWriteMode);
+        return new RequestTrackListWindowMessage(trackStartIndex);
     }
 
     // ============================================================================
@@ -126,9 +126,9 @@ public final class TransportAutomationWriteModeChangeMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# TransportAutomationWriteModeChange\n");
-        sb.append("transportAutomationWriteModeChange:\n");
-        sb.append("  automationWriteMode: ").append(getAutomationWriteMode()).append("\n");
+        sb.append("# RequestTrackListWindow\n");
+        sb.append("requestTrackListWindow:\n");
+        sb.append("  trackStartIndex: ").append(getTrackStartIndex()).append("\n");
         return sb.toString();
     }
 }  // class Message

@@ -52,6 +52,8 @@ struct RemoteControls {
     uint8_t parameterType;
     std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
+    bool hasAutomation;
+    float modulatedValue;
 };
 
 #endif // PROTOCOL_REMOTECONTROLS_STRUCT
@@ -72,7 +74,7 @@ struct DeviceChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 9215;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 9263;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -112,6 +114,8 @@ struct DeviceChangeMessage {
                 encodeString(ptr, type);
             }
             encodeUint8(ptr, item.currentValueIndex);
+            encodeBool(ptr, item.hasAutomation);
+            encodeFloat32(ptr, item.modulatedValue);
         }
 
         return ptr - buffer;
@@ -164,6 +168,8 @@ struct DeviceChangeMessage {
                 item.discreteValueNames.push_back(temp_discreteValueNames);
             }
             if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.hasAutomation)) return std::nullopt;
+            if (!decodeFloat32(ptr, remaining, item.modulatedValue)) return std::nullopt;
             remoteControls_data[i] = item;
         }
 
@@ -220,6 +226,12 @@ struct DeviceChangeMessage {
             }
         }
         ptr += snprintf(ptr, end - ptr, "      currentValueIndex: %lu\n", (unsigned long)remoteControls[i].currentValueIndex);
+        ptr += snprintf(ptr, end - ptr, "      hasAutomation: %s\n", remoteControls[i].hasAutomation ? "true" : "false");
+        {
+            char floatBuf_remoteControls_i_modulatedValue[16];
+            floatToString(floatBuf_remoteControls_i_modulatedValue, sizeof(floatBuf_remoteControls_i_modulatedValue), remoteControls[i].modulatedValue);
+            ptr += snprintf(ptr, end - ptr, "      modulatedValue: %s\n", floatBuf_remoteControls_i_modulatedValue);
+        }
         }
 
         *ptr = '\0';

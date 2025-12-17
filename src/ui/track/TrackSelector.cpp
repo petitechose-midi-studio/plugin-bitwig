@@ -1,120 +1,162 @@
 #include "TrackSelector.hpp"
 
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
+#include <oc/ui/lvgl/theme/BaseTheme.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/icon.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
-using namespace bitwig::theme;
-namespace style = oc::ui::lvgl::style;
-
 namespace bitwig {
 
-TrackSelector::TrackSelector(lv_obj_t *parent) : BaseSelector(parent) {
-    setTitle("Tracks");
-    createFooter();  // Create footer once, after list - ensures correct flex order
+using namespace oc::ui::lvgl;
+using namespace theme;
+namespace style = oc::ui::lvgl::style;
+
+// ══════════════════════════════════════════════════════════════════
+// Constants
+// ══════════════════════════════════════════════════════════════════
+
+constexpr int VISIBLE_SLOTS = 5;
+constexpr int ITEM_HEIGHT = 32;
+
+// ══════════════════════════════════════════════════════════════════
+// Construction
+// ══════════════════════════════════════════════════════════════════
+
+TrackSelector::TrackSelector(lv_obj_t *parent) : parent_(parent) {
+    createOverlay();
+    createHeader();
+
+    // Create virtual list
+    list_ = std::make_unique<ui::VirtualList>(container_, VISIBLE_SLOTS, ITEM_HEIGHT);
+    list_->setOnBindSlot([this](ui::VirtualSlot &slot, int index, bool isSelected) {
+        bindSlot(slot, index, isSelected);
+    });
+    list_->setOnUpdateHighlight([this](ui::VirtualSlot &slot, bool isSelected) {
+        updateSlotHighlight(slot, isSelected);
+    });
+
+    // Pre-allocate slot items
+    slotItems_.resize(VISIBLE_SLOTS);
+
+    createFooter();
 }
 
-TrackSelector::~TrackSelector() { footer_.reset(); }
+TrackSelector::~TrackSelector() {
+    slotItems_.clear();
+    list_.reset();
+    footer_.reset();
+
+    if (overlay_) {
+        lv_obj_delete(overlay_);
+        overlay_ = nullptr;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Render
+// ══════════════════════════════════════════════════════════════════
 
 void TrackSelector::render(const TrackSelectorProps &props) {
     if (!props.visible) {
         hide();
-        if (footer_) footer_->hide();
         return;
     }
 
     if (props.names.empty()) return;
 
-    const auto &names = props.names;
+    // Store current props for access in callbacks
+    currentProps_ = props;
 
-    // Check if items changed
-    bool itemsChanged = (prev_items_ != names);
+    // Update list
+    list_->setTotalCount(static_cast<int>(props.names.size()));
+    list_->setSelectedIndex(props.selectedIndex);
 
-    if (itemsChanged) {
-        clearTrackItems();
-        prev_items_ = names;
-    }
-
-    overlay().setItems(names);
-    overlay().setSelectedIndex(props.selectedIndex);
-
-    if (itemsChanged) { createTrackItems(names); }
-
-    renderTrackItems(props);
-
-    if (!isVisible()) show();
+    // Show overlay and list
+    if (!visible_) show();
 
     renderFooter(props);
 }
 
+// ══════════════════════════════════════════════════════════════════
+// IComponent
+// ══════════════════════════════════════════════════════════════════
+
+void TrackSelector::show() {
+    if (overlay_) lv_obj_clear_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
+    if (list_) list_->show();
+    if (footer_) footer_->show();
+    visible_ = true;
+}
+
+void TrackSelector::hide() {
+    if (overlay_) lv_obj_add_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
+    if (list_) list_->hide();
+    if (footer_) footer_->hide();
+    visible_ = false;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Overlay Structure
+// ══════════════════════════════════════════════════════════════════
+
+void TrackSelector::createOverlay() {
+    // Full-screen overlay with semi-transparent background
+    overlay_ = lv_obj_create(parent_);
+    lv_obj_add_flag(overlay_, LV_OBJ_FLAG_FLOATING);
+    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, Opacity::OVERLAY_BG).noScroll();
+    lv_obj_align(overlay_, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_style_border_width(overlay_, 0, LV_STATE_DEFAULT);
+    lv_obj_add_flag(overlay_, LV_OBJ_FLAG_HIDDEN);
+
+    // Container with flex column layout
+    container_ = lv_obj_create(overlay_);
+    style::apply(container_).fullSize().transparent().noScroll();
+    lv_obj_align(container_, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(container_, BaseTheme::Layout::ROW_GAP_MD, LV_STATE_DEFAULT);
+}
+
+void TrackSelector::createHeader() {
+    header_ = lv_obj_create(container_);
+    lv_obj_set_size(header_, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(header_, Opacity::HIDDEN, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(header_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(header_, Layout::OVERLAY_PAD_H, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(header_, Layout::OVERLAY_PAD_TOP, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(header_, Layout::OVERLAY_PAD_BOTTOM, LV_STATE_DEFAULT);
+    lv_obj_set_flex_flow(header_, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(header_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(header_, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_move_to_index(header_, 0);
+
+    header_label_ = lv_label_create(header_);
+    lv_label_set_text(header_label_, "Tracks");
+    if (bitwig_fonts.device_label) {
+        lv_obj_set_style_text_font(header_label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
+    }
+    style::apply(header_label_).textColor(Color::TEXT_LIGHT);
+}
+
 void TrackSelector::createFooter() {
-    // Create footer inside overlay container (participates in flex layout)
-    footer_ = std::make_unique<HintBar>(overlay().getContainer(), HintBarPosition::BOTTOM);
+    footer_ = std::make_unique<HintBar>(container_, HintBarPosition::BOTTOM);
     footer_->setSize(Layout::HINT_BAR_HEIGHT);
 
-    // Create mute icon (cell 1 = center)
+    // Mute icon (cell 1 = center)
     footer_mute_ = lv_label_create(footer_->getElement());
     Icon::set(footer_mute_, Icon::CHANNEL_MUTE, Icon::Size::L);
     style::apply(footer_mute_).textColor(Color::TRACK_MUTE);
     footer_->setCell(1, footer_mute_);
 
-    // Create solo icon (cell 2 = right)
+    // Solo icon (cell 2 = right)
     footer_solo_ = lv_label_create(footer_->getElement());
     Icon::set(footer_solo_, Icon::CHANNEL_SOLO, Icon::Size::L);
     style::apply(footer_solo_).textColor(Color::TRACK_SOLO);
     footer_->setCell(2, footer_solo_);
-}
-
-void TrackSelector::createTrackItems(const std::vector<std::string> &names) {
-    track_items_.clear();
-
-    bool has_back_item = !names.empty() && (names[0] == Icon::UI_ARROW_LEFT);
-
-    // Apply icon font to back button if present
-    if (has_back_item) {
-        overlay().setItemFont(0, bitwig_fonts.icons_14);
-        track_items_.push_back(nullptr);
-    }
-
-    // Create TrackTitleItem for regular items (skip back button if present)
-    size_t start_index = has_back_item ? 1 : 0;
-    for (size_t i = start_index; i < names.size(); i++) {
-        lv_obj_t *btn = overlay().getButton(i);
-        if (!btn) continue;
-
-        // Remove default Label widget to replace with TrackTitleItem
-        overlay().removeLabel(i);
-
-        auto item = std::make_unique<TrackTitleItem>(btn, true, 12);
-        track_items_.push_back(std::move(item));
-    }
-}
-
-void TrackSelector::clearTrackItems() { track_items_.clear(); }
-
-void TrackSelector::renderTrackItems(const TrackSelectorProps &props) {
-    if (props.names.empty()) return;
-
-    const auto &names = props.names;
-    size_t count = names.size();
-
-    for (size_t i = 0; i < track_items_.size() && i < count; i++) {
-        if (!track_items_[i]) continue;
-
-        bool is_muted = i < props.muteStates.size() ? props.muteStates[i] : false;
-        bool is_soloed = i < props.soloStates.size() ? props.soloStates[i] : false;
-        uint8_t track_type = i < props.trackTypes.size() ? props.trackTypes[i] : 0;
-        uint32_t track_color = i < props.trackColors.size() ? props.trackColors[i] : 0xFFFFFF;
-
-        track_items_[i]->render({.name = names[i].c_str(),
-                                 .color = track_color,
-                                 .trackType = track_type,
-                                 .isMuted = is_muted,
-                                 .isSoloed = is_soloed,
-                                 .highlighted = static_cast<int>(i) == props.selectedIndex});
-    }
 }
 
 void TrackSelector::renderFooter(const TrackSelectorProps &props) {
@@ -128,7 +170,6 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
                          ? props.soloStates[idx]
                          : false;
 
-    // Update opacity based on state (active = full, inactive = faded)
     if (footer_mute_)
         lv_obj_set_style_text_opa(footer_mute_, is_muted ? Opacity::FULL : Opacity::FADED,
                                   LV_STATE_DEFAULT);
@@ -137,6 +178,105 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
                                   LV_STATE_DEFAULT);
 
     footer_->show();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VirtualList Callbacks
+// ══════════════════════════════════════════════════════════════════
+
+void TrackSelector::bindSlot(ui::VirtualSlot &slot, int index, bool isSelected) {
+    int slotIndex = index - list_->getWindowStart();
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
+
+    // Ensure TrackTitleItem exists for this slot
+    ensureSlotWidgets(slotIndex);
+
+    // Get data for this index
+    const auto &props = currentProps_;
+    const char *name = index < static_cast<int>(props.names.size())
+                           ? props.names[index].c_str()
+                           : "";
+    uint32_t color = index < static_cast<int>(props.trackColors.size())
+                         ? props.trackColors[index]
+                         : 0xFFFFFF;
+    uint8_t trackType = index < static_cast<int>(props.trackTypes.size())
+                            ? props.trackTypes[index]
+                            : 0;
+    bool isMuted = index < static_cast<int>(props.muteStates.size())
+                       ? props.muteStates[index]
+                       : false;
+    bool isSoloed = index < static_cast<int>(props.soloStates.size())
+                        ? props.soloStates[index]
+                        : false;
+
+    // Render the track item
+    slotItems_[slotIndex]->render({
+        .name = name,
+        .color = color,
+        .trackType = trackType,
+        .isMuted = isMuted,
+        .isSoloed = isSoloed,
+        .level = 0.0f,
+        .highlighted = isSelected,
+        .hideIndicators = false
+    });
+}
+
+void TrackSelector::updateSlotHighlight(ui::VirtualSlot &slot, bool isSelected) {
+    int slotIndex = slot.boundIndex - list_->getWindowStart();
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
+
+    applyHighlightStyle(slotIndex, isSelected);
+}
+
+void TrackSelector::ensureSlotWidgets(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
+
+    // Create TrackTitleItem if not exists
+    if (!slotItems_[slotIndex]) {
+        const auto &slots = list_->getSlots();
+        if (slotIndex < static_cast<int>(slots.size())) {
+            lv_obj_t *container = slots[slotIndex].container;
+            slotItems_[slotIndex] = std::make_unique<TrackTitleItem>(container, true, 12);
+        }
+    }
+}
+
+void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
+    if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
+    if (!slotItems_[slotIndex]) return;
+
+    // Get current data for this slot
+    int logicalIndex = list_->getWindowStart() + slotIndex;
+    const auto &props = currentProps_;
+
+    const char *name = logicalIndex < static_cast<int>(props.names.size())
+                           ? props.names[logicalIndex].c_str()
+                           : "";
+    uint32_t color = logicalIndex < static_cast<int>(props.trackColors.size())
+                         ? props.trackColors[logicalIndex]
+                         : 0xFFFFFF;
+    uint8_t trackType = logicalIndex < static_cast<int>(props.trackTypes.size())
+                            ? props.trackTypes[logicalIndex]
+                            : 0;
+    bool isMuted = logicalIndex < static_cast<int>(props.muteStates.size())
+                       ? props.muteStates[logicalIndex]
+                       : false;
+    bool isSoloed = logicalIndex < static_cast<int>(props.soloStates.size())
+                        ? props.soloStates[logicalIndex]
+                        : false;
+
+    // Re-render with updated highlight state
+    slotItems_[slotIndex]->render({
+        .name = name,
+        .color = color,
+        .trackType = trackType,
+        .isMuted = isMuted,
+        .isSoloed = isSoloed,
+        .level = 0.0f,
+        .highlighted = isSelected,
+        .hideIndicators = false
+    });
 }
 
 }  // namespace bitwig
