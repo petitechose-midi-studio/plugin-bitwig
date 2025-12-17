@@ -85,6 +85,20 @@ public class DecoderRegistry {
                     callbacks.onDeviceRemoteControlDiscreteValues.handle(msg);
                 }
                 break;
+            case DEVICE_REMOTE_CONTROL_HAS_AUTOMATION_CHANGE:
+                if (callbacks.onDeviceRemoteControlHasAutomationChange != null) {
+                    DeviceRemoteControlHasAutomationChangeMessage msg = DeviceRemoteControlHasAutomationChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlHasAutomationChange.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE:
+                if (callbacks.onDeviceRemoteControlModulatedValueChange != null) {
+                    DeviceRemoteControlModulatedValueChangeMessage msg = DeviceRemoteControlModulatedValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlModulatedValueChange.handle(msg);
+                }
+                break;
             case DEVICE_REMOTE_CONTROL_NAME_CHANGE:
                 if (callbacks.onDeviceRemoteControlNameChange != null) {
                     DeviceRemoteControlNameChangeMessage msg = DeviceRemoteControlNameChangeMessage.decode(payload);
@@ -225,11 +239,25 @@ public class DecoderRegistry {
                     callbacks.onRequestTrackList.handle(msg);
                 }
                 break;
+            case REQUEST_TRACK_SEND_LIST:
+                if (callbacks.onRequestTrackSendList != null) {
+                    RequestTrackSendListMessage msg = RequestTrackSendListMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onRequestTrackSendList.handle(msg);
+                }
+                break;
             case TRACK_ACTIVATE:
                 if (callbacks.onTrackActivate != null) {
                     TrackActivateMessage msg = TrackActivateMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onTrackActivate.handle(msg);
+                }
+                break;
+            case TRACK_ARM_CHANGE:
+                if (callbacks.onTrackArmChange != null) {
+                    TrackArmChangeMessage msg = TrackArmChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackArmChange.handle(msg);
                 }
                 break;
             case TRACK_CHANGE:
@@ -253,6 +281,41 @@ public class DecoderRegistry {
                     callbacks.onTrackMute.handle(msg);
                 }
                 break;
+            case TRACK_MUTED_BY_SOLO_CHANGE:
+                if (callbacks.onTrackMutedBySoloChange != null) {
+                    TrackMutedBySoloChangeMessage msg = TrackMutedBySoloChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackMutedBySoloChange.handle(msg);
+                }
+                break;
+            case TRACK_PAN_CHANGE:
+                if (callbacks.onTrackPanChange != null) {
+                    TrackPanChangeMessage msg = TrackPanChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackPanChange.handle(msg);
+                }
+                break;
+            case TRACK_PAN_HAS_AUTOMATION_CHANGE:
+                if (callbacks.onTrackPanHasAutomationChange != null) {
+                    TrackPanHasAutomationChangeMessage msg = TrackPanHasAutomationChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackPanHasAutomationChange.handle(msg);
+                }
+                break;
+            case TRACK_PAN_MODULATED_VALUE_CHANGE:
+                if (callbacks.onTrackPanModulatedValueChange != null) {
+                    TrackPanModulatedValueChangeMessage msg = TrackPanModulatedValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackPanModulatedValueChange.handle(msg);
+                }
+                break;
+            case TRACK_PAN_TOUCH:
+                if (callbacks.onTrackPanTouch != null) {
+                    TrackPanTouchMessage msg = TrackPanTouchMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackPanTouch.handle(msg);
+                }
+                break;
             case TRACK_SELECT_BY_INDEX:
                 if (callbacks.onTrackSelectByIndex != null) {
                     TrackSelectByIndexMessage msg = TrackSelectByIndexMessage.decode(payload);
@@ -260,11 +323,144 @@ public class DecoderRegistry {
                     callbacks.onTrackSelectByIndex.handle(msg);
                 }
                 break;
+            case TRACK_SEND_ENABLED_CHANGE:
+                if (callbacks.onTrackSendEnabledChange != null) {
+                    TrackSendEnabledChangeMessage msg = TrackSendEnabledChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendEnabledChange.handle(msg);
+                }
+                break;
+            case TRACK_SEND_HAS_AUTOMATION_CHANGE:
+                if (callbacks.onTrackSendHasAutomationChange != null) {
+                    TrackSendHasAutomationChangeMessage msg = TrackSendHasAutomationChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendHasAutomationChange.handle(msg);
+                }
+                break;
+            case TRACK_SEND_LIST:
+                if (callbacks.onTrackSendList != null) {
+                    TrackSendListMessage msg = TrackSendListMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendList.handle(msg);
+                }
+                break;
+            case TRACK_SEND_MODE_CHANGE:
+                if (callbacks.onTrackSendModeChange != null) {
+                    TrackSendModeChangeMessage msg = TrackSendModeChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendModeChange.handle(msg);
+                }
+                break;
+            case TRACK_SEND_MODULATED_VALUE_CHANGE:
+                if (callbacks.onTrackSendModulatedValueChange != null) {
+                    TrackSendModulatedValueChangeMessage msg = TrackSendModulatedValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendModulatedValueChange.handle(msg);
+                }
+                break;
+            case TRACK_SEND_PRE_FADER_CHANGE:
+                if (callbacks.onTrackSendPreFaderChange != null) {
+                    TrackSendPreFaderChangeMessage msg = TrackSendPreFaderChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendPreFaderChange.handle(msg);
+                }
+                break;
+            case TRACK_SEND_TOUCH:
+                if (callbacks.onTrackSendTouch != null) {
+                    TrackSendTouchMessage msg = TrackSendTouchMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendTouch.handle(msg);
+                }
+                break;
+            case TRACK_SEND_VALUE_CHANGE:
+                if (callbacks.onTrackSendValueChange != null) {
+                    TrackSendValueChangeMessage msg = TrackSendValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackSendValueChange.handle(msg);
+                }
+                break;
             case TRACK_SOLO:
                 if (callbacks.onTrackSolo != null) {
                     TrackSoloMessage msg = TrackSoloMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onTrackSolo.handle(msg);
+                }
+                break;
+            case TRACK_VOLUME_CHANGE:
+                if (callbacks.onTrackVolumeChange != null) {
+                    TrackVolumeChangeMessage msg = TrackVolumeChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackVolumeChange.handle(msg);
+                }
+                break;
+            case TRACK_VOLUME_HAS_AUTOMATION_CHANGE:
+                if (callbacks.onTrackVolumeHasAutomationChange != null) {
+                    TrackVolumeHasAutomationChangeMessage msg = TrackVolumeHasAutomationChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackVolumeHasAutomationChange.handle(msg);
+                }
+                break;
+            case TRACK_VOLUME_MODULATED_VALUE_CHANGE:
+                if (callbacks.onTrackVolumeModulatedValueChange != null) {
+                    TrackVolumeModulatedValueChangeMessage msg = TrackVolumeModulatedValueChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackVolumeModulatedValueChange.handle(msg);
+                }
+                break;
+            case TRACK_VOLUME_TOUCH:
+                if (callbacks.onTrackVolumeTouch != null) {
+                    TrackVolumeTouchMessage msg = TrackVolumeTouchMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTrackVolumeTouch.handle(msg);
+                }
+                break;
+            case RESET_AUTOMATION_OVERRIDES:
+                if (callbacks.onResetAutomationOverrides != null) {
+                    ResetAutomationOverridesMessage msg = ResetAutomationOverridesMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onResetAutomationOverrides.handle(msg);
+                }
+                break;
+            case TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_CHANGE:
+                if (callbacks.onTransportArrangerAutomationWriteEnabledChange != null) {
+                    TransportArrangerAutomationWriteEnabledChangeMessage msg = TransportArrangerAutomationWriteEnabledChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportArrangerAutomationWriteEnabledChange.handle(msg);
+                }
+                break;
+            case TRANSPORT_ARRANGER_OVERDUB_ENABLED_CHANGE:
+                if (callbacks.onTransportArrangerOverdubEnabledChange != null) {
+                    TransportArrangerOverdubEnabledChangeMessage msg = TransportArrangerOverdubEnabledChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportArrangerOverdubEnabledChange.handle(msg);
+                }
+                break;
+            case TRANSPORT_AUTOMATION_OVERRIDE_ACTIVE_CHANGE:
+                if (callbacks.onTransportAutomationOverrideActiveChange != null) {
+                    TransportAutomationOverrideActiveChangeMessage msg = TransportAutomationOverrideActiveChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportAutomationOverrideActiveChange.handle(msg);
+                }
+                break;
+            case TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE:
+                if (callbacks.onTransportAutomationWriteModeChange != null) {
+                    TransportAutomationWriteModeChangeMessage msg = TransportAutomationWriteModeChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportAutomationWriteModeChange.handle(msg);
+                }
+                break;
+            case TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED_CHANGE:
+                if (callbacks.onTransportClipLauncherAutomationWriteEnabledChange != null) {
+                    TransportClipLauncherAutomationWriteEnabledChangeMessage msg = TransportClipLauncherAutomationWriteEnabledChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportClipLauncherAutomationWriteEnabledChange.handle(msg);
+                }
+                break;
+            case TRANSPORT_CLIP_LAUNCHER_OVERDUB_ENABLED_CHANGE:
+                if (callbacks.onTransportClipLauncherOverdubEnabledChange != null) {
+                    TransportClipLauncherOverdubEnabledChangeMessage msg = TransportClipLauncherOverdubEnabledChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onTransportClipLauncherOverdubEnabledChange.handle(msg);
                 }
                 break;
             case TRANSPORT_PLAY:

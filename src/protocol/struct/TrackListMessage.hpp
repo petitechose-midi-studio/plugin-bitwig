@@ -36,8 +36,12 @@ struct Tracks {
     bool isActivated;
     bool isMute;
     bool isSolo;
+    bool isMutedBySolo;
+    bool isArm;
     bool isGroup;
     uint8_t trackType;
+    float volume;
+    float pan;
 };
 
 #endif // PROTOCOL_TRACKS_STRUCT
@@ -58,7 +62,7 @@ struct TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1445;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1829;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -89,8 +93,12 @@ struct TrackListMessage {
             encodeBool(ptr, item.isActivated);
             encodeBool(ptr, item.isMute);
             encodeBool(ptr, item.isSolo);
+            encodeBool(ptr, item.isMutedBySolo);
+            encodeBool(ptr, item.isArm);
             encodeBool(ptr, item.isGroup);
             encodeUint8(ptr, item.trackType);
+            encodeFloat32(ptr, item.volume);
+            encodeFloat32(ptr, item.pan);
         }
 
         return ptr - buffer;
@@ -131,8 +139,12 @@ struct TrackListMessage {
             if (!decodeBool(ptr, remaining, item.isActivated)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isMute)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isSolo)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isMutedBySolo)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isArm)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isGroup)) return std::nullopt;
             if (!decodeUint8(ptr, remaining, item.trackType)) return std::nullopt;
+            if (!decodeFloat32(ptr, remaining, item.volume)) return std::nullopt;
+            if (!decodeFloat32(ptr, remaining, item.pan)) return std::nullopt;
             tracks_data[i] = item;
         }
 
@@ -166,8 +178,20 @@ struct TrackListMessage {
         ptr += snprintf(ptr, end - ptr, "      isActivated: %s\n", tracks[i].isActivated ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isMute: %s\n", tracks[i].isMute ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isSolo: %s\n", tracks[i].isSolo ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "      isMutedBySolo: %s\n", tracks[i].isMutedBySolo ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "      isArm: %s\n", tracks[i].isArm ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isGroup: %s\n", tracks[i].isGroup ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      trackType: %lu\n", (unsigned long)tracks[i].trackType);
+        {
+            char floatBuf_tracks_i_volume[16];
+            floatToString(floatBuf_tracks_i_volume, sizeof(floatBuf_tracks_i_volume), tracks[i].volume);
+            ptr += snprintf(ptr, end - ptr, "      volume: %s\n", floatBuf_tracks_i_volume);
+        }
+        {
+            char floatBuf_tracks_i_pan[16];
+            floatToString(floatBuf_tracks_i_pan, sizeof(floatBuf_tracks_i_pan), tracks[i].pan);
+            ptr += snprintf(ptr, end - ptr, "      pan: %s\n", floatBuf_tracks_i_pan);
+        }
         }
 
         *ptr = '\0';

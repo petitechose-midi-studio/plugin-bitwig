@@ -38,18 +38,26 @@ public final class TrackListMessage {
         private final boolean isActivated;
         private final boolean isMute;
         private final boolean isSolo;
+        private final boolean isMutedBySolo;
+        private final boolean isArm;
         private final boolean isGroup;
         private final int trackType;
+        private final float volume;
+        private final float pan;
 
-        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isGroup, int trackType) {
+        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, boolean isGroup, int trackType, float volume, float pan) {
             this.trackIndex = trackIndex;
             this.trackName = trackName;
             this.color = color;
             this.isActivated = isActivated;
             this.isMute = isMute;
             this.isSolo = isSolo;
+            this.isMutedBySolo = isMutedBySolo;
+            this.isArm = isArm;
             this.isGroup = isGroup;
             this.trackType = trackType;
+            this.volume = volume;
+            this.pan = pan;
         }
 
         public int getTrackIndex() {
@@ -76,12 +84,28 @@ public final class TrackListMessage {
             return isSolo;
         }
 
+        public boolean isMutedBySolo() {
+            return isMutedBySolo;
+        }
+
+        public boolean isArm() {
+            return isArm;
+        }
+
         public boolean isGroup() {
             return isGroup;
         }
 
         public int getTrackType() {
             return trackType;
+        }
+
+        public float getVolume() {
+            return volume;
+        }
+
+        public float getPan() {
+            return pan;
         }
 
     }
@@ -176,7 +200,7 @@ public final class TrackListMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1445;
+    public static final int MAX_PAYLOAD_SIZE = 1829;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -222,12 +246,24 @@ public final class TrackListMessage {
     byte[] item_isSolo_encoded = Encoder.encodeBool(item.isSolo());
             System.arraycopy(item_isSolo_encoded, 0, buffer, offset, item_isSolo_encoded.length);
             offset += item_isSolo_encoded.length;
+    byte[] item_isMutedBySolo_encoded = Encoder.encodeBool(item.isMutedBySolo());
+            System.arraycopy(item_isMutedBySolo_encoded, 0, buffer, offset, item_isMutedBySolo_encoded.length);
+            offset += item_isMutedBySolo_encoded.length;
+    byte[] item_isArm_encoded = Encoder.encodeBool(item.isArm());
+            System.arraycopy(item_isArm_encoded, 0, buffer, offset, item_isArm_encoded.length);
+            offset += item_isArm_encoded.length;
     byte[] item_isGroup_encoded = Encoder.encodeBool(item.isGroup());
             System.arraycopy(item_isGroup_encoded, 0, buffer, offset, item_isGroup_encoded.length);
             offset += item_isGroup_encoded.length;
     byte[] item_trackType_encoded = Encoder.encodeUint8(item.getTrackType());
             System.arraycopy(item_trackType_encoded, 0, buffer, offset, item_trackType_encoded.length);
             offset += item_trackType_encoded.length;
+    byte[] item_volume_encoded = Encoder.encodeFloat32(item.getVolume());
+            System.arraycopy(item_volume_encoded, 0, buffer, offset, item_volume_encoded.length);
+            offset += item_volume_encoded.length;
+    byte[] item_pan_encoded = Encoder.encodeFloat32(item.getPan());
+            System.arraycopy(item_pan_encoded, 0, buffer, offset, item_pan_encoded.length);
+            offset += item_pan_encoded.length;
         }
 
 
@@ -241,7 +277,7 @@ public final class TrackListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 389;
+    private static final int MIN_PAYLOAD_SIZE = 773;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -282,11 +318,19 @@ public final class TrackListMessage {
             offset += 1;
     boolean item_isSolo = Decoder.decodeBool(data, offset);
             offset += 1;
+    boolean item_isMutedBySolo = Decoder.decodeBool(data, offset);
+            offset += 1;
+    boolean item_isArm = Decoder.decodeBool(data, offset);
+            offset += 1;
     boolean item_isGroup = Decoder.decodeBool(data, offset);
             offset += 1;
     int item_trackType = Decoder.decodeUint8(data, offset);
             offset += 1;
-            tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isGroup, item_trackType));
+    float item_volume = Decoder.decodeFloat32(data, offset);
+            offset += 5;
+    float item_pan = Decoder.decodeFloat32(data, offset);
+            offset += 5;
+            tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isMutedBySolo, item_isArm, item_isGroup, item_trackType, item_volume, item_pan));
         }
 
 
@@ -296,6 +340,18 @@ public final class TrackListMessage {
     // ============================================================================
     // Logging
     // ============================================================================
+    
+    /**
+     * Format float with 4 decimal places, handling edge cases.
+     * 
+     * @param value Float value to format
+     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
+     */
+    private static String formatFloat(float value) {
+        if (Float.isNaN(value)) return "NaN";
+        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
+        return String.format("%.4f", value);
+    }
     
     /**
      * Convert message to YAML format for logging.
@@ -319,8 +375,12 @@ public final class TrackListMessage {
             sb.append("      isActivated: ").append(item.isActivated() ? "true" : "false").append("\n");
             sb.append("      isMute: ").append(item.isMute() ? "true" : "false").append("\n");
             sb.append("      isSolo: ").append(item.isSolo() ? "true" : "false").append("\n");
+            sb.append("      isMutedBySolo: ").append(item.isMutedBySolo() ? "true" : "false").append("\n");
+            sb.append("      isArm: ").append(item.isArm() ? "true" : "false").append("\n");
             sb.append("      isGroup: ").append(item.isGroup() ? "true" : "false").append("\n");
             sb.append("      trackType: ").append(item.getTrackType()).append("\n");
+            sb.append("      volume: ").append(formatFloat(item.getVolume())).append("\n");
+            sb.append("      pan: ").append(formatFloat(item.getPan())).append("\n");
         }
         return sb.toString();
     }

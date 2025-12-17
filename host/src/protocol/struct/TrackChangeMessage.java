@@ -37,6 +37,15 @@ public final class TrackChangeMessage {
     private final long color;
     private final int trackIndex;
     private final int trackType;
+    private final boolean isActivated;
+    private final boolean isMute;
+    private final boolean isSolo;
+    private final boolean isMutedBySolo;
+    private final boolean isArm;
+    private final float volume;
+    private final String volumeDisplay;
+    private final float pan;
+    private final String panDisplay;
 
     // ============================================================================
     // Constructor
@@ -49,12 +58,30 @@ public final class TrackChangeMessage {
      * @param color The color value
      * @param trackIndex The trackIndex value
      * @param trackType The trackType value
+     * @param isActivated The isActivated value
+     * @param isMute The isMute value
+     * @param isSolo The isSolo value
+     * @param isMutedBySolo The isMutedBySolo value
+     * @param isArm The isArm value
+     * @param volume The volume value
+     * @param volumeDisplay The volumeDisplay value
+     * @param pan The pan value
+     * @param panDisplay The panDisplay value
      */
-    public TrackChangeMessage(String trackName, long color, int trackIndex, int trackType) {
+    public TrackChangeMessage(String trackName, long color, int trackIndex, int trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
         this.trackName = trackName;
         this.color = color;
         this.trackIndex = trackIndex;
         this.trackType = trackType;
+        this.isActivated = isActivated;
+        this.isMute = isMute;
+        this.isSolo = isSolo;
+        this.isMutedBySolo = isMutedBySolo;
+        this.isArm = isArm;
+        this.volume = volume;
+        this.volumeDisplay = volumeDisplay;
+        this.pan = pan;
+        this.panDisplay = panDisplay;
     }
 
     // ============================================================================
@@ -97,6 +124,87 @@ public final class TrackChangeMessage {
         return trackType;
     }
 
+    /**
+     * Get the isActivated value
+     *
+     * @return isActivated
+     */
+    public boolean isActivated() {
+        return isActivated;
+    }
+
+    /**
+     * Get the isMute value
+     *
+     * @return isMute
+     */
+    public boolean isMute() {
+        return isMute;
+    }
+
+    /**
+     * Get the isSolo value
+     *
+     * @return isSolo
+     */
+    public boolean isSolo() {
+        return isSolo;
+    }
+
+    /**
+     * Get the isMutedBySolo value
+     *
+     * @return isMutedBySolo
+     */
+    public boolean isMutedBySolo() {
+        return isMutedBySolo;
+    }
+
+    /**
+     * Get the isArm value
+     *
+     * @return isArm
+     */
+    public boolean isArm() {
+        return isArm;
+    }
+
+    /**
+     * Get the volume value
+     *
+     * @return volume
+     */
+    public float getVolume() {
+        return volume;
+    }
+
+    /**
+     * Get the volumeDisplay value
+     *
+     * @return volumeDisplay
+     */
+    public String getVolumeDisplay() {
+        return volumeDisplay;
+    }
+
+    /**
+     * Get the pan value
+     *
+     * @return pan
+     */
+    public float getPan() {
+        return pan;
+    }
+
+    /**
+     * Get the panDisplay value
+     *
+     * @return panDisplay
+     */
+    public String getPanDisplay() {
+        return panDisplay;
+    }
+
     // ============================================================================
     // Encoding
     // ============================================================================
@@ -104,7 +212,7 @@ public final class TrackChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 40;
+    public static final int MAX_PAYLOAD_SIZE = 121;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -127,6 +235,33 @@ public final class TrackChangeMessage {
         byte[] trackType_encoded = Encoder.encodeUint8(trackType);
         System.arraycopy(trackType_encoded, 0, buffer, offset, trackType_encoded.length);
         offset += trackType_encoded.length;
+        byte[] isActivated_encoded = Encoder.encodeBool(isActivated);
+        System.arraycopy(isActivated_encoded, 0, buffer, offset, isActivated_encoded.length);
+        offset += isActivated_encoded.length;
+        byte[] isMute_encoded = Encoder.encodeBool(isMute);
+        System.arraycopy(isMute_encoded, 0, buffer, offset, isMute_encoded.length);
+        offset += isMute_encoded.length;
+        byte[] isSolo_encoded = Encoder.encodeBool(isSolo);
+        System.arraycopy(isSolo_encoded, 0, buffer, offset, isSolo_encoded.length);
+        offset += isSolo_encoded.length;
+        byte[] isMutedBySolo_encoded = Encoder.encodeBool(isMutedBySolo);
+        System.arraycopy(isMutedBySolo_encoded, 0, buffer, offset, isMutedBySolo_encoded.length);
+        offset += isMutedBySolo_encoded.length;
+        byte[] isArm_encoded = Encoder.encodeBool(isArm);
+        System.arraycopy(isArm_encoded, 0, buffer, offset, isArm_encoded.length);
+        offset += isArm_encoded.length;
+        byte[] volume_encoded = Encoder.encodeFloat32(volume);
+        System.arraycopy(volume_encoded, 0, buffer, offset, volume_encoded.length);
+        offset += volume_encoded.length;
+        byte[] volumeDisplay_encoded = Encoder.encodeString(volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        System.arraycopy(volumeDisplay_encoded, 0, buffer, offset, volumeDisplay_encoded.length);
+        offset += volumeDisplay_encoded.length;
+        byte[] pan_encoded = Encoder.encodeFloat32(pan);
+        System.arraycopy(pan_encoded, 0, buffer, offset, pan_encoded.length);
+        offset += pan_encoded.length;
+        byte[] panDisplay_encoded = Encoder.encodeString(panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        System.arraycopy(panDisplay_encoded, 0, buffer, offset, panDisplay_encoded.length);
+        offset += panDisplay_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -138,7 +273,7 @@ public final class TrackChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 8;
+    private static final int MIN_PAYLOAD_SIZE = 25;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -162,13 +297,43 @@ public final class TrackChangeMessage {
         offset += 1;
         int trackType = Decoder.decodeUint8(data, offset);
         offset += 1;
+        boolean isActivated = Decoder.decodeBool(data, offset);
+        offset += 1;
+        boolean isMute = Decoder.decodeBool(data, offset);
+        offset += 1;
+        boolean isSolo = Decoder.decodeBool(data, offset);
+        offset += 1;
+        boolean isMutedBySolo = Decoder.decodeBool(data, offset);
+        offset += 1;
+        boolean isArm = Decoder.decodeBool(data, offset);
+        offset += 1;
+        float volume = Decoder.decodeFloat32(data, offset);
+        offset += 5;
+        String volumeDisplay = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += 1 + volumeDisplay.length();
+        float pan = Decoder.decodeFloat32(data, offset);
+        offset += 5;
+        String panDisplay = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += 1 + panDisplay.length();
 
-        return new TrackChangeMessage(trackName, color, trackIndex, trackType);
+        return new TrackChangeMessage(trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay);
     }
 
     // ============================================================================
     // Logging
     // ============================================================================
+    
+    /**
+     * Format float with 4 decimal places, handling edge cases.
+     * 
+     * @param value Float value to format
+     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
+     */
+    private static String formatFloat(float value) {
+        if (Float.isNaN(value)) return "NaN";
+        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
+        return String.format("%.4f", value);
+    }
     
     /**
      * Convert message to YAML format for logging.
@@ -184,6 +349,15 @@ public final class TrackChangeMessage {
         sb.append("  color: ").append(getColor()).append("\n");
         sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
         sb.append("  trackType: ").append(getTrackType()).append("\n");
+        sb.append("  isActivated: ").append(isActivated() ? "true" : "false").append("\n");
+        sb.append("  isMute: ").append(isMute() ? "true" : "false").append("\n");
+        sb.append("  isSolo: ").append(isSolo() ? "true" : "false").append("\n");
+        sb.append("  isMutedBySolo: ").append(isMutedBySolo() ? "true" : "false").append("\n");
+        sb.append("  isArm: ").append(isArm() ? "true" : "false").append("\n");
+        sb.append("  volume: ").append(formatFloat(getVolume())).append("\n");
+        sb.append("  volumeDisplay: \"").append(getVolumeDisplay()).append("\"\n");
+        sb.append("  pan: ").append(formatFloat(getPan())).append("\n");
+        sb.append("  panDisplay: \"").append(getPanDisplay()).append("\"\n");
         return sb.toString();
     }
 }  // class Message
