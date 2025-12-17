@@ -87,7 +87,7 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
 
     if (items_changed) {
         // Apply icon font to Back button (index 0)
-        if (!names.empty() && names[0] == Icon::ARROW_LEFT) {
+        if (!names.empty() && names[0] == Icon::UI_ARROW_LEFT) {
             overlay().setItemFont(0, bitwig_fonts.icons_14);
         }
 
@@ -102,9 +102,9 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
 
                 const char *icon_symbol = nullptr;
                 switch (types[i]) {
-                    case 0: icon_symbol = Icon::SLIDER; break;
-                    case 1: icon_symbol = Icon::LAYER; break;
-                    case 2: icon_symbol = Icon::DRUM_PAD_MATRIX; break;
+                    case 0: icon_symbol = Icon::UI_SLIDER; break;
+                    case 1: icon_symbol = Icon::BROWSER_LAYER; break;
+                    case 2: icon_symbol = Icon::DEVICE_DRUM_PAD; break;
                 }
 
                 if (icon_symbol) {
@@ -254,7 +254,7 @@ void DeviceSelector::clearIndicators() {
 }
 
 bool DeviceSelector::isNonDeviceItem(const std::string &name) {
-    return name == Icon::ARROW_LEFT || (!name.empty() && name[0] == '[');
+    return name == Icon::UI_ARROW_LEFT || (!name.empty() && name[0] == '[');
 }
 
 bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index) {
@@ -284,7 +284,7 @@ lv_obj_t *DeviceSelector::createDeviceStateIcon(lv_obj_t *parent, bool enabled) 
 
 lv_obj_t *DeviceSelector::createFolderIcon(lv_obj_t *parent) {
     lv_obj_t *icon = lv_label_create(parent);
-    Icon::set(icon, Icon::DIRECTORY);
+    Icon::set(icon, Icon::BROWSER_DIRECTORY);
     style::apply(icon).textColor(Color::INACTIVE_LIGHTER);
     lv_obj_set_style_text_opa(icon, Opacity::SUBTLE, LV_STATE_DEFAULT);
     return icon;
@@ -307,7 +307,7 @@ void DeviceSelector::createIndicators(const DeviceSelectorProps &props) {
         lv_obj_t *button = overlay().getButton(i);
         if (!button) continue;
 
-        bool is_back_item = (i == 0) && (names[i] == Icon::ARROW_LEFT);
+        bool is_back_item = (i == 0) && (names[i] == Icon::UI_ARROW_LEFT);
 
         if (is_back_item) {
             overlay().setItemFont(i, bitwig_fonts.icons_14);

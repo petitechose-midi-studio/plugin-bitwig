@@ -1,8 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include <lvgl.h>
+
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 namespace bitwig {
 
@@ -31,7 +34,7 @@ private:
     lv_obj_t *type_icon_ = nullptr;   // Device type: Audio/Instrument/Note
     lv_obj_t *state_icon_ = nullptr;  // Device state: ON/OFF
     lv_obj_t *folder_icon_ = nullptr;
-    lv_obj_t *label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> label_;
     IconSize icon_size_;
 };
 

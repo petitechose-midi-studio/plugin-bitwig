@@ -32,3 +32,6 @@ PADDING_PERCENT = 0.10
 # LVGL font generation
 FONT_SIZES = {'S': 12, 'M': 14, 'L': 16}  # Icon::Size enum: name → pixels
 LVGL_BPP = 4  # Bits per pixel (1, 2, 4, or 8)
+
+# Header include (file that declares bitwig_fonts global)
+HEADER_INCLUDE = "BitwigFonts.hpp"

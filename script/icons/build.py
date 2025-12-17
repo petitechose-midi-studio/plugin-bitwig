@@ -306,7 +306,7 @@ def generate_header(glyphs: list[tuple[str, int]], path: Path, font_sizes: dict[
 
     lines: list[str] = [
         f'// Auto-generated | {len(glyphs)} icons | {datetime.now():%Y-%m-%d}',
-        '#pragma once', '#include "FontLoader.hpp"', '',
+        '#pragma once', f'#include "{HEADER_INCLUDE}"', '',
         '#include <lvgl.h>', '',
         'namespace Icon {', f'enum class Size : uint8_t {{ {size_enum} }};', ''
     ]

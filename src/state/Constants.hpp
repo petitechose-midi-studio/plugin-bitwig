@@ -22,7 +22,7 @@ constexpr uint8_t MAX_CHILD_TYPES = 4;
 // UI Text Constants
 // =============================================================================
 
-constexpr const char* BACK_TO_PARENT_TEXT = Icon::ARROW_LEFT;
+constexpr const char* BACK_TO_PARENT_TEXT = Icon::UI_ARROW_LEFT;
 
 // =============================================================================
 // Device Types

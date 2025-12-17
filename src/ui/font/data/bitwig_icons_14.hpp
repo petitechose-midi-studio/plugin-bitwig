@@ -1,4 +1,4 @@
-// Auto-generated | bitwig_icons | 14px | 4bpp | 2025-12-02 13:10
+// Auto-generated | bitwig_icons | 14px | 4bpp | 2025-12-17 13:55
 #pragma once
 #include <Arduino.h>
 extern const uint8_t bitwig_icons_14_bin[] PROGMEM;

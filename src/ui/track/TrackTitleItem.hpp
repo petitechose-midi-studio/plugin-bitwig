@@ -8,6 +8,8 @@
 
 #include <lvgl.h>
 
+#include <oc/ui/lvgl/widget/Label.hpp>
+
 namespace bitwig {
 
 struct TrackTitleItemProps {
@@ -38,7 +40,7 @@ private:
     lv_obj_t *mute_icon_ = nullptr;
     lv_obj_t *solo_icon_ = nullptr;
     lv_obj_t *type_icon_ = nullptr;
-    lv_obj_t *label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> label_;
     std::unique_ptr<LevelBar> level_bar_;
 
     lv_coord_t bar_height_ = 12;

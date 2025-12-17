@@ -56,13 +56,13 @@ void TrackSelector::createFooter() {
 
     // Create mute icon (cell 1 = center)
     footer_mute_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_mute_, Icon::MUTE, Icon::Size::L);
+    Icon::set(footer_mute_, Icon::CHANNEL_MUTE, Icon::Size::L);
     style::apply(footer_mute_).textColor(Color::TRACK_MUTE);
     footer_->setCell(1, footer_mute_);
 
     // Create solo icon (cell 2 = right)
     footer_solo_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_solo_, Icon::SOLO, Icon::Size::L);
+    Icon::set(footer_solo_, Icon::CHANNEL_SOLO, Icon::Size::L);
     style::apply(footer_solo_).textColor(Color::TRACK_SOLO);
     footer_->setCell(2, footer_solo_);
 }
@@ -70,7 +70,7 @@ void TrackSelector::createFooter() {
 void TrackSelector::createTrackItems(const std::vector<std::string> &names) {
     track_items_.clear();
 
-    bool has_back_item = !names.empty() && (names[0] == Icon::ARROW_LEFT);
+    bool has_back_item = !names.empty() && (names[0] == Icon::UI_ARROW_LEFT);
 
     // Apply icon font to back button if present
     if (has_back_item) {
@@ -84,15 +84,8 @@ void TrackSelector::createTrackItems(const std::vector<std::string> &names) {
         lv_obj_t *btn = overlay().getButton(i);
         if (!btn) continue;
 
-        // Remove default label to replace with TrackTitleItem
-        uint32_t child_count = lv_obj_get_child_cnt(btn);
-        for (uint32_t j = 0; j < child_count; j++) {
-            lv_obj_t *child = lv_obj_get_child(btn, j);
-            if (child && lv_obj_check_type(child, &lv_label_class)) {
-                lv_obj_delete(child);
-                break;
-            }
-        }
+        // Remove default Label widget to replace with TrackTitleItem
+        overlay().removeLabel(i);
 
         auto item = std::make_unique<TrackTitleItem>(btn, true, 12);
         track_items_.push_back(std::move(item));

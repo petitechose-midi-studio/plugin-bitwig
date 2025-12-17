@@ -31,25 +31,27 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
         lv_obj_set_style_text_opa(type_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
     }
 
-    label_ = lv_label_create(parent_);
-    if (label_) {
-        style::apply(label_).textColor(Color::TEXT_LIGHT);
-        lv_obj_set_style_text_font(label_, bitwig_fonts.track_label, LV_STATE_DEFAULT);
-    }
+    // Use framework Label widget with auto-scroll for overflow text
+    // ownsLvglObjects(false) lets LVGL parent-child handle deletion
+    label_ = std::make_unique<oc::ui::lvgl::Label>(parent_);
+    label_->alignment(LV_TEXT_ALIGN_LEFT)
+        .color(Color::TEXT_LIGHT)
+        .font(bitwig_fonts.track_label)
+        .ownsLvglObjects(false);
 
     if (has_mute_solo_ && label_) {
-        lv_obj_set_flex_grow(label_, 1);
+        label_->flexGrow(true);
 
         mute_icon_ = lv_label_create(parent_);
         if (mute_icon_) {
-            Icon::set(mute_icon_, Icon::MUTE);
+            Icon::set(mute_icon_, Icon::CHANNEL_MUTE);
             style::apply(mute_icon_).textColor(Color::TRACK_MUTE);
             lv_obj_set_style_text_opa(mute_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
 
         solo_icon_ = lv_label_create(parent_);
         if (solo_icon_) {
-            Icon::set(solo_icon_, Icon::SOLO);
+            Icon::set(solo_icon_, Icon::CHANNEL_SOLO);
             style::apply(solo_icon_).textColor(Color::TRACK_SOLO);
             lv_obj_set_style_text_opa(solo_icon_, Opacity::HINT, LV_STATE_DEFAULT);
         }
@@ -59,6 +61,7 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
 }
 
 TrackTitleItem::~TrackTitleItem() {
+    // label_ is unique_ptr - cleaned up automatically
     if (color_bar_) {
         lv_obj_delete(color_bar_);
         color_bar_ = nullptr;
@@ -66,10 +69,6 @@ TrackTitleItem::~TrackTitleItem() {
     if (type_icon_) {
         lv_obj_delete(type_icon_);
         type_icon_ = nullptr;
-    }
-    if (label_) {
-        lv_obj_delete(label_);
-        label_ = nullptr;
     }
     if (mute_icon_) {
         lv_obj_delete(mute_icon_);
@@ -83,9 +82,9 @@ TrackTitleItem::~TrackTitleItem() {
 
 void TrackTitleItem::render(const TrackTitleItemProps &props) {
     if (label_) {
-        lv_label_set_text(label_, props.name ? props.name : "");
+        label_->setText(props.name ? props.name : "");
         uint32_t labelColor = props.highlighted ? Color::TEXT_PRIMARY : Color::INACTIVE_LIGHTER;
-        style::apply(label_).textColor(labelColor);
+        label_->color(labelColor);
     }
 
     if (color_bar_) {
@@ -134,9 +133,9 @@ const char *TrackTitleItem::getTrackTypeIcon(uint8_t trackType) {
         case 0: return Icon::TRACK_AUDIO;
         case 1: return Icon::TRACK_INSTRUMENT;
         case 2: return Icon::TRACK_HYBRID;
-        case 3: return Icon::DIRECTORY;
-        case 4: return Icon::RETURN_TRACK;
-        case 5: return Icon::MASTER_TRACK;
+        case 3: return Icon::BROWSER_DIRECTORY;
+        case 4: return Icon::TRACK_RETURN;
+        case 5: return Icon::TRACK_MASTER;
         default: return Icon::TRACK_AUDIO;
     }
 }
