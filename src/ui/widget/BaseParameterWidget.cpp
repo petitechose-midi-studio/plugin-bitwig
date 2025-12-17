@@ -33,19 +33,21 @@ void BaseParameterWidget::createContainerWithGrid(lv_coord_t width, lv_coord_t h
 }
 
 void BaseParameterWidget::createNameLabel() {
-    name_label_ = lv_label_create(container_);
-    lv_label_set_text(name_label_, "");
-    style::apply(name_label_).textColor(Color::TEXT_PRIMARY);
-    lv_obj_set_style_text_align(name_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(name_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
-    lv_obj_set_grid_cell(name_label_,
+    // Use framework Label widget with auto-scroll for overflow text
+    name_label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
+    name_label_->alignment(LV_TEXT_ALIGN_CENTER)
+               .color(Color::TEXT_PRIMARY)
+               .font(bitwig_fonts.param_label)
+               .ownsLvglObjects(false);
+
+    lv_obj_set_grid_cell(name_label_->getElement(),
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
         LV_GRID_ALIGN_CENTER, 1, 1);  // Vertical: center in CONTENT row
 }
 
 void BaseParameterWidget::setName(const std::string& name) {
     if (name_label_) {
-        lv_label_set_text(name_label_, name.c_str());
+        name_label_->setText(name);
     }
 }
 

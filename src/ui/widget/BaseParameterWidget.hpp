@@ -1,9 +1,12 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <lvgl.h>
+
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "IParameterWidget.hpp"
 
@@ -70,7 +73,7 @@ protected:
 
     lv_obj_t* parent_ = nullptr;
     lv_obj_t* container_ = nullptr;
-    lv_obj_t* name_label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> name_label_;
     uint8_t index_ = 0;
 };
 

@@ -1,8 +1,11 @@
 #pragma once
 
+#include <memory>
+
 #include <lvgl.h>
 
 #include <oc/ui/lvgl/IWidget.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "ui/theme/BitwigTheme.hpp"
 
@@ -49,7 +52,7 @@ private:
 
     lv_obj_t* container_ = nullptr;
     lv_obj_t* icon_ = nullptr;
-    lv_obj_t* label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> label_;
     lv_obj_t* indicator_ = nullptr;
 };
 

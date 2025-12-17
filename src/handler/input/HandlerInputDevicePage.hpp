@@ -20,6 +20,7 @@
 
 #include <oc/api/ButtonAPI.hpp>
 #include <oc/api/EncoderAPI.hpp>
+#include <oc/state/Signal.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -51,7 +52,7 @@ public:
 private:
     void setupBindings();
 
-    void requestPageList();
+    void openSelector();
     void navigate(float delta);
     void confirmSelection();
     void closeSelector();
@@ -64,7 +65,8 @@ private:
     lv_obj_t* scopeElement_;
     lv_obj_t* overlayElement_;
 
-    bool requested_ = false;
+    // Auto-reset latch when overlay hidden externally (by OverlayManager)
+    oc::state::Subscription visibleSub_;
 };
 
 }  // namespace bitwig::handler

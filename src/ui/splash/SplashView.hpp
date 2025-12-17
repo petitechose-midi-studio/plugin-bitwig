@@ -1,10 +1,12 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include <lvgl.h>
 
 #include <oc/ui/lvgl/IView.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 namespace bitwig {
 
@@ -26,7 +28,7 @@ private:
     lv_obj_t *zone_;
     lv_obj_t *container_{nullptr};
     lv_obj_t *logo_{nullptr};
-    lv_obj_t *label_{nullptr};
+    std::unique_ptr<oc::ui::lvgl::Label> label_;
 
     std::function<void()> fade_callback_;
 

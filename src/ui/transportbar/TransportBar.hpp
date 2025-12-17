@@ -6,6 +6,7 @@
 #include <lvgl.h>
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IComponent.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 #include <oc/ui/lvgl/widget/StateIndicator.hpp>
 
 #include "state/TransportState.hpp"
@@ -54,7 +55,7 @@ private:
     lv_obj_t* play_icon_ = nullptr;
     lv_obj_t* stop_icon_ = nullptr;
     lv_obj_t* record_icon_ = nullptr;
-    lv_obj_t* bpm_label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> bpm_label_;
 
     // Setup
     void createContainer(lv_obj_t* parent);

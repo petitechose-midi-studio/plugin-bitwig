@@ -32,7 +32,7 @@ void SplashView::onDeactivate() {
 
 void SplashView::setText(const char *message) {
     if (!container_) { createUI(); }
-    if (label_) { lv_label_set_text(label_, message ? message : ""); }
+    if (label_) { label_->setText(message ? message : ""); }
 }
 
 void SplashView::createUI() {
@@ -51,24 +51,27 @@ void SplashView::createUI() {
     lv_image_set_src(logo_, &Bitwig_Logo);
     lv_obj_set_style_img_opa(logo_, Opacity::FULL, LV_STATE_DEFAULT);
 
-    label_ = lv_label_create(container_);
-    style::apply(label_).textColor(Color::TEXT_PRIMARY);
+    // Use framework Label widget with auto-scroll for overflow text
+    label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
+    label_->alignment(LV_TEXT_ALIGN_CENTER)
+           .color(Color::TEXT_PRIMARY)
+           .ownsLvglObjects(false);
 
     if (bitwig_fonts.device_label) {
-        lv_obj_set_style_text_font(label_, bitwig_fonts.device_label, LV_STATE_DEFAULT);
+        label_->font(bitwig_fonts.device_label);
     }
 
-    lv_obj_set_style_text_align(label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(label_, 15, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(label_->getElement(), 15, LV_STATE_DEFAULT);
 
     lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }
 
 void SplashView::destroyUI() {
+    // label_ is unique_ptr with ownsLvglObjects(false) - container deletion handles LVGL cleanup
+    label_.reset();
     if (container_) {
         lv_obj_delete(container_);
         container_ = nullptr;
-        label_ = nullptr;
     }
 }
 

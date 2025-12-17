@@ -27,10 +27,10 @@ void ListOverlay::setTitle(const std::string& title) {
 
     if (ui_created_ && title_label_) {
         if (title_.empty()) {
-            lv_obj_add_flag(title_label_, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(title_label_->getElement(), LV_OBJ_FLAG_HIDDEN);
         } else {
-            lv_label_set_text(title_label_, title_.c_str());
-            lv_obj_clear_flag(title_label_, LV_OBJ_FLAG_HIDDEN);
+            title_label_->setText(title_);
+            lv_obj_clear_flag(title_label_->getElement(), LV_OBJ_FLAG_HIDDEN);
         }
     }
 }
@@ -101,17 +101,26 @@ lv_obj_t* ListOverlay::getButton(size_t index) const {
     return (index < buttons_.size()) ? buttons_[index] : nullptr;
 }
 
-void ListOverlay::setItemFont(size_t index, const lv_font_t* font) {
-    lv_obj_t* btn = getButton(index);
-    if (!btn || !font) return;
+oc::ui::lvgl::Label* ListOverlay::getLabel(size_t index) const {
+    return (index < labels_.size()) ? labels_[index].get() : nullptr;
+}
 
-    uint32_t childCount = lv_obj_get_child_cnt(btn);
-    for (uint32_t i = 0; i < childCount; i++) {
-        lv_obj_t* child = lv_obj_get_child(btn, i);
-        if (child && lv_obj_check_type(child, &lv_label_class)) {
-            lv_obj_set_style_text_font(child, font, LV_STATE_DEFAULT);
-            break;
+void ListOverlay::setItemFont(size_t index, const lv_font_t* font) {
+    if (!font) return;
+
+    auto* label = getLabel(index);
+    if (label) {
+        label->font(font);
+    }
+}
+
+void ListOverlay::removeLabel(size_t index) {
+    if (index < labels_.size() && labels_[index]) {
+        // Manually delete LVGL container since ownsLvglObjects is false
+        if (labels_[index]->getElement()) {
+            lv_obj_delete(labels_[index]->getElement());
         }
+        labels_[index].reset();
     }
 }
 
@@ -136,22 +145,26 @@ void ListOverlay::createOverlay() {
 }
 
 void ListOverlay::createTitleLabel() {
-    title_label_ = lv_label_create(container_);
-    lv_obj_set_width(title_label_, lv_pct(100) - BaseTheme::Layout::MARGIN_LG);
-    lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-    style::apply(title_label_).textColor(BaseTheme::Color::TEXT_PRIMARY);
-    lv_obj_set_style_margin_left(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_right(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_top(title_label_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+    // Use framework Label widget with auto-scroll for overflow text
+    title_label_ = std::make_unique<Label>(container_);
+    title_label_->alignment(LV_TEXT_ALIGN_CENTER)
+                 .color(BaseTheme::Color::TEXT_PRIMARY)
+                 .ownsLvglObjects(false);
+
+    lv_obj_t* elem = title_label_->getElement();
+    lv_obj_set_width(elem, lv_pct(100) - BaseTheme::Layout::MARGIN_LG);
+    lv_obj_set_style_margin_left(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_right(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_top(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
 
     if (fonts.tempo_label) {
-        lv_obj_set_style_text_font(title_label_, fonts.tempo_label, LV_STATE_DEFAULT);
+        title_label_->font(fonts.tempo_label);
     }
 
     if (title_.empty()) {
-        lv_obj_add_flag(title_label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(elem, LV_OBJ_FLAG_HIDDEN);
     } else {
-        lv_label_set_text(title_label_, title_.c_str());
+        title_label_->setText(title_);
     }
 }
 
@@ -185,6 +198,7 @@ void ListOverlay::populateList() {
     if (!list_) return;
 
     buttons_.clear();
+    labels_.clear();
 
     for (const auto& item : items_) {
         lv_obj_t* btn = lv_obj_create(list_);
@@ -206,19 +220,24 @@ void ListOverlay::populateList() {
         lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-        lv_obj_t* label = lv_label_create(btn);
-        lv_label_set_text(label, item.c_str());
-
-        lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::INACTIVE_LIGHTER), LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(label, Opacity::FULL, LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_color(label, lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(label, Opacity::FULL, LV_STATE_FOCUSED);
+        // Use framework Label widget with auto-scroll for overflow text
+        // ownsLvglObjects(false) lets LVGL parent-child handle deletion
+        auto label = std::make_unique<Label>(btn);
+        label->flexGrow(true)
+              .alignment(LV_TEXT_ALIGN_LEFT)
+              .color(BaseTheme::Color::INACTIVE_LIGHTER)
+              .ownsLvglObjects(false);
 
         if (fonts.list_item_label) {
-            lv_obj_set_style_text_font(label, fonts.list_item_label, LV_STATE_DEFAULT);
+            label->font(fonts.list_item_label);
         }
 
+        // Apply styles for focused state on the inner label element
+        lv_obj_set_style_text_color(label->getLabel(), lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
+
+        label->setText(item);
+
+        labels_.push_back(std::move(label));
         buttons_.push_back(btn);
     }
 
@@ -264,6 +283,9 @@ void ListOverlay::scrollToSelected(bool animate) {
 }
 
 void ListOverlay::destroyList() {
+    // Labels have ownsLvglObjects(false), so they don't delete LVGL objects
+    // LVGL parent-child handles cleanup when lv_obj_clean() is called
+    labels_.clear();
     if (list_) {
         lv_obj_clean(list_);
     }
@@ -271,11 +293,13 @@ void ListOverlay::destroyList() {
 }
 
 void ListOverlay::cleanup() {
+    // Labels have ownsLvglObjects(false) - overlay deletion handles LVGL cleanup
+    labels_.clear();
+    title_label_.reset();
     if (overlay_) {
         lv_obj_delete(overlay_);
         overlay_ = nullptr;
         container_ = nullptr;
-        title_label_ = nullptr;
         list_ = nullptr;
     }
     buttons_.clear();

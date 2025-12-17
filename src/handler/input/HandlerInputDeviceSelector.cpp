@@ -2,6 +2,7 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
+#include "config/App.hpp"
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "protocol/struct/DeviceSelectByIndexMessage.hpp"
@@ -15,6 +16,8 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
+using ButtonID = Config::ButtonID;
+using EncoderID = Config::EncoderID;
 using OverlayType = state::OverlayType;
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
@@ -30,6 +33,16 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
     , scopeElement_(scopeElement)
     , overlayElement_(overlayElement) {
     setupBindings();
+
+    // Auto-reset latch and state when overlay hidden externally (by OverlayManager)
+    visibleSub_ = state_.deviceSelector.visible.subscribe([this](bool visible) {
+        if (!visible) {
+            buttons_.setLatch(ButtonID::LEFT_CENTER, false);
+            requested_ = false;
+            // Reset children view so next open shows device list, not stale children
+            state_.deviceSelector.showingChildren.set(false);
+        }
+    });
 }
 
 void HandlerInputDeviceSelector::setupBindings() {
@@ -157,8 +170,8 @@ void HandlerInputDeviceSelector::enterDeviceAtIndex(int selectorIndex) {
     size_t count = ds.names.size();
     if (deviceIndex < 0 || static_cast<size_t>(deviceIndex) >= count) return;
 
-    if (hasChildren(deviceIndex)) {
-        // Store which device we're entering children of
+    if (hasChildrenAtDisplayIndex(selectorIndex)) {
+        // Store which device we're entering children of (raw bank index for host)
         currentDeviceIndex_ = static_cast<uint8_t>(deviceIndex);
         // Request children - HostHandler will set showingChildren=true when response arrives
         protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
@@ -177,15 +190,15 @@ void HandlerInputDeviceSelector::enterChildAtIndex(int selectorIndex) {
         return;
     }
 
-    // Read item type directly from state (set by HostHandler on DeviceChildren message)
-    int listIndex = selectorIndex - 1;
+    // childrenTypes layout: [0]=back button placeholder, [1]=first child type, [2]=second child type...
+    // selectorIndex=1 → first actual child → childrenTypes[1]
     uint8_t itemType = 0;
-    if (listIndex < static_cast<int>(ds.childrenTypes.size())) {
-        itemType = ds.childrenTypes[listIndex];
+    if (selectorIndex < static_cast<int>(ds.childrenTypes.size())) {
+        itemType = ds.childrenTypes[selectorIndex];
     }
 
-    // Child index is simply the list index
-    uint8_t childIndex = static_cast<uint8_t>(listIndex);
+    // childIndex for host is 0-based (selectorIndex=1 → childIndex=0)
+    uint8_t childIndex = static_cast<uint8_t>(selectorIndex - 1);
 
     protocol_.send(Protocol::EnterDeviceChildMessage{currentDeviceIndex_, itemType, childIndex});
 }
@@ -214,19 +227,19 @@ void HandlerInputDeviceSelector::requestTrackList() {
 }
 
 void HandlerInputDeviceSelector::close() {
-    // Hide all overlays via OverlayManager
+    // Hide all overlays via OverlayManager (subscription handles latch reset)
     state_.overlays.hideAll();
-    requested_ = false;
-    buttons_.setLatch(ButtonID::LEFT_CENTER, false);
 }
 
-bool HandlerInputDeviceSelector::hasChildren(uint8_t deviceIndex) const {
+bool HandlerInputDeviceSelector::hasChildrenAtDisplayIndex(int displayIndex) const {
+    // displayIndex is the UI list index (includes back button when nested)
+    // hasSlots/hasLayers/hasDrums are also indexed by display index
     auto& ds = state_.deviceSelector;
-    if (deviceIndex >= ds.hasSlots.size()) return false;
+    if (displayIndex < 0 || displayIndex >= static_cast<int>(ds.hasSlots.size())) return false;
 
-    return ds.hasSlots[deviceIndex] ||
-           ds.hasLayers[deviceIndex] ||
-           ds.hasDrums[deviceIndex];
+    return ds.hasSlots[displayIndex] ||
+           ds.hasLayers[displayIndex] ||
+           ds.hasDrums[displayIndex];
 }
 
 int HandlerInputDeviceSelector::getAdjustedDeviceIndex(int selectorIndex) const {

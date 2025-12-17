@@ -27,13 +27,17 @@
  *     │   └── HandlerHostMidi
  *     ├── InputHandlers (input → state + protocol)
  *     │   ├── HandlerInputTransport
+ *     │   ├── HandlerInputViewSwitcher (LEFT_TOP → cycle views)
  *     │   ├── HandlerInputRemoteControl
  *     │   ├── HandlerInputDevicePage
  *     │   ├── HandlerInputDeviceSelector
  *     │   ├── HandlerInputTrack
  *     │   └── HandlerInputLastClicked
- *     └── Views (subscribe to state)
- *         └── RemoteControlsView, TransportBar, etc.
+ *     └── Views (managed by ViewManager)
+ *         ├── RemoteControlsView (device parameters)
+ *         ├── MixView (volume, pan, sends) - placeholder
+ *         ├── ClipView (clip launcher) - placeholder
+ *         └── TransportBar (persistent)
  * ```
  *
  * The context itself is thin - handlers and views do the work.
@@ -66,8 +70,12 @@
 #include "handler/input/HandlerInputRemoteControl.hpp"
 #include "handler/input/HandlerInputTrack.hpp"
 #include "handler/input/HandlerInputTransport.hpp"
+#include "handler/input/HandlerInputViewSwitcher.hpp"
+#include "ui/clip/ClipView.hpp"
+#include "ui/mix/MixView.hpp"
 #include "ui/remotecontrols/RemoteControlsView.hpp"
 #include "ui/transportbar/TransportBar.hpp"
+#include "ui/view/ViewSelector.hpp"
 #include "ui/ViewContainer.hpp"
 
 namespace bitwig {
@@ -148,6 +156,7 @@ private:
 
     // Input Handlers (input → state + protocol)
     std::unique_ptr<handler::HandlerInputTransport> inputTransport_;
+    std::unique_ptr<handler::HandlerInputViewSwitcher> inputViewSwitcher_;
     std::unique_ptr<handler::HandlerInputRemoteControl> inputRemoteControl_;
     std::unique_ptr<handler::HandlerInputDevicePage> inputDevicePage_;
     std::unique_ptr<handler::HandlerInputDeviceSelector> inputDeviceSelector_;
@@ -157,9 +166,17 @@ private:
     // UI Container
     std::unique_ptr<ViewContainer> viewContainer_;
 
-    // Views (subscribe to state in their constructors)
+    // Views (managed by ViewManager)
     std::unique_ptr<RemoteControlsView> remoteControlsView_;
+    std::unique_ptr<MixView> mixView_;
+    std::unique_ptr<ClipView> clipView_;
+
+    // Persistent UI (always visible)
     std::unique_ptr<TransportBar> transportBar_;
+
+    // Global overlays
+    std::unique_ptr<ViewSelector> viewSelector_;
+    std::vector<oc::state::Subscription> viewSelectorSubs_;
 };
 
 }  // namespace bitwig

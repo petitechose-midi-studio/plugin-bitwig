@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <oc/ui/lvgl/widget/EnumWidget.hpp>
+#include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "BaseParameterWidget.hpp"
 
@@ -28,7 +29,7 @@ private:
     void createUI(lv_coord_t width, lv_coord_t height);
     void updateValueDisplay();
 
-    lv_obj_t* value_label_ = nullptr;
+    std::unique_ptr<oc::ui::lvgl::Label> value_label_;
     std::unique_ptr<oc::ui::lvgl::EnumWidget> enum_widget_;
     int16_t discrete_count_ = 0;
     std::vector<std::string> value_names_;

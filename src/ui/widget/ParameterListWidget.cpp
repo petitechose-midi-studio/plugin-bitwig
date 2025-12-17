@@ -30,14 +30,15 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
         LV_GRID_ALIGN_STRETCH, 0, 1); // Vertical: fill FR(1) space
 
-    // Value label inside enum widget's inner area
-    value_label_ = lv_label_create(enum_widget_->inner());
-    lv_label_set_text(value_label_, "");
-    lv_obj_set_size(value_label_, LV_PCT(100), LV_SIZE_CONTENT);
-    style::apply(value_label_).textColor(Color::TEXT_PRIMARY);
-    lv_obj_set_style_text_align(value_label_, LV_TEXT_ALIGN_CENTER, LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(value_label_, bitwig_fonts.param_label, LV_STATE_DEFAULT);
-    lv_obj_center(value_label_);
+    // Value label inside enum widget's inner area using framework Label
+    value_label_ = std::make_unique<oc::ui::lvgl::Label>(enum_widget_->inner());
+    value_label_->alignment(LV_TEXT_ALIGN_CENTER)
+                .color(Color::TEXT_PRIMARY)
+                .font(bitwig_fonts.param_label)
+                .ownsLvglObjects(false);
+
+    lv_obj_set_size(value_label_->getElement(), LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_center(value_label_->getElement());
 
     createNameLabel();
 }
@@ -54,7 +55,7 @@ void ParameterListWidget::setValueWithDisplay(float value, const char* displayVa
         current_index_ = static_cast<uint8_t>(value * (discrete_count_ - 1));
     }
     if (value_label_ && displayValue) {
-        lv_label_set_text(value_label_, displayValue);
+        value_label_->setText(displayValue);
     }
     if (enum_widget_) {
         enum_widget_->triggerFlash();
@@ -71,7 +72,7 @@ void ParameterListWidget::setDiscreteMetadata(int16_t discreteCount,
 
 void ParameterListWidget::updateValueDisplay() {
     if (value_label_ && current_index_ < value_names_.size()) {
-        lv_label_set_text(value_label_, value_names_[current_index_].c_str());
+        value_label_->setText(value_names_[current_index_].c_str());
     }
 }
 
