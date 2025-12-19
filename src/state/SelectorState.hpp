@@ -91,6 +91,7 @@ struct DeviceSelectorState {
     // Windowed loading state
     Signal<uint8_t> totalCount{0};   // Total devices (absolute, from host)
     Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
+    Signal<bool> loading{false};     // True while waiting for host response
 
     void reset() {
         names.clear();
@@ -109,6 +110,7 @@ struct DeviceSelectorState {
         visible.set(false);
         totalCount.set(0);
         loadedUpTo.set(0);
+        loading.set(false);
     }
 };
 

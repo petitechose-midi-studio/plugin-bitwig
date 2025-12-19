@@ -104,8 +104,8 @@ void HandlerInputDeviceSelector::setupBindings() {
 void HandlerInputDeviceSelector::requestDeviceList() {
     auto& ds = state_.deviceSelector;
 
-    // Show cached list immediately if available (cache-first)
-    if (ds.names.size() > 0 && !ds.visible.get()) {
+    // Always show overlay immediately (even if empty - will show "No Device")
+    if (!ds.visible.get()) {
         state_.overlays.show(OverlayType::DEVICE_SELECTOR, false);
     }
 
@@ -116,6 +116,7 @@ void HandlerInputDeviceSelector::requestDeviceList() {
         ds.names.clear();
         ds.totalCount.set(0);
         ds.loadedUpTo.set(0);
+        ds.loading.set(true);  // Mark as loading until host responds
         // Request first window (windowed loading)
         protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
         requested_ = true;
