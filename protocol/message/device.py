@@ -93,6 +93,11 @@ DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE = Message(
     fields=[remote_control_index, parameter_modulated_value]
 )
 
+DEVICE_REMOTE_CONTROL_ORIGIN_CHANGE = Message(
+    description='origin changed for remote control (bipolar center point)',
+    fields=[remote_control_index, parameter_origin]
+)
+
 DEVICE_STATE_CHANGE = Message(
     description='Toggle device enabled/bypassed by index',
     fields=[device_index, device_state]

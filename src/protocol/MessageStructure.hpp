@@ -29,6 +29,7 @@
 #include "struct/DeviceRemoteControlHasAutomationChangeMessage.hpp"
 #include "struct/DeviceRemoteControlModulatedValueChangeMessage.hpp"
 #include "struct/DeviceRemoteControlNameChangeMessage.hpp"
+#include "struct/DeviceRemoteControlOriginChangeMessage.hpp"
 #include "struct/DeviceRemoteControlTouchMessage.hpp"
 #include "struct/DeviceRemoteControlUpdateMessage.hpp"
 #include "struct/DeviceRemoteControlValueChangeMessage.hpp"
