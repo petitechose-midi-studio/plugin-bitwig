@@ -139,6 +139,7 @@ void RemoteControlsView::setupBindings() {
         paramGroup.watch(slot.visible);
         paramGroup.watch(slot.currentValueIndex);
         paramGroup.watch(slot.discreteValues);
+        paramGroup.watch(slot.origin);
     }
 
     // =========================================================================
@@ -161,6 +162,7 @@ void RemoteControlsView::setupBindings() {
     deviceSelectorGroup.watch(state_.deviceSelector.showingChildren);
     deviceSelectorGroup.watch(state_.deviceSelector.showFooter);
     deviceSelectorGroup.watch(state_.deviceSelector.childrenNames);
+    deviceSelectorGroup.watch(state_.deviceSelector.loading);
     for (auto& s : state_.deviceSelector.deviceStates) {
         deviceSelectorGroup.watch(s);
     }
@@ -272,6 +274,11 @@ void RemoteControlsView::updateParameter(uint8_t index) {
     widgets_[index]->setName(slot.name.get());
     widgets_[index]->setValueWithDisplay(slot.value.get(), slot.displayValue.get());
 
+    // Update origin for knob widgets
+    if (type == bitwig::state::ParameterType::KNOB) {
+        static_cast<ParameterKnobWidget*>(widgets_[index].get())->setOrigin(slot.origin.get());
+    }
+
     // Update discrete metadata for button/list widgets
     // Uses static_cast as all widgets inherit from BaseParameterWidget
     if (type == bitwig::state::ParameterType::BUTTON ||
@@ -336,7 +343,8 @@ void RemoteControlsView::updateDeviceSelector() {
         .isNested = state_.deviceSelector.isNested.get(),
         .showingChildren = state_.deviceSelector.showingChildren.get(),
         .showFooter = state_.deviceSelector.showFooter.get(),
-        .visible = true
+        .visible = true,
+        .loading = state_.deviceSelector.loading.get()
     });
 }
 

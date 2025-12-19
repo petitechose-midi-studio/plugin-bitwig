@@ -46,6 +46,7 @@ struct DeviceSelectorProps {
     bool showingChildren = false;
     bool showFooter = false;
     bool visible = false;
+    bool loading = false;    // True while waiting for host response
 };
 
 /**
@@ -141,6 +142,9 @@ private:
     DeviceSelectorProps currentProps_;
     bool visible_ = false;
     bool showingChildren_ = false;
+
+    // Empty state
+    std::unique_ptr<oc::ui::lvgl::Label> emptyLabel_;
 };
 
 }  // namespace bitwig

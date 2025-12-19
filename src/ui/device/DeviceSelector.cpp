@@ -40,6 +40,16 @@ DeviceSelector::DeviceSelector(lv_obj_t *parent) : parent_(parent) {
 
     slotWidgets_.resize(VISIBLE_SLOTS);
 
+    // Empty state label (floating, centered in parent, hidden by default)
+    emptyLabel_ = std::make_unique<oc::ui::lvgl::Label>(container_);
+    emptyLabel_->alignment(LV_TEXT_ALIGN_CENTER)
+        .font(bitwig_fonts.device_label)
+        .color(Color::DATA_INACTIVE);
+    emptyLabel_->setText("No Devices");
+    lv_obj_add_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_FLOATING);
+    lv_obj_add_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_HIDDEN);
+    lv_obj_center(emptyLabel_->getElement());
+
     createHeader();
     createFooter();
 
@@ -50,6 +60,7 @@ DeviceSelector::~DeviceSelector() {
     track_header_.reset();
     page_label_.reset();
     footer_.reset();
+    emptyLabel_.reset();
     list_.reset();
 }
 
@@ -109,13 +120,39 @@ void DeviceSelector::hide() {
 // ══════════════════════════════════════════════════════════════════
 
 void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
-    if (props.names.empty()) return;
+    renderHeader(props);
+
+    // Loading state: hide both list and empty label, wait for host response
+    if (props.loading) {
+        list_->hide();
+        if (emptyLabel_) {
+            lv_obj_add_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_HIDDEN);
+        }
+        if (footer_) footer_->hide();
+        if (!visible_) show();
+        return;
+    }
+
+    if (props.names.empty()) {
+        // Empty state: show "No Device" label, hide list
+        list_->hide();
+        if (emptyLabel_) {
+            lv_obj_clear_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_HIDDEN);
+        }
+        if (footer_) footer_->hide();
+        if (!visible_) show();
+        return;
+    }
+
+    // Normal state: hide empty label, show list
+    if (emptyLabel_) {
+        lv_obj_add_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_HIDDEN);
+    }
+    list_->show();
 
     list_->setTotalCount(static_cast<int>(props.names.size()));
     list_->setSelectedIndex(props.selectedIndex);
     list_->invalidate();  // Force rebind to pick up state changes
-
-    renderHeader(props);
 
     if (!visible_) show();
 
@@ -128,6 +165,12 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
 
 void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
     if (props.childrenNames.empty()) return;
+
+    // Hide empty label when showing children
+    if (emptyLabel_) {
+        lv_obj_add_flag(emptyLabel_->getElement(), LV_OBJ_FLAG_HIDDEN);
+    }
+    list_->show();
 
     list_->setTotalCount(static_cast<int>(props.childrenNames.size()));
     list_->setSelectedIndex(props.selectedIndex);
