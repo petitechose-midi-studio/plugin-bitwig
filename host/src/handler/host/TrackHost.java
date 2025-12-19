@@ -152,6 +152,24 @@ public class TrackHost {
             }
         });
 
+        // Observer for track selection changes (focus moved to different track)
+        // Updates track list with new activeTrackIndex for TrackSelector sync
+        cursorTrack.position().addValueObserver(position -> {
+            if (cursorTrack.exists().get()) {
+                sendTrackListWindow(0);
+            }
+        });
+
+        // Observer for track existence changes (first track added to empty project)
+        // Ensures sync when transitioning from 0 to 1 track
+        cursorTrack.exists().addValueObserver(exists -> {
+            if (exists) {
+                lastTrackName = cursorTrack.name().get();
+                sendTrackChange();
+                sendTrackListWindow(0);
+            }
+        });
+
         // Effect track bank for send destination names
         for (int i = 0; i < MAX_SENDS; i++) {
             Track effectTrack = effectTrackBank.getItemAt(i);

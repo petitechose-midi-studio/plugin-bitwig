@@ -131,6 +131,9 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     protocol_.onDeviceListWindow = [this](const DeviceListWindowMessage& msg) {
         if (!msg.fromHost) return;
 
+        // Mark loading complete (host responded)
+        state_.deviceSelector.loading.set(false);
+
         // Update total count
         state_.deviceSelector.totalCount.set(msg.deviceCount);
 

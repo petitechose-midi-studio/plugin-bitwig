@@ -41,6 +41,7 @@ public:
     std::function<void(const DeviceRemoteControlHasAutomationChangeMessage&)> onDeviceRemoteControlHasAutomationChange;
     std::function<void(const DeviceRemoteControlModulatedValueChangeMessage&)> onDeviceRemoteControlModulatedValueChange;
     std::function<void(const DeviceRemoteControlNameChangeMessage&)> onDeviceRemoteControlNameChange;
+    std::function<void(const DeviceRemoteControlOriginChangeMessage&)> onDeviceRemoteControlOriginChange;
     std::function<void(const DeviceRemoteControlTouchMessage&)> onDeviceRemoteControlTouch;
     std::function<void(const DeviceRemoteControlUpdateMessage&)> onDeviceRemoteControlUpdate;
     std::function<void(const DeviceRemoteControlValueChangeMessage&)> onDeviceRemoteControlValueChange;

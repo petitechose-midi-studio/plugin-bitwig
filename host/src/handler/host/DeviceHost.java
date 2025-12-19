@@ -110,6 +110,28 @@ public class DeviceHost {
                 sendDeviceChange();
             }
         });
+
+        // Observer for device selection changes (focus moved to different device in chain)
+        // Updates device list with new activeDeviceIndex for DeviceSelector sync
+        cursorDevice.position().addValueObserver(position -> {
+            if (cursorDevice.exists().get()) {
+                sendDeviceListWindow(0);
+            }
+        });
+
+        // Observer for device existence changes
+        // Handles: 0→1 device (send device info) and 1→0 device (send "No Device")
+        cursorDevice.exists().addValueObserver(exists -> {
+            if (exists) {
+                lastDeviceName = cursorDevice.name().get();
+                sendDeviceChange();
+                sendDeviceListWindow(0);
+            } else {
+                // Device no longer exists (switched to empty track or last device deleted)
+                lastDeviceName = "";
+                sendDeviceCleared();
+            }
+        });
     }
 
     private void setupRemoteControlsObservables() {
@@ -166,6 +188,12 @@ public class DeviceHost {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain modulated values
                 protocol.send(new DeviceRemoteControlModulatedValueChangeMessage(paramIndex, (float) modulatedValue));
             });
+
+            // Origin observer - sends lightweight origin-only message
+            param.value().getOrigin().addValueObserver(origin -> {
+                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain origin
+                protocol.send(new DeviceRemoteControlOriginChangeMessage(paramIndex, (float) origin));
+            });
         }
     }
 
@@ -217,6 +245,7 @@ public class DeviceHost {
         // Delay to let Bitwig API initialize values
         host.scheduleTask(() -> {
             sendDeviceChange();
+            sendDeviceListWindow(0);
         }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
@@ -547,6 +576,13 @@ public class DeviceHost {
         // Delay all reads to let Bitwig API update hasSlots/hasLayers/hasDrumPads
         // Uses longer delay (100ms) because child type properties populate slower than name/state
         host.scheduleTask(() -> {
+            // Guard: if device was deleted during delay, don't send empty state
+            // (sendDeviceCleared handles the "No Device" case separately)
+            if (!cursorDevice.exists().get()) {
+                deviceChangePending = false;
+                return;
+            }
+
             String deviceName = cursorDevice.name().get();
             boolean isEnabled = cursorDevice.isEnabled().get();
             String deviceTypeRaw = cursorDevice.deviceType().get();
@@ -574,12 +610,38 @@ public class DeviceHost {
     }
 
     private void sendDeviceCleared() {
-        // Block individual observers during clear - no messages sent
-        // Controller keeps current display until a real device is selected
+        // Block individual observers during clear
         deviceChangePending = true;
 
-        // Small delay then resume observers (in case device is quickly reselected)
+        // Send "No Device" state to controller
         host.scheduleTask(() -> {
+            // Send header with "No Device" and empty state
+            protocol.send(new DeviceChangeHeaderMessage(
+                "No Device",           // deviceName
+                false,                 // isEnabled
+                0,                     // deviceType (UNKNOWN)
+                new DeviceChangeHeaderMessage.PageInfo(0, 0, ""),  // empty page info
+                List.of(0, 0, 0, 0)   // no children types
+            ));
+
+            // Clear all parameters (mark as not visible)
+            for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
+                protocol.send(new DeviceRemoteControlUpdateMessage(
+                    i,                 // remoteControlIndex
+                    "",                // parameterName
+                    0.0f,              // parameterValue
+                    "",                // displayValue
+                    0.0f,              // parameterOrigin
+                    false,             // parameterExists (NOT visible)
+                    0,                 // parameterType
+                    (short) 0,         // discreteValueCount
+                    0,                 // currentValueIndex
+                    false,             // hasAutomation
+                    0.0f               // modulatedValue
+                ));
+            }
+
+            // Resume observers
             deviceChangePending = false;
         }, BitwigConfig.STANDARD_DELAY_MS);
     }

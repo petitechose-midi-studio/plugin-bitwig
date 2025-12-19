@@ -5,6 +5,7 @@
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlOriginChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlUpdateMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
 #include "state/Constants.hpp"
@@ -92,6 +93,12 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
     protocol_.onDeviceRemoteControlNameChange = [this](const DeviceRemoteControlNameChangeMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
         state_.parameters.slots[msg.remoteControlIndex].name.set(msg.parameterName.c_str());
+    };
+
+    protocol_.onDeviceRemoteControlOriginChange = [this](const DeviceRemoteControlOriginChangeMessage& msg) {
+        if (!msg.fromHost) return;
+        if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
+        state_.parameters.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
     };
 }
 
