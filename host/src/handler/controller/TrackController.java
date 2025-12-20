@@ -17,7 +17,6 @@ import handler.host.DeviceHost;
  * - NEVER sends protocol messages (except via Host delegates)
  */
 public class TrackController {
-    private final ControllerHost host;
     private final CursorTrack cursorTrack;
     private final TrackBank trackBank;
     private final CursorDevice cursorDevice;
@@ -34,7 +33,6 @@ public class TrackController {
         DeviceBank deviceBank,
         Protocol protocol
     ) {
-        this.host = host;
         this.cursorTrack = cursorTrack;
         this.trackBank = trackBank;
         this.cursorDevice = cursorDevice;
@@ -56,7 +54,6 @@ public class TrackController {
         // Request track list FROM controller (legacy - redirect to windowed)
         protocol.onRequestTrackList = msg -> {
             if (msg.fromHost) return;
-            host.println("\n[TRACK CTRL] → Requesting track list (redirected to windowed)\n");
             if (trackHost != null) {
                 trackHost.sendTrackListWindow(0);  // Redirect legacy to windowed
             }
@@ -79,9 +76,6 @@ public class TrackController {
             Track track = (trackHost != null) ? trackHost.getTrackAtIndex(trackIndex) : trackBank.getItemAt(trackIndex);
 
             if (track != null && track.exists().get()) {
-                String trackName = track.name().get();
-                host.println("\n[TRACK CTRL] SELECT → \"" + trackName + "\" [" + trackIndex + "]\n");
-
                 cursorTrack.selectChannel(track);
 
                 // Select first device when deviceBank is ready

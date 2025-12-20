@@ -73,8 +73,9 @@ public final class DevicePageChangeMessage {
         private final int currentValueIndex;
         private final boolean hasAutomation;
         private final float modulatedValue;
+        private final boolean isModulated;
 
-        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
+        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex, boolean hasAutomation, float modulatedValue, boolean isModulated) {
             this.remoteControlIndex = remoteControlIndex;
             this.parameterValue = parameterValue;
             this.parameterName = parameterName;
@@ -87,6 +88,7 @@ public final class DevicePageChangeMessage {
             this.currentValueIndex = currentValueIndex;
             this.hasAutomation = hasAutomation;
             this.modulatedValue = modulatedValue;
+            this.isModulated = isModulated;
         }
 
         public int getRemoteControlIndex() {
@@ -135,6 +137,10 @@ public final class DevicePageChangeMessage {
 
         public float getModulatedValue() {
             return modulatedValue;
+        }
+
+        public boolean isModulated() {
+            return isModulated;
         }
 
     }
@@ -193,7 +199,7 @@ public final class DevicePageChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 9196;
+    public static final int MAX_PAYLOAD_SIZE = 9212;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -259,6 +265,9 @@ public final class DevicePageChangeMessage {
     byte[] item_modulatedValue_encoded = Encoder.encodeFloat32(item.getModulatedValue());
             System.arraycopy(item_modulatedValue_encoded, 0, buffer, offset, item_modulatedValue_encoded.length);
             offset += item_modulatedValue_encoded.length;
+    byte[] item_isModulated_encoded = Encoder.encodeBool(item.isModulated());
+            System.arraycopy(item_isModulated_encoded, 0, buffer, offset, item_isModulated_encoded.length);
+            offset += item_isModulated_encoded.length;
         }
 
 
@@ -272,7 +281,7 @@ public final class DevicePageChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 212;
+    private static final int MIN_PAYLOAD_SIZE = 220;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -331,7 +340,9 @@ public final class DevicePageChangeMessage {
             offset += 1;
     float item_modulatedValue = Decoder.decodeFloat32(data, offset);
             offset += 5;
-            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue));
+    boolean item_isModulated = Decoder.decodeBool(data, offset);
+            offset += 1;
+            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue, item_isModulated));
         }
 
 
@@ -381,6 +392,7 @@ public final class DevicePageChangeMessage {
             sb.append("      currentValueIndex: ").append(item.getCurrentValueIndex()).append("\n");
             sb.append("      hasAutomation: ").append(item.getHasAutomation() ? "true" : "false").append("\n");
             sb.append("      modulatedValue: ").append(formatFloat(item.getModulatedValue())).append("\n");
+            sb.append("      isModulated: ").append(item.isModulated() ? "true" : "false").append("\n");
         }
         return sb.toString();
     }

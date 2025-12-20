@@ -175,10 +175,6 @@ public final class DeviceChangeHeaderMessage {
         byte[] pageInfo_devicePageName_encoded = Encoder.encodeString(pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
         System.arraycopy(pageInfo_devicePageName_encoded, 0, buffer, offset, pageInfo_devicePageName_encoded.length);
         offset += pageInfo_devicePageName_encoded.length;
-        byte[] childrenTypes_count = Encoder.encodeUint8(childrenTypes.size());
-        System.arraycopy(childrenTypes_count, 0, buffer, offset, 1);
-        offset += 1;
-
         for (int item : childrenTypes) {
     byte[] item_encoded = Encoder.encodeUint8(item);
             System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
@@ -196,7 +192,7 @@ public final class DeviceChangeHeaderMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 7;
+    private static final int MIN_PAYLOAD_SIZE = 10;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -226,11 +222,8 @@ public final class DeviceChangeHeaderMessage {
         offset += 1 + pageInfo_devicePageName.length();
         PageInfo pageInfo = new PageInfo(pageInfo_devicePageIndex, pageInfo_devicePageCount, pageInfo_devicePageName);
 
-        int count_childrenTypes = Decoder.decodeUint8(data, offset);
-        offset += 1;
-
         List<Integer> childrenTypes_list = new ArrayList<>();
-        for (int i = 0; i < count_childrenTypes; i++) {
+        for (int i = 0; i < 4; i++) {
     int item_childrenTypes = Decoder.decodeUint8(data, offset);
             offset += 1;
             childrenTypes_list.add(item_childrenTypes);

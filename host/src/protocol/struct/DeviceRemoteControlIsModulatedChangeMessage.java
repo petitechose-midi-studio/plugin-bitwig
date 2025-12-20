@@ -3,29 +3,26 @@ package protocol.struct;
 import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
-import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
- * DeviceRemoteControlDiscreteValuesMessage - Auto-generated Protocol Message
+ * DeviceRemoteControlIsModulatedChangeMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_REMOTE_CONTROL_DISCRETE_VALUES message
+ * Description: DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 7-bit MIDI-safe.
  */
-public final class DeviceRemoteControlDiscreteValuesMessage {
+public final class DeviceRemoteControlIsModulatedChangeMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_DISCRETE_VALUES;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE;
 
 
     // ============================================================================
@@ -36,24 +33,21 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     public boolean fromHost = false;
 
     private final int remoteControlIndex;
-    private final List<String> discreteValueNames;
-    private final int currentValueIndex;
+    private final boolean isModulated;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new DeviceRemoteControlDiscreteValuesMessage
+     * Construct a new DeviceRemoteControlIsModulatedChangeMessage
      *
      * @param remoteControlIndex The remoteControlIndex value
-     * @param discreteValueNames The discreteValueNames value
-     * @param currentValueIndex The currentValueIndex value
+     * @param isModulated The isModulated value
      */
-    public DeviceRemoteControlDiscreteValuesMessage(int remoteControlIndex, List<String> discreteValueNames, int currentValueIndex) {
+    public DeviceRemoteControlIsModulatedChangeMessage(int remoteControlIndex, boolean isModulated) {
         this.remoteControlIndex = remoteControlIndex;
-        this.discreteValueNames = discreteValueNames;
-        this.currentValueIndex = currentValueIndex;
+        this.isModulated = isModulated;
     }
 
     // ============================================================================
@@ -70,21 +64,12 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     }
 
     /**
-     * Get the discreteValueNames value
+     * Get the isModulated value
      *
-     * @return discreteValueNames
+     * @return isModulated
      */
-    public List<String> getDiscreteValueNames() {
-        return discreteValueNames;
-    }
-
-    /**
-     * Get the currentValueIndex value
-     *
-     * @return currentValueIndex
-     */
-    public int getCurrentValueIndex() {
-        return currentValueIndex;
+    public boolean isModulated() {
+        return isModulated;
     }
 
     // ============================================================================
@@ -94,7 +79,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1059;
+    public static final int MAX_PAYLOAD_SIZE = 2;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -108,19 +93,9 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
         byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
         System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
         offset += remoteControlIndex_encoded.length;
-        byte[] discreteValueNames_count = Encoder.encodeUint8(discreteValueNames.size());
-        System.arraycopy(discreteValueNames_count, 0, buffer, offset, 1);
-        offset += 1;
-
-        for (String item : discreteValueNames) {
-    byte[] item_encoded = Encoder.encodeString(item, ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
-        }
-
-        byte[] currentValueIndex_encoded = Encoder.encodeUint8(currentValueIndex);
-        System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
-        offset += currentValueIndex_encoded.length;
+        byte[] isModulated_encoded = Encoder.encodeBool(isModulated);
+        System.arraycopy(isModulated_encoded, 0, buffer, offset, isModulated_encoded.length);
+        offset += isModulated_encoded.length;
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
@@ -132,38 +107,28 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 3;
+    private static final int MIN_PAYLOAD_SIZE = 2;
 
     /**
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceRemoteControlDiscreteValuesMessage instance
+     * @return Decoded DeviceRemoteControlIsModulatedChangeMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceRemoteControlDiscreteValuesMessage decode(byte[] data) {
+    public static DeviceRemoteControlIsModulatedChangeMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlDiscreteValuesMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceRemoteControlIsModulatedChangeMessage decode");
         }
 
         int offset = 0;
 
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
-        int count_discreteValueNames = Decoder.decodeUint8(data, offset);
+        boolean isModulated = Decoder.decodeBool(data, offset);
         offset += 1;
 
-        List<String> discreteValueNames_list = new ArrayList<>();
-        for (int i = 0; i < count_discreteValueNames; i++) {
-    String item_discreteValueNames = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
-            offset += 1 + item_discreteValueNames.length();
-            discreteValueNames_list.add(item_discreteValueNames);
-        }
-
-        int currentValueIndex = Decoder.decodeUint8(data, offset);
-        offset += 1;
-
-        return new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames_list, currentValueIndex);
+        return new DeviceRemoteControlIsModulatedChangeMessage(remoteControlIndex, isModulated);
     }
 
     // ============================================================================
@@ -178,19 +143,10 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceRemoteControlDiscreteValues\n");
-        sb.append("deviceRemoteControlDiscreteValues:\n");
+        sb.append("# DeviceRemoteControlIsModulatedChange\n");
+        sb.append("deviceRemoteControlIsModulatedChange:\n");
         sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
-        sb.append("  discreteValueNames:");
-        if (getDiscreteValueNames().isEmpty()) {
-            sb.append(" []\n");
-        } else {
-            sb.append("\n");
-            for (String item : getDiscreteValueNames()) {
-                sb.append("    - \"").append(item).append("\"\n");
-            }
-        }
-        sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
+        sb.append("  isModulated: ").append(isModulated() ? "true" : "false").append("\n");
         return sb.toString();
     }
 }  // class Message

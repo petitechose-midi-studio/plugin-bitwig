@@ -10,6 +10,7 @@
  * - RemoteControlDiscreteValues (enum values update)
  * - RemoteControlValueChange (value/display update from host)
  * - RemoteControlNameChange (parameter name update)
+ * - RemoteControlModulatedValueChange (modulation offset for ribbon)
  *
  * @see HandlerHostPage for bulk parameter init on page change
  * @see HandlerHostDevice for device info/list
@@ -19,6 +20,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
+#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 

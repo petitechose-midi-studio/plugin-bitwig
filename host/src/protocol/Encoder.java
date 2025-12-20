@@ -10,7 +10,7 @@ package protocol;
  * types. All multi-byte types use 7-bit encoding to ensure MIDI-safe
  * transmission (all bytes < 0x80).
  *
- * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, string
+ * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Encoding Strategy:
  * - Single-byte types (uint8, int8): No encoding (already < 0x80 when valid)
@@ -118,6 +118,47 @@ public final class Encoder {
      */
     public static byte[] encodeInt8(byte value) {
         return new byte[]{ (byte) (value & 0x7F) };
+    }
+
+
+    /**
+     * Encode norm16 (2 bytes → 3 bytes, 7-bit encoding)
+     * Normalized float (0.0-1.0) stored as uint16 for efficiency
+     * Overhead: +50% (2→3 bytes) but 40% smaller than float32
+     *
+     * Converts float 0.0-1.0 to uint16 0-65535 for efficient transmission.
+     * Precision: ~0.0000153 (1/65535)
+     *
+     * @param value Float value to encode (clamped to 0.0-1.0)
+     * @return Encoded byte array (3 bytes)
+     */
+    public static byte[] encodeNorm16(float value) {
+        // Clamp to 0.0-1.0 and convert to uint16
+        float clamped = Math.max(0.0f, Math.min(1.0f, value));
+        int val = Math.round(clamped * 65535.0f) & 0xFFFF;
+        return new byte[]{
+            (byte) (val & 0x7F),           // bits 0-6
+            (byte) ((val >> 7) & 0x7F),    // bits 7-13
+            (byte) ((val >> 14) & 0x03)    // bits 14-15 (only 2 bits needed)
+        };
+    }
+
+
+    /**
+     * Encode norm8 (1 byte, 7-bit encoding)
+     * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
+     *
+     * Converts float 0.0-1.0 to 7-bit value 0-127 for minimal bandwidth.
+     * Precision: ~0.8% (1/127), sufficient for visual display.
+     *
+     * @param value Float value to encode (clamped to 0.0-1.0)
+     * @return Encoded byte array (1 byte)
+     */
+    public static byte[] encodeNorm8(float value) {
+        // Clamp to 0.0-1.0 and convert to 7-bit
+        float clamped = Math.max(0.0f, Math.min(1.0f, value));
+        int val = Math.round(clamped * 127.0f) & 0x7F;
+        return new byte[]{ (byte) val };
     }
 
 

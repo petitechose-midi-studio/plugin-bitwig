@@ -93,6 +93,19 @@ DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE = Message(
     fields=[remote_control_index, parameter_modulated_value]
 )
 
+DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE = Message(
+    description='isModulated state changed for remote control (modulation source added/removed)',
+    fields=[remote_control_index, parameter_is_modulated]
+)
+
+DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH = Message(
+    description='Batch update of all 8 remote control modulated values (sent at fixed rate ~30Hz)',
+    fields=[
+        batch_sequence_number,           # UINT8: Rolling sequence (0-255) for staleness detection
+        parameter_modulated_values_batch # NORM8[8]: Modulated values for all 8 remote controls
+    ]
+)
+
 DEVICE_REMOTE_CONTROL_ORIGIN_CHANGE = Message(
     description='origin changed for remote control (bipolar center point)',
     fields=[remote_control_index, parameter_origin]
@@ -256,5 +269,19 @@ DEVICE_SELECT_BY_INDEX = Message(
     description='Select device by index in current chain',
     fields=[
         device_index           # Device index (uint8)
+    ]
+)
+
+# ============================================================================
+# VIEW STATE MESSAGES (Controller → Host)
+# ============================================================================
+# Controller informs host about active view state
+# Host uses this to control batch sends (modulated values only needed for RemoteControls)
+
+VIEW_STATE_CHANGE = Message(
+    description='Controller view state changed (view type or selector visibility)',
+    fields=[
+        view_type,             # UINT8: 0=REMOTE_CONTROLS, 1=MIX, 2=CLIP
+        selector_active        # BOOL: true if any selector/overlay is open
     ]
 )

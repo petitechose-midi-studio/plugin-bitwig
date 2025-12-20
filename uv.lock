@@ -54,7 +54,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "fonttools", specifier = ">=4.47.0" },
-    { name = "protocol-codegen", git = "https://github.com/open-control/protocol-codegen.git" },
+    { name = "protocol-codegen", editable = "../../open-control/protocol-codegen" },
     { name = "svgpathtools", specifier = ">=1.6.0" },
 ]
 
@@ -405,11 +405,23 @@ wheels = [
 [[package]]
 name = "protocol-codegen"
 version = "1.0.0"
-source = { git = "https://github.com/open-control/protocol-codegen.git#9ee7982410e959ffc8f6fafc0cac789c8d9f0420" }
+source = { editable = "../../open-control/protocol-codegen" }
 dependencies = [
     { name = "click" },
     { name = "pydantic" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
+    { name = "types-click", marker = "extra == 'dev'", specifier = ">=7.1.0" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "pyclipper"

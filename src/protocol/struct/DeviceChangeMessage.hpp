@@ -54,6 +54,7 @@ struct RemoteControls {
     uint8_t currentValueIndex;
     bool hasAutomation;
     float modulatedValue;
+    bool isModulated;
 };
 
 #endif // PROTOCOL_REMOTECONTROLS_STRUCT
@@ -74,7 +75,7 @@ struct DeviceChangeMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 9263;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 9279;
 
     /**
      * Minimum payload size in bytes (with empty strings)
@@ -116,6 +117,7 @@ struct DeviceChangeMessage {
             encodeUint8(ptr, item.currentValueIndex);
             encodeBool(ptr, item.hasAutomation);
             encodeFloat32(ptr, item.modulatedValue);
+            encodeBool(ptr, item.isModulated);
         }
 
         return ptr - buffer;
@@ -170,6 +172,7 @@ struct DeviceChangeMessage {
             if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.hasAutomation)) return std::nullopt;
             if (!decodeFloat32(ptr, remaining, item.modulatedValue)) return std::nullopt;
+            if (!decodeBool(ptr, remaining, item.isModulated)) return std::nullopt;
             remoteControls_data[i] = item;
         }
 
@@ -232,6 +235,7 @@ struct DeviceChangeMessage {
             floatToString(floatBuf_remoteControls_i_modulatedValue, sizeof(floatBuf_remoteControls_i_modulatedValue), remoteControls[i].modulatedValue);
             ptr += snprintf(ptr, end - ptr, "      modulatedValue: %s\n", floatBuf_remoteControls_i_modulatedValue);
         }
+        ptr += snprintf(ptr, end - ptr, "      isModulated: %s\n", remoteControls[i].isModulated ? "true" : "false");
         }
 
         *ptr = '\0';

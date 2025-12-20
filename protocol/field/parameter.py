@@ -41,3 +41,22 @@ parameter_has_automation = PrimitiveField('hasAutomation', type_name=Type.BOOL)
 
 # modulatedValue() - value after automation/modulation applied (0.0-1.0)
 parameter_modulated_value = PrimitiveField('modulatedValue', type_name=Type.FLOAT32)
+
+# isModulated - true if parameter has modulation source (automation, LFO, envelope, etc.)
+# Used to determine if ribbon should be displayed on knob
+parameter_is_modulated = PrimitiveField('isModulated', type_name=Type.BOOL)
+
+# ============================================================================
+# BATCHED AUTOMATION FIELDS
+# ============================================================================
+# For efficient batch updates of all 8 remote control modulated values
+
+# Sequence number for staleness detection (0-255, wraps)
+# Used to detect USB buffer accumulation and discard stale batches
+batch_sequence_number = PrimitiveField('sequenceNumber', type_name=Type.UINT8)
+
+# Array of 8 modulated values (one per remote control slot)
+# Uses NORM8 (1 byte per value) for minimal bandwidth
+# Total: 8 bytes instead of 40 bytes per batch (80% reduction)
+# Precision: ~0.8% (1/127), sufficient for visual display of modulation ribbon
+parameter_modulated_values_batch = PrimitiveField('modulatedValues', type_name=Type.NORM8, array=8)

@@ -9,7 +9,7 @@ package protocol;
  * This class provides static decode methods for all builtin primitive
  * types. Converts 7-bit MIDI-safe bytes back to native types.
  *
- * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, string
+ * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Decoding Strategy:
  * - SysEx bytes (7-bit) → Native types
@@ -138,6 +138,47 @@ public final class Decoder {
             throw new IllegalArgumentException("Insufficient data for int8 decode");
         }
         return (byte) (data[offset] & 0x7F);
+    }
+
+
+    /**
+     * Decode norm16 (3 bytes → float 0.0-1.0)
+     * Normalized float (0.0-1.0) stored as uint16 for efficiency
+     *
+     * @param data Byte array containing encoded data
+     * @param offset Start offset in array
+     * @return Decoded normalized float value (0.0-1.0)
+     * @throws IllegalArgumentException if insufficient data
+     */
+    public static float decodeNorm16(byte[] data, int offset) {
+        if (data.length - offset < 3) {
+            throw new IllegalArgumentException("Insufficient data for norm16 decode");
+        }
+
+        int val = (data[offset] & 0x7F)
+                | ((data[offset + 1] & 0x7F) << 7)
+                | ((data[offset + 2] & 0x03) << 14);
+
+        return val / 65535.0f;
+    }
+
+
+    /**
+     * Decode norm8 (1 byte → float 0.0-1.0)
+     * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
+     *
+     * @param data Byte array containing encoded data
+     * @param offset Start offset in array
+     * @return Decoded normalized float value (0.0-1.0)
+     * @throws IllegalArgumentException if insufficient data
+     */
+    public static float decodeNorm8(byte[] data, int offset) {
+        if (data.length - offset < 1) {
+            throw new IllegalArgumentException("Insufficient data for norm8 decode");
+        }
+
+        int val = data[offset] & 0x7F;
+        return val / 127.0f;
     }
 
 

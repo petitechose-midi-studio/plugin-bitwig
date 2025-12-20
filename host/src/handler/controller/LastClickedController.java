@@ -15,7 +15,6 @@ import config.BitwigConfig;
  * - NEVER observes Bitwig API directly (that's LastClickedHost's job)
  */
 public class LastClickedController {
-    private final ControllerHost host;
     private final Protocol protocol;
     private LastClickedHost lastClickedHost;
 
@@ -23,7 +22,6 @@ public class LastClickedController {
     private long lastControllerChangeTime = 0;
 
     public LastClickedController(ControllerHost host, Protocol protocol) {
-        this.host = host;
         this.protocol = protocol;
         setupProtocolCallbacks();
     }

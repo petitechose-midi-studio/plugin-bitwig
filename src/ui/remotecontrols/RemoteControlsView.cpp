@@ -140,6 +140,8 @@ void RemoteControlsView::setupBindings() {
         paramGroup.watch(slot.currentValueIndex);
         paramGroup.watch(slot.discreteValues);
         paramGroup.watch(slot.origin);
+        paramGroup.watch(slot.modulationOffset);
+        paramGroup.watch(slot.isModulated);
     }
 
     // =========================================================================
@@ -274,9 +276,13 @@ void RemoteControlsView::updateParameter(uint8_t index) {
     widgets_[index]->setName(slot.name.get());
     widgets_[index]->setValueWithDisplay(slot.value.get(), slot.displayValue.get());
 
-    // Update origin for knob widgets
+    // Update origin, modulated value, and modulation state for knob widgets
     if (type == bitwig::state::ParameterType::KNOB) {
-        static_cast<ParameterKnobWidget*>(widgets_[index].get())->setOrigin(slot.origin.get());
+        auto* knob = static_cast<ParameterKnobWidget*>(widgets_[index].get());
+        knob->setOrigin(slot.origin.get());
+        knob->setIsModulated(slot.isModulated.get());  // Controls ribbon visibility
+        // Ribbon = value + offset (follows optimistic updates)
+        knob->setModulatedValue(slot.value.get() + slot.modulationOffset.get());
     }
 
     // Update discrete metadata for button/list widgets

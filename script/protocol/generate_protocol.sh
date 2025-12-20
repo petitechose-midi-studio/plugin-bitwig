@@ -57,10 +57,8 @@ cd "$PROJECT_ROOT"
 echo "Running protocol-codegen..."
 echo ""
 
-# Run protocol-codegen via uvx from GitHub
-# This will download and cache the package automatically
-uvx --python python3.13 --from git+https://github.com/open-control/protocol-codegen \
-    protocol-codegen generate \
+# Run protocol-codegen via uv run (uses local editable install from pyproject.toml)
+uv run protocol-codegen generate \
     --method sysex \
     --messages "protocol/message" \
     --config "protocol/sysex_protocol_config.py" \

@@ -7,7 +7,7 @@
  * This file provides static inline decode functions for all builtin
  * primitive types. Converts 7-bit MIDI-safe bytes back to native types.
  *
- * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, string
+ * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Decoding Strategy:
  * - SysEx bytes (7-bit) → Native types
@@ -128,6 +128,43 @@ static inline bool decodeInt8(
 
     out = static_cast<int8_t>((*buf++) & 0x7F);
     remaining -= 1;
+    return true;
+}
+
+
+/**
+ * Decode norm16 (3 bytes → float 0.0-1.0)
+ * Normalized float (0.0-1.0) stored as uint16 for efficiency
+ */
+static inline bool decodeNorm16(
+    const uint8_t*& buf, size_t& remaining, float& out) {
+
+    if (remaining < 3) return false;
+
+    uint16_t val = (buf[0] & 0x7F)
+                 | ((buf[1] & 0x7F) << 7)
+                 | ((buf[2] & 0x03) << 14);
+    buf += 3;
+    remaining -= 3;
+
+    out = static_cast<float>(val) / 65535.0f;
+    return true;
+}
+
+
+/**
+ * Decode norm8 (1 byte → float 0.0-1.0)
+ * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
+ */
+static inline bool decodeNorm8(
+    const uint8_t*& buf, size_t& remaining, float& out) {
+
+    if (remaining < 1) return false;
+
+    uint8_t val = (*buf++) & 0x7F;
+    remaining -= 1;
+
+    out = static_cast<float>(val) / 127.0f;
     return true;
 }
 

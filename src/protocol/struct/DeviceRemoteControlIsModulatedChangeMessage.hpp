@@ -1,10 +1,10 @@
 /**
- * DeviceRemoteControlDiscreteValuesMessage.hpp - Auto-generated Protocol Struct
+ * DeviceRemoteControlIsModulatedChangeMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_REMOTE_CONTROL_DISCRETE_VALUES message
+ * Description: DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -20,20 +20,17 @@
 #include "../Logger.hpp"
 #include <cstdint>
 #include <optional>
-#include <string>
-#include <vector>
 
 namespace Protocol {
 
 
 
-struct DeviceRemoteControlDiscreteValuesMessage {
+struct DeviceRemoteControlIsModulatedChangeMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_DISCRETE_VALUES;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE;
 
     uint8_t remoteControlIndex;
-    std::vector<std::string> discreteValueNames;
-    uint8_t currentValueIndex;
+    bool isModulated;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +38,12 @@ struct DeviceRemoteControlDiscreteValuesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1059;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 2;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 3;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 2;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -61,11 +58,7 @@ struct DeviceRemoteControlDiscreteValuesMessage {
         uint8_t* ptr = buffer;
 
         encodeUint8(ptr, remoteControlIndex);
-        encodeUint8(ptr, discreteValueNames.size());
-        for (const auto& item : discreteValueNames) {
-            encodeString(ptr, item);
-        }
-        encodeUint8(ptr, currentValueIndex);
+        encodeBool(ptr, isModulated);
 
         return ptr - buffer;
     }
@@ -77,7 +70,7 @@ struct DeviceRemoteControlDiscreteValuesMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DeviceRemoteControlDiscreteValuesMessage> decode(
+    static std::optional<DeviceRemoteControlIsModulatedChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -88,18 +81,10 @@ struct DeviceRemoteControlDiscreteValuesMessage {
         // Decode fields
         uint8_t remoteControlIndex;
         if (!decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
-        std::vector<std::string> discreteValueNames_data;
-        uint8_t count_discreteValueNames;
-        if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
-        for (uint8_t i = 0; i < count_discreteValueNames && i < 32; ++i) {
-            std::string temp_item;
-            if (!decodeString(ptr, remaining, temp_item)) return std::nullopt;
-            discreteValueNames_data.push_back(temp_item);
-        }
-        uint8_t currentValueIndex;
-        if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
+        bool isModulated;
+        if (!decodeBool(ptr, remaining, isModulated)) return std::nullopt;
 
-        return DeviceRemoteControlDiscreteValuesMessage{remoteControlIndex, discreteValueNames_data, currentValueIndex};
+        return DeviceRemoteControlIsModulatedChangeMessage{remoteControlIndex, isModulated};
     }
 
 
@@ -115,19 +100,10 @@ struct DeviceRemoteControlDiscreteValuesMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlDiscreteValues\ndeviceRemoteControlDiscreteValues:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlIsModulatedChange\ndeviceRemoteControlIsModulatedChange:\n");
 
         ptr += snprintf(ptr, end - ptr, "  remoteControlIndex: %lu\n", (unsigned long)remoteControlIndex);
-        ptr += snprintf(ptr, end - ptr, "  discreteValueNames:");
-        if (discreteValueNames.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t i = 0; i < discreteValueNames.size(); ++i) {
-                ptr += snprintf(ptr, end - ptr, "    - \"%s\"\n", discreteValueNames[i].c_str());
-            }
-        }
-        ptr += snprintf(ptr, end - ptr, "  currentValueIndex: %lu\n", (unsigned long)currentValueIndex);
+        ptr += snprintf(ptr, end - ptr, "  isModulated: %s\n", isModulated ? "true" : "false");
 
         *ptr = '\0';
         return g_logBuffer;

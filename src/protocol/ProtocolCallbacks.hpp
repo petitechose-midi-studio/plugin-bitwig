@@ -37,8 +37,10 @@ public:
     std::function<void(const DevicePageNamesMessage&)> onDevicePageNames;
     std::function<void(const DevicePageNamesWindowMessage&)> onDevicePageNamesWindow;
     std::function<void(const DevicePageSelectByIndexMessage&)> onDevicePageSelectByIndex;
+    std::function<void(const DeviceRemoteControlsModulatedValuesBatchMessage&)> onDeviceRemoteControlsModulatedValuesBatch;
     std::function<void(const DeviceRemoteControlDiscreteValuesMessage&)> onDeviceRemoteControlDiscreteValues;
     std::function<void(const DeviceRemoteControlHasAutomationChangeMessage&)> onDeviceRemoteControlHasAutomationChange;
+    std::function<void(const DeviceRemoteControlIsModulatedChangeMessage&)> onDeviceRemoteControlIsModulatedChange;
     std::function<void(const DeviceRemoteControlModulatedValueChangeMessage&)> onDeviceRemoteControlModulatedValueChange;
     std::function<void(const DeviceRemoteControlNameChangeMessage&)> onDeviceRemoteControlNameChange;
     std::function<void(const DeviceRemoteControlOriginChangeMessage&)> onDeviceRemoteControlOriginChange;
@@ -54,6 +56,7 @@ public:
     std::function<void(const RequestDeviceListWindowMessage&)> onRequestDeviceListWindow;
     std::function<void(const RequestDevicePageNamesMessage&)> onRequestDevicePageNames;
     std::function<void(const RequestDevicePageNamesWindowMessage&)> onRequestDevicePageNamesWindow;
+    std::function<void(const ViewStateChangeMessage&)> onViewStateChange;
     std::function<void(const LastClickedTouchMessage&)> onLastClickedTouch;
     std::function<void(const LastClickedUpdateMessage&)> onLastClickedUpdate;
     std::function<void(const LastClickedValueChangeMessage&)> onLastClickedValueChange;

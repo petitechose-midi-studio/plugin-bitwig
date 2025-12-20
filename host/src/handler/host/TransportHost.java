@@ -17,7 +17,6 @@ import protocol.struct.*;
  * - NEVER executes Bitwig actions (that's TransportController's job)
  */
 public class TransportHost {
-    private final ControllerHost host;
     private final Protocol protocol;
     private final Transport transport;
 
@@ -31,7 +30,6 @@ public class TransportHost {
         Protocol protocol,
         Transport transport
     ) {
-        this.host = host;
         this.protocol = protocol;
         this.transport = transport;
     }
@@ -112,9 +110,6 @@ public class TransportHost {
         boolean isPlaying = transport.isPlaying().get();
         boolean isRecording = transport.isArrangerRecordEnabled().get();
         double tempo = transport.tempo().getRaw();
-
-        String state = (isPlaying ? "▶" : "⏸") + (isRecording ? " ●" : "");
-        host.println("[TRANSPORT HOST] Init: " + state + " | " + tempo + " BPM");
 
         protocol.send(new TransportPlayMessage(isPlaying));
         protocol.send(new TransportRecordMessage(isRecording));

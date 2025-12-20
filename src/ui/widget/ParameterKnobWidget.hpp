@@ -21,6 +21,8 @@ public:
     void setValueWithDisplay(float value, const char* displayValue) override;
 
     void setOrigin(float origin);
+    void setModulatedValue(float modulatedValue);
+    void setIsModulated(bool isModulated);
 
 private:
     void createUI(lv_coord_t width, lv_coord_t height, bool centered);

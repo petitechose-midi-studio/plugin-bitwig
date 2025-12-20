@@ -15,7 +15,6 @@ import handler.controller.LastClickedController;
  * - NEVER receives protocol callbacks (that's LastClickedController's job)
  */
 public class LastClickedHost {
-    private final ControllerHost host;
     private final Protocol protocol;
     private final LastClickedParameter lastClicked;
     private LastClickedController lastClickedController;
@@ -23,7 +22,6 @@ public class LastClickedHost {
     private String lastParamName = "";
 
     public LastClickedHost(ControllerHost host, Protocol protocol) {
-        this.host = host;
         this.protocol = protocol;
         this.lastClicked = host.createLastClickedParameter("last_clicked", "Last Clicked");
     }
@@ -50,8 +48,6 @@ public class LastClickedHost {
         // Using exists() as primary trigger like the original working version
         lastClicked.parameter().exists().addValueObserver(exists -> {
             String name = lastClicked.parameter().name().get();
-
-            host.println("[LASTCLICKED HOST] exists observer: exists=" + exists + " name='" + name + "' lastParamName='" + lastParamName + "'");
 
             if (!exists) {
                 // Parameter cleared - only if we had a param before
@@ -118,8 +114,6 @@ public class LastClickedHost {
 
         final int currentValueIndex = discreteCount > 0 ? (int)(value * discreteCount) : 0;
 
-        host.println("[LASTCLICKED HOST] Update: name='" + name + "' value=" + value);
-
         protocol.send(new LastClickedUpdateMessage(
             name,
             (float) value,
@@ -136,8 +130,6 @@ public class LastClickedHost {
      * Send cleared message (when parameter deselected)
      */
     private void sendLastClickedCleared() {
-        host.println("[LASTCLICKED HOST] Cleared");
-
         protocol.send(new LastClickedUpdateMessage(
             "",
             0.0f,

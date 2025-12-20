@@ -38,8 +38,10 @@ public class ProtocolCallbacks {
     public MessageHandler<DevicePageNamesMessage> onDevicePageNames;
     public MessageHandler<DevicePageNamesWindowMessage> onDevicePageNamesWindow;
     public MessageHandler<DevicePageSelectByIndexMessage> onDevicePageSelectByIndex;
+    public MessageHandler<DeviceRemoteControlsModulatedValuesBatchMessage> onDeviceRemoteControlsModulatedValuesBatch;
     public MessageHandler<DeviceRemoteControlDiscreteValuesMessage> onDeviceRemoteControlDiscreteValues;
     public MessageHandler<DeviceRemoteControlHasAutomationChangeMessage> onDeviceRemoteControlHasAutomationChange;
+    public MessageHandler<DeviceRemoteControlIsModulatedChangeMessage> onDeviceRemoteControlIsModulatedChange;
     public MessageHandler<DeviceRemoteControlModulatedValueChangeMessage> onDeviceRemoteControlModulatedValueChange;
     public MessageHandler<DeviceRemoteControlNameChangeMessage> onDeviceRemoteControlNameChange;
     public MessageHandler<DeviceRemoteControlOriginChangeMessage> onDeviceRemoteControlOriginChange;
@@ -55,6 +57,7 @@ public class ProtocolCallbacks {
     public MessageHandler<RequestDeviceListWindowMessage> onRequestDeviceListWindow;
     public MessageHandler<RequestDevicePageNamesMessage> onRequestDevicePageNames;
     public MessageHandler<RequestDevicePageNamesWindowMessage> onRequestDevicePageNamesWindow;
+    public MessageHandler<ViewStateChangeMessage> onViewStateChange;
     public MessageHandler<LastClickedTouchMessage> onLastClickedTouch;
     public MessageHandler<LastClickedUpdateMessage> onLastClickedUpdate;
     public MessageHandler<LastClickedValueChangeMessage> onLastClickedValueChange;
