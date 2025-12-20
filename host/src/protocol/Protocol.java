@@ -1,22 +1,25 @@
 package protocol;
 
-import com.bitwig.extension.controller.api.MidiOut;
-import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.MessageID;
 import protocol.ProtocolConstants;
 import protocol.DecoderRegistry;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
- * Protocol - Bitwig Protocol Implementation
+ * Protocol - Bitwig Serial8 Protocol Implementation
  *
  * MANUAL - DO NOT REGENERATE
  *
- * Handles transport layer (MidiOut/MidiIn) only.
- * Message callbacks are defined in ProtocolCallbacks (generated).
+ * Supports both UDP and TCP transports, selectable via environment variable.
+ * Set MIDI_STUDIO_TRANSPORT=tcp or MIDI_STUDIO_TRANSPORT=udp (default: udp)
  *
  * Usage:
- *   Protocol protocol = new Protocol(midiOut, midiIn);
+ *   Protocol protocol = new Protocol(host, "127.0.0.1", 9000);
  *
  *   // Assign callbacks
  *   protocol.onTransportPlay = msg -> {
@@ -29,12 +32,23 @@ import protocol.DecoderRegistry;
 public class Protocol extends ProtocolCallbacks {
 
     // ========================================================================
+    // Configuration
+    // ========================================================================
+
+    private static final int DEFAULT_BRIDGE_PORT = 9000;
+    private static final String TRANSPORT_ENV_VAR = "MIDI_STUDIO_TRANSPORT";
+
+    // ========================================================================
     // Dependencies
     // ========================================================================
 
-    private final MidiOut midiOut;
     private final ControllerHost host;
-    private volatile boolean isActive = true;
+    private final ProtocolTransport transport;
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    // Reflection cache for performance
+    private record MessageMeta(MessageID messageId, Method encodeMethod) {}
+    private final ConcurrentHashMap<Class<?>, MessageMeta> messageCache = new ConcurrentHashMap<>();
 
     // ========================================================================
     // Lifecycle
@@ -42,34 +56,68 @@ public class Protocol extends ProtocolCallbacks {
 
     /**
      * Deactivate the protocol (prevents sending after extension exit)
-     * Must be called before sending HostDeactivatedMessage
      */
     public void deactivate() {
-        isActive = false;
+        isActive.set(false);
+    }
+
+    /**
+     * Close the connection
+     */
+    public void close() {
+        isActive.set(false);
+        if (transport != null) {
+            transport.close();
+        }
     }
 
     // ========================================================================
     // Constructor
     // ========================================================================
 
-    public Protocol(ControllerHost host, MidiOut midiOut, MidiIn midiIn) {
+    /**
+     * Create protocol with default port (9000)
+     */
+    public Protocol(ControllerHost host) {
+        this(host, "127.0.0.1", DEFAULT_BRIDGE_PORT);
+    }
+
+    /**
+     * Create protocol with specified host and port
+     * Transport type is determined by MIDI_STUDIO_TRANSPORT env var (default: udp)
+     */
+    public Protocol(ControllerHost host, String bridgeHost, int bridgePort) {
         if (host == null) {
             throw new IllegalArgumentException("ControllerHost cannot be null");
         }
-        if (midiOut == null) {
-            throw new IllegalArgumentException("MidiOut cannot be null");
-        }
-        if (midiIn == null) {
-            throw new IllegalArgumentException("MidiIn cannot be null");
-        }
         this.host = host;
-        this.midiOut = midiOut;
 
-        // Register SysEx callback automatically (no need to store midiIn)
-        midiIn.setSysexCallback(hexData -> {
-            byte[] data = hexStringToByteArray(hexData);
-            dispatch(data);
-        });
+        // Determine transport type from environment
+        ProtocolTransport.Type transportType = getTransportTypeFromEnv();
+        host.println("[Protocol] Using transport: " + transportType);
+
+        // Create transport
+        ProtocolTransport.ReceiveCallback callback = this::dispatch;
+
+        if (transportType == ProtocolTransport.Type.TCP) {
+            this.transport = new TcpTransport(host, bridgeHost, bridgePort, callback);
+        } else {
+            this.transport = new UdpTransport(host, bridgeHost, bridgePort, callback);
+        }
+    }
+
+    /**
+     * Get transport type from environment variable
+     */
+    private ProtocolTransport.Type getTransportTypeFromEnv() {
+        // TEMP: Force UDP for testing
+        return ProtocolTransport.Type.UDP;
+
+        // String envValue = System.getenv(TRANSPORT_ENV_VAR);
+        // if (envValue != null && envValue.equalsIgnoreCase("tcp")) {
+        //     return ProtocolTransport.Type.TCP;
+        // }
+        // return ProtocolTransport.Type.UDP;  // Default
     }
 
     // ========================================================================
@@ -78,24 +126,21 @@ public class Protocol extends ProtocolCallbacks {
 
     /**
      * Send a protocol message (auto-encodes and auto-detects MessageID)
-     *
-     * Example:
-     *   protocol.send(new TransportPlayMessage(true));
      */
     public <T> void send(T message) {
-        if (!isActive) return;  // Skip if extension is deactivating
+        if (!isActive.get()) return;
         sendInternal(message);
     }
 
     /**
      * Send a final message (bypasses isActive check, used during exit)
-     * Catches exceptions to handle socket closed gracefully
      */
     public <T> void sendFinal(T message) {
+        if (transport == null || !transport.isConnected()) return;
         try {
             sendInternal(message);
         } catch (Exception e) {
-            // Ignore - socket may already be closed
+            // Ignore - transport may already be closed
         }
     }
 
@@ -104,27 +149,31 @@ public class Protocol extends ProtocolCallbacks {
             throw new IllegalArgumentException("Message cannot be null");
         }
 
-        // Auto-detect MessageID from message type using reflection
-        MessageID messageId;
+        // Use cached reflection for performance
+        Class<?> clazz = message.getClass();
+        MessageMeta meta = messageCache.computeIfAbsent(clazz, c -> {
+            try {
+                Field messageIdField = c.getField("MESSAGE_ID");
+                MessageID id = (MessageID) messageIdField.get(null);
+                Method encode = c.getMethod("encode");
+                return new MessageMeta(id, encode);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to cache message type: " + c.getName(), e);
+            }
+        });
+
         byte[] payload;
         try {
-            var messageIdField = message.getClass().getField("MESSAGE_ID");
-            messageId = (MessageID) messageIdField.get(null);
-
-            var encodeMethod = message.getClass().getMethod("encode");
-            payload = (byte[]) encodeMethod.invoke(message);
+            payload = (byte[]) meta.encodeMethod().invoke(message);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send message: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to encode message: " + e.getMessage(), e);
         }
 
-        // Build SysEx frame
-        byte[] sysex = buildSysExFrame(messageId.getValue(), payload);
+        // Build Serial8 frame: [MessageID][fromHost][payload...]
+        byte[] frame = buildFrame(meta.messageId().getValue(), payload);
 
-        // Profiling log: message type, payload size, total size
-        host.println("[SYSEX TX] " + messageId.name() + " payload=" + payload.length + "B total=" + sysex.length + "B");
-
-        // Send via MidiOut
-        midiOut.sendSysex(sysex);
+        // Send via transport
+        transport.send(frame);
     }
 
     // ========================================================================
@@ -132,40 +181,29 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
 
     /**
-     * Dispatch incoming SysEx to callbacks
-     * Called automatically by SysEx receive callback
+     * Dispatch incoming frame to callbacks
      */
-    public void dispatch(byte[] sysex) {
-        // Validate SysEx frame (now includes fromHost byte)
-        if (sysex == null || sysex.length < ProtocolConstants.MIN_MESSAGE_LENGTH) {
+    private void dispatch(byte[] frame) {
+        if (frame == null || frame.length < ProtocolConstants.MIN_MESSAGE_LENGTH) {
             return;
         }
 
-        if (sysex[0] != ProtocolConstants.SYSEX_START ||
-            sysex[sysex.length - 1] != ProtocolConstants.SYSEX_END) {
-            return;
-        }
-
-        if (sysex[1] != ProtocolConstants.MANUFACTURER_ID ||
-            sysex[2] != ProtocolConstants.DEVICE_ID) {
-            return;
-        }
-
-        // Extract MessageID and fromHost flag
-        byte messageIdByte = sysex[ProtocolConstants.MESSAGE_TYPE_OFFSET];
+        // Parse header
+        byte messageIdByte = frame[ProtocolConstants.MESSAGE_TYPE_OFFSET];
         MessageID messageId = MessageID.fromValue(messageIdByte);
         if (messageId == null) {
+            host.errorln("[Protocol] Unknown message ID: " + messageIdByte);
             return;
         }
 
-        boolean fromHost = (sysex[ProtocolConstants.FROM_HOST_OFFSET] != 0);
+        boolean fromHost = (frame[ProtocolConstants.FROM_HOST_OFFSET] != 0);
 
         // Extract payload
-        int payloadLength = sysex.length - ProtocolConstants.MIN_MESSAGE_LENGTH;
+        int payloadLength = frame.length - ProtocolConstants.PAYLOAD_OFFSET;
         byte[] payload = new byte[payloadLength];
-        System.arraycopy(sysex, ProtocolConstants.PAYLOAD_OFFSET, payload, 0, payloadLength);
+        System.arraycopy(frame, ProtocolConstants.PAYLOAD_OFFSET, payload, 0, payloadLength);
 
-        // Dispatch to callbacks with fromHost flag
+        // Dispatch to callbacks
         DecoderRegistry.dispatch(this, messageId, payload, fromHost);
     }
 
@@ -173,33 +211,30 @@ public class Protocol extends ProtocolCallbacks {
     // Internal Helpers
     // ========================================================================
 
-    private byte[] buildSysExFrame(byte messageId, byte[] payload) {
-        int totalSize = ProtocolConstants.MIN_MESSAGE_LENGTH + payload.length;
-        byte[] sysex = new byte[totalSize];
+    private byte[] buildFrame(byte messageId, byte[] payload) {
+        // Frame format: [MessageID][fromHost][payload...]
+        byte[] frame = new byte[2 + payload.length];
 
-        int offset = 0;
-        sysex[offset++] = ProtocolConstants.SYSEX_START;
-        sysex[offset++] = ProtocolConstants.MANUFACTURER_ID;
-        sysex[offset++] = ProtocolConstants.DEVICE_ID;
-        sysex[offset++] = messageId;
-        sysex[offset++] = 1;  // fromHost flag (Java = host)
+        frame[0] = messageId;
+        frame[1] = 1;  // fromHost = true (we are the host)
 
-        System.arraycopy(payload, 0, sysex, offset, payload.length);
-        offset += payload.length;
+        System.arraycopy(payload, 0, frame, 2, payload.length);
 
-        sysex[offset] = ProtocolConstants.SYSEX_END;
-
-        return sysex;
+        return frame;
     }
 
-    private static byte[] hexStringToByteArray(String hexString) {
-        int len = hexString.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
-                                 + Character.digit(hexString.charAt(i+1), 16));
-        }
-        return data;
+    /**
+     * Check if connected
+     */
+    public boolean isConnected() {
+        return transport != null && transport.isConnected() && isActive.get();
+    }
+
+    /**
+     * Get current transport type
+     */
+    public ProtocolTransport.Type getTransportType() {
+        return transport != null ? transport.getType() : null;
     }
 
 }  // class Protocol

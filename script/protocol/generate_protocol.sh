@@ -59,9 +59,9 @@ echo ""
 
 # Run protocol-codegen via uv run (uses local editable install from pyproject.toml)
 uv run protocol-codegen generate \
-    --method sysex \
+    --method serial8 \
     --messages "protocol/message" \
-    --config "protocol/sysex_protocol_config.py" \
+    --config "protocol/serial8_protocol_config.py" \
     --plugin-paths "protocol/plugin_paths.py" \
     --output-base "." \
     --verbose

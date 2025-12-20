@@ -13,7 +13,7 @@ import protocol.Decoder;
  * Description: TRACK_VOLUME_MODULATED_VALUE_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class TrackVolumeModulatedValueChangeMessage {
 
@@ -77,9 +77,9 @@ public final class TrackVolumeModulatedValueChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 6;
+    public static final int MAX_PAYLOAD_SIZE = 5;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -107,7 +107,7 @@ public final class TrackVolumeModulatedValueChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 6;
+    private static final int MIN_PAYLOAD_SIZE = 5;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -126,7 +126,7 @@ public final class TrackVolumeModulatedValueChangeMessage {
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         float modulatedValue = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
 
         return new TrackVolumeModulatedValueChangeMessage(trackIndex, modulatedValue);
     }

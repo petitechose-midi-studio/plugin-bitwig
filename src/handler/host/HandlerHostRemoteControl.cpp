@@ -3,7 +3,6 @@
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlIsModulatedChangeMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlModulatedValueChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlOriginChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlsModulatedValuesBatchMessage.hpp"

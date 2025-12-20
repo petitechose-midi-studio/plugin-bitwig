@@ -3,6 +3,7 @@
 #include <oc/log/Log.hpp>
 #include <ui/font/FontLoader.hpp>  // Core's font system
 
+#include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
 
 namespace bitwig {
@@ -94,9 +95,9 @@ void BitwigContext::onConnected() {
     OC_LOG_INFO("BitwigContext activated");
 
     // Request current state from Bitwig
-    protocol_->requestHostStatus();
-    protocol_->requestDeviceList();
-    protocol_->requestTrackList();
+    protocol_->send(Protocol::RequestHostStatusMessage{});
+    protocol_->send(Protocol::RequestDeviceListWindowMessage{0});
+    protocol_->send(Protocol::RequestTrackListWindowMessage{0});
 }
 
 void BitwigContext::onDisconnected() {
@@ -109,7 +110,7 @@ void BitwigContext::onDisconnected() {
 // =============================================================================
 
 void BitwigContext::createProtocol() {
-    protocol_ = std::make_unique<BitwigProtocol>(midi(), events());
+    protocol_ = std::make_unique<BitwigProtocol>(serial());
 }
 
 void BitwigContext::createHostHandlers() {

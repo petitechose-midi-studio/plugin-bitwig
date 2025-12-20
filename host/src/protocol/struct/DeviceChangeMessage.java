@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Description: DEVICE_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceChangeMessage {
 
@@ -233,9 +233,9 @@ public final class DeviceChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 9279;
+    public static final int MAX_PAYLOAD_SIZE = 9247;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -326,7 +326,7 @@ public final class DeviceChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 223;
+    private static final int MIN_PAYLOAD_SIZE = 191;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -364,15 +364,15 @@ public final class DeviceChangeMessage {
     int item_remoteControlIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
     float item_parameterValue = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
     String item_parameterName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_parameterName.length();
     float item_parameterOrigin = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
     boolean item_parameterExists = Decoder.decodeBool(data, offset);
             offset += 1;
     short item_discreteValueCount = Decoder.decodeInt16(data, offset);
-            offset += 3;
+            offset += 2;
     String item_displayValue = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_displayValue.length();
     int item_parameterType = Decoder.decodeUint8(data, offset);
@@ -390,7 +390,7 @@ public final class DeviceChangeMessage {
     boolean item_hasAutomation = Decoder.decodeBool(data, offset);
             offset += 1;
     float item_modulatedValue = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
     boolean item_isModulated = Decoder.decodeBool(data, offset);
             offset += 1;
             remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue, item_isModulated));

@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Description: TRACK_SEND_LIST message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class TrackSendListMessage {
 
@@ -150,9 +150,9 @@ public final class TrackSendListMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 899;
+    public static final int MAX_PAYLOAD_SIZE = 883;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -211,7 +211,7 @@ public final class TrackSendListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 131;
+    private static final int MIN_PAYLOAD_SIZE = 115;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -241,9 +241,9 @@ public final class TrackSendListMessage {
     String item_sendName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_sendName.length();
     long item_color = Decoder.decodeUint32(data, offset);
-            offset += 5;
+            offset += 4;
     float item_sendValue = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
     String item_sendDisplayValue = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_sendDisplayValue.length();
     boolean item_sendIsEnabled = Decoder.decodeBool(data, offset);

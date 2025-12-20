@@ -88,11 +88,6 @@ DEVICE_REMOTE_CONTROL_HAS_AUTOMATION_CHANGE = Message(
     fields=[remote_control_index, parameter_has_automation]
 )
 
-DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE = Message(
-    description='modulatedValue() changed for remote control (automation/modulation applied)',
-    fields=[remote_control_index, parameter_modulated_value]
-)
-
 DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE = Message(
     description='isModulated state changed for remote control (modulation source added/removed)',
     fields=[remote_control_index, parameter_is_modulated]

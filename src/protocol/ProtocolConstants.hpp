@@ -1,11 +1,13 @@
 /**
- * ProtocolConstants.hpp - Protocol Configuration Constants
+ * ProtocolConstants.hpp - Protocol Configuration Constants (Serial8)
  *
  * AUTO-GENERATED - DO NOT EDIT
- * Generated from: protocol_config.yaml
+ * Generated from: Serial8Config
  *
- * This file contains all protocol constants including SysEx framing,
- * message structure offsets, and encoding limits.
+ * This file contains all protocol constants including message structure
+ * offsets and encoding limits for 8-bit binary protocol.
+ *
+ * Note: Framing (COBS) is handled by the bridge layer, not the codec.
  *
  * All constants are constexpr (compile-time, zero runtime cost).
  */
@@ -17,28 +19,22 @@
 namespace Protocol {
 
 // ============================================================================
-// SYSEX FRAMING CONSTANTS
+// MESSAGE STRUCTURE CONSTANTS
 // ============================================================================
 
-constexpr uint8_t SYSEX_START = 0xf0;  // SysEx start byte
-constexpr uint8_t SYSEX_END = 0xf7;    // SysEx end byte
-
-constexpr uint8_t MANUFACTURER_ID = 0x7f;  // MIDI manufacturer ID
-constexpr uint8_t DEVICE_ID = 0x01;        // Device identifier
-
-constexpr uint8_t MIN_MESSAGE_LENGTH = 6;  // Minimum valid SysEx message
-constexpr uint8_t MESSAGE_TYPE_OFFSET = 3;  // Position of MessageID byte
-constexpr uint8_t FROM_HOST_OFFSET = 4;      // Position of fromHost flag
-constexpr uint8_t PAYLOAD_OFFSET = 5;      // Start of payload data
+constexpr uint8_t MESSAGE_TYPE_OFFSET = 0;  // Position of MessageID byte
+constexpr uint8_t FROM_HOST_OFFSET = 1;      // Position of fromHost flag
+constexpr uint8_t PAYLOAD_OFFSET = 2;          // Start of payload data
+constexpr uint8_t MIN_MESSAGE_LENGTH = 2;  // Minimum valid message size
 
 // ============================================================================
 // ENCODING LIMITS
 // ============================================================================
 
-constexpr uint8_t STRING_MAX_LENGTH = 32;  // Max chars per string (7-bit encoding)
-constexpr uint8_t ARRAY_MAX_ITEMS = 32;      // Max items per array (7-bit count)
-constexpr uint16_t MAX_PAYLOAD_SIZE = 10000;    // Max payload bytes
-constexpr uint16_t MAX_MESSAGE_SIZE = 16000;    // Max total message bytes
+constexpr uint8_t STRING_MAX_LENGTH = 32;  // Max chars per string (8-bit length)
+constexpr uint8_t ARRAY_MAX_ITEMS = 32;    // Max items per array (8-bit count)
+constexpr uint16_t MAX_PAYLOAD_SIZE = 10000;  // Max payload bytes
+constexpr uint16_t MAX_MESSAGE_SIZE = 16000;  // Max total message bytes
 
 
 }  // namespace Protocol

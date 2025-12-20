@@ -13,7 +13,7 @@ import protocol.Decoder;
  * Description: DEVICE_REMOTE_CONTROL_ORIGIN_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceRemoteControlOriginChangeMessage {
 
@@ -77,9 +77,9 @@ public final class DeviceRemoteControlOriginChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 6;
+    public static final int MAX_PAYLOAD_SIZE = 5;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -107,7 +107,7 @@ public final class DeviceRemoteControlOriginChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 6;
+    private static final int MIN_PAYLOAD_SIZE = 5;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -126,7 +126,7 @@ public final class DeviceRemoteControlOriginChangeMessage {
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         float parameterOrigin = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
 
         return new DeviceRemoteControlOriginChangeMessage(remoteControlIndex, parameterOrigin);
     }

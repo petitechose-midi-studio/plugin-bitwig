@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Description: DEVICE_CHILDREN message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceChildrenMessage {
 
@@ -132,7 +132,7 @@ public final class DeviceChildrenMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
     public static final int MAX_PAYLOAD_SIZE = 564;
 

@@ -1,26 +1,26 @@
 /**
- * Encoder.hpp - 7-bit MIDI-safe Encoder
+ * Encoder.hpp - 8-bit Binary Encoder (Serial8 Protocol)
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: builtin_types.yaml
  *
  * This file provides static inline encode functions for all builtin
- * primitive types. Converts native types to 7-bit MIDI-safe bytes.
+ * primitive types. Uses full 8-bit byte range for efficient encoding.
  *
  * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Encoding Strategy:
- * - Single-byte types (uint8, int8): No encoding (already < 0x80 when valid)
- * - Multi-byte integers: 7-bit per byte (e.g., uint16: 2→3 bytes)
- * - Float32: 4→5 bytes (7-bit chunks)
- * - String: length prefix (7-bit) + ASCII data
+ * - Direct byte writes (no 7-bit constraint)
+ * - Little-endian for multi-byte integers
+ * - IEEE 754 for floats (native byte order)
+ * - 8-bit length prefix for strings/arrays
  *
  * Performance:
  * - Static inline = zero runtime overhead
  * - Compiler optimizes away function calls
- * - Identical to manual inline code
+ * - More efficient than 7-bit encoding (no expansion)
  *
- * Companion file: Decoder.hpp (SysEx → Type direction)
+ * Companion file: Decoder.hpp
  */
 
 #pragma once
@@ -33,7 +33,7 @@
 namespace Protocol {
 
 // ============================================================================
-// ENCODE FUNCTIONS (Type → 7-bit MIDI-safe bytes)
+// ENCODE FUNCTIONS (Type -> 8-bit binary bytes)
 // ============================================================================
 
 
@@ -47,93 +47,81 @@ static inline void encodeBool(uint8_t*& buf, bool val) {
 
 
 /**
- * Encode float32 (4 bytes → 5 bytes, 7-bit encoding)
+ * Encode float32 (4 bytes, IEEE 754 little-endian)
  * 32-bit IEEE 754 floating point
- * Overhead: +25% (4→5 bytes)
- *
- * Uses IEEE 754 bit representation, split into 7-bit chunks.
  */
 static inline void encodeFloat32(uint8_t*& buf, float val) {
     uint32_t bits;
-    memcpy(&bits, &val, sizeof(float));  // Type-punning via memcpy (safe)
+    memcpy(&bits, &val, sizeof(float));
 
-    *buf++ = bits & 0x7F;           // bits 0-6
-    *buf++ = (bits >> 7) & 0x7F;    // bits 7-13
-    *buf++ = (bits >> 14) & 0x7F;   // bits 14-20
-    *buf++ = (bits >> 21) & 0x7F;   // bits 21-27
-    *buf++ = (bits >> 28) & 0x0F;   // bits 28-31
+    *buf++ = bits & 0xFF;
+    *buf++ = (bits >> 8) & 0xFF;
+    *buf++ = (bits >> 16) & 0xFF;
+    *buf++ = (bits >> 24) & 0xFF;
 }
 
 
 /**
- * Encode int16 (2 bytes → 3 bytes, 7-bit encoding)
+ * Encode int16 (2 bytes, little-endian)
  * 16-bit signed integer (-32768 to 32767)
- * Overhead: +50% (2→3 bytes)
  */
 static inline void encodeInt16(uint8_t*& buf, int16_t val) {
     uint16_t bits = static_cast<uint16_t>(val);
-    *buf++ = bits & 0x7F;
-    *buf++ = (bits >> 7) & 0x7F;
-    *buf++ = (bits >> 14) & 0x03;
+    *buf++ = bits & 0xFF;
+    *buf++ = (bits >> 8) & 0xFF;
 }
 
 
 /**
- * Encode int32 (4 bytes → 5 bytes, 7-bit encoding)
+ * Encode int32 (4 bytes, little-endian)
  * 32-bit signed integer (-2147483648 to 2147483647)
- * Overhead: +25% (4→5 bytes)
  */
 static inline void encodeInt32(uint8_t*& buf, int32_t val) {
     uint32_t bits = static_cast<uint32_t>(val);
-    *buf++ = bits & 0x7F;
-    *buf++ = (bits >> 7) & 0x7F;
-    *buf++ = (bits >> 14) & 0x7F;
-    *buf++ = (bits >> 21) & 0x7F;
-    *buf++ = (bits >> 28) & 0x0F;
+    *buf++ = bits & 0xFF;
+    *buf++ = (bits >> 8) & 0xFF;
+    *buf++ = (bits >> 16) & 0xFF;
+    *buf++ = (bits >> 24) & 0xFF;
 }
 
 
 /**
- * Encode int8 (1 byte, signed → unsigned mapping)
+ * Encode int8 (1 byte, direct)
  * 8-bit signed integer (-128 to 127)
  */
 static inline void encodeInt8(uint8_t*& buf, int8_t val) {
-    *buf++ = static_cast<uint8_t>(val) & 0x7F;
+    *buf++ = static_cast<uint8_t>(val);
 }
 
 
 /**
- * Encode norm16 (2 bytes → 3 bytes, 7-bit encoding)
+ * Encode norm16 (2 bytes, little-endian)
  * Normalized float (0.0-1.0) stored as uint16 for efficiency
- * Overhead: +50% (2→3 bytes) but 40% smaller than float32
  *
- * Converts float 0.0-1.0 to uint16 0-65535 for efficient transmission.
- * Precision: ~0.0000153 (1/65535)
+ * Converts float 0.0-1.0 to uint16 0-65535 for high precision.
+ * Precision: ~0.0015% (1/65535)
  */
 static inline void encodeNorm16(uint8_t*& buf, float val) {
-    // Clamp to 0.0-1.0 and convert to uint16
     if (val < 0.0f) val = 0.0f;
     if (val > 1.0f) val = 1.0f;
     uint16_t norm = static_cast<uint16_t>(val * 65535.0f + 0.5f);
 
-    *buf++ = norm & 0x7F;           // bits 0-6
-    *buf++ = (norm >> 7) & 0x7F;    // bits 7-13
-    *buf++ = (norm >> 14) & 0x03;   // bits 14-15 (only 2 bits needed)
+    *buf++ = norm & 0xFF;
+    *buf++ = (norm >> 8) & 0xFF;
 }
 
 
 /**
- * Encode norm8 (1 byte, 7-bit encoding)
+ * Encode norm8 (1 byte, full 8-bit range)
  * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
  *
- * Converts float 0.0-1.0 to 7-bit value 0-127 for minimal bandwidth.
- * Precision: ~0.8% (1/127), sufficient for visual display.
+ * Converts float 0.0-1.0 to 8-bit value 0-255 for optimal precision.
+ * Precision: ~0.4% (1/255), better than 7-bit norm8.
  */
 static inline void encodeNorm8(uint8_t*& buf, float val) {
-    // Clamp to 0.0-1.0 and convert to 7-bit
     if (val < 0.0f) val = 0.0f;
     if (val > 1.0f) val = 1.0f;
-    *buf++ = static_cast<uint8_t>(val * 127.0f + 0.5f) & 0x7F;
+    *buf++ = static_cast<uint8_t>(val * 255.0f + 0.5f);
 }
 
 
@@ -141,51 +129,47 @@ static inline void encodeNorm8(uint8_t*& buf, float val) {
  * Encode string (variable length: 1 byte length + data)
  * Variable-length UTF-8 string (prefixed with uint8 length)
  *
- * Format: [length (7-bit)] [char0] [char1] ... [charN-1]
- * Max length: 127 chars (7-bit length encoding)
+ * Format: [length (8-bit)] [char0] [char1] ... [charN-1]
+ * Max length: 255 chars (8-bit length encoding)
  */
 static inline void encodeString(uint8_t*& buf, const std::string& str) {
-    uint8_t len = static_cast<uint8_t>(str.length()) & 0x7F;  // Max 127
+    uint8_t len = static_cast<uint8_t>(str.length());  // Max 255
     *buf++ = len;
 
     for (size_t i = 0; i < len; ++i) {
-        *buf++ = static_cast<uint8_t>(str[i]) & 0x7F;  // ASCII chars are already < 0x80
+        *buf++ = static_cast<uint8_t>(str[i]);
     }
 }
 
 
 /**
- * Encode uint16 (2 bytes → 3 bytes, 7-bit encoding)
+ * Encode uint16 (2 bytes, little-endian)
  * 16-bit unsigned integer (0-65535)
- * Overhead: +50% (2→3 bytes)
  */
 static inline void encodeUint16(uint8_t*& buf, uint16_t val) {
-    *buf++ = val & 0x7F;           // bits 0-6
-    *buf++ = (val >> 7) & 0x7F;    // bits 7-13
-    *buf++ = (val >> 14) & 0x03;   // bits 14-15 (only 2 bits needed)
+    *buf++ = val & 0xFF;         // low byte
+    *buf++ = (val >> 8) & 0xFF;  // high byte
 }
 
 
 /**
- * Encode uint32 (4 bytes → 5 bytes, 7-bit encoding)
+ * Encode uint32 (4 bytes, little-endian)
  * 32-bit unsigned integer (0-4294967295)
- * Overhead: +25% (4→5 bytes)
  */
 static inline void encodeUint32(uint8_t*& buf, uint32_t val) {
-    *buf++ = val & 0x7F;           // bits 0-6
-    *buf++ = (val >> 7) & 0x7F;    // bits 7-13
-    *buf++ = (val >> 14) & 0x7F;   // bits 14-20
-    *buf++ = (val >> 21) & 0x7F;   // bits 21-27
-    *buf++ = (val >> 28) & 0x0F;   // bits 28-31 (only 4 bits needed)
+    *buf++ = val & 0xFF;
+    *buf++ = (val >> 8) & 0xFF;
+    *buf++ = (val >> 16) & 0xFF;
+    *buf++ = (val >> 24) & 0xFF;
 }
 
 
 /**
- * Encode uint8 (1 byte, no transformation needed if < 0x80)
+ * Encode uint8 (1 byte, direct)
  * 8-bit unsigned integer (0-255)
  */
 static inline void encodeUint8(uint8_t*& buf, uint8_t val) {
-    *buf++ = val & 0x7F;  // Ensure MIDI-safe
+    *buf++ = val;
 }
 
 
