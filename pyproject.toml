@@ -10,14 +10,17 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "protocol-codegen @ git+https://github.com/open-control/protocol-codegen.git",
+    "protocol-codegen",
     "fonttools>=4.47.0",
     "svgpathtools>=1.6.0",
 ]
 
+[tool.uv.sources]
+protocol-codegen = { path = "../../open-control/protocol-codegen", editable = true }
+
 [tool.pyright]
 include = ["protocol"]
-extraPaths = ["protocol"]
+extraPaths = ["protocol", "../open-control/protocol-codegen/src"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 venvPath = "."

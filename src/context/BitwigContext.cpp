@@ -52,6 +52,7 @@ void BitwigContext::cleanup() {
     // Destroy in reverse order of creation
 
     // Input Handlers (they hold bindings that may reference state)
+    inputViewState_.reset();
     inputLastClicked_.reset();
     inputTrack_.reset();
     inputDeviceSelector_.reset();
@@ -153,6 +154,10 @@ void BitwigContext::createInputHandlers() {
     // LastClicked: OPT encoder for adjusting last clicked parameter
     inputLastClicked_ = std::make_unique<handler::HandlerInputLastClicked>(
         state_, *protocol_, encoders(), scopeElement);
+
+    // ViewState: notifies host about active view and selector state
+    inputViewState_ = std::make_unique<handler::HandlerInputViewState>(
+        state_, *protocol_);
 }
 
 void BitwigContext::createViews() {

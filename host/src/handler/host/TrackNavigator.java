@@ -14,7 +14,6 @@ import com.bitwig.extension.controller.api.*;
  * Consistency with DeviceNavigator pattern.
  */
 public class TrackNavigator {
-    private final ControllerHost host;
     private final CursorTrack cursorTrack;
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;
@@ -30,7 +29,6 @@ public class TrackNavigator {
         TrackBank siblingTrackBank,
         Track parentTrack
     ) {
-        this.host = host;
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
         this.siblingTrackBank = siblingTrackBank;
@@ -71,14 +69,11 @@ public class TrackNavigator {
         Track track = currentBank.getItemAt(trackIndex);
 
         if (!track.exists().get() || !track.isGroup().get()) {
-            host.println("[TRACK NAV] ✗ Enter failed: track " + trackIndex + " is not a group");
             if (onComplete != null) onComplete.run();
             return;
         }
 
-        host.println("[TRACK NAV] ▶ Enter: " + track.name().get());
         navigationDepth++;
-
         cursorTrack.selectChannel(track);
         cursorTrack.selectFirstChild();
         // itemCount observer will trigger list refresh
@@ -90,14 +85,11 @@ public class TrackNavigator {
      */
     public void exitTrackGroup(Runnable onComplete) {
         if (!hasParentGroup()) {
-            host.println("[TRACK NAV] ✗ Exit failed: already at root");
             if (onComplete != null) onComplete.run();
             return;
         }
 
-        host.println("[TRACK NAV] ◀ Exit: " + parentTrack.name().get());
         navigationDepth--;
-
         cursorTrack.selectParent();
         // itemCount observer will trigger list refresh
     }

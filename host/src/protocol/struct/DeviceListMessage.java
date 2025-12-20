@@ -219,7 +219,7 @@ public final class DeviceListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 165;
+    private static final int MIN_PAYLOAD_SIZE = 261;
 
     /**
      * Decode message from MIDI-safe bytes

@@ -89,12 +89,24 @@ public class DeviceController {
         return false;
     }
 
+    /**
+     * Check if ANY parameter is currently in echo state.
+     * Used to skip batch sends during controller activity.
+     */
+    public boolean isAnyEchoActive() {
+        long now = System.currentTimeMillis();
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
+            if (now - lastControllerChangeTime[i] < BitwigConfig.ECHO_TIMEOUT_MS) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void setupProtocolCallbacks() {
         protocol.onDeviceRemoteControlValueChange = msg -> {
-            if (msg.fromHost) {
-                host.println("[DEVICE CTRL] Feedback from host: param=" + msg.getRemoteControlIndex() + " value=" + msg.getParameterValue());
+            if (msg.fromHost)
                 return;
-            }
 
             int index = msg.getRemoteControlIndex();
             if (index < 0 || index >= BitwigConfig.MAX_PARAMETERS) return;
@@ -106,13 +118,8 @@ public class DeviceController {
             boolean inPressDelay = touchState[index] && timeSincePress < BitwigConfig.TOUCH_PRESS_DELAY_MS;
             boolean inReleaseGrace = !touchState[index] && timeSinceRelease < BitwigConfig.TOUCH_RELEASE_GRACE_MS;
 
-            host.println("[DEVICE CTRL] Param " + index + " = " + msg.getParameterValue() +
-                        " (touched=" + touchState[index] + ", pressDelay=" + inPressDelay + ", releaseGrace=" + inReleaseGrace + ")");
-
-            if (inPressDelay || inReleaseGrace) {
-                host.println("[DEVICE CTRL] ✗ Blocked by timing delay");
+            if (inPressDelay || inReleaseGrace)
                 return;
-            }
 
             RemoteControl param = remoteControls.getParameter(index);
             markControllerChange(index);
@@ -138,43 +145,26 @@ public class DeviceController {
             if (msg.fromHost) return;
 
             int paramIndex = msg.getRemoteControlIndex();
-            host.println("[TOUCH] Received: param=" + paramIndex + " touched=" + msg.isTouched());
-
-            if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) {
-                host.println("[TOUCH] ✗ Invalid param index");
+            if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS)
                 return;
-            }
 
             boolean isTouched = msg.isTouched();
-            if (touchState[paramIndex] == isTouched) {
-                host.println("[TOUCH] ✗ Debounced (same state)");
+            if (touchState[paramIndex] == isTouched)
                 return;
-            }
 
             touchState[paramIndex] = isTouched;
             RemoteControl param = remoteControls.getParameter(paramIndex);
 
             if (isTouched) {
-                host.println("[TOUCH] ▶ Press: enabling automation write + touch(true)");
                 transport.isClipLauncherAutomationWriteEnabled().set(true);
                 param.touch(true);
                 lastPressTime[paramIndex] = System.currentTimeMillis();
             } else {
-                host.println("[TOUCH] ◀ Release: touch(false) + scheduling automation disable");
                 param.touch(false);
                 lastReleaseTime[paramIndex] = System.currentTimeMillis();
                 host.scheduleTask(() -> {
-                    host.println("[TOUCH] ⏱ Delayed: disabling automation write");
                     transport.isClipLauncherAutomationWriteEnabled().set(false);
                 }, BitwigConfig.TOUCH_RELEASE_GRACE_MS);
-            }
-        };
-
-        // Request page names list FROM controller (DEPRECATED - use windowed version)
-        protocol.onRequestDevicePageNames = msg -> {
-            if (msg.fromHost) return;
-            if (deviceHost != null) {
-                deviceHost.sendPageNames();
             }
         };
 
@@ -255,6 +245,19 @@ public class DeviceController {
                 cursorDevice.selectDevice(device);
                 // NOTE: Don't auto-select first layer here
                 // Let enterDeviceChild handle layer/slot/drumpad navigation explicitly
+            }
+        };
+
+        // ========================================================================
+        // View State Callback (for batch send control)
+        // ========================================================================
+
+        // Controller view state changed - controls batch modulated values send
+        protocol.onViewStateChange = msg -> {
+            if (msg.fromHost)
+                return;
+            if (deviceHost != null) {
+                deviceHost.setControllerViewState(msg.getViewType(), msg.getSelectorActive());
             }
         };
     }

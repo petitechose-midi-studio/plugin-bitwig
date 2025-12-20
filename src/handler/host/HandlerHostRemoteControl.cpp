@@ -1,14 +1,14 @@
 #include "HandlerHostRemoteControl.hpp"
 
-#include <array>
-
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlIsModulatedChangeMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlModulatedValueChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlOriginChangeMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlsModulatedValuesBatchMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlUpdateMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
-#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
@@ -100,6 +100,23 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
         state_.parameters.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
     };
+
+    // Batch modulated values - updates all 8 ribbon offsets at once
+    protocol_.onDeviceRemoteControlsModulatedValuesBatch =
+        [this](const DeviceRemoteControlsModulatedValuesBatchMessage& msg) {
+            for (size_t i = 0; i < msg.modulatedValues.size() && i < PARAMETER_COUNT; ++i) {
+                auto& slot = state_.parameters.slots[i];
+                // Store offset so ribbon follows optimistic value updates
+                slot.modulationOffset.set(msg.modulatedValues[i] - slot.value.get());
+            }
+        };
+
+    // isModulated state change - controls ribbon visibility
+    protocol_.onDeviceRemoteControlIsModulatedChange =
+        [this](const DeviceRemoteControlIsModulatedChangeMessage& msg) {
+            if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
+            state_.parameters.slots[msg.remoteControlIndex].isModulated.set(msg.isModulated);
+        };
 }
 
 }  // namespace bitwig::handler

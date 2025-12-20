@@ -105,7 +105,6 @@ public class TrackHost {
 
         // Observer for track count changes (add/remove track)
         mainTrackBank.itemCount().addValueObserver(count -> {
-            host.println("[TRACK HOST] Main bank track count changed: " + count);
             sendTrackListWindow(0);  // Use windowed loading
         });
 
@@ -126,7 +125,6 @@ public class TrackHost {
 
         // Observer for sibling track count changes (add/remove track in group)
         siblingTrackBank.itemCount().addValueObserver(count -> {
-            host.println("[TRACK HOST] Sibling bank track count changed: " + count);
             sendTrackListWindow(0);  // Use windowed loading
         });
         for (int i = 0; i < BitwigConfig.MAX_BANK_SIZE; i++) {
@@ -343,8 +341,6 @@ public class TrackHost {
             long elapsed = System.currentTimeMillis() - pendingMuteTimestamp;
             if (pendingMuteTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingMuteTrackIndex = -1;
-                String trackName = track.name().get();
-                host.println("\n[TRACK HOST] MUTE → \"" + trackName + "\" [" + trackIndex + "] = " + (isMuted ? "MUTED" : "UNMUTED") + "\n");
                 protocol.send(new TrackMuteMessage(trackIndex, isMuted));
             }
         });
@@ -354,8 +350,6 @@ public class TrackHost {
             long elapsed = System.currentTimeMillis() - pendingSoloTimestamp;
             if (pendingSoloTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingSoloTrackIndex = -1;
-                String trackName = track.name().get();
-                host.println("\n[TRACK HOST] SOLO → \"" + trackName + "\" [" + trackIndex + "] = " + (isSoloed ? "SOLOED" : "UNSOLOED") + "\n");
                 protocol.send(new TrackSoloMessage(trackIndex, isSoloed));
             }
         });
@@ -397,9 +391,6 @@ public class TrackHost {
             final List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
             final int selectedIndex = findSelectedTrackIndex(tracks);
 
-            // Log and send
-            String context = hasParent ? " ↳ " + parentName : " ⌂ root";
-            host.println("[TRACK HOST] Tracks: " + tracks.size() + " | Cursor: " + selectedIndex + context);
             protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
         }, BitwigConfig.TRACK_SELECT_DELAY_MS);
     }

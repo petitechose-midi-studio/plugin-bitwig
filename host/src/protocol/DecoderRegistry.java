@@ -92,6 +92,13 @@ public class DecoderRegistry {
                     callbacks.onDevicePageSelectByIndex.handle(msg);
                 }
                 break;
+            case DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH:
+                if (callbacks.onDeviceRemoteControlsModulatedValuesBatch != null) {
+                    DeviceRemoteControlsModulatedValuesBatchMessage msg = DeviceRemoteControlsModulatedValuesBatchMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlsModulatedValuesBatch.handle(msg);
+                }
+                break;
             case DEVICE_REMOTE_CONTROL_DISCRETE_VALUES:
                 if (callbacks.onDeviceRemoteControlDiscreteValues != null) {
                     DeviceRemoteControlDiscreteValuesMessage msg = DeviceRemoteControlDiscreteValuesMessage.decode(payload);
@@ -104,6 +111,13 @@ public class DecoderRegistry {
                     DeviceRemoteControlHasAutomationChangeMessage msg = DeviceRemoteControlHasAutomationChangeMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onDeviceRemoteControlHasAutomationChange.handle(msg);
+                }
+                break;
+            case DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE:
+                if (callbacks.onDeviceRemoteControlIsModulatedChange != null) {
+                    DeviceRemoteControlIsModulatedChangeMessage msg = DeviceRemoteControlIsModulatedChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlIsModulatedChange.handle(msg);
                 }
                 break;
             case DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE:
@@ -209,6 +223,13 @@ public class DecoderRegistry {
                     RequestDevicePageNamesWindowMessage msg = RequestDevicePageNamesWindowMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onRequestDevicePageNamesWindow.handle(msg);
+                }
+                break;
+            case VIEW_STATE_CHANGE:
+                if (callbacks.onViewStateChange != null) {
+                    ViewStateChangeMessage msg = ViewStateChangeMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onViewStateChange.handle(msg);
                 }
                 break;
             case LAST_CLICKED_TOUCH:

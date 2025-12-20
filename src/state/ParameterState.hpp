@@ -33,7 +33,9 @@ using oc::state::SignalVector;
 struct ParameterSlot {
     // Value and display
     Signal<float> value{0.0f};
-    Signal<float> origin{0.0f};  // Bipolar center point
+    Signal<float> origin{0.0f};           // Bipolar center point
+    Signal<float> modulationOffset{0.0f}; // Offset from value (modulatedValue = value + offset)
+    Signal<bool> isModulated{false};      // True when modulation is active (automation, LFO, etc.)
     SignalLabel name;
     SignalTiny displayValue;
 
@@ -51,6 +53,8 @@ struct ParameterSlot {
     void reset() {
         value.set(0.0f);
         origin.set(0.0f);
+        modulationOffset.set(0.0f);
+        isModulated.set(false);
         name.set("");
         displayValue.set("");
         type.set(ParameterType::KNOB);
@@ -61,7 +65,7 @@ struct ParameterSlot {
         loading.set(false);
         metadataSet.set(false);
     }
-};
+};;
 
 /**
  * @brief State for all 8 device parameters

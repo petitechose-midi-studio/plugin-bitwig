@@ -43,7 +43,8 @@ remote_control = [
     parameter_discrete_value_names,     # GENERIC: Array of discrete value names
     parameter_current_value_index,      # GENERIC: Current index in discreteValueNames array
     parameter_has_automation,           # GENERIC: Has automation data (from Bitwig API)
-    parameter_modulated_value           # GENERIC: Value after automation/modulation applied
+    parameter_modulated_value,          # GENERIC: Value after automation/modulation applied
+    parameter_is_modulated              # GENERIC: Has modulation source (for ribbon display)
 ]
 
 # ============================================================================
@@ -163,3 +164,15 @@ child_info = [
 # Array of children (max 16: flat list of slots + layers + drums)
 # Memory impact: 16 children * ~20 bytes = 320 bytes (acceptable for Teensy)
 children_list = CompositeField('children', fields=child_info, array=16)
+
+# ============================================================================
+# VIEW STATE FIELDS (Controller → Host)
+# ============================================================================
+# Used to inform host about controller's active view state
+# Host uses this to control batch sends (only send when RemoteControls visible)
+
+# View type enum: 0=REMOTE_CONTROLS, 1=MIX, 2=CLIP
+view_type = PrimitiveField('viewType', type_name=Type.UINT8)
+
+# Whether a selector/overlay is currently active (device selector, page selector, etc.)
+selector_active = PrimitiveField('selectorActive', type_name=Type.BOOL)

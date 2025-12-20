@@ -38,8 +38,22 @@ public class DeviceHost {
 
     // Prevent duplicate calls during transitions
     private boolean deviceChangePending = false;  // Ignores individual param messages during device change
-    private boolean deviceListPending = false;  // Debounce for sendDeviceList
     private boolean pageChangePending = false;  // Debounce for sendPageChange
+    private boolean selectorRequestActive = false; // Pause all value/modulation sends during selector requests
+
+    // View state tracking (from controller VIEW_STATE_CHANGE message)
+    // viewType: 0=REMOTE_CONTROLS, 1=MIX, 2=CLIP
+    private int controllerViewType = 0;
+    private boolean controllerSelectorActive = false;
+
+    // Modulated values - simple batch at fixed rate
+    private static final int MODULATED_BATCH_INTERVAL_MS = 30;  // ~30Hz batch rate
+    private final float[] modulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
+    private final float[] parameterValues = new float[BitwigConfig.MAX_PARAMETERS];
+    private final float[] lastSentModulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
+    private final boolean[] previousIsModulated = new boolean[BitwigConfig.MAX_PARAMETERS];
+    private final boolean[] hasAutomationState = new boolean[BitwigConfig.MAX_PARAMETERS];
+    private boolean modulatedValuesDirty = false;
 
     public DeviceHost(
         ControllerHost host,
@@ -71,6 +85,62 @@ public class DeviceHost {
         setupRemoteControlsObservables();
         setupDeviceBankObservables();
         setupLayerAndDrumBanksObservables();
+
+        // Start batch timer for modulated values (~30Hz)
+        startModulatedValuesBatchTimer();
+    }
+
+    /**
+     * Check if isModulated state changed and send granular message if it did.
+     * isModulated = hasAutomation || (modulatedValue != value)
+     */
+    private void checkAndSendIsModulatedChange(int paramIndex) {
+        boolean hasAutomation = hasAutomationState[paramIndex];
+        float value = parameterValues[paramIndex];
+        float modulatedValue = modulatedValues[paramIndex];
+        boolean isModulated = hasAutomation || Math.abs(modulatedValue - value) > 0.001f;
+
+        if (isModulated != previousIsModulated[paramIndex]) {
+            previousIsModulated[paramIndex] = isModulated;
+            protocol.send(new DeviceRemoteControlIsModulatedChangeMessage(paramIndex, isModulated));
+        }
+    }
+
+    /**
+     * Start the modulated values batch timer.
+     * Sends all 8 modulated values in a single batch message at fixed rate.
+     */
+    private void startModulatedValuesBatchTimer() {
+        host.scheduleTask(this::modulatedValuesBatchTick, MODULATED_BATCH_INTERVAL_MS);
+    }
+
+    /**
+     * Batch tick: send all modulated values if dirty and conditions allow.
+     */
+    private void modulatedValuesBatchTick() {
+        // Reschedule for next tick
+        host.scheduleTask(this::modulatedValuesBatchTick, MODULATED_BATCH_INTERVAL_MS);
+
+        // Skip if not on RemoteControls view or selector is open
+        if (controllerViewType != 0 || controllerSelectorActive) return;
+        if (deviceChangePending || selectorRequestActive) return;
+
+        // Only send if something changed
+        if (!modulatedValuesDirty) return;
+        modulatedValuesDirty = false;
+
+        // Send batch message with all 8 modulated values
+        List<Float> values = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
+            values.add(modulatedValues[i]);
+            lastSentModulatedValues[i] = modulatedValues[i];
+        }
+        protocol.send(new DeviceRemoteControlsModulatedValuesBatchMessage(0, values));
+
+        // Check isModulated state for all parameters
+        for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
+            checkAndSendIsModulatedChange(i);
+        }
     }
 
     private void setupCursorTrackObservables() {
@@ -167,10 +237,17 @@ public class DeviceHost {
             RemoteControl param = remoteControls.getParameter(i);
 
             param.value().displayedValue().addValueObserver(displayValue -> {
-                if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all values
+                if (deviceChangePending || selectorRequestActive)
+                    return; // Skip during transitions or selector requests
                 double value = param.value().get();
+                parameterValues[paramIndex] = (float) value; // Track for isModulated detection
                 boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
-                protocol.send(new DeviceRemoteControlValueChangeMessage(paramIndex, (float) value, displayValue, isEcho));
+                // Skip sending if echo - controller already has the value, avoid protocol
+                // saturation
+                if (!isEcho) {
+                    protocol.send(
+                            new DeviceRemoteControlValueChangeMessage(paramIndex, (float) value, displayValue, false));
+                }
             });
 
             param.name().addValueObserver(name -> {
@@ -178,15 +255,20 @@ public class DeviceHost {
                 protocol.send(new DeviceRemoteControlNameChangeMessage(paramIndex, name));
             });
 
-            // Automation observers - granular updates
+            // Automation observers - granular updates (immediate, as automation changes are
+            // rare)
             param.hasAutomation().addValueObserver(hasAutomation -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain automation state
+                hasAutomationState[paramIndex] = hasAutomation; // Track for isModulated detection
                 protocol.send(new DeviceRemoteControlHasAutomationChangeMessage(paramIndex, hasAutomation));
+                // Check isModulated immediately (automation changes are rare)
+                checkAndSendIsModulatedChange(paramIndex);
             });
 
             param.modulatedValue().addValueObserver(modulatedValue -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain modulated values
-                protocol.send(new DeviceRemoteControlModulatedValueChangeMessage(paramIndex, (float) modulatedValue));
+                modulatedValues[paramIndex] = (float) modulatedValue;
+                modulatedValuesDirty = true;  // Mark for next batch tick
             });
 
             // Origin observer - sends lightweight origin-only message
@@ -205,7 +287,6 @@ public class DeviceHost {
 
         // Observer for device count changes (add/remove device)
         deviceBank.itemCount().addValueObserver(count -> {
-            host.println("[DEVICE HOST] Device count changed: " + count);
             sendDeviceListWindow(0);  // Use windowed loading
         });
 
@@ -254,34 +335,23 @@ public class DeviceHost {
     }
 
     /**
+     * Update controller view state (from VIEW_STATE_CHANGE message).
+     * Controls whether modulated values batch is sent.
+     *
+     * @param viewType       0=REMOTE_CONTROLS, 1=MIX, 2=CLIP
+     * @param selectorActive true if any selector/overlay is open
+     */
+    public void setControllerViewState(int viewType, boolean selectorActive) {
+        this.controllerViewType = viewType;
+        this.controllerSelectorActive = selectorActive;
+    }
+
+    /**
      * Schedule action after device bank update delay.
      * Used by TrackController when selecting track to auto-select first device.
      */
     public void scheduleAfterDeviceBankUpdate(Runnable action) {
         host.scheduleTask(action, BitwigConfig.DEVICE_ENTER_CHILD_MS);
-    }
-
-    /**
-     * @deprecated Use sendPageNamesWindow instead for windowed loading
-     */
-    public void sendPageNames() {
-        // Delay to let Bitwig API update values
-        host.scheduleTask(() -> {
-            final int pageCount = remoteControls.pageCount().get();
-            final int currentIndex = remoteControls.selectedPageIndex().get();
-
-            final List<String> names = new ArrayList<>();
-            final String[] pageNamesArray = remoteControls.pageNames().get();
-            for (int i = 0; i < pageCount; i++) {
-                if (pageNamesArray != null && i < pageNamesArray.length) {
-                    names.add(pageNamesArray[i]);
-                } else {
-                    names.add("");
-                }
-            }
-
-            protocol.send(new DevicePageNamesMessage(pageCount, currentIndex, names));
-        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
     private static final int PAGE_WINDOW_SIZE = 16;
@@ -294,6 +364,9 @@ public class DeviceHost {
      * @param requestedStartIndex Start index requested by controller
      */
     public void sendPageNamesWindow(int requestedStartIndex) {
+        // Pause value/modulation sends to free bandwidth for selector response
+        selectorRequestActive = true;
+
         host.scheduleTask(() -> {
             final int totalCount = remoteControls.pageCount().get();
             final int currentIndex = remoteControls.selectedPageIndex().get();
@@ -325,35 +398,9 @@ public class DeviceHost {
                 currentIndex,   // Currently selected page
                 windowNames     // This window's page names (up to 16)
             ));
-        }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
-    }
 
-    /**
-     * @deprecated Use sendDeviceListWindow() for windowed loading
-     */
-    @Deprecated
-    public void sendDeviceList() {
-        // Debounce: skip if already pending
-        if (deviceListPending) return;
-        deviceListPending = true;
-
-        // Delay to let Bitwig API update values
-        host.scheduleTask(() -> {
-            deviceListPending = false;
-            final int totalDeviceCount = deviceBank.itemCount().get();
-            final int currentDevicePosition = cursorDevice.position().get();
-            final boolean isNested = cursorDevice.isNested().get();
-            final String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
-            final List<DeviceListMessage.Devices> devicesList = buildDevicesList();
-            final int currentDeviceIndex = findCurrentDeviceIndex(devicesList, currentDevicePosition);
-
-            protocol.send(new DeviceListMessage(
-                totalDeviceCount,
-                currentDeviceIndex,
-                isNested,
-                parentName,
-                devicesList
-            ));
+            // Resume value/modulation sends after response sent
+            selectorRequestActive = false;
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
@@ -364,6 +411,9 @@ public class DeviceHost {
      * @param requestedStartIndex The starting index requested by the controller
      */
     public void sendDeviceListWindow(int requestedStartIndex) {
+        // Pause value/modulation sends to free bandwidth for selector response
+        selectorRequestActive = true;
+
         host.scheduleTask(() -> {
             final int totalDeviceCount = deviceBank.itemCount().get();
             final int currentDevicePosition = cursorDevice.position().get();
@@ -390,6 +440,9 @@ public class DeviceHost {
                 parentName,
                 windowDevices
             ));
+
+            // Resume value/modulation sends after response sent
+            selectorRequestActive = false;
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
@@ -417,30 +470,6 @@ public class DeviceHost {
         return list;
     }
 
-    private List<DeviceListMessage.Devices> buildDevicesList() {
-        List<DeviceListMessage.Devices> list = new ArrayList<>();
-        int bankSize = deviceBank.getSizeOfBank();
-
-        for (int i = 0; i < bankSize; i++) {
-            Device device = deviceBank.getItemAt(i);
-            if (!device.exists().get()) continue;
-
-            String deviceTypeRaw = device.deviceType().get();
-            int deviceTypeInt = DeviceTypeUtils.toInt(deviceTypeRaw);
-            host.println("[DeviceList] " + device.name().get() + " -> deviceType='" + deviceTypeRaw + "' (" + deviceTypeInt + ")");
-
-            list.add(new DeviceListMessage.Devices(
-                device.position().get(),
-                device.name().get(),
-                device.isEnabled().get(),
-                deviceTypeInt,
-                getDeviceChildrenTypes(device)
-            ));
-        }
-
-        return list;
-    }
-
     private int[] getDeviceChildrenTypes(Device device) {
         int[] types = new int[4];
         int index = 0;
@@ -448,15 +477,6 @@ public class DeviceHost {
         if (device.hasLayers().get() && index < 4) types[index++] = 2;
         if (device.hasDrumPads().get() && index < 4) types[index++] = 4;
         return types;
-    }
-
-    private int findCurrentDeviceIndex(List<DeviceListMessage.Devices> devicesList, int currentDevicePosition) {
-        for (int i = 0; i < devicesList.size(); i++) {
-            if (devicesList.get(i).getDeviceIndex() == currentDevicePosition) {
-                return i;
-            }
-        }
-        return 0;
     }
 
     public void sendDeviceChildren(int deviceIndex, int childType) {
@@ -495,8 +515,6 @@ public class DeviceHost {
                 allChildren.add(drum);
             }
 
-            host.println("[DEVICE HOST] DeviceChildren: deviceIndex=" + deviceIndex + ", count=" + allChildren.size());
-
             protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
@@ -506,7 +524,7 @@ public class DeviceHost {
      * Delegates to DeviceNavigator
      */
     public void enterDeviceChild(int deviceIndex, int itemType, int childIndex) {
-        navigator.enterDeviceChild(deviceIndex, itemType, childIndex);
+        navigator.enterDeviceChild(host, deviceIndex, itemType, childIndex);
     }
 
     /**
@@ -677,6 +695,13 @@ public class DeviceHost {
             RemoteControl param = remoteControls.getParameter(i);
             ParameterData data = captureParameterData(param, i);
 
+            // Sync tracking arrays for throttled observers
+            parameterValues[i] = data.value;
+            modulatedValues[i] = data.modulatedValue;
+            lastSentModulatedValues[i] = data.modulatedValue;
+            hasAutomationState[i] = data.hasAutomation;
+            previousIsModulated[i] = data.isModulated;
+
             remoteControlsList.add(new DevicePageChangeMessage.RemoteControls(
                 i,
                 data.value,
@@ -689,7 +714,8 @@ public class DeviceHost {
                 data.typeInfo.discreteValueNames,
                 data.typeInfo.currentValueIndex,
                 data.hasAutomation,
-                data.modulatedValue
+                    data.modulatedValue,
+                    data.isModulated
             ));
         }
         return remoteControlsList;
@@ -717,10 +743,11 @@ public class DeviceHost {
         final ParameterTypeInfo typeInfo;
         final boolean hasAutomation;
         final float modulatedValue;
+        final boolean isModulated;
 
         ParameterData(String name, float value, String displayedValue, float origin,
                      boolean exists, int discreteCount, ParameterTypeInfo typeInfo,
-                     boolean hasAutomation, float modulatedValue) {
+                boolean hasAutomation, float modulatedValue, boolean isModulated) {
             this.name = name;
             this.value = value;
             this.displayedValue = displayedValue;
@@ -730,6 +757,7 @@ public class DeviceHost {
             this.typeInfo = typeInfo;
             this.hasAutomation = hasAutomation;
             this.modulatedValue = modulatedValue;
+            this.isModulated = isModulated;
         }
     }
 
@@ -743,13 +771,19 @@ public class DeviceHost {
         boolean hasAutomation = param.hasAutomation().get();
         float modulatedValue = (float) param.modulatedValue().get();
 
+        // isModulated: true if hasAutomation or if modulatedValue differs from value
+        // This indicates a modulation source is active (automation, LFO, envelope,
+        // etc.)
+        boolean isModulated = hasAutomation || Math.abs(modulatedValue - value) > 0.001f;
+
         if (deviceController != null) {
             deviceController.updateParameterMetadata(paramIndex, discreteCount);
         }
 
         ParameterTypeInfo typeInfo = detectParameterType(param, discreteCount);
 
-        return new ParameterData(name, value, displayedValue, origin, exists, discreteCount, typeInfo, hasAutomation, modulatedValue);
+        return new ParameterData(name, value, displayedValue, origin, exists, discreteCount, typeInfo, hasAutomation,
+                modulatedValue, isModulated);
     }
 
     private ParameterTypeInfo detectParameterType(RemoteControl param, int discreteCount) {

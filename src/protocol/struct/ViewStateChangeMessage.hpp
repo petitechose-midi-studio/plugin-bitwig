@@ -1,10 +1,10 @@
 /**
- * DevicePageNamesMessage.hpp - Auto-generated Protocol Struct
+ * ViewStateChangeMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_PAGE_NAMES message
+ * Description: VIEW_STATE_CHANGE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 7-bit MIDI-safe. Performance is identical to inline
@@ -18,22 +18,19 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
-#include <array>
 #include <cstdint>
 #include <optional>
-#include <string>
 
 namespace Protocol {
 
 
 
-struct DevicePageNamesMessage {
+struct ViewStateChangeMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_PAGE_NAMES;
+    static constexpr MessageID MESSAGE_ID = MessageID::VIEW_STATE_CHANGE;
 
-    uint8_t devicePageCount;
-    uint8_t devicePageIndex;
-    std::array<std::string, 32> pageNames;
+    uint8_t viewType;
+    bool selectorActive;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +38,12 @@ struct DevicePageNamesMessage {
     /**
      * Maximum payload size in bytes (7-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1058;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 2;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 34;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 2;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -60,11 +57,8 @@ struct DevicePageNamesMessage {
 
         uint8_t* ptr = buffer;
 
-        encodeUint8(ptr, devicePageCount);
-        encodeUint8(ptr, devicePageIndex);
-        for (const auto& item : pageNames) {
-            encodeString(ptr, item);
-        }
+        encodeUint8(ptr, viewType);
+        encodeBool(ptr, selectorActive);
 
         return ptr - buffer;
     }
@@ -76,7 +70,7 @@ struct DevicePageNamesMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DevicePageNamesMessage> decode(
+    static std::optional<ViewStateChangeMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -85,16 +79,12 @@ struct DevicePageNamesMessage {
         size_t remaining = len;
 
         // Decode fields
-        uint8_t devicePageCount;
-        if (!decodeUint8(ptr, remaining, devicePageCount)) return std::nullopt;
-        uint8_t devicePageIndex;
-        if (!decodeUint8(ptr, remaining, devicePageIndex)) return std::nullopt;
-        std::array<std::string, 32> pageNames_data;
-        for (uint8_t i = 0; i < 32; ++i) {
-            if (!decodeString(ptr, remaining, pageNames_data[i])) return std::nullopt;
-        }
+        uint8_t viewType;
+        if (!decodeUint8(ptr, remaining, viewType)) return std::nullopt;
+        bool selectorActive;
+        if (!decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
 
-        return DevicePageNamesMessage{devicePageCount, devicePageIndex, pageNames_data};
+        return ViewStateChangeMessage{viewType, selectorActive};
     }
 
 
@@ -110,19 +100,10 @@ struct DevicePageNamesMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DevicePageNames\ndevicePageNames:\n");
+        ptr += snprintf(ptr, end - ptr, "# ViewStateChange\nviewStateChange:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  devicePageCount: %lu\n", (unsigned long)devicePageCount);
-        ptr += snprintf(ptr, end - ptr, "  devicePageIndex: %lu\n", (unsigned long)devicePageIndex);
-        ptr += snprintf(ptr, end - ptr, "  pageNames:");
-        if (pageNames.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t i = 0; i < pageNames.size(); ++i) {
-                ptr += snprintf(ptr, end - ptr, "    - \"%s\"\n", pageNames[i].c_str());
-            }
-        }
+        ptr += snprintf(ptr, end - ptr, "  viewType: %lu\n", (unsigned long)viewType);
+        ptr += snprintf(ptr, end - ptr, "  selectorActive: %s\n", selectorActive ? "true" : "false");
 
         *ptr = '\0';
         return g_logBuffer;

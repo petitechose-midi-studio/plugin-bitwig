@@ -25,6 +25,7 @@ void ParameterKnobWidget::createUI(lv_coord_t width, lv_coord_t height, bool cen
         .bgColor(Color::KNOB_BACKGROUND)
         .trackColor(Color::KNOB_VALUE_RIBBON)
         .valueColor(Color::KNOB_VALUE_INDICATOR)
+        .ribbonThickness(0.3)
         .flashColor(Color::DATA_ACTIVE);
     lv_obj_set_grid_cell(knob_->getElement(),
         LV_GRID_ALIGN_CENTER, 0, 1,  // Horizontal: center
@@ -47,6 +48,18 @@ void ParameterKnobWidget::setValueWithDisplay(float value, const char* displayVa
 void ParameterKnobWidget::setOrigin(float origin) {
     if (knob_) {
         knob_->origin(origin);
+    }
+}
+
+void ParameterKnobWidget::setModulatedValue(float modulatedValue) {
+    if (knob_) {
+        knob_->setRibbonValue(modulatedValue);
+    }
+}
+
+void ParameterKnobWidget::setIsModulated(bool isModulated) {
+    if (knob_) {
+        knob_->setRibbonEnabled(isModulated);
     }
 }
 

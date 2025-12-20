@@ -130,6 +130,11 @@ void HandlerHostPage::setupProtocolCallbacks() {
             slot.visible.set(rc.parameterExists);
             slot.loading.set(false);
             slot.metadataSet.set(true);
+
+            // Modulation state - controls ribbon visibility
+            // Store offset (not absolute value) so ribbon follows optimistic updates
+            slot.isModulated.set(rc.isModulated);
+            slot.modulationOffset.set(rc.modulatedValue - rc.parameterValue);
         }
     };
 }

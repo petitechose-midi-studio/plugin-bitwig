@@ -53,6 +53,10 @@ void HandlerInputRemoteControl::handleValueChange(uint8_t index, float value) {
     // Optimistic update
     state_.parameters.slots[index].value.set(value);
 
+    // Hide modulation ribbon immediately when user moves the knob
+    // This prevents visual latency while waiting for host roundtrip
+    state_.parameters.slots[index].isModulated.set(false);
+
     // Send to host
     protocol_.send(Protocol::DeviceRemoteControlValueChangeMessage{index, value, "", false});
 }

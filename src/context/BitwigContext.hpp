@@ -70,6 +70,7 @@
 #include "handler/input/HandlerInputRemoteControl.hpp"
 #include "handler/input/HandlerInputTrack.hpp"
 #include "handler/input/HandlerInputTransport.hpp"
+#include "handler/input/HandlerInputViewState.hpp"
 #include "handler/input/HandlerInputViewSwitcher.hpp"
 #include "ui/clip/ClipView.hpp"
 #include "ui/mix/MixView.hpp"
@@ -162,6 +163,7 @@ private:
     std::unique_ptr<handler::HandlerInputDeviceSelector> inputDeviceSelector_;
     std::unique_ptr<handler::HandlerInputTrack> inputTrack_;
     std::unique_ptr<handler::HandlerInputLastClicked> inputLastClicked_;
+    std::unique_ptr<handler::HandlerInputViewState> inputViewState_;
 
     // UI Container
     std::unique_ptr<ViewContainer> viewContainer_;

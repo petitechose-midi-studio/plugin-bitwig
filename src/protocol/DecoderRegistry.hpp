@@ -128,6 +128,16 @@ public:
                 }
             }
             break;
+        case MessageID::DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH:
+            if (callbacks.onDeviceRemoteControlsModulatedValuesBatch) {
+                auto decoded = DeviceRemoteControlsModulatedValuesBatchMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlsModulatedValuesBatch(msg);
+                }
+            }
+            break;
         case MessageID::DEVICE_REMOTE_CONTROL_DISCRETE_VALUES:
             if (callbacks.onDeviceRemoteControlDiscreteValues) {
                 auto decoded = DeviceRemoteControlDiscreteValuesMessage::decode(payload, payloadLen);
@@ -145,6 +155,16 @@ public:
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onDeviceRemoteControlHasAutomationChange(msg);
+                }
+            }
+            break;
+        case MessageID::DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE:
+            if (callbacks.onDeviceRemoteControlIsModulatedChange) {
+                auto decoded = DeviceRemoteControlIsModulatedChangeMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlIsModulatedChange(msg);
                 }
             }
             break;
@@ -295,6 +315,16 @@ public:
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
                     callbacks.onRequestDevicePageNamesWindow(msg);
+                }
+            }
+            break;
+        case MessageID::VIEW_STATE_CHANGE:
+            if (callbacks.onViewStateChange) {
+                auto decoded = ViewStateChangeMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onViewStateChange(msg);
                 }
             }
             break;

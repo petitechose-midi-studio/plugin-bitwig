@@ -234,7 +234,7 @@ public final class DeviceListWindowMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 86;
+    private static final int MIN_PAYLOAD_SIZE = 134;
 
     /**
      * Decode message from MIDI-safe bytes
