@@ -1,26 +1,26 @@
 /**
- * Decoder.hpp - 7-bit MIDI-safe Decoder
+ * Decoder.hpp - 8-bit Binary Decoder (Serial8 Protocol)
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: builtin_types.yaml
  *
  * This file provides static inline decode functions for all builtin
- * primitive types. Converts 7-bit MIDI-safe bytes back to native types.
+ * primitive types. Decodes 8-bit binary bytes to native types.
  *
  * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Decoding Strategy:
- * - SysEx bytes (7-bit) → Native types
- * - Multi-byte integers: 7-bit chunks → full integers
- * - Float32: 5 bytes → 4 bytes (7-bit chunks → IEEE 754)
- * - String: length prefix + ASCII data
+ * - Direct byte reads (no 7-bit constraint)
+ * - Little-endian for multi-byte integers
+ * - IEEE 754 for floats
+ * - 8-bit length prefix for strings/arrays
  *
  * Performance:
  * - Static inline = zero runtime overhead
  * - Compiler optimizes away function calls
- * - Identical to manual inline code
+ * - More efficient than 7-bit decoding
  *
- * Companion file: Encoder.hpp (Type → SysEx direction)
+ * Companion file: Encoder.hpp
  */
 
 #pragma once
@@ -33,11 +33,11 @@
 namespace Protocol {
 
 // ============================================================================
-// DECODE FUNCTIONS (7-bit MIDI-safe bytes → Type)
+// DECODE FUNCTIONS (8-bit binary bytes -> Type)
 // ============================================================================
 // Returns bool success, writes decoded value to output parameter
-// Output parameter pattern minimizes memory footprint (no optional overhead)
-// Returns false if insufficient data or invalid encoding
+// Output parameter pattern minimizes memory footprint
+// Returns false if insufficient data
 
 
 /**
@@ -56,69 +56,65 @@ static inline bool decodeBool(
 
 
 /**
- * Decode float32 (5 bytes → 4 bytes)
+ * Decode float32 (4 bytes, IEEE 754 little-endian)
  * 32-bit IEEE 754 floating point
  */
 static inline bool decodeFloat32(
     const uint8_t*& buf, size_t& remaining, float& out) {
 
-    if (remaining < 5) return false;
+    if (remaining < 4) return false;
 
-    uint32_t bits = (buf[0] & 0x7F)
-                  | ((buf[1] & 0x7F) << 7)
-                  | ((buf[2] & 0x7F) << 14)
-                  | ((buf[3] & 0x7F) << 21)
-                  | ((buf[4] & 0x0F) << 28);
-    buf += 5;
-    remaining -= 5;
+    uint32_t bits = buf[0]
+                  | (static_cast<uint32_t>(buf[1]) << 8)
+                  | (static_cast<uint32_t>(buf[2]) << 16)
+                  | (static_cast<uint32_t>(buf[3]) << 24);
+    buf += 4;
+    remaining -= 4;
 
-    memcpy(&out, &bits, sizeof(float));  // Type-punning via memcpy (safe)
+    memcpy(&out, &bits, sizeof(float));
     return true;
 }
 
 
 /**
- * Decode int16 (3 bytes → 2 bytes)
+ * Decode int16 (2 bytes, little-endian)
  * 16-bit signed integer (-32768 to 32767)
  */
 static inline bool decodeInt16(
     const uint8_t*& buf, size_t& remaining, int16_t& out) {
 
-    if (remaining < 3) return false;
+    if (remaining < 2) return false;
 
-    uint16_t bits = (buf[0] & 0x7F)
-                  | ((buf[1] & 0x7F) << 7)
-                  | ((buf[2] & 0x03) << 14);
+    uint16_t bits = buf[0] | (static_cast<uint16_t>(buf[1]) << 8);
     out = static_cast<int16_t>(bits);
-    buf += 3;
-    remaining -= 3;
+    buf += 2;
+    remaining -= 2;
     return true;
 }
 
 
 /**
- * Decode int32 (5 bytes → 4 bytes)
+ * Decode int32 (4 bytes, little-endian)
  * 32-bit signed integer (-2147483648 to 2147483647)
  */
 static inline bool decodeInt32(
     const uint8_t*& buf, size_t& remaining, int32_t& out) {
 
-    if (remaining < 5) return false;
+    if (remaining < 4) return false;
 
-    uint32_t bits = (buf[0] & 0x7F)
-                  | ((buf[1] & 0x7F) << 7)
-                  | ((buf[2] & 0x7F) << 14)
-                  | ((buf[3] & 0x7F) << 21)
-                  | ((buf[4] & 0x0F) << 28);
+    uint32_t bits = buf[0]
+                  | (static_cast<uint32_t>(buf[1]) << 8)
+                  | (static_cast<uint32_t>(buf[2]) << 16)
+                  | (static_cast<uint32_t>(buf[3]) << 24);
     out = static_cast<int32_t>(bits);
-    buf += 5;
-    remaining -= 5;
+    buf += 4;
+    remaining -= 4;
     return true;
 }
 
 
 /**
- * Decode int8 (1 byte)
+ * Decode int8 (1 byte, direct)
  * 8-bit signed integer (-128 to 127)
  */
 static inline bool decodeInt8(
@@ -126,26 +122,24 @@ static inline bool decodeInt8(
 
     if (remaining < 1) return false;
 
-    out = static_cast<int8_t>((*buf++) & 0x7F);
+    out = static_cast<int8_t>(*buf++);
     remaining -= 1;
     return true;
 }
 
 
 /**
- * Decode norm16 (3 bytes → float 0.0-1.0)
+ * Decode norm16 (2 bytes -> float 0.0-1.0)
  * Normalized float (0.0-1.0) stored as uint16 for efficiency
  */
 static inline bool decodeNorm16(
     const uint8_t*& buf, size_t& remaining, float& out) {
 
-    if (remaining < 3) return false;
+    if (remaining < 2) return false;
 
-    uint16_t val = (buf[0] & 0x7F)
-                 | ((buf[1] & 0x7F) << 7)
-                 | ((buf[2] & 0x03) << 14);
-    buf += 3;
-    remaining -= 3;
+    uint16_t val = buf[0] | (static_cast<uint16_t>(buf[1]) << 8);
+    buf += 2;
+    remaining -= 2;
 
     out = static_cast<float>(val) / 65535.0f;
     return true;
@@ -153,7 +147,7 @@ static inline bool decodeNorm16(
 
 
 /**
- * Decode norm8 (1 byte → float 0.0-1.0)
+ * Decode norm8 (1 byte -> float 0.0-1.0)
  * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
  */
 static inline bool decodeNorm8(
@@ -161,10 +155,10 @@ static inline bool decodeNorm8(
 
     if (remaining < 1) return false;
 
-    uint8_t val = (*buf++) & 0x7F;
+    uint8_t val = *buf++;
     remaining -= 1;
 
-    out = static_cast<float>(val) / 127.0f;
+    out = static_cast<float>(val) / 255.0f;
     return true;
 }
 
@@ -178,17 +172,12 @@ static inline bool decodeString(
 
     if (remaining < 1) return false;
 
-    uint8_t len = (*buf++) & 0x7F;
+    uint8_t len = *buf++;
     remaining -= 1;
 
     if (remaining < len) return false;
 
-    out.clear();
-    out.reserve(len);
-    for (uint8_t i = 0; i < len; ++i) {
-        out.push_back(static_cast<char>(buf[i] & 0x7F));
-    }
-
+    out.assign(reinterpret_cast<const char*>(buf), len);
     buf += len;
     remaining -= len;
     return true;
@@ -196,45 +185,42 @@ static inline bool decodeString(
 
 
 /**
- * Decode uint16 (3 bytes → 2 bytes)
+ * Decode uint16 (2 bytes, little-endian)
  * 16-bit unsigned integer (0-65535)
  */
 static inline bool decodeUint16(
     const uint8_t*& buf, size_t& remaining, uint16_t& out) {
 
-    if (remaining < 3) return false;
+    if (remaining < 2) return false;
 
-    out = (buf[0] & 0x7F)
-        | ((buf[1] & 0x7F) << 7)
-        | ((buf[2] & 0x03) << 14);
-    buf += 3;
-    remaining -= 3;
+    out = buf[0] | (static_cast<uint16_t>(buf[1]) << 8);
+    buf += 2;
+    remaining -= 2;
     return true;
 }
 
 
 /**
- * Decode uint32 (5 bytes → 4 bytes)
+ * Decode uint32 (4 bytes, little-endian)
  * 32-bit unsigned integer (0-4294967295)
  */
 static inline bool decodeUint32(
     const uint8_t*& buf, size_t& remaining, uint32_t& out) {
 
-    if (remaining < 5) return false;
+    if (remaining < 4) return false;
 
-    out = (buf[0] & 0x7F)
-        | ((buf[1] & 0x7F) << 7)
-        | ((buf[2] & 0x7F) << 14)
-        | ((buf[3] & 0x7F) << 21)
-        | ((buf[4] & 0x0F) << 28);
-    buf += 5;
-    remaining -= 5;
+    out = buf[0]
+        | (static_cast<uint32_t>(buf[1]) << 8)
+        | (static_cast<uint32_t>(buf[2]) << 16)
+        | (static_cast<uint32_t>(buf[3]) << 24);
+    buf += 4;
+    remaining -= 4;
     return true;
 }
 
 
 /**
- * Decode uint8 (1 byte)
+ * Decode uint8 (1 byte, direct)
  * 8-bit unsigned integer (0-255)
  */
 static inline bool decodeUint8(
@@ -242,7 +228,7 @@ static inline bool decodeUint8(
 
     if (remaining < 1) return false;
 
-    out = (*buf++) & 0x7F;
+    out = *buf++;
     remaining -= 1;
     return true;
 }

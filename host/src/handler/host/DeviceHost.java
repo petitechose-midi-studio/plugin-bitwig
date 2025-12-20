@@ -47,7 +47,7 @@ public class DeviceHost {
     private boolean controllerSelectorActive = false;
 
     // Modulated values - simple batch at fixed rate
-    private static final int MODULATED_BATCH_INTERVAL_MS = 30;  // ~30Hz batch rate
+    private static final int MODULATED_BATCH_INTERVAL_MS = 2; // ~60Hz batch rate
     private final float[] modulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] parameterValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] lastSentModulatedValues = new float[BitwigConfig.MAX_PARAMETERS];

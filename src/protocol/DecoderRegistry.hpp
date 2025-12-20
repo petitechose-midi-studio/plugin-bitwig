@@ -168,16 +168,6 @@ public:
                 }
             }
             break;
-        case MessageID::DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE:
-            if (callbacks.onDeviceRemoteControlModulatedValueChange) {
-                auto decoded = DeviceRemoteControlModulatedValueChangeMessage::decode(payload, payloadLen);
-                if (decoded.has_value()) {
-                    auto& msg = decoded.value();  // Reference to avoid copy
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceRemoteControlModulatedValueChange(msg);
-                }
-            }
-            break;
         case MessageID::DEVICE_REMOTE_CONTROL_NAME_CHANGE:
             if (callbacks.onDeviceRemoteControlNameChange) {
                 auto decoded = DeviceRemoteControlNameChangeMessage::decode(payload, payloadLen);

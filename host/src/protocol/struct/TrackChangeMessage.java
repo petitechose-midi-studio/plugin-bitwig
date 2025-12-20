@@ -14,7 +14,7 @@ import protocol.ProtocolConstants;
  * Description: TRACK_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class TrackChangeMessage {
 
@@ -210,9 +210,9 @@ public final class TrackChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 121;
+    public static final int MAX_PAYLOAD_SIZE = 118;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -273,7 +273,7 @@ public final class TrackChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 25;
+    private static final int MIN_PAYLOAD_SIZE = 22;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -292,7 +292,7 @@ public final class TrackChangeMessage {
         String trackName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + trackName.length();
         long color = Decoder.decodeUint32(data, offset);
-        offset += 5;
+        offset += 4;
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         int trackType = Decoder.decodeUint8(data, offset);
@@ -308,11 +308,11 @@ public final class TrackChangeMessage {
         boolean isArm = Decoder.decodeBool(data, offset);
         offset += 1;
         float volume = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         String volumeDisplay = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + volumeDisplay.length();
         float pan = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         String panDisplay = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + panDisplay.length();
 

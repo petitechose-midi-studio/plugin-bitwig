@@ -14,7 +14,7 @@ import protocol.ProtocolConstants;
  * Description: DEVICE_REMOTE_CONTROL_UPDATE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceRemoteControlUpdateMessage {
 
@@ -186,9 +186,9 @@ public final class DeviceRemoteControlUpdateMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 89;
+    public static final int MAX_PAYLOAD_SIZE = 85;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -243,7 +243,7 @@ public final class DeviceRemoteControlUpdateMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 25;
+    private static final int MIN_PAYLOAD_SIZE = 21;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -264,23 +264,23 @@ public final class DeviceRemoteControlUpdateMessage {
         String parameterName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + parameterName.length();
         float parameterValue = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         String displayValue = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + displayValue.length();
         float parameterOrigin = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         boolean parameterExists = Decoder.decodeBool(data, offset);
         offset += 1;
         int parameterType = Decoder.decodeUint8(data, offset);
         offset += 1;
         short discreteValueCount = Decoder.decodeInt16(data, offset);
-        offset += 3;
+        offset += 2;
         int currentValueIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         boolean hasAutomation = Decoder.decodeBool(data, offset);
         offset += 1;
         float modulatedValue = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
 
         return new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue);
     }

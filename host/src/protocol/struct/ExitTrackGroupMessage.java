@@ -11,7 +11,7 @@ import protocol.MessageID;
  * Description: EXIT_TRACK_GROUP message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class ExitTrackGroupMessage {
 
@@ -51,7 +51,7 @@ public final class ExitTrackGroupMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
     public static final int MAX_PAYLOAD_SIZE = 0;
 

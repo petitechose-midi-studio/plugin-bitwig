@@ -14,7 +14,7 @@ import protocol.ProtocolConstants;
  * Description: DEVICE_REMOTE_CONTROL_VALUE_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceRemoteControlValueChangeMessage {
 
@@ -102,9 +102,9 @@ public final class DeviceRemoteControlValueChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 40;
+    public static final int MAX_PAYLOAD_SIZE = 39;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -138,7 +138,7 @@ public final class DeviceRemoteControlValueChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 8;
+    private static final int MIN_PAYLOAD_SIZE = 7;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -157,7 +157,7 @@ public final class DeviceRemoteControlValueChangeMessage {
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         float parameterValue = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         String displayValue = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + displayValue.length();
         boolean isEcho = Decoder.decodeBool(data, offset);

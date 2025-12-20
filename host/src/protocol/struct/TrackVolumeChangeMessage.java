@@ -14,7 +14,7 @@ import protocol.ProtocolConstants;
  * Description: TRACK_VOLUME_CHANGE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class TrackVolumeChangeMessage {
 
@@ -102,9 +102,9 @@ public final class TrackVolumeChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 40;
+    public static final int MAX_PAYLOAD_SIZE = 39;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -138,7 +138,7 @@ public final class TrackVolumeChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 8;
+    private static final int MIN_PAYLOAD_SIZE = 7;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -157,7 +157,7 @@ public final class TrackVolumeChangeMessage {
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         float volume = Decoder.decodeFloat32(data, offset);
-        offset += 5;
+        offset += 4;
         String volumeDisplay = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + volumeDisplay.length();
         boolean isEcho = Decoder.decodeBool(data, offset);

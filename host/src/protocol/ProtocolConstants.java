@@ -1,13 +1,15 @@
 package protocol;
 
 /**
- * ProtocolConstants - Protocol Configuration Constants
+ * ProtocolConstants - Protocol Configuration Constants (Serial8)
  *
  * AUTO-GENERATED - DO NOT EDIT
- * Generated from: protocol_config.yaml
+ * Generated from: Serial8Config
  *
- * This class contains all protocol constants including SysEx framing,
- * message structure offsets, and encoding limits.
+ * This class contains all protocol constants including message structure
+ * offsets and encoding limits for 8-bit binary protocol.
+ *
+ * Note: Framing (COBS) is handled by the bridge layer, not the codec.
  *
  * All constants are public static final (compile-time constants).
  */
@@ -19,41 +21,29 @@ public final class ProtocolConstants {
     }
 
     // ============================================================================
-    // SYSEX FRAMING CONSTANTS
+    // MESSAGE STRUCTURE CONSTANTS
     // ============================================================================
 
-    /** SysEx start byte */
-    public static final byte SYSEX_START = (byte) 0xf0;
+    /** Position of MessageID byte in message */
+    public static final int MESSAGE_TYPE_OFFSET = 0;
 
-    /** SysEx end byte */
-    public static final byte SYSEX_END = (byte) 0xf7;
+    /** Position of fromHost flag in message */
+    public static final int FROM_HOST_OFFSET = 1;
 
-    /** MIDI manufacturer ID */
-    public static final byte MANUFACTURER_ID = 0x7f;
+    /** Start of payload data in message */
+    public static final int PAYLOAD_OFFSET = 2;
 
-    /** Device identifier */
-    public static final byte DEVICE_ID = 0x01;
-
-    /** Minimum valid SysEx message length */
-    public static final int MIN_MESSAGE_LENGTH = 6;
-
-    /** Position of MessageID byte in SysEx message */
-    public static final int MESSAGE_TYPE_OFFSET = 3;
-
-    /** Position of fromHost flag in SysEx message */
-    public static final int FROM_HOST_OFFSET = 4;
-
-    /** Start of payload data in SysEx message */
-    public static final int PAYLOAD_OFFSET = 5;
+    /** Minimum valid message length */
+    public static final int MIN_MESSAGE_LENGTH = 2;
 
     // ============================================================================
     // ENCODING LIMITS
     // ============================================================================
 
-    /** Maximum characters per string field (7-bit encoding) */
+    /** Maximum characters per string field (8-bit length) */
     public static final int STRING_MAX_LENGTH = 32;
 
-    /** Maximum items per array field (7-bit count) */
+    /** Maximum items per array field (8-bit count) */
     public static final int ARRAY_MAX_ITEMS = 32;
 
     /** Maximum payload bytes */

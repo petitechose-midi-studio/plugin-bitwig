@@ -76,6 +76,7 @@ static void initMux() {
 static void initApp() {
     app = oc::teensy::AppBuilder()
               .midi()
+              .serial()
               .encoders(Hardware::Encoder::ENCODERS)
               .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
               .inputConfig(Config::Input::CONFIG);
@@ -89,17 +90,16 @@ static void initApp() {
 // =============================================================================
 
 void setup() {
-    // Initialize logging first (waits for Serial + configures output)
-    oc::teensy::initLogging();
+    // NOTE: Logging disabled - Serial is used for Serial8 protocol
+    // To debug, use LogMessage via protocol instead
+    // oc::teensy::initLogging();
 
-    OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
+    // OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
 
     initDisplay();
     initLVGL();
     initMux();
     initApp();
-
-    OC_LOG_INFO("System ready");
 }
 
 // Timing constants for main loop
@@ -118,13 +118,10 @@ void loop() {
 
     loopCount++;
 
-    // Initialize on first loop
+    // Initialize on first loop (RAM monitoring disabled with logging)
     if (initialFreeRAM == 0) {
         initialFreeRAM = getFreeRAM();
-        OC_LOG_INFO("[Loop] Initial free RAM: {} bytes", initialFreeRAM);
     }
-
-    // Heartbeat every 5 seconds
 
     // Poll hardware and update active context
     app->update();

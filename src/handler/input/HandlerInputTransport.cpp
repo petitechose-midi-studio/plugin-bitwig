@@ -1,7 +1,7 @@
 #include "HandlerInputTransport.hpp"
 
 #include "config/App.hpp"
-#include "protocol/struct/TransportTempoMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {
 
@@ -43,19 +43,19 @@ void HandlerInputTransport::setupBindings() {
 void HandlerInputTransport::togglePlay() {
     bool newState = !state_.transport.playing.get();
     state_.transport.playing.set(newState);
-    protocol_.togglePlay();
+    protocol_.send(Protocol::TransportPlayMessage{newState});
 }
 
 void HandlerInputTransport::stop() {
     state_.transport.playing.set(false);
     state_.transport.recording.set(false);
-    protocol_.stop();
+    protocol_.send(Protocol::TransportStopMessage{});
 }
 
 void HandlerInputTransport::toggleRecord() {
     bool newState = !state_.transport.recording.get();
     state_.transport.recording.set(newState);
-    protocol_.toggleRecord();
+    protocol_.send(Protocol::TransportRecordMessage{newState});
 }
 
 void HandlerInputTransport::adjustTempo(float delta) {

@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Description: TRACK_LIST_WINDOW message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class TrackListWindowMessage {
 
@@ -210,9 +210,9 @@ public final class TrackListWindowMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 934;
+    public static final int MAX_PAYLOAD_SIZE = 886;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -292,7 +292,7 @@ public final class TrackListWindowMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 390;
+    private static final int MIN_PAYLOAD_SIZE = 342;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -328,7 +328,7 @@ public final class TrackListWindowMessage {
     String item_trackName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_trackName.length();
     long item_color = Decoder.decodeUint32(data, offset);
-            offset += 5;
+            offset += 4;
     boolean item_isActivated = Decoder.decodeBool(data, offset);
             offset += 1;
     boolean item_isMute = Decoder.decodeBool(data, offset);
@@ -344,9 +344,9 @@ public final class TrackListWindowMessage {
     int item_trackType = Decoder.decodeUint8(data, offset);
             offset += 1;
     float item_volume = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
     float item_pan = Decoder.decodeFloat32(data, offset);
-            offset += 5;
+            offset += 4;
             tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isMutedBySolo, item_isArm, item_isGroup, item_trackType, item_volume, item_pan));
         }
 

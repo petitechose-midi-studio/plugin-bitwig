@@ -7,7 +7,7 @@
  * Description: REQUEST_TRACK_LIST_WINDOW message
  *
  * This struct uses encode/decode functions from Protocol namespace.
- * All encoding is 7-bit MIDI-safe. Performance is identical to inline
+ * All encoding is 8-bit binary (Serial8). Performance is identical to inline
  * code due to static inline + compiler optimization.
  */
 
@@ -35,7 +35,7 @@ struct RequestTrackListWindowMessage {
     bool fromHost = false;
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
     static constexpr uint16_t MAX_PAYLOAD_SIZE = 1;
 

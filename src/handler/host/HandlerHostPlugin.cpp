@@ -2,8 +2,7 @@
 
 #include <oc/log/Log.hpp>
 
-#include "protocol/struct/HostDeactivatedMessage.hpp"
-#include "protocol/struct/HostInitializedMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {
 
@@ -12,7 +11,7 @@ using namespace Protocol;
 HandlerHostPlugin::HandlerHostPlugin(state::BitwigState& state, BitwigProtocol& protocol)
     : state_(state), protocol_(protocol) {
     setupProtocolCallbacks();
-    protocol_.requestHostStatus();
+    protocol_.send(RequestHostStatusMessage{});
 }
 
 void HandlerHostPlugin::setupProtocolCallbacks() {
@@ -40,9 +39,9 @@ void HandlerHostPlugin::setupProtocolCallbacks() {
             state_.trackSelector.loadedUpTo.set(0);
 
             // Request initial windows (uses windowed loading internally)
-            protocol_.requestDeviceList();
-            protocol_.requestPageNames();
-            protocol_.requestTrackList();
+            protocol_.send(RequestDeviceListWindowMessage{0});
+            protocol_.send(RequestDevicePageNamesWindowMessage{0});
+            protocol_.send(RequestTrackListWindowMessage{0});
         }
     };
 

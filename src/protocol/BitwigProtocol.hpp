@@ -2,17 +2,16 @@
 
 /**
  * @file BitwigProtocol.hpp
- * @brief Bitwig protocol wrapper for open-control framework
+ * @brief Bitwig protocol wrapper for open-control framework (Serial8)
  *
- * Adapts the Protocol class to use the framework's MidiAPI and EventBus.
- * Subscribes to SysExEvent from the EventBus (set up by OpenControlApp)
- * to avoid callback conflicts.
+ * Uses ISerialTransport for USB Serial communication with COBS framing.
+ * The transport layer handles COBS encoding/decoding internally.
  *
  * ## Usage
  *
  * ```cpp
  * // In BitwigContext
- * BitwigProtocol protocol(midi(), events());
+ * BitwigProtocol protocol(serial());
  *
  * // Send messages
  * protocol.send(TransportPlayMessage{true});
@@ -26,10 +25,9 @@
  */
 
 #include <cstdint>
+#include <cstring>
 
-#include <oc/api/MidiAPI.hpp>
-#include <oc/core/event/Events.hpp>
-#include <oc/core/event/IEventBus.hpp>
+#include <oc/hal/ISerialTransport.hpp>
 #include <oc/log/Log.hpp>
 
 #include "DecoderRegistry.hpp"
@@ -40,39 +38,28 @@
 namespace bitwig {
 
 /**
- * @brief Bitwig SysEx protocol handler using open-control framework
+ * @brief Bitwig Serial8 protocol handler using open-control framework
  *
  * Inherits from ProtocolCallbacks for message callbacks.
- * Subscribes to EventBus for incoming SysEx (avoids callback conflicts).
- * Uses MidiAPI for outgoing SysEx.
+ * Uses ISerialTransport for COBS-framed serial communication.
  */
 class BitwigProtocol : public Protocol::ProtocolCallbacks {
 public:
     /**
-     * @brief Construct protocol with MidiAPI and EventBus
+     * @brief Construct protocol with ISerialTransport
      *
-     * Subscribes to SysExEvent from EventBus for incoming messages.
-     * Uses MidiAPI only for sending outgoing messages.
+     * Registers receive callback with transport for automatic dispatch.
      *
-     * @param midi Reference to MidiAPI (for sending)
-     * @param events Reference to EventBus (for receiving SysEx events)
+     * @param transport Reference to ISerialTransport (must outlive Protocol)
      */
-    BitwigProtocol(oc::api::MidiAPI& midi, oc::core::event::IEventBus& events)
-        : midi_(midi), events_(events) {
-        using namespace oc::core::event;
-        subscriptionId_ = events_.on(
-            EventCategory::MIDI,
-            MidiEvent::SYSEX,
-            [this](const Event& evt) {
-                const auto& sysex = static_cast<const SysExEvent&>(evt);
-                dispatch(sysex.data, sysex.length);
-            });
+    explicit BitwigProtocol(oc::hal::ISerialTransport& transport)
+        : transport_(transport) {
+        transport_.setOnReceive([this](const uint8_t* data, size_t len) {
+            dispatch(data, len);
+        });
     }
 
-    ~BitwigProtocol() {
-        // Unsubscribe from EventBus
-        events_.off(subscriptionId_);
-    }
+    ~BitwigProtocol() = default;
 
     // Non-copyable, non-movable
     BitwigProtocol(const BitwigProtocol&) = delete;
@@ -96,146 +83,53 @@ public:
     template <typename T>
     void send(const T& message) {
         using Protocol::MAX_MESSAGE_SIZE;
-        using Protocol::MANUFACTURER_ID;
-        using Protocol::DEVICE_ID;
-        using Protocol::SYSEX_START;
-        using Protocol::SYSEX_END;
 
         constexpr Protocol::MessageID messageId = T::MESSAGE_ID;
 
+        // Encode payload
         uint8_t payload[T::MAX_PAYLOAD_SIZE];
         uint16_t payloadLen = message.encode(payload, sizeof(payload));
 
-        uint8_t sysex[MAX_MESSAGE_SIZE];
-
+        // Build frame: [MessageID][fromHost][payload...]
+        uint8_t frame[MAX_MESSAGE_SIZE];
         uint16_t offset = 0;
-        sysex[offset++] = SYSEX_START;
-        sysex[offset++] = MANUFACTURER_ID;
-        sysex[offset++] = DEVICE_ID;
-        sysex[offset++] = static_cast<uint8_t>(messageId);
-        sysex[offset++] = 0;  // fromHost flag (C++ = controller = 0)
 
-        for (uint16_t i = 0; i < payloadLen; ++i) {
-            sysex[offset++] = payload[i];
-        }
+        frame[offset++] = static_cast<uint8_t>(messageId);
+        frame[offset++] = 0;  // fromHost = false (we are the controller)
 
-        sysex[offset++] = SYSEX_END;
+        std::memcpy(frame + offset, payload, payloadLen);
+        offset += payloadLen;
 
-        midi_.sendSysEx(sysex, offset);
+        // Send via transport (COBS framing handled by transport)
+        transport_.send(frame, offset);
     }
 
-    /**
-     * @brief Request host connection status
-     *
-     * Sends RequestHostStatusMessage. If Bitwig is running,
-     * it will respond with HostInitializedMessage.
-     */
-    void requestHostStatus();
-
-    /**
-     * @brief Request device list for current track
-     */
-    void requestDeviceList();
-
-    /**
-     * @brief Request page names for current device
-     */
-    void requestPageNames();
-
-    /**
-     * @brief Request track list
-     */
-    void requestTrackList();
-
-    /**
-     * @brief Select device by index
-     * @param index Device index in chain (0-based)
-     */
-    void selectDevice(uint8_t index);
-
-    /**
-     * @brief Select page by index
-     * @param index Page index (0-based)
-     */
-    void selectPage(uint8_t index);
-
-    /**
-     * @brief Select track by index
-     * @param index Track index (0-based)
-     */
-    void selectTrack(uint8_t index);
-
-    /**
-     * @brief Send parameter value change
-     * @param paramIndex Parameter index (0-7)
-     * @param value Normalized value [0.0, 1.0]
-     */
-    void sendParameterValue(uint8_t paramIndex, float value);
-
-    /**
-     * @brief Send parameter touch state
-     * @param paramIndex Parameter index (0-7)
-     * @param touched true when encoder touched, false when released
-     */
-    void sendParameterTouch(uint8_t paramIndex, bool touched);
-
-    /**
-     * @brief Toggle transport play/pause
-     */
-    void togglePlay();
-
-    /**
-     * @brief Toggle transport record
-     */
-    void toggleRecord();
-
-    /**
-     * @brief Stop transport
-     */
-    void stop();
-
 private:
-    oc::api::MidiAPI& midi_;
-    oc::core::event::IEventBus& events_;
-    oc::core::event::SubscriptionID subscriptionId_{0};
+    oc::hal::ISerialTransport& transport_;
 
     /**
-     * @brief Dispatch incoming SysEx to callbacks
+     * @brief Dispatch incoming frame to callbacks
      *
-     * Called automatically by SysEx receive callback.
+     * Called automatically by transport when a complete frame arrives.
      */
-    void dispatch(const uint8_t* sysex, uint16_t length) {
+    void dispatch(const uint8_t* data, size_t len) {
         using Protocol::MIN_MESSAGE_LENGTH;
-        using Protocol::MANUFACTURER_ID;
-        using Protocol::DEVICE_ID;
-        using Protocol::SYSEX_START;
-        using Protocol::SYSEX_END;
         using Protocol::MESSAGE_TYPE_OFFSET;
         using Protocol::FROM_HOST_OFFSET;
         using Protocol::PAYLOAD_OFFSET;
         using Protocol::MessageID;
         using Protocol::DecoderRegistry;
 
-        if (sysex == nullptr || length < MIN_MESSAGE_LENGTH) {
-            OC_LOG_WARN("[Protocol] dispatch: invalid sysex (null or too short: {})", length);
+        if (data == nullptr || len < MIN_MESSAGE_LENGTH) {
+            OC_LOG_WARN("[Protocol] dispatch: invalid frame (null or too short: {})", len);
             return;
         }
 
-        if (sysex[0] != SYSEX_START || sysex[length - 1] != SYSEX_END) {
-            OC_LOG_WARN("[Protocol] dispatch: invalid sysex framing");
-            return;
-        }
+        MessageID messageId = static_cast<MessageID>(data[MESSAGE_TYPE_OFFSET]);
+        bool fromHost = (data[FROM_HOST_OFFSET] != 0);
 
-        if (sysex[1] != MANUFACTURER_ID || sysex[2] != DEVICE_ID) {
-            OC_LOG_WARN("[Protocol] dispatch: wrong manufacturer/device ID");
-            return;
-        }
-
-        MessageID messageId = static_cast<MessageID>(sysex[MESSAGE_TYPE_OFFSET]);
-        bool fromHost = (sysex[FROM_HOST_OFFSET] != 0);
-
-        uint16_t payloadLen = length - MIN_MESSAGE_LENGTH;
-        const uint8_t* payload = sysex + PAYLOAD_OFFSET;
+        uint16_t payloadLen = len - PAYLOAD_OFFSET;
+        const uint8_t* payload = data + PAYLOAD_OFFSET;
 
         DecoderRegistry::dispatch(*this, messageId, payload, payloadLen, fromHost);
     }

@@ -13,7 +13,7 @@ import protocol.Decoder;
  * Description: DEVICE_REMOTE_CONTROL_TOUCH message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 7-bit MIDI-safe.
+ * All encoding is 8-bit binary (Serial8).
  */
 public final class DeviceRemoteControlTouchMessage {
 
@@ -77,7 +77,7 @@ public final class DeviceRemoteControlTouchMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (7-bit encoded)
+     * Maximum payload size in bytes (8-bit encoded)
      */
     public static final int MAX_PAYLOAD_SIZE = 2;
 

@@ -43,10 +43,7 @@ public class MidiStudioExtension extends ControllerExtension {
       TrackBank trackBank = host.createTrackBank(BitwigConfig.MAX_BANK_SIZE, 8, 0, false);  // 8 sends for MixView
       TrackBank effectTrackBank = host.createEffectTrackBank(8, 0); // For send destination names
 
-      protocol = new Protocol(
-            host,
-            host.getMidiOutPort(0),
-            host.getMidiInPort(0));
+      protocol = new Protocol(host);  // Connects to oc-bridge on localhost:9000
 
       new TransportController(transport, protocol);
       DeviceController deviceController = new DeviceController(host, cursorDevice, remoteControls, protocol, deviceBank,

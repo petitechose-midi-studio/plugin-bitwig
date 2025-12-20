@@ -1,27 +1,26 @@
 package protocol;
 
 /**
- * Encoder - 7-bit MIDI-safe Encoder/Decoder
+ * Encoder - 8-bit Binary Encoder (Serial8 Protocol)
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: builtin_types.yaml
  *
- * This class provides static encode/decode methods for all builtin primitive
- * types. All multi-byte types use 7-bit encoding to ensure MIDI-safe
- * transmission (all bytes < 0x80).
+ * This class provides static encode methods for all builtin primitive
+ * types. Uses full 8-bit byte range for efficient encoding.
  *
  * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
  *
  * Encoding Strategy:
- * - Single-byte types (uint8, int8): No encoding (already < 0x80 when valid)
- * - Multi-byte integers: 7-bit per byte (e.g., uint16: 2→3 bytes)
- * - Float32: 4→5 bytes (7-bit chunks)
- * - String: length prefix (7-bit) + ASCII data
+ * - Direct byte writes (no 7-bit constraint)
+ * - Little-endian for multi-byte integers
+ * - IEEE 754 for floats
+ * - 8-bit length prefix for strings/arrays
  *
  * Performance:
  * - Static methods for zero overhead
  * - Direct byte array manipulation
- * - Optimized for protocol efficiency
+ * - More efficient than 7-bit encoding (no expansion)
  */
 public final class Encoder {
 
@@ -31,7 +30,7 @@ public final class Encoder {
     }
 
     // ============================================================================
-    // ENCODE METHODS (Type → 7-bit MIDI-safe bytes)
+    // ENCODE METHODS (Type -> 8-bit binary bytes)
     // ============================================================================
 
 
@@ -48,116 +47,101 @@ public final class Encoder {
 
 
     /**
-     * Encode float32 (4 bytes → 5 bytes, 7-bit encoding)
+     * Encode float32 (4 bytes, IEEE 754 little-endian)
      * 32-bit IEEE 754 floating point
-     * Overhead: +25% (4→5 bytes)
-     *
-     * Uses IEEE 754 bit representation, split into 7-bit chunks.
      *
      * @param value Value to encode
-     * @return Encoded byte array (5 bytes)
+     * @return Encoded byte array (4 bytes)
      */
     public static byte[] encodeFloat32(float value) {
         int bits = Float.floatToRawIntBits(value);
-        long unsignedBits = bits & 0xFFFFFFFFL;
-
         return new byte[]{
-            (byte) (unsignedBits & 0x7F),           // bits 0-6
-            (byte) ((unsignedBits >> 7) & 0x7F),    // bits 7-13
-            (byte) ((unsignedBits >> 14) & 0x7F),   // bits 14-20
-            (byte) ((unsignedBits >> 21) & 0x7F),   // bits 21-27
-            (byte) ((unsignedBits >> 28) & 0x0F)    // bits 28-31
+            (byte) (bits & 0xFF),
+            (byte) ((bits >> 8) & 0xFF),
+            (byte) ((bits >> 16) & 0xFF),
+            (byte) ((bits >> 24) & 0xFF)
         };
     }
 
 
     /**
-     * Encode int16 (2 bytes → 3 bytes, 7-bit encoding)
+     * Encode int16 (2 bytes, little-endian)
      * 16-bit signed integer (-32768 to 32767)
-     * Overhead: +50% (2→3 bytes)
      *
      * @param value Value to encode
-     * @return Encoded byte array (3 bytes)
+     * @return Encoded byte array (2 bytes)
      */
     public static byte[] encodeInt16(short value) {
         int bits = value & 0xFFFF;
         return new byte[]{
-            (byte) (bits & 0x7F),
-            (byte) ((bits >> 7) & 0x7F),
-            (byte) ((bits >> 14) & 0x03)
+            (byte) (bits & 0xFF),
+            (byte) ((bits >> 8) & 0xFF)
         };
     }
 
 
     /**
-     * Encode int32 (4 bytes → 5 bytes, 7-bit encoding)
+     * Encode int32 (4 bytes, little-endian)
      * 32-bit signed integer (-2147483648 to 2147483647)
-     * Overhead: +25% (4→5 bytes)
      *
      * @param value Value to encode
-     * @return Encoded byte array (5 bytes)
+     * @return Encoded byte array (4 bytes)
      */
     public static byte[] encodeInt32(int value) {
-        long bits = value & 0xFFFFFFFFL;
         return new byte[]{
-            (byte) (bits & 0x7F),
-            (byte) ((bits >> 7) & 0x7F),
-            (byte) ((bits >> 14) & 0x7F),
-            (byte) ((bits >> 21) & 0x7F),
-            (byte) ((bits >> 28) & 0x0F)
+            (byte) (value & 0xFF),
+            (byte) ((value >> 8) & 0xFF),
+            (byte) ((value >> 16) & 0xFF),
+            (byte) ((value >> 24) & 0xFF)
         };
     }
 
 
     /**
-     * Encode int8 (1 byte, signed → unsigned mapping)
+     * Encode int8 (1 byte, direct)
      * 8-bit signed integer (-128 to 127)
      *
      * @param value Value to encode
      * @return Encoded byte array (1 byte)
      */
     public static byte[] encodeInt8(byte value) {
-        return new byte[]{ (byte) (value & 0x7F) };
+        return new byte[]{ (byte) value };
     }
 
 
     /**
-     * Encode norm16 (2 bytes → 3 bytes, 7-bit encoding)
+     * Encode norm16 (2 bytes, little-endian)
      * Normalized float (0.0-1.0) stored as uint16 for efficiency
-     * Overhead: +50% (2→3 bytes) but 40% smaller than float32
      *
-     * Converts float 0.0-1.0 to uint16 0-65535 for efficient transmission.
-     * Precision: ~0.0000153 (1/65535)
+     * Converts float 0.0-1.0 to uint16 0-65535 for high precision.
+     * Precision: ~0.0015% (1/65535)
      *
      * @param value Float value to encode (clamped to 0.0-1.0)
-     * @return Encoded byte array (3 bytes)
+     * @return Encoded byte array (2 bytes)
      */
     public static byte[] encodeNorm16(float value) {
-        // Clamp to 0.0-1.0 and convert to uint16
         float clamped = Math.max(0.0f, Math.min(1.0f, value));
         int val = Math.round(clamped * 65535.0f) & 0xFFFF;
         return new byte[]{
-            (byte) (val & 0x7F),           // bits 0-6
-            (byte) ((val >> 7) & 0x7F),    // bits 7-13
-            (byte) ((val >> 14) & 0x03)    // bits 14-15 (only 2 bits needed)
+            (byte) (val & 0xFF),
+            (byte) ((val >> 8) & 0xFF)
         };
     }
 
 
     /**
-     * Encode norm8 (1 byte, 7-bit encoding)
+     * Encode norm8 (1 byte, full 8-bit range)
      * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
      *
-     * Converts float 0.0-1.0 to 7-bit value 0-127 for minimal bandwidth.
-     * Precision: ~0.8% (1/127), sufficient for visual display.
+     * Converts float 0.0-1.0 to 8-bit value 0-255 for optimal precision.
+     * Precision: ~0.4% (1/255), better than 7-bit norm8.
      *
      * @param value Float value to encode (clamped to 0.0-1.0)
      * @return Encoded byte array (1 byte)
      */
     public static byte[] encodeNorm8(float value) {
-        // Clamp to 0.0-1.0 and convert to 7-bit
         float clamped = Math.max(0.0f, Math.min(1.0f, value));
-        int val = Math.round(clamped * 127.0f) & 0x7F;
+        int val = Math.round(clamped * 255.0f) & 0xFF;
         return new byte[]{ (byte) val };
     }
 
@@ -166,26 +150,25 @@ public final class Encoder {
      * Encode string (variable length: 1 byte length + data)
      * Variable-length UTF-8 string (prefixed with uint8 length)
      *
-     * Format: [length (7-bit)] [char0] [char1] ... [charN-1]
-     * Max length: 127 chars (7-bit length encoding)
+     * Format: [length (8-bit)] [char0] [char1] ... [charN-1]
+     * Max length: 255 chars (8-bit length encoding)
      *
      * @param value String to encode
      * @param maxLength Maximum allowed string length
      * @return Encoded byte array (1 + string.length bytes)
-     * @throws IllegalArgumentException if string exceeds maxLength
      */
     public static byte[] encodeString(String value, int maxLength) {
         if (value == null) {
             value = "";
         }
 
-        int len = Math.min(value.length(), Math.min(maxLength, 127));
+        int len = Math.min(value.length(), Math.min(maxLength, 255));
         byte[] result = new byte[1 + len];
 
-        result[0] = (byte) (len & 0x7F);
+        result[0] = (byte) len;
 
         for (int i = 0; i < len; i++) {
-            result[1 + i] = (byte) (value.charAt(i) & 0x7F);  // ASCII chars < 0x80
+            result[1 + i] = (byte) value.charAt(i);
         }
 
         return result;
@@ -193,52 +176,48 @@ public final class Encoder {
 
 
     /**
-     * Encode uint16 (2 bytes → 3 bytes, 7-bit encoding)
+     * Encode uint16 (2 bytes, little-endian)
      * 16-bit unsigned integer (0-65535)
-     * Overhead: +50% (2→3 bytes)
      *
      * @param value Value to encode (treated as unsigned)
-     * @return Encoded byte array (3 bytes)
+     * @return Encoded byte array (2 bytes)
      */
     public static byte[] encodeUint16(int value) {
-        int val = value & 0xFFFF;  // Treat as unsigned
+        int val = value & 0xFFFF;
         return new byte[]{
-            (byte) (val & 0x7F),           // bits 0-6
-            (byte) ((val >> 7) & 0x7F),    // bits 7-13
-            (byte) ((val >> 14) & 0x03)    // bits 14-15 (only 2 bits needed)
+            (byte) (val & 0xFF),         // low byte
+            (byte) ((val >> 8) & 0xFF)   // high byte
         };
     }
 
 
     /**
-     * Encode uint32 (4 bytes → 5 bytes, 7-bit encoding)
+     * Encode uint32 (4 bytes, little-endian)
      * 32-bit unsigned integer (0-4294967295)
-     * Overhead: +25% (4→5 bytes)
      *
      * @param value Value to encode (treated as unsigned)
-     * @return Encoded byte array (5 bytes)
+     * @return Encoded byte array (4 bytes)
      */
     public static byte[] encodeUint32(long value) {
-        long val = value & 0xFFFFFFFFL;  // Treat as unsigned
+        long val = value & 0xFFFFFFFFL;
         return new byte[]{
-            (byte) (val & 0x7F),           // bits 0-6
-            (byte) ((val >> 7) & 0x7F),    // bits 7-13
-            (byte) ((val >> 14) & 0x7F),   // bits 14-20
-            (byte) ((val >> 21) & 0x7F),   // bits 21-27
-            (byte) ((val >> 28) & 0x0F)    // bits 28-31 (only 4 bits needed)
+            (byte) (val & 0xFF),
+            (byte) ((val >> 8) & 0xFF),
+            (byte) ((val >> 16) & 0xFF),
+            (byte) ((val >> 24) & 0xFF)
         };
     }
 
 
     /**
-     * Encode uint8 (1 byte, no transformation needed if < 0x80)
+     * Encode uint8 (1 byte, direct)
      * 8-bit unsigned integer (0-255)
      *
      * @param value Value to encode (treated as unsigned)
      * @return Encoded byte array (1 byte)
      */
     public static byte[] encodeUint8(int value) {
-        return new byte[]{ (byte) (value & 0x7F) };
+        return new byte[]{ (byte) (value & 0xFF) };
     }
 
 

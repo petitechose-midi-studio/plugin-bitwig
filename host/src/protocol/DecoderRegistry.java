@@ -120,13 +120,6 @@ public class DecoderRegistry {
                     callbacks.onDeviceRemoteControlIsModulatedChange.handle(msg);
                 }
                 break;
-            case DEVICE_REMOTE_CONTROL_MODULATED_VALUE_CHANGE:
-                if (callbacks.onDeviceRemoteControlModulatedValueChange != null) {
-                    DeviceRemoteControlModulatedValueChangeMessage msg = DeviceRemoteControlModulatedValueChangeMessage.decode(payload);
-                    msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceRemoteControlModulatedValueChange.handle(msg);
-                }
-                break;
             case DEVICE_REMOTE_CONTROL_NAME_CHANGE:
                 if (callbacks.onDeviceRemoteControlNameChange != null) {
                     DeviceRemoteControlNameChangeMessage msg = DeviceRemoteControlNameChangeMessage.decode(payload);

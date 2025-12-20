@@ -42,7 +42,6 @@ public class ProtocolCallbacks {
     public MessageHandler<DeviceRemoteControlDiscreteValuesMessage> onDeviceRemoteControlDiscreteValues;
     public MessageHandler<DeviceRemoteControlHasAutomationChangeMessage> onDeviceRemoteControlHasAutomationChange;
     public MessageHandler<DeviceRemoteControlIsModulatedChangeMessage> onDeviceRemoteControlIsModulatedChange;
-    public MessageHandler<DeviceRemoteControlModulatedValueChangeMessage> onDeviceRemoteControlModulatedValueChange;
     public MessageHandler<DeviceRemoteControlNameChangeMessage> onDeviceRemoteControlNameChange;
     public MessageHandler<DeviceRemoteControlOriginChangeMessage> onDeviceRemoteControlOriginChange;
     public MessageHandler<DeviceRemoteControlTouchMessage> onDeviceRemoteControlTouch;
