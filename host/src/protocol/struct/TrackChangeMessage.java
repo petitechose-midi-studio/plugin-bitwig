@@ -25,6 +25,9 @@ public final class TrackChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.TRACK_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "TrackChange";
+
 
     // ============================================================================
     // Fields
@@ -212,7 +215,7 @@ public final class TrackChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 118;
+    public static final int MAX_PAYLOAD_SIZE = 130;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -222,6 +225,12 @@ public final class TrackChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] trackName_encoded = Encoder.encodeString(trackName, ProtocolConstants.STRING_MAX_LENGTH);
         System.arraycopy(trackName_encoded, 0, buffer, offset, trackName_encoded.length);
@@ -273,7 +282,7 @@ public final class TrackChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 22;
+    private static final int MIN_PAYLOAD_SIZE = 34;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -288,6 +297,10 @@ public final class TrackChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         String trackName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + trackName.length();

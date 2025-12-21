@@ -27,6 +27,9 @@ public final class DevicePageChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.DEVICE_PAGE_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "DevicePageChange";
+
     // ============================================================================
     // Inner Class: PageInfo
     // ============================================================================
@@ -199,7 +202,7 @@ public final class DevicePageChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 9180;
+    public static final int MAX_PAYLOAD_SIZE = 9197;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -209,6 +212,12 @@ public final class DevicePageChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] pageInfo_devicePageIndex_encoded = Encoder.encodeUint8(pageInfo.getDevicePageIndex());
         System.arraycopy(pageInfo_devicePageIndex_encoded, 0, buffer, offset, pageInfo_devicePageIndex_encoded.length);
@@ -281,7 +290,7 @@ public final class DevicePageChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 188;
+    private static final int MIN_PAYLOAD_SIZE = 205;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -296,6 +305,10 @@ public final class DevicePageChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int pageInfo_devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;

@@ -19,6 +19,7 @@
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
 #include <cstdint>
+#include <cstring>
 #include <optional>
 
 namespace Protocol {
@@ -29,6 +30,9 @@ struct TransportArrangerAutomationWriteEnabledChangeMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    static constexpr const char* MESSAGE_NAME = "TransportArrangerAutomationWriteEnabledChange";
+
     bool isArrangerAutomationWriteEnabled;
 
     // Origin tracking (set by DecoderRegistry during decode)
@@ -37,12 +41,12 @@ struct TransportArrangerAutomationWriteEnabledChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 47;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 1;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 47;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -55,6 +59,12 @@ struct TransportArrangerAutomationWriteEnabledChangeMessage {
         if (bufferSize < MAX_PAYLOAD_SIZE) return 0;
 
         uint8_t* ptr = buffer;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
+            *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
+        }
 
         encodeBool(ptr, isArrangerAutomationWriteEnabled);
 
@@ -75,6 +85,13 @@ struct TransportArrangerAutomationWriteEnabledChangeMessage {
 
         const uint8_t* ptr = data;
         size_t remaining = len;
+
+        // Skip message name prefix (length + name bytes)
+        uint8_t nameLen;
+        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
+        if (remaining < nameLen) return std::nullopt;
+        ptr += nameLen;
+        remaining -= nameLen;
 
         // Decode fields
         bool isArrangerAutomationWriteEnabled;

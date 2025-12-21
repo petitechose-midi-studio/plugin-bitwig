@@ -132,11 +132,8 @@ void HandlerInputTrack::close() {
     // Hide track selector via OverlayManager (restores device selector from stack)
     state_.overlays.hide();
 
-    // Reset device cache and request fresh windowed device list for restored overlay
-    auto& ds = state_.deviceSelector;
-    ds.names.clear();
-    ds.totalCount.set(0);
-    ds.loadedUpTo.set(0);
+    // Request fresh device list - don't clear cache to avoid flash
+    // Old data remains visible until new data arrives
     protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
 }
 

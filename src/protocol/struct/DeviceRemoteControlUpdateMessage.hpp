@@ -19,6 +19,7 @@
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <string>
 
@@ -29,6 +30,9 @@ namespace Protocol {
 struct DeviceRemoteControlUpdateMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_REMOTE_CONTROL_UPDATE;
+
+    // Message name for logging (encoded in payload)
+    static constexpr const char* MESSAGE_NAME = "DeviceRemoteControlUpdate";
 
     uint8_t remoteControlIndex;
     std::string parameterName;
@@ -48,12 +52,12 @@ struct DeviceRemoteControlUpdateMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 85;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 111;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 21;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 47;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -66,6 +70,12 @@ struct DeviceRemoteControlUpdateMessage {
         if (bufferSize < MAX_PAYLOAD_SIZE) return 0;
 
         uint8_t* ptr = buffer;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
+            *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
+        }
 
         encodeUint8(ptr, remoteControlIndex);
         encodeString(ptr, parameterName);
@@ -96,6 +106,13 @@ struct DeviceRemoteControlUpdateMessage {
 
         const uint8_t* ptr = data;
         size_t remaining = len;
+
+        // Skip message name prefix (length + name bytes)
+        uint8_t nameLen;
+        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
+        if (remaining < nameLen) return std::nullopt;
+        ptr += nameLen;
+        remaining -= nameLen;
 
         // Decode fields
         uint8_t remoteControlIndex;
