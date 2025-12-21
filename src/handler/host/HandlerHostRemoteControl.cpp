@@ -1,11 +1,14 @@
 #include "HandlerHostRemoteControl.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 #include "handler/InputUtils.hpp"
 #include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlIsModulatedChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlOriginChangeMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlsModulatedValuesBatchMessage.hpp"
+#include "protocol/struct/DeviceRemoteControlsBatchMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlUpdateMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
 
@@ -100,13 +103,57 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
         state_.parameters.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
     };
 
-    // Batch modulated values - updates all 8 ribbon offsets at once
-    protocol_.onDeviceRemoteControlsModulatedValuesBatch =
-        [this](const DeviceRemoteControlsModulatedValuesBatchMessage& msg) {
-            for (size_t i = 0; i < msg.modulatedValues.size() && i < PARAMETER_COUNT; ++i) {
+    // Combined batch: values + modulated values in single synchronized update
+    protocol_.onDeviceRemoteControlsBatch =
+        [this](const DeviceRemoteControlsBatchMessage& msg) {
+            if (!msg.fromHost) return;
+
+            for (size_t i = 0; i < PARAMETER_COUNT; ++i) {
                 auto& slot = state_.parameters.slots[i];
+
+                // Update modulation offset (always, for ribbon display)
                 // Store offset so ribbon follows optimistic value updates
                 slot.modulationOffset.set(msg.modulatedValues[i] - slot.value.get());
+
+                // Update value only if dirty in this batch
+                if (msg.dirtyMask & (1 << i)) {
+                    bool isEcho = msg.echoMask & (1 << i);
+
+                    if (isEcho) {
+                        // Echo: skip value update for KNOB (optimistic already applied)
+                        if (slot.type.get() == ParameterType::KNOB) continue;
+                    }
+
+                    float value = msg.values[i];
+
+                    // Update value
+                    slot.value.set(value);
+
+                    // For LIST/BUTTON parameters: update currentValueIndex and displayValue
+                    auto paramType = slot.type.get();
+                    if (paramType == ParameterType::LIST || paramType == ParameterType::BUTTON) {
+                        int16_t count = slot.discreteCount.get();
+                        if (count > 1) {
+                            // Calculate index from normalized value
+                            int index = static_cast<int>(std::round(value * (count - 1)));
+                            index = std::clamp(index, 0, count - 1);
+                            slot.currentValueIndex.set(static_cast<uint8_t>(index));
+
+                            // Update displayValue from discreteValues if available
+                            if (static_cast<size_t>(index) < slot.discreteValues.size()) {
+                                slot.displayValue.set(slot.discreteValues[index].c_str());
+                            }
+                        }
+                    }
+
+                    // Update encoder position for non-echo
+                    if (!isEcho) {
+                        auto encoderId = getEncoderIdForParameter(i);
+                        if (encoderId != EncoderID{0}) {
+                            encoders_.setPosition(encoderId, value);
+                        }
+                    }
+                }
             }
         };
 

@@ -52,6 +52,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         state_.pageSelector.loadedUpTo.set(0);
 
         // Preload first window of page names for immediate availability
+        OC_LOG_INFO("[HandlerHostDevice] Sending RequestDevicePageNamesWindow(0)");
         protocol_.send(RequestDevicePageNamesWindowMessage{0});
     };
 
