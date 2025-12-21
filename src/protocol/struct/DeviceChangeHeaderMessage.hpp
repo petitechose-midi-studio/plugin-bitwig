@@ -57,12 +57,12 @@ struct DeviceChangeHeaderMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 93;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 94;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 29;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 26;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -88,6 +88,7 @@ struct DeviceChangeHeaderMessage {
         encodeUint8(ptr, pageInfo.devicePageIndex);
         encodeUint8(ptr, pageInfo.devicePageCount);
         encodeString(ptr, pageInfo.devicePageName);
+        encodeUint8(ptr, childrenTypes.size());
         for (const auto& item : childrenTypes) {
             encodeUint8(ptr, item);
         }
@@ -129,7 +130,9 @@ struct DeviceChangeHeaderMessage {
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
         if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
         std::array<uint8_t, 4> childrenTypes_data;
-        for (uint8_t i = 0; i < 4; ++i) {
+        uint8_t count_childrenTypes;
+        if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
+        for (uint8_t i = 0; i < count_childrenTypes && i < 4; ++i) {
             if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return std::nullopt;
         }
 

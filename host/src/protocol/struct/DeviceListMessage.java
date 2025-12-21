@@ -161,7 +161,7 @@ public final class DeviceListMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1328;
+    public static final int MAX_PAYLOAD_SIZE = 1360;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -228,7 +228,7 @@ public final class DeviceListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 272;
+    private static final int MIN_PAYLOAD_SIZE = 176;
 
     /**
      * Decode message from MIDI-safe bytes

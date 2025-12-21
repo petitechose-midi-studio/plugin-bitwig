@@ -59,7 +59,7 @@ struct DeviceListMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1328;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1360;
 
     /**
      * Minimum payload size in bytes (with empty strings)

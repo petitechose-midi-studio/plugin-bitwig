@@ -60,7 +60,7 @@ struct DeviceListWindowMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 695;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 711;
 
     /**
      * Minimum payload size in bytes (with empty strings)

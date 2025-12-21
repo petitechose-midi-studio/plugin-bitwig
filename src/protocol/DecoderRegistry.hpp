@@ -128,13 +128,13 @@ public:
                 }
             }
             break;
-        case MessageID::DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH:
-            if (callbacks.onDeviceRemoteControlsModulatedValuesBatch) {
-                auto decoded = DeviceRemoteControlsModulatedValuesBatchMessage::decode(payload, payloadLen);
+        case MessageID::DEVICE_REMOTE_CONTROLS_BATCH:
+            if (callbacks.onDeviceRemoteControlsBatch) {
+                auto decoded = DeviceRemoteControlsBatchMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceRemoteControlsModulatedValuesBatch(msg);
+                    callbacks.onDeviceRemoteControlsBatch(msg);
                 }
             }
             break;

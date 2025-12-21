@@ -92,11 +92,11 @@ public class DecoderRegistry {
                     callbacks.onDevicePageSelectByIndex.handle(msg);
                 }
                 break;
-            case DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH:
-                if (callbacks.onDeviceRemoteControlsModulatedValuesBatch != null) {
-                    DeviceRemoteControlsModulatedValuesBatchMessage msg = DeviceRemoteControlsModulatedValuesBatchMessage.decode(payload);
+            case DEVICE_REMOTE_CONTROLS_BATCH:
+                if (callbacks.onDeviceRemoteControlsBatch != null) {
+                    DeviceRemoteControlsBatchMessage msg = DeviceRemoteControlsBatchMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceRemoteControlsModulatedValuesBatch.handle(msg);
+                    callbacks.onDeviceRemoteControlsBatch.handle(msg);
                 }
                 break;
             case DEVICE_REMOTE_CONTROL_DISCRETE_VALUES:
