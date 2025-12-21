@@ -60,3 +60,19 @@ batch_sequence_number = PrimitiveField('sequenceNumber', type_name=Type.UINT8)
 # Total: 8 bytes instead of 40 bytes per batch (80% reduction)
 # Precision: ~0.8% (1/127), sufficient for visual display of modulation ribbon
 parameter_modulated_values_batch = PrimitiveField('modulatedValues', type_name=Type.NORM8, array=8)
+
+# ============================================================================
+# BATCHED PARAMETER VALUES FIELDS
+# ============================================================================
+# For efficient batch updates of all 8 remote control values (automation playback)
+
+# Dirty mask - which parameters changed in this batch (bit 0-7)
+values_dirty_mask = PrimitiveField('dirtyMask', type_name=Type.UINT8)
+
+# Echo mask - which parameters are echoes from controller changes (bit 0-7)
+values_echo_mask = PrimitiveField('echoMask', type_name=Type.UINT8)
+
+# Array of 8 parameter values (one per remote control slot)
+# Uses NORM8 (1 byte per value) for minimal bandwidth
+# Total: 8 bytes instead of 40 bytes per batch (80% reduction)
+parameter_values_batch = PrimitiveField('values', type_name=Type.NORM8, array=8)

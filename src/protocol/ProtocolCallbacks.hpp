@@ -37,7 +37,7 @@ public:
     std::function<void(const DevicePageNamesMessage&)> onDevicePageNames;
     std::function<void(const DevicePageNamesWindowMessage&)> onDevicePageNamesWindow;
     std::function<void(const DevicePageSelectByIndexMessage&)> onDevicePageSelectByIndex;
-    std::function<void(const DeviceRemoteControlsModulatedValuesBatchMessage&)> onDeviceRemoteControlsModulatedValuesBatch;
+    std::function<void(const DeviceRemoteControlsBatchMessage&)> onDeviceRemoteControlsBatch;
     std::function<void(const DeviceRemoteControlDiscreteValuesMessage&)> onDeviceRemoteControlDiscreteValues;
     std::function<void(const DeviceRemoteControlHasAutomationChangeMessage&)> onDeviceRemoteControlHasAutomationChange;
     std::function<void(const DeviceRemoteControlIsModulatedChangeMessage&)> onDeviceRemoteControlIsModulatedChange;

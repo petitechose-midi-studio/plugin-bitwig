@@ -45,12 +45,12 @@ struct DevicePageNamesMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1074;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1075;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 50;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 19;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -72,6 +72,7 @@ struct DevicePageNamesMessage {
 
         encodeUint8(ptr, devicePageCount);
         encodeUint8(ptr, devicePageIndex);
+        encodeUint8(ptr, pageNames.size());
         for (const auto& item : pageNames) {
             encodeString(ptr, item);
         }
@@ -107,7 +108,9 @@ struct DevicePageNamesMessage {
         uint8_t devicePageIndex;
         if (!decodeUint8(ptr, remaining, devicePageIndex)) return std::nullopt;
         std::array<std::string, 32> pageNames_data;
-        for (uint8_t i = 0; i < 32; ++i) {
+        uint8_t count_pageNames;
+        if (!decodeUint8(ptr, remaining, count_pageNames)) return std::nullopt;
+        for (uint8_t i = 0; i < count_pageNames && i < 32; ++i) {
             if (!decodeString(ptr, remaining, pageNames_data[i])) return std::nullopt;
         }
 

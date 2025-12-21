@@ -93,10 +93,13 @@ DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE = Message(
     fields=[remote_control_index, parameter_is_modulated]
 )
 
-DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH = Message(
-    description='Batch update of all 8 remote control modulated values (sent at fixed rate ~30Hz)',
+DEVICE_REMOTE_CONTROLS_BATCH = Message(
+    description='Combined batch update of all 8 remote control values and modulated values (sent at fixed rate ~50Hz)',
     fields=[
         batch_sequence_number,           # UINT8: Rolling sequence (0-255) for staleness detection
+        values_dirty_mask,               # UINT8: Which values changed (bit 0-7)
+        values_echo_mask,                # UINT8: Which are echoes from controller (bit 0-7)
+        parameter_values_batch,          # NORM8[8]: Parameter values for all 8 remote controls
         parameter_modulated_values_batch # NORM8[8]: Modulated values for all 8 remote controls
     ]
 )

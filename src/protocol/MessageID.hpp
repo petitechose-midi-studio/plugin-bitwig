@@ -37,7 +37,7 @@ enum class MessageID : uint8_t {
     DEVICE_PAGE_NAMES = 0x06,  // [DEPRECATED] List of all available page names
     DEVICE_PAGE_NAMES_WINDOW = 0x07,  // Windowed page names response (16 items max)
     DEVICE_PAGE_SELECT_BY_INDEX = 0x08,  // Select device page by index (modulo pageCount)
-    DEVICE_REMOTE_CONTROLS_MODULATED_VALUES_BATCH = 0x09,  // Batch update of all 8 remote control modulated values (sent at fixed rate ~30Hz)
+    DEVICE_REMOTE_CONTROLS_BATCH = 0x09,  // Combined batch update of all 8 remote control values and modulated values (sent at fixed rate ~50Hz)
     DEVICE_REMOTE_CONTROL_DISCRETE_VALUES = 0x0A,  // Full list of discrete values for List parameters (lazy-loaded on demand)
     DEVICE_REMOTE_CONTROL_HAS_AUTOMATION_CHANGE = 0x0B,  // hasAutomation() state changed for remote control
     DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE = 0x0C,  // isModulated state changed for remote control (modulation source added/removed)

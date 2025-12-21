@@ -97,7 +97,7 @@ public final class DevicePageNamesMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1074;
+    public static final int MAX_PAYLOAD_SIZE = 1075;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -120,6 +120,10 @@ public final class DevicePageNamesMessage {
         byte[] devicePageIndex_encoded = Encoder.encodeUint8(devicePageIndex);
         System.arraycopy(devicePageIndex_encoded, 0, buffer, offset, devicePageIndex_encoded.length);
         offset += devicePageIndex_encoded.length;
+        byte[] pageNames_count = Encoder.encodeUint8(pageNames.size());
+        System.arraycopy(pageNames_count, 0, buffer, offset, 1);
+        offset += 1;
+
         for (String item : pageNames) {
     byte[] item_encoded = Encoder.encodeString(item, ProtocolConstants.STRING_MAX_LENGTH);
             System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
@@ -137,7 +141,7 @@ public final class DevicePageNamesMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 50;
+    private static final int MIN_PAYLOAD_SIZE = 19;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -161,8 +165,11 @@ public final class DevicePageNamesMessage {
         offset += 1;
         int devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
+        int count_pageNames = Decoder.decodeUint8(data, offset);
+        offset += 1;
+
         List<String> pageNames_list = new ArrayList<>();
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < count_pageNames; i++) {
     String item_pageNames = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_pageNames.length();
             pageNames_list.add(item_pageNames);

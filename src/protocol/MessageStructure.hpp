@@ -25,7 +25,7 @@
 #include "struct/DevicePageNamesMessage.hpp"
 #include "struct/DevicePageNamesWindowMessage.hpp"
 #include "struct/DevicePageSelectByIndexMessage.hpp"
-#include "struct/DeviceRemoteControlsModulatedValuesBatchMessage.hpp"
+#include "struct/DeviceRemoteControlsBatchMessage.hpp"
 #include "struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
 #include "struct/DeviceRemoteControlHasAutomationChangeMessage.hpp"
 #include "struct/DeviceRemoteControlIsModulatedChangeMessage.hpp"

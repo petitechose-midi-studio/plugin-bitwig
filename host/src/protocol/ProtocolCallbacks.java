@@ -38,7 +38,7 @@ public class ProtocolCallbacks {
     public MessageHandler<DevicePageNamesMessage> onDevicePageNames;
     public MessageHandler<DevicePageNamesWindowMessage> onDevicePageNamesWindow;
     public MessageHandler<DevicePageSelectByIndexMessage> onDevicePageSelectByIndex;
-    public MessageHandler<DeviceRemoteControlsModulatedValuesBatchMessage> onDeviceRemoteControlsModulatedValuesBatch;
+    public MessageHandler<DeviceRemoteControlsBatchMessage> onDeviceRemoteControlsBatch;
     public MessageHandler<DeviceRemoteControlDiscreteValuesMessage> onDeviceRemoteControlDiscreteValues;
     public MessageHandler<DeviceRemoteControlHasAutomationChangeMessage> onDeviceRemoteControlHasAutomationChange;
     public MessageHandler<DeviceRemoteControlIsModulatedChangeMessage> onDeviceRemoteControlIsModulatedChange;
