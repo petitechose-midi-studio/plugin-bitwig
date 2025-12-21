@@ -61,6 +61,7 @@ void HandlerHostPage::setupProtocolCallbacks() {
 
     // NEW: Windowed page names (accumulates in cache)
     protocol_.onDevicePageNamesWindow = [this](const DevicePageNamesWindowMessage& msg) {
+        OC_LOG_INFO("[Page] Window fH={} c={}", msg.fromHost, msg.devicePageCount);
         if (!msg.fromHost) return;
 
         // Update total count

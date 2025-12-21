@@ -90,11 +90,10 @@ static void initApp() {
 // =============================================================================
 
 void setup() {
-    // NOTE: Logging disabled - Serial is used for Serial8 protocol
-    // To debug, use LogMessage via protocol instead
-    // oc::teensy::initLogging();
+    // NOTE: Logging enabled temporarily for debug - may interfere with protocol
+    oc::teensy::initLogging();
 
-    // OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
+    OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
 
     initDisplay();
     initLVGL();

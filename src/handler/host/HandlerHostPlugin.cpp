@@ -39,6 +39,7 @@ void HandlerHostPlugin::setupProtocolCallbacks() {
             state_.trackSelector.loadedUpTo.set(0);
 
             // Request initial windows (uses windowed loading internally)
+            OC_LOG_INFO("[HostPlugin] Requesting initial windows");
             protocol_.send(RequestDeviceListWindowMessage{0});
             protocol_.send(RequestDevicePageNamesWindowMessage{0});
             protocol_.send(RequestTrackListWindowMessage{0});

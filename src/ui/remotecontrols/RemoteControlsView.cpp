@@ -145,14 +145,13 @@ void RemoteControlsView::setupBindings() {
     }
 
     // =========================================================================
-    // Page Selector (coalesced)
+    // Page Selector (coalesced with group - same pattern as DeviceSelector)
     // =========================================================================
-    watcher_.watchAll(
-        [this]() { updatePageSelector(); },
-        state_.pageSelector.names,
-        state_.pageSelector.selectedIndex,
-        state_.pageSelector.visible
-    );
+    auto& pageSelectorGroup = watcher_.group([this]() { updatePageSelector(); });
+    pageSelectorGroup.watch(state_.pageSelector.names);
+    pageSelectorGroup.watch(state_.pageSelector.selectedIndex);
+    pageSelectorGroup.watch(state_.pageSelector.totalCount);
+    pageSelectorGroup.watch(state_.pageSelector.visible);
 
     // =========================================================================
     // Device Selector (coalesced with array signals)
@@ -313,9 +312,15 @@ void RemoteControlsView::updatePageSelector() {
         return;
     }
 
+    int totalCount = state_.pageSelector.totalCount.get();
+    size_t namesSize = state_.pageSelector.names.size();
+    OC_LOG_INFO("[PageSelector] tc={} ns={} sel={}",
+                totalCount, namesSize, state_.pageSelector.selectedIndex.get());
+
     page_selector_->render({
-        .names = state_.pageSelector.names,
+        .names = state_.pageSelector.names,  // SignalVector converts to std::vector
         .selectedIndex = state_.pageSelector.selectedIndex.get(),
+        .totalCount = totalCount,
         .visible = true
     });
 }
