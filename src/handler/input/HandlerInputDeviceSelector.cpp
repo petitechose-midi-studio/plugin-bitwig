@@ -267,9 +267,9 @@ void HandlerInputDeviceSelector::requestTrackList() {
     ts.totalCount.set(0);
     ts.loadedUpTo.set(0);
 
-    // Show track selector (pushes device selector to stack for restoration)
-    state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
-    // Request first window (windowed loading)
+    // Request first window - overlay will be shown when data arrives (prefetch pattern)
+    // This prevents flash between overlays by keeping device selector visible until
+    // track data is ready
     protocol_.send(Protocol::RequestTrackListWindowMessage{0});
 }
 

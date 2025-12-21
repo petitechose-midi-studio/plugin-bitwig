@@ -122,6 +122,12 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         if (startIdx == 0) {
             int displayIndex = msg.isNested ? msg.trackIndex + 1 : msg.trackIndex;
             state_.trackSelector.currentIndex.set(displayIndex);
+
+            // Prefetch pattern: show overlay only when first window data arrives
+            // This prevents flash between overlays (device stays visible until track data ready)
+            if (!state_.trackSelector.visible.get()) {
+                state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
+            }
         }
         state_.trackSelector.activeTrackIndex.set(msg.trackIndex);
 

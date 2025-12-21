@@ -20,6 +20,7 @@
 #include "../Logger.hpp"
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <string>
 
@@ -43,6 +44,9 @@ struct DeviceListMessage {
     // Auto-detected MessageID for protocol.send()
     static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_LIST;
 
+    // Message name for logging (encoded in payload)
+    static constexpr const char* MESSAGE_NAME = "DeviceList";
+
     uint8_t deviceCount;
     uint8_t deviceIndex;
     bool isNested;
@@ -55,12 +59,12 @@ struct DeviceListMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1317;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 1328;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 5;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 16;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -73,6 +77,12 @@ struct DeviceListMessage {
         if (bufferSize < MAX_PAYLOAD_SIZE) return 0;
 
         uint8_t* ptr = buffer;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
+            *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
+        }
 
         encodeUint8(ptr, deviceCount);
         encodeUint8(ptr, deviceIndex);
@@ -107,6 +117,13 @@ struct DeviceListMessage {
 
         const uint8_t* ptr = data;
         size_t remaining = len;
+
+        // Skip message name prefix (length + name bytes)
+        uint8_t nameLen;
+        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
+        if (remaining < nameLen) return std::nullopt;
+        ptr += nameLen;
+        remaining -= nameLen;
 
         // Decode fields
         uint8_t deviceCount;

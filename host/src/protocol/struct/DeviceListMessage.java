@@ -27,6 +27,9 @@ public final class DeviceListMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.DEVICE_LIST;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "DeviceList";
+
     // ============================================================================
     // Inner Class: Devices
     // ============================================================================
@@ -158,7 +161,7 @@ public final class DeviceListMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1317;
+    public static final int MAX_PAYLOAD_SIZE = 1328;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -168,6 +171,12 @@ public final class DeviceListMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] deviceCount_encoded = Encoder.encodeUint8(deviceCount);
         System.arraycopy(deviceCount_encoded, 0, buffer, offset, deviceCount_encoded.length);
@@ -219,7 +228,7 @@ public final class DeviceListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 261;
+    private static final int MIN_PAYLOAD_SIZE = 272;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -234,6 +243,10 @@ public final class DeviceListMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int deviceCount = Decoder.decodeUint8(data, offset);
         offset += 1;

@@ -27,6 +27,9 @@ public final class TrackListMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.TRACK_LIST;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "TrackList";
+
     // ============================================================================
     // Inner Class: Tracks
     // ============================================================================
@@ -200,7 +203,7 @@ public final class TrackListMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1733;
+    public static final int MAX_PAYLOAD_SIZE = 1743;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -210,6 +213,12 @@ public final class TrackListMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] trackCount_encoded = Encoder.encodeUint8(trackCount);
         System.arraycopy(trackCount_encoded, 0, buffer, offset, trackCount_encoded.length);
@@ -277,7 +286,7 @@ public final class TrackListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 677;
+    private static final int MIN_PAYLOAD_SIZE = 687;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -292,6 +301,10 @@ public final class TrackListMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int trackCount = Decoder.decodeUint8(data, offset);
         offset += 1;

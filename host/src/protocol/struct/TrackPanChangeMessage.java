@@ -25,6 +25,9 @@ public final class TrackPanChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.TRACK_PAN_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "TrackPanChange";
+
 
     // ============================================================================
     // Fields
@@ -104,7 +107,7 @@ public final class TrackPanChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 39;
+    public static final int MAX_PAYLOAD_SIZE = 54;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -114,6 +117,12 @@ public final class TrackPanChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
         System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
@@ -138,7 +147,7 @@ public final class TrackPanChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 7;
+    private static final int MIN_PAYLOAD_SIZE = 22;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -153,6 +162,10 @@ public final class TrackPanChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;

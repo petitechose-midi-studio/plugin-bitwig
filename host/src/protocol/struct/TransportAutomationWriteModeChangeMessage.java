@@ -24,6 +24,9 @@ public final class TransportAutomationWriteModeChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "TransportAutomationWriteModeChange";
+
 
     // ============================================================================
     // Fields
@@ -67,7 +70,7 @@ public final class TransportAutomationWriteModeChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 1;
+    public static final int MAX_PAYLOAD_SIZE = 36;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -77,6 +80,12 @@ public final class TransportAutomationWriteModeChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] automationWriteMode_encoded = Encoder.encodeUint8(automationWriteMode);
         System.arraycopy(automationWriteMode_encoded, 0, buffer, offset, automationWriteMode_encoded.length);
@@ -92,7 +101,7 @@ public final class TransportAutomationWriteModeChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 1;
+    private static final int MIN_PAYLOAD_SIZE = 36;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -107,6 +116,10 @@ public final class TransportAutomationWriteModeChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int automationWriteMode = Decoder.decodeUint8(data, offset);
         offset += 1;

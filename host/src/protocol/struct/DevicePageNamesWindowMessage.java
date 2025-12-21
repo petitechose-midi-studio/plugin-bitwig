@@ -27,6 +27,9 @@ public final class DevicePageNamesWindowMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.DEVICE_PAGE_NAMES_WINDOW;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "DevicePageNamesWindow";
+
 
     // ============================================================================
     // Fields
@@ -106,7 +109,7 @@ public final class DevicePageNamesWindowMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 531;
+    public static final int MAX_PAYLOAD_SIZE = 553;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -116,6 +119,12 @@ public final class DevicePageNamesWindowMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] devicePageCount_encoded = Encoder.encodeUint8(devicePageCount);
         System.arraycopy(devicePageCount_encoded, 0, buffer, offset, devicePageCount_encoded.length);
@@ -143,7 +152,7 @@ public final class DevicePageNamesWindowMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 19;
+    private static final int MIN_PAYLOAD_SIZE = 41;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -158,6 +167,10 @@ public final class DevicePageNamesWindowMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int devicePageCount = Decoder.decodeUint8(data, offset);
         offset += 1;

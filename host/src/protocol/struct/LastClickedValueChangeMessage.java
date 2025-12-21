@@ -25,6 +25,9 @@ public final class LastClickedValueChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.LAST_CLICKED_VALUE_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "LastClickedValueChange";
+
 
     // ============================================================================
     // Fields
@@ -92,7 +95,7 @@ public final class LastClickedValueChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 38;
+    public static final int MAX_PAYLOAD_SIZE = 61;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -102,6 +105,12 @@ public final class LastClickedValueChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] parameterValue_encoded = Encoder.encodeFloat32(parameterValue);
         System.arraycopy(parameterValue_encoded, 0, buffer, offset, parameterValue_encoded.length);
@@ -123,7 +132,7 @@ public final class LastClickedValueChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 6;
+    private static final int MIN_PAYLOAD_SIZE = 29;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -138,6 +147,10 @@ public final class LastClickedValueChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         float parameterValue = Decoder.decodeFloat32(data, offset);
         offset += 4;

@@ -25,6 +25,9 @@ public final class DeviceRemoteControlNameChangeMessage {
 
     public static final MessageID MESSAGE_ID = MessageID.DEVICE_REMOTE_CONTROL_NAME_CHANGE;
 
+    // Message name for logging (encoded in payload)
+    public static final String MESSAGE_NAME = "DeviceRemoteControlNameChange";
+
 
     // ============================================================================
     // Fields
@@ -80,7 +83,7 @@ public final class DeviceRemoteControlNameChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 34;
+    public static final int MAX_PAYLOAD_SIZE = 64;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -90,6 +93,12 @@ public final class DeviceRemoteControlNameChangeMessage {
     public byte[] encode() {
         byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
         int offset = 0;
+
+        // Encode message name (length-prefixed string for bridge logging)
+        buffer[offset++] = (byte) MESSAGE_NAME.length();
+        for (int i = 0; i < MESSAGE_NAME.length(); i++) {
+            buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
+        }
 
         byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
         System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
@@ -108,7 +117,7 @@ public final class DeviceRemoteControlNameChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 2;
+    private static final int MIN_PAYLOAD_SIZE = 32;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -123,6 +132,10 @@ public final class DeviceRemoteControlNameChangeMessage {
         }
 
         int offset = 0;
+
+        // Skip message name prefix (length + name bytes)
+        int nameLen = data[offset++] & 0xFF;
+        offset += nameLen;
 
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
