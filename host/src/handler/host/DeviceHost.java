@@ -46,14 +46,16 @@ public class DeviceHost {
     private int controllerViewType = 0;
     private boolean controllerSelectorActive = false;
 
-    // Modulated values - simple batch at fixed rate
-    private static final int MODULATED_BATCH_INTERVAL_MS = 2; // ~60Hz batch rate
+    // Combined batch for values + modulated values (single synchronized update)
+    private static final int BATCH_INTERVAL_MS = 2; // ~66Hz batch rate
     private final float[] modulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] parameterValues = new float[BitwigConfig.MAX_PARAMETERS];
-    private final float[] lastSentModulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
+    private final float[] pendingValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] previousIsModulated = new boolean[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] hasAutomationState = new boolean[BitwigConfig.MAX_PARAMETERS];
-    private boolean modulatedValuesDirty = false;
+    private int valuesDirtyMask = 0;  // Bit mask: which parameter values changed
+    private int valuesEchoMask = 0;   // Bit mask: which parameters are echoes
+    private boolean batchDirty = false; // True if any value or modulated value changed
 
     public DeviceHost(
         ControllerHost host,
@@ -86,8 +88,8 @@ public class DeviceHost {
         setupDeviceBankObservables();
         setupLayerAndDrumBanksObservables();
 
-        // Start batch timer for modulated values (~30Hz)
-        startModulatedValuesBatchTimer();
+        // Start combined batch timer
+        startBatchTimer();
     }
 
     /**
@@ -107,35 +109,43 @@ public class DeviceHost {
     }
 
     /**
-     * Start the modulated values batch timer.
-     * Sends all 8 modulated values in a single batch message at fixed rate.
+     * Start the combined batch timer.
+     * Sends values and modulated values in a single synchronized message.
      */
-    private void startModulatedValuesBatchTimer() {
-        host.scheduleTask(this::modulatedValuesBatchTick, MODULATED_BATCH_INTERVAL_MS);
+    private void startBatchTimer() {
+        host.scheduleTask(this::batchTick, BATCH_INTERVAL_MS);
     }
 
     /**
-     * Batch tick: send all modulated values if dirty and conditions allow.
+     * Combined batch tick: send all values and modulated values in one message.
+     * This ensures perfect synchronization between value and modulation display.
      */
-    private void modulatedValuesBatchTick() {
+    private void batchTick() {
         // Reschedule for next tick
-        host.scheduleTask(this::modulatedValuesBatchTick, MODULATED_BATCH_INTERVAL_MS);
+        host.scheduleTask(this::batchTick, BATCH_INTERVAL_MS);
 
         // Skip if not on RemoteControls view or selector is open
         if (controllerViewType != 0 || controllerSelectorActive) return;
         if (deviceChangePending || selectorRequestActive) return;
 
         // Only send if something changed
-        if (!modulatedValuesDirty) return;
-        modulatedValuesDirty = false;
+        if (!batchDirty) return;
+        batchDirty = false;
 
-        // Send batch message with all 8 modulated values
+        // Build combined batch with both values and modulated values
         List<Float> values = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+        List<Float> modulatedValuesList = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
-            values.add(modulatedValues[i]);
-            lastSentModulatedValues[i] = modulatedValues[i];
+            values.add(pendingValues[i]);
+            modulatedValuesList.add(modulatedValues[i]);
         }
-        protocol.send(new DeviceRemoteControlsModulatedValuesBatchMessage(0, values));
+
+        // Send single combined message
+        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, values, modulatedValuesList));
+
+        // Reset masks
+        valuesDirtyMask = 0;
+        valuesEchoMask = 0;
 
         // Check isModulated state for all parameters
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
@@ -239,14 +249,16 @@ public class DeviceHost {
             param.value().displayedValue().addValueObserver(displayValue -> {
                 if (deviceChangePending || selectorRequestActive)
                     return; // Skip during transitions or selector requests
-                double value = param.value().get();
-                parameterValues[paramIndex] = (float) value; // Track for isModulated detection
-                boolean isEcho = deviceController != null && deviceController.consumeEcho(paramIndex);
-                // Skip sending if echo - controller already has the value, avoid protocol
-                // saturation
-                if (!isEcho) {
-                    protocol.send(
-                            new DeviceRemoteControlValueChangeMessage(paramIndex, (float) value, displayValue, false));
+
+                float value = (float) param.value().get();
+                parameterValues[paramIndex] = value; // Track for isModulated detection
+                pendingValues[paramIndex] = value;   // Store for batch
+                valuesDirtyMask |= (1 << paramIndex); // Mark value as changed
+                batchDirty = true;  // Mark batch for sending
+
+                // Check if this is an echo from controller
+                if (deviceController != null && deviceController.consumeEcho(paramIndex)) {
+                    valuesEchoMask |= (1 << paramIndex);
                 }
             });
 
@@ -268,7 +280,7 @@ public class DeviceHost {
             param.modulatedValue().addValueObserver(modulatedValue -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain modulated values
                 modulatedValues[paramIndex] = (float) modulatedValue;
-                modulatedValuesDirty = true;  // Mark for next batch tick
+                batchDirty = true;  // Mark for next batch tick
             });
 
             // Origin observer - sends lightweight origin-only message
@@ -381,7 +393,7 @@ public class DeviceHost {
                 startIndex = 0;
             }
 
-            // Build window of up to 16 items
+            // Build window of up to 16 items (protocol encodes count prefix)
             final List<String> windowNames = new ArrayList<>();
             for (int i = 0; i < PAGE_WINDOW_SIZE && (startIndex + i) < totalCount; i++) {
                 int idx = startIndex + i;
@@ -698,7 +710,7 @@ public class DeviceHost {
             // Sync tracking arrays for throttled observers
             parameterValues[i] = data.value;
             modulatedValues[i] = data.modulatedValue;
-            lastSentModulatedValues[i] = data.modulatedValue;
+            pendingValues[i] = data.value;
             hasAutomationState[i] = data.hasAutomation;
             previousIsModulated[i] = data.isModulated;
 
