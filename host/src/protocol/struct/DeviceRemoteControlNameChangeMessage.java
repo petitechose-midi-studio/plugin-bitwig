@@ -100,12 +100,8 @@ public final class DeviceRemoteControlNameChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] parameterName_encoded = Encoder.encodeString(parameterName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
-        offset += parameterName_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeString(buffer, offset, parameterName, ProtocolConstants.STRING_MAX_LENGTH);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -232,45 +232,19 @@ public final class TrackChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackName_encoded = Encoder.encodeString(trackName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(trackName_encoded, 0, buffer, offset, trackName_encoded.length);
-        offset += trackName_encoded.length;
-        byte[] color_encoded = Encoder.encodeUint32(color);
-        System.arraycopy(color_encoded, 0, buffer, offset, color_encoded.length);
-        offset += color_encoded.length;
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] trackType_encoded = Encoder.encodeUint8(trackType);
-        System.arraycopy(trackType_encoded, 0, buffer, offset, trackType_encoded.length);
-        offset += trackType_encoded.length;
-        byte[] isActivated_encoded = Encoder.encodeBool(isActivated);
-        System.arraycopy(isActivated_encoded, 0, buffer, offset, isActivated_encoded.length);
-        offset += isActivated_encoded.length;
-        byte[] isMute_encoded = Encoder.encodeBool(isMute);
-        System.arraycopy(isMute_encoded, 0, buffer, offset, isMute_encoded.length);
-        offset += isMute_encoded.length;
-        byte[] isSolo_encoded = Encoder.encodeBool(isSolo);
-        System.arraycopy(isSolo_encoded, 0, buffer, offset, isSolo_encoded.length);
-        offset += isSolo_encoded.length;
-        byte[] isMutedBySolo_encoded = Encoder.encodeBool(isMutedBySolo);
-        System.arraycopy(isMutedBySolo_encoded, 0, buffer, offset, isMutedBySolo_encoded.length);
-        offset += isMutedBySolo_encoded.length;
-        byte[] isArm_encoded = Encoder.encodeBool(isArm);
-        System.arraycopy(isArm_encoded, 0, buffer, offset, isArm_encoded.length);
-        offset += isArm_encoded.length;
-        byte[] volume_encoded = Encoder.encodeFloat32(volume);
-        System.arraycopy(volume_encoded, 0, buffer, offset, volume_encoded.length);
-        offset += volume_encoded.length;
-        byte[] volumeDisplay_encoded = Encoder.encodeString(volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(volumeDisplay_encoded, 0, buffer, offset, volumeDisplay_encoded.length);
-        offset += volumeDisplay_encoded.length;
-        byte[] pan_encoded = Encoder.encodeFloat32(pan);
-        System.arraycopy(pan_encoded, 0, buffer, offset, pan_encoded.length);
-        offset += pan_encoded.length;
-        byte[] panDisplay_encoded = Encoder.encodeString(panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(panDisplay_encoded, 0, buffer, offset, panDisplay_encoded.length);
-        offset += panDisplay_encoded.length;
+        offset += Encoder.writeString(buffer, offset, trackName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeUint32(buffer, offset, color);
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeUint8(buffer, offset, trackType);
+        offset += Encoder.writeBool(buffer, offset, isActivated);
+        offset += Encoder.writeBool(buffer, offset, isMute);
+        offset += Encoder.writeBool(buffer, offset, isSolo);
+        offset += Encoder.writeBool(buffer, offset, isMutedBySolo);
+        offset += Encoder.writeBool(buffer, offset, isArm);
+        offset += Encoder.writeFloat32(buffer, offset, volume);
+        offset += Encoder.writeString(buffer, offset, volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeFloat32(buffer, offset, pan);
+        offset += Encoder.writeString(buffer, offset, panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

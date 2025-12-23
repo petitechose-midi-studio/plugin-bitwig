@@ -126,23 +126,13 @@ public final class DevicePageNamesWindowMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] devicePageCount_encoded = Encoder.encodeUint8(devicePageCount);
-        System.arraycopy(devicePageCount_encoded, 0, buffer, offset, devicePageCount_encoded.length);
-        offset += devicePageCount_encoded.length;
-        byte[] pageStartIndex_encoded = Encoder.encodeUint8(pageStartIndex);
-        System.arraycopy(pageStartIndex_encoded, 0, buffer, offset, pageStartIndex_encoded.length);
-        offset += pageStartIndex_encoded.length;
-        byte[] devicePageIndex_encoded = Encoder.encodeUint8(devicePageIndex);
-        System.arraycopy(devicePageIndex_encoded, 0, buffer, offset, devicePageIndex_encoded.length);
-        offset += devicePageIndex_encoded.length;
-        byte[] pageNames_count = Encoder.encodeUint8(pageNames.size());
-        System.arraycopy(pageNames_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, devicePageCount);
+        offset += Encoder.writeUint8(buffer, offset, pageStartIndex);
+        offset += Encoder.writeUint8(buffer, offset, devicePageIndex);
+        offset += Encoder.writeUint8(buffer, offset, pageNames.size());
 
         for (String item : pageNames) {
-    byte[] item_encoded = Encoder.encodeString(item, ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
+            offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
         }
 
 

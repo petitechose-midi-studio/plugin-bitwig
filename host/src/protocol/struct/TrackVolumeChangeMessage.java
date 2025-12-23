@@ -124,18 +124,10 @@ public final class TrackVolumeChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] volume_encoded = Encoder.encodeFloat32(volume);
-        System.arraycopy(volume_encoded, 0, buffer, offset, volume_encoded.length);
-        offset += volume_encoded.length;
-        byte[] volumeDisplay_encoded = Encoder.encodeString(volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(volumeDisplay_encoded, 0, buffer, offset, volumeDisplay_encoded.length);
-        offset += volumeDisplay_encoded.length;
-        byte[] isEcho_encoded = Encoder.encodeBool(isEcho);
-        System.arraycopy(isEcho_encoded, 0, buffer, offset, isEcho_encoded.length);
-        offset += isEcho_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeFloat32(buffer, offset, volume);
+        offset += Encoder.writeString(buffer, offset, volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeBool(buffer, offset, isEcho);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

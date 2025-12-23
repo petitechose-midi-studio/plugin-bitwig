@@ -166,32 +166,16 @@ public final class DeviceChangeHeaderMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceName_encoded = Encoder.encodeString(deviceName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(deviceName_encoded, 0, buffer, offset, deviceName_encoded.length);
-        offset += deviceName_encoded.length;
-        byte[] isEnabled_encoded = Encoder.encodeBool(isEnabled);
-        System.arraycopy(isEnabled_encoded, 0, buffer, offset, isEnabled_encoded.length);
-        offset += isEnabled_encoded.length;
-        byte[] deviceType_encoded = Encoder.encodeUint8(deviceType);
-        System.arraycopy(deviceType_encoded, 0, buffer, offset, deviceType_encoded.length);
-        offset += deviceType_encoded.length;
-        byte[] pageInfo_devicePageIndex_encoded = Encoder.encodeUint8(pageInfo.getDevicePageIndex());
-        System.arraycopy(pageInfo_devicePageIndex_encoded, 0, buffer, offset, pageInfo_devicePageIndex_encoded.length);
-        offset += pageInfo_devicePageIndex_encoded.length;
-        byte[] pageInfo_devicePageCount_encoded = Encoder.encodeUint8(pageInfo.getDevicePageCount());
-        System.arraycopy(pageInfo_devicePageCount_encoded, 0, buffer, offset, pageInfo_devicePageCount_encoded.length);
-        offset += pageInfo_devicePageCount_encoded.length;
-        byte[] pageInfo_devicePageName_encoded = Encoder.encodeString(pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(pageInfo_devicePageName_encoded, 0, buffer, offset, pageInfo_devicePageName_encoded.length);
-        offset += pageInfo_devicePageName_encoded.length;
-        byte[] childrenTypes_count = Encoder.encodeUint8(childrenTypes.size());
-        System.arraycopy(childrenTypes_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeString(buffer, offset, deviceName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeBool(buffer, offset, isEnabled);
+        offset += Encoder.writeUint8(buffer, offset, deviceType);
+        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
+        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
+        offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeUint8(buffer, offset, childrenTypes.size());
 
         for (int item : childrenTypes) {
-    byte[] item_encoded = Encoder.encodeUint8(item);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item);
         }
 
 

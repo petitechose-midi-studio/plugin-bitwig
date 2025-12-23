@@ -172,41 +172,19 @@ public final class TrackSendListMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] sendCount_encoded = Encoder.encodeUint8(sendCount);
-        System.arraycopy(sendCount_encoded, 0, buffer, offset, sendCount_encoded.length);
-        offset += sendCount_encoded.length;
-        byte[] sends_count = Encoder.encodeUint8(sends.size());
-        System.arraycopy(sends_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeUint8(buffer, offset, sendCount);
+        offset += Encoder.writeUint8(buffer, offset, sends.size());
 
         for (Sends item : sends) {
-    byte[] item_sendIndex_encoded = Encoder.encodeUint8(item.getSendIndex());
-            System.arraycopy(item_sendIndex_encoded, 0, buffer, offset, item_sendIndex_encoded.length);
-            offset += item_sendIndex_encoded.length;
-    byte[] item_sendName_encoded = Encoder.encodeString(item.getSendName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_sendName_encoded, 0, buffer, offset, item_sendName_encoded.length);
-            offset += item_sendName_encoded.length;
-    byte[] item_color_encoded = Encoder.encodeUint32(item.getColor());
-            System.arraycopy(item_color_encoded, 0, buffer, offset, item_color_encoded.length);
-            offset += item_color_encoded.length;
-    byte[] item_sendValue_encoded = Encoder.encodeFloat32(item.getSendValue());
-            System.arraycopy(item_sendValue_encoded, 0, buffer, offset, item_sendValue_encoded.length);
-            offset += item_sendValue_encoded.length;
-    byte[] item_sendDisplayValue_encoded = Encoder.encodeString(item.getSendDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_sendDisplayValue_encoded, 0, buffer, offset, item_sendDisplayValue_encoded.length);
-            offset += item_sendDisplayValue_encoded.length;
-    byte[] item_sendIsEnabled_encoded = Encoder.encodeBool(item.getSendIsEnabled());
-            System.arraycopy(item_sendIsEnabled_encoded, 0, buffer, offset, item_sendIsEnabled_encoded.length);
-            offset += item_sendIsEnabled_encoded.length;
-    byte[] item_sendMode_encoded = Encoder.encodeString(item.getSendMode(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_sendMode_encoded, 0, buffer, offset, item_sendMode_encoded.length);
-            offset += item_sendMode_encoded.length;
-    byte[] item_sendIsPreFader_encoded = Encoder.encodeBool(item.getSendIsPreFader());
-            System.arraycopy(item_sendIsPreFader_encoded, 0, buffer, offset, item_sendIsPreFader_encoded.length);
-            offset += item_sendIsPreFader_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
+            offset += Encoder.writeString(buffer, offset, item.getSendName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeUint32(buffer, offset, item.getColor());
+            offset += Encoder.writeFloat32(buffer, offset, item.getSendValue());
+            offset += Encoder.writeString(buffer, offset, item.getSendDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeBool(buffer, offset, item.getSendIsEnabled());
+            offset += Encoder.writeString(buffer, offset, item.getSendMode(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeBool(buffer, offset, item.getSendIsPreFader());
         }
 
 

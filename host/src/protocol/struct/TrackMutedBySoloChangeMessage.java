@@ -99,12 +99,8 @@ public final class TrackMutedBySoloChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isMutedBySolo_encoded = Encoder.encodeBool(isMutedBySolo);
-        System.arraycopy(isMutedBySolo_encoded, 0, buffer, offset, isMutedBySolo_encoded.length);
-        offset += isMutedBySolo_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isMutedBySolo);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

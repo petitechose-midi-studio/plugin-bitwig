@@ -124,18 +124,10 @@ public final class TrackPanChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] pan_encoded = Encoder.encodeFloat32(pan);
-        System.arraycopy(pan_encoded, 0, buffer, offset, pan_encoded.length);
-        offset += pan_encoded.length;
-        byte[] panDisplay_encoded = Encoder.encodeString(panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(panDisplay_encoded, 0, buffer, offset, panDisplay_encoded.length);
-        offset += panDisplay_encoded.length;
-        byte[] isEcho_encoded = Encoder.encodeBool(isEcho);
-        System.arraycopy(isEcho_encoded, 0, buffer, offset, isEcho_encoded.length);
-        offset += isEcho_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeFloat32(buffer, offset, pan);
+        offset += Encoder.writeString(buffer, offset, panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeBool(buffer, offset, isEcho);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

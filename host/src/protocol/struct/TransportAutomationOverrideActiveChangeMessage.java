@@ -87,9 +87,7 @@ public final class TransportAutomationOverrideActiveChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isAutomationOverrideActive_encoded = Encoder.encodeBool(isAutomationOverrideActive);
-        System.arraycopy(isAutomationOverrideActive_encoded, 0, buffer, offset, isAutomationOverrideActive_encoded.length);
-        offset += isAutomationOverrideActive_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isAutomationOverrideActive);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

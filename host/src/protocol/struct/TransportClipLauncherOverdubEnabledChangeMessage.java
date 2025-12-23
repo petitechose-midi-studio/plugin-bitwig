@@ -87,9 +87,7 @@ public final class TransportClipLauncherOverdubEnabledChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isClipLauncherOverdubEnabled_encoded = Encoder.encodeBool(isClipLauncherOverdubEnabled);
-        System.arraycopy(isClipLauncherOverdubEnabled_encoded, 0, buffer, offset, isClipLauncherOverdubEnabled_encoded.length);
-        offset += isClipLauncherOverdubEnabled_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isClipLauncherOverdubEnabled);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

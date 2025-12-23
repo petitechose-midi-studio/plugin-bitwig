@@ -87,9 +87,7 @@ public final class SelectMixSendMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] sendIndex_encoded = Encoder.encodeUint8(sendIndex);
-        System.arraycopy(sendIndex_encoded, 0, buffer, offset, sendIndex_encoded.length);
-        offset += sendIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, sendIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

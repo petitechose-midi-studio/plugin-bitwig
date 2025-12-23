@@ -99,12 +99,8 @@ public final class RequestDeviceChildrenMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceIndex_encoded = Encoder.encodeUint8(deviceIndex);
-        System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
-        offset += deviceIndex_encoded.length;
-        byte[] childType_encoded = Encoder.encodeUint8(childType);
-        System.arraycopy(childType_encoded, 0, buffer, offset, childType_encoded.length);
-        offset += childType_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeUint8(buffer, offset, childType);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

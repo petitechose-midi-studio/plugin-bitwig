@@ -87,9 +87,7 @@ public final class RequestDeviceListWindowMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceStartIndex_encoded = Encoder.encodeUint8(deviceStartIndex);
-        System.arraycopy(deviceStartIndex_encoded, 0, buffer, offset, deviceStartIndex_encoded.length);
-        offset += deviceStartIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, deviceStartIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -99,12 +99,8 @@ public final class DeviceRemoteControlOriginChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] parameterOrigin_encoded = Encoder.encodeFloat32(parameterOrigin);
-        System.arraycopy(parameterOrigin_encoded, 0, buffer, offset, parameterOrigin_encoded.length);
-        offset += parameterOrigin_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

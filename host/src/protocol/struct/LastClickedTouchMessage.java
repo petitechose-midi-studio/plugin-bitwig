@@ -87,9 +87,7 @@ public final class LastClickedTouchMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isTouched_encoded = Encoder.encodeBool(isTouched);
-        System.arraycopy(isTouched_encoded, 0, buffer, offset, isTouched_encoded.length);
-        offset += isTouched_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isTouched);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -87,9 +87,7 @@ public final class RequestDevicePageNamesWindowMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] pageStartIndex_encoded = Encoder.encodeUint8(pageStartIndex);
-        System.arraycopy(pageStartIndex_encoded, 0, buffer, offset, pageStartIndex_encoded.length);
-        offset += pageStartIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, pageStartIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

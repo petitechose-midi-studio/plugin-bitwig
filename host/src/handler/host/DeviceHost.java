@@ -47,15 +47,21 @@ public class DeviceHost {
     private boolean controllerSelectorActive = false;
 
     // Combined batch for values + modulated values (single synchronized update)
-    private static final int BATCH_INTERVAL_MS = 2; // ~66Hz batch rate
+    private static final int BATCH_INTERVAL_MS = 1  ; // ~66Hz batch rate (15ms = imperceptible for UI)
     private final float[] modulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] parameterValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] pendingValues = new float[BitwigConfig.MAX_PARAMETERS];
+    private final String[] pendingDisplayValues = new String[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] previousIsModulated = new boolean[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] hasAutomationState = new boolean[BitwigConfig.MAX_PARAMETERS];
     private int valuesDirtyMask = 0;  // Bit mask: which parameter values changed
     private int valuesEchoMask = 0;   // Bit mask: which parameters are echoes
     private boolean batchDirty = false; // True if any value or modulated value changed
+
+    // Pre-allocated lists for batch message (avoid allocation per tick)
+    private final List<Float> batchValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+    private final List<Float> batchModulatedValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+    private final List<String> batchDisplayValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
 
     public DeviceHost(
         ControllerHost host,
@@ -132,16 +138,20 @@ public class DeviceHost {
         if (!batchDirty) return;
         batchDirty = false;
 
-        // Build combined batch with both values and modulated values
-        List<Float> values = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
-        List<Float> modulatedValuesList = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+        // Build combined batch with values, modulated values, and display values
+        // Reuse pre-allocated lists (clear + add instead of new ArrayList)
+        batchValues.clear();
+        batchModulatedValues.clear();
+        batchDisplayValues.clear();
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
-            values.add(pendingValues[i]);
-            modulatedValuesList.add(modulatedValues[i]);
+            batchValues.add(pendingValues[i]);
+            batchModulatedValues.add(modulatedValues[i]);
+            // Use empty string if null (KNOB parameters or not yet initialized)
+            batchDisplayValues.add(pendingDisplayValues[i] != null ? pendingDisplayValues[i] : "");
         }
 
         // Send single combined message
-        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, values, modulatedValuesList));
+        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, batchValues, batchModulatedValues, batchDisplayValues));
 
         // Reset masks
         valuesDirtyMask = 0;
@@ -253,6 +263,7 @@ public class DeviceHost {
                 float value = (float) param.value().get();
                 parameterValues[paramIndex] = value; // Track for isModulated detection
                 pendingValues[paramIndex] = value;   // Store for batch
+                pendingDisplayValues[paramIndex] = displayValue; // Store display value for batch
                 valuesDirtyMask |= (1 << paramIndex); // Mark value as changed
                 batchDirty = true;  // Mark batch for sending
 

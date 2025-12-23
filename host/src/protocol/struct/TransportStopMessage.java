@@ -87,9 +87,7 @@ public final class TransportStopMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isStopping_encoded = Encoder.encodeBool(isStopping);
-        System.arraycopy(isStopping_encoded, 0, buffer, offset, isStopping_encoded.length);
-        offset += isStopping_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isStopping);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

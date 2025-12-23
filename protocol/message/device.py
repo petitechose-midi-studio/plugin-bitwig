@@ -100,7 +100,8 @@ DEVICE_REMOTE_CONTROLS_BATCH = Message(
         values_dirty_mask,               # UINT8: Which values changed (bit 0-7)
         values_echo_mask,                # UINT8: Which are echoes from controller (bit 0-7)
         parameter_values_batch,          # NORM8[8]: Parameter values for all 8 remote controls
-        parameter_modulated_values_batch # NORM8[8]: Modulated values for all 8 remote controls
+        parameter_modulated_values_batch, # NORM8[8]: Modulated values for all 8 remote controls
+        parameter_display_values_batch   # STRING[8]: Display values for LIST/BUTTON params (empty for KNOB)
     ]
 )
 

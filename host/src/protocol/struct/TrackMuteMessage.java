@@ -99,12 +99,8 @@ public final class TrackMuteMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isMute_encoded = Encoder.encodeBool(isMute);
-        System.arraycopy(isMute_encoded, 0, buffer, offset, isMute_encoded.length);
-        offset += isMute_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isMute);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -99,12 +99,8 @@ public final class TrackPanTouchMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isTouched_encoded = Encoder.encodeBool(isTouched);
-        System.arraycopy(isTouched_encoded, 0, buffer, offset, isTouched_encoded.length);
-        offset += isTouched_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isTouched);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

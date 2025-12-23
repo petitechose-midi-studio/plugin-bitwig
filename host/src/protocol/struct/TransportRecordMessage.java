@@ -87,9 +87,7 @@ public final class TransportRecordMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isRecording_encoded = Encoder.encodeBool(isRecording);
-        System.arraycopy(isRecording_encoded, 0, buffer, offset, isRecording_encoded.length);
-        offset += isRecording_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isRecording);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

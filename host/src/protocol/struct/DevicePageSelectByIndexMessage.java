@@ -87,9 +87,7 @@ public final class DevicePageSelectByIndexMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] devicePageIndex_encoded = Encoder.encodeUint8(devicePageIndex);
-        System.arraycopy(devicePageIndex_encoded, 0, buffer, offset, devicePageIndex_encoded.length);
-        offset += devicePageIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, devicePageIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

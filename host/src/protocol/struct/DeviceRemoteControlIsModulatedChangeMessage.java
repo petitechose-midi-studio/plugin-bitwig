@@ -99,12 +99,8 @@ public final class DeviceRemoteControlIsModulatedChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] isModulated_encoded = Encoder.encodeBool(isModulated);
-        System.arraycopy(isModulated_encoded, 0, buffer, offset, isModulated_encoded.length);
-        offset += isModulated_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeBool(buffer, offset, isModulated);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

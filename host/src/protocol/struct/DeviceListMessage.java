@@ -178,42 +178,20 @@ public final class DeviceListMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceCount_encoded = Encoder.encodeUint8(deviceCount);
-        System.arraycopy(deviceCount_encoded, 0, buffer, offset, deviceCount_encoded.length);
-        offset += deviceCount_encoded.length;
-        byte[] deviceIndex_encoded = Encoder.encodeUint8(deviceIndex);
-        System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
-        offset += deviceIndex_encoded.length;
-        byte[] isNested_encoded = Encoder.encodeBool(isNested);
-        System.arraycopy(isNested_encoded, 0, buffer, offset, isNested_encoded.length);
-        offset += isNested_encoded.length;
-        byte[] parentName_encoded = Encoder.encodeString(parentName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(parentName_encoded, 0, buffer, offset, parentName_encoded.length);
-        offset += parentName_encoded.length;
-        byte[] devices_count = Encoder.encodeUint8(devices.size());
-        System.arraycopy(devices_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, deviceCount);
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeBool(buffer, offset, isNested);
+        offset += Encoder.writeString(buffer, offset, parentName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeUint8(buffer, offset, devices.size());
 
         for (Devices item : devices) {
-    byte[] item_deviceIndex_encoded = Encoder.encodeUint8(item.getDeviceIndex());
-            System.arraycopy(item_deviceIndex_encoded, 0, buffer, offset, item_deviceIndex_encoded.length);
-            offset += item_deviceIndex_encoded.length;
-    byte[] item_deviceName_encoded = Encoder.encodeString(item.getDeviceName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_deviceName_encoded, 0, buffer, offset, item_deviceName_encoded.length);
-            offset += item_deviceName_encoded.length;
-    byte[] item_isEnabled_encoded = Encoder.encodeBool(item.isEnabled());
-            System.arraycopy(item_isEnabled_encoded, 0, buffer, offset, item_isEnabled_encoded.length);
-            offset += item_isEnabled_encoded.length;
-    byte[] item_deviceType_encoded = Encoder.encodeUint8(item.getDeviceType());
-            System.arraycopy(item_deviceType_encoded, 0, buffer, offset, item_deviceType_encoded.length);
-            offset += item_deviceType_encoded.length;
-            byte[] count_childrenTypes = Encoder.encodeUint8((byte) item.getChildrenTypes().length);
-            System.arraycopy(count_childrenTypes, 0, buffer, offset, 1);
-            offset += 1;
+            offset += Encoder.writeUint8(buffer, offset, item.getDeviceIndex());
+            offset += Encoder.writeString(buffer, offset, item.getDeviceName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeBool(buffer, offset, item.isEnabled());
+            offset += Encoder.writeUint8(buffer, offset, item.getDeviceType());
+            offset += Encoder.writeUint8(buffer, offset, item.getChildrenTypes().length);
             for (int type : item.getChildrenTypes()) {
-        byte[] type_encoded = Encoder.encodeUint8(type);
-                System.arraycopy(type_encoded, 0, buffer, offset, type_encoded.length);
-                offset += type_encoded.length;
+                offset += Encoder.writeUint8(buffer, offset, type);
             }
         }
 

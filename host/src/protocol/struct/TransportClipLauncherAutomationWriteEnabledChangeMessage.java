@@ -87,9 +87,7 @@ public final class TransportClipLauncherAutomationWriteEnabledChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isClipLauncherAutomationWriteEnabled_encoded = Encoder.encodeBool(isClipLauncherAutomationWriteEnabled);
-        System.arraycopy(isClipLauncherAutomationWriteEnabled_encoded, 0, buffer, offset, isClipLauncherAutomationWriteEnabled_encoded.length);
-        offset += isClipLauncherAutomationWriteEnabled_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isClipLauncherAutomationWriteEnabled);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

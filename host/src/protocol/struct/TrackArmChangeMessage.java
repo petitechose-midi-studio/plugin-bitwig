@@ -99,12 +99,8 @@ public final class TrackArmChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isArm_encoded = Encoder.encodeBool(isArm);
-        System.arraycopy(isArm_encoded, 0, buffer, offset, isArm_encoded.length);
-        offset += isArm_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isArm);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

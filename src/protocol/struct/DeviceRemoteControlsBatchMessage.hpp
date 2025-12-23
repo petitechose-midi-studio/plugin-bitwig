@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include <string>
 
 namespace Protocol {
 
@@ -39,6 +40,7 @@ struct DeviceRemoteControlsBatchMessage {
     uint8_t echoMask;
     std::array<float, 8> values;
     std::array<float, 8> modulatedValues;
+    std::array<std::string, 8> displayValues;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -46,12 +48,12 @@ struct DeviceRemoteControlsBatchMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 47;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 312;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 31;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 32;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -81,6 +83,10 @@ struct DeviceRemoteControlsBatchMessage {
         encodeUint8(ptr, modulatedValues.size());
         for (const auto& item : modulatedValues) {
             encodeNorm8(ptr, item);
+        }
+        encodeUint8(ptr, displayValues.size());
+        for (const auto& item : displayValues) {
+            encodeString(ptr, item);
         }
 
         return ptr - buffer;
@@ -127,8 +133,14 @@ struct DeviceRemoteControlsBatchMessage {
         for (uint8_t i = 0; i < count_modulatedValues && i < 8; ++i) {
             if (!decodeNorm8(ptr, remaining, modulatedValues_data[i])) return std::nullopt;
         }
+        std::array<std::string, 8> displayValues_data;
+        uint8_t count_displayValues;
+        if (!decodeUint8(ptr, remaining, count_displayValues)) return std::nullopt;
+        for (uint8_t i = 0; i < count_displayValues && i < 8; ++i) {
+            if (!decodeString(ptr, remaining, displayValues_data[i])) return std::nullopt;
+        }
 
-        return DeviceRemoteControlsBatchMessage{sequenceNumber, dirtyMask, echoMask, values_data, modulatedValues_data};
+        return DeviceRemoteControlsBatchMessage{sequenceNumber, dirtyMask, echoMask, values_data, modulatedValues_data, displayValues_data};
     }
 
 
@@ -173,6 +185,15 @@ struct DeviceRemoteControlsBatchMessage {
                     floatToString(floatBuf_modulatedValues, sizeof(floatBuf_modulatedValues), modulatedValues[i]);
                     ptr += snprintf(ptr, end - ptr, "    - %s\n", floatBuf_modulatedValues);
                 }
+            }
+        }
+        ptr += snprintf(ptr, end - ptr, "  displayValues:");
+        if (displayValues.size() == 0) {
+            ptr += snprintf(ptr, end - ptr, " []\n");
+        } else {
+            ptr += snprintf(ptr, end - ptr, "\n");
+            for (size_t i = 0; i < displayValues.size(); ++i) {
+                ptr += snprintf(ptr, end - ptr, "    - \"%s\"\n", displayValues[i].c_str());
             }
         }
 
