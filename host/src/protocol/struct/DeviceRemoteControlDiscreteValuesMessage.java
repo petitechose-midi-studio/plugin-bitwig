@@ -114,22 +114,14 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] discreteValueNames_count = Encoder.encodeUint8(discreteValueNames.size());
-        System.arraycopy(discreteValueNames_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeUint8(buffer, offset, discreteValueNames.size());
 
         for (String item : discreteValueNames) {
-    byte[] item_encoded = Encoder.encodeString(item, ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
+            offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
         }
 
-        byte[] currentValueIndex_encoded = Encoder.encodeUint8(currentValueIndex);
-        System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
-        offset += currentValueIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

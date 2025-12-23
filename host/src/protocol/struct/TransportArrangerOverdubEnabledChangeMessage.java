@@ -87,9 +87,7 @@ public final class TransportArrangerOverdubEnabledChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isArrangerOverdubEnabled_encoded = Encoder.encodeBool(isArrangerOverdubEnabled);
-        System.arraycopy(isArrangerOverdubEnabled_encoded, 0, buffer, offset, isArrangerOverdubEnabled_encoded.length);
-        offset += isArrangerOverdubEnabled_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isArrangerOverdubEnabled);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

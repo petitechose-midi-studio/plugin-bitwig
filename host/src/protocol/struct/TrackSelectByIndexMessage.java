@@ -87,9 +87,7 @@ public final class TrackSelectByIndexMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

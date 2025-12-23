@@ -87,9 +87,7 @@ public final class TransportTempoMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] tempo_encoded = Encoder.encodeFloat32(tempo);
-        System.arraycopy(tempo_encoded, 0, buffer, offset, tempo_encoded.length);
-        offset += tempo_encoded.length;
+        offset += Encoder.writeFloat32(buffer, offset, tempo);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

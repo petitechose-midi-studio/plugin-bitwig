@@ -99,12 +99,8 @@ public final class ViewStateChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] viewType_encoded = Encoder.encodeUint8(viewType);
-        System.arraycopy(viewType_encoded, 0, buffer, offset, viewType_encoded.length);
-        offset += viewType_encoded.length;
-        byte[] selectorActive_encoded = Encoder.encodeBool(selectorActive);
-        System.arraycopy(selectorActive_encoded, 0, buffer, offset, selectorActive_encoded.length);
-        offset += selectorActive_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, viewType);
+        offset += Encoder.writeBool(buffer, offset, selectorActive);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

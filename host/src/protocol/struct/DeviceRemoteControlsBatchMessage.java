@@ -3,6 +3,7 @@ package protocol.struct;
 import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
+import protocol.ProtocolConstants;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -42,6 +43,7 @@ public final class DeviceRemoteControlsBatchMessage {
     private final int echoMask;
     private final List<Float> values;
     private final List<Float> modulatedValues;
+    private final List<String> displayValues;
 
     // ============================================================================
     // Constructor
@@ -55,13 +57,15 @@ public final class DeviceRemoteControlsBatchMessage {
      * @param echoMask The echoMask value
      * @param values The values value
      * @param modulatedValues The modulatedValues value
+     * @param displayValues The displayValues value
      */
-    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, List<Float> values, List<Float> modulatedValues) {
+    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, List<Float> values, List<Float> modulatedValues, List<String> displayValues) {
         this.sequenceNumber = sequenceNumber;
         this.dirtyMask = dirtyMask;
         this.echoMask = echoMask;
         this.values = values;
         this.modulatedValues = modulatedValues;
+        this.displayValues = displayValues;
     }
 
     // ============================================================================
@@ -113,6 +117,15 @@ public final class DeviceRemoteControlsBatchMessage {
         return modulatedValues;
     }
 
+    /**
+     * Get the displayValues value
+     *
+     * @return displayValues
+     */
+    public List<String> getDisplayValues() {
+        return displayValues;
+    }
+
     // ============================================================================
     // Encoding
     // ============================================================================
@@ -120,7 +133,7 @@ public final class DeviceRemoteControlsBatchMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 47;
+    public static final int MAX_PAYLOAD_SIZE = 312;
 
     /**
      * Encode message to MIDI-safe bytes
@@ -137,33 +150,25 @@ public final class DeviceRemoteControlsBatchMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] sequenceNumber_encoded = Encoder.encodeUint8(sequenceNumber);
-        System.arraycopy(sequenceNumber_encoded, 0, buffer, offset, sequenceNumber_encoded.length);
-        offset += sequenceNumber_encoded.length;
-        byte[] dirtyMask_encoded = Encoder.encodeUint8(dirtyMask);
-        System.arraycopy(dirtyMask_encoded, 0, buffer, offset, dirtyMask_encoded.length);
-        offset += dirtyMask_encoded.length;
-        byte[] echoMask_encoded = Encoder.encodeUint8(echoMask);
-        System.arraycopy(echoMask_encoded, 0, buffer, offset, echoMask_encoded.length);
-        offset += echoMask_encoded.length;
-        byte[] values_count = Encoder.encodeUint8(values.size());
-        System.arraycopy(values_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, sequenceNumber);
+        offset += Encoder.writeUint8(buffer, offset, dirtyMask);
+        offset += Encoder.writeUint8(buffer, offset, echoMask);
+        offset += Encoder.writeUint8(buffer, offset, values.size());
 
         for (float item : values) {
-    byte[] item_encoded = Encoder.encodeNorm8(item);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
+            offset += Encoder.writeNorm8(buffer, offset, item);
         }
 
-        byte[] modulatedValues_count = Encoder.encodeUint8(modulatedValues.size());
-        System.arraycopy(modulatedValues_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, modulatedValues.size());
 
         for (float item : modulatedValues) {
-    byte[] item_encoded = Encoder.encodeNorm8(item);
-            System.arraycopy(item_encoded, 0, buffer, offset, item_encoded.length);
-            offset += item_encoded.length;
+            offset += Encoder.writeNorm8(buffer, offset, item);
+        }
+
+        offset += Encoder.writeUint8(buffer, offset, displayValues.size());
+
+        for (String item : displayValues) {
+            offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
         }
 
 
@@ -177,7 +182,7 @@ public final class DeviceRemoteControlsBatchMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 31;
+    private static final int MIN_PAYLOAD_SIZE = 32;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -223,8 +228,18 @@ public final class DeviceRemoteControlsBatchMessage {
             modulatedValues_list.add(item_modulatedValues);
         }
 
+        int count_displayValues = Decoder.decodeUint8(data, offset);
+        offset += 1;
 
-        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, values_list, modulatedValues_list);
+        List<String> displayValues_list = new ArrayList<>();
+        for (int i = 0; i < count_displayValues; i++) {
+    String item_displayValues = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += 1 + item_displayValues.length();
+            displayValues_list.add(item_displayValues);
+        }
+
+
+        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, values_list, modulatedValues_list, displayValues_list);
     }
 
     // ============================================================================
@@ -272,6 +287,15 @@ public final class DeviceRemoteControlsBatchMessage {
             sb.append("\n");
             for (float item : getModulatedValues()) {
                 sb.append("    - ").append(formatFloat(item)).append("\n");
+            }
+        }
+        sb.append("  displayValues:");
+        if (getDisplayValues().isEmpty()) {
+            sb.append(" []\n");
+        } else {
+            sb.append("\n");
+            for (String item : getDisplayValues()) {
+                sb.append("    - \"").append(item).append("\"\n");
             }
         }
         return sb.toString();

@@ -138,11 +138,10 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
                             int index = static_cast<int>(std::round(value * (count - 1)));
                             index = std::clamp(index, 0, count - 1);
                             slot.currentValueIndex.set(static_cast<uint8_t>(index));
-
-                            // Update displayValue from discreteValues if available
-                            if (static_cast<size_t>(index) < slot.discreteValues.size()) {
-                                slot.displayValue.set(slot.discreteValues[index].c_str());
-                            }
+                        }
+                        // Update displayValue from batch (sent by host with correct value from Bitwig)
+                        if (!msg.displayValues[i].empty()) {
+                            slot.displayValue.set(msg.displayValues[i].c_str());
                         }
                     }
 

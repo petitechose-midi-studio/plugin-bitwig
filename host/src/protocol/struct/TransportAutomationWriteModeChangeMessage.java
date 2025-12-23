@@ -87,9 +87,7 @@ public final class TransportAutomationWriteModeChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] automationWriteMode_encoded = Encoder.encodeUint8(automationWriteMode);
-        System.arraycopy(automationWriteMode_encoded, 0, buffer, offset, automationWriteMode_encoded.length);
-        offset += automationWriteMode_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, automationWriteMode);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

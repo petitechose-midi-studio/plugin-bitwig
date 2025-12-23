@@ -99,12 +99,8 @@ public final class TrackSoloMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isSolo_encoded = Encoder.encodeBool(isSolo);
-        System.arraycopy(isSolo_encoded, 0, buffer, offset, isSolo_encoded.length);
-        offset += isSolo_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isSolo);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

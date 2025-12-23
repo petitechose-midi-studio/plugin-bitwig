@@ -111,15 +111,9 @@ public final class EnterDeviceChildMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceIndex_encoded = Encoder.encodeUint8(deviceIndex);
-        System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
-        offset += deviceIndex_encoded.length;
-        byte[] childType_encoded = Encoder.encodeUint8(childType);
-        System.arraycopy(childType_encoded, 0, buffer, offset, childType_encoded.length);
-        offset += childType_encoded.length;
-        byte[] childIndex_encoded = Encoder.encodeUint8(childIndex);
-        System.arraycopy(childIndex_encoded, 0, buffer, offset, childIndex_encoded.length);
-        offset += childIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeUint8(buffer, offset, childType);
+        offset += Encoder.writeUint8(buffer, offset, childIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

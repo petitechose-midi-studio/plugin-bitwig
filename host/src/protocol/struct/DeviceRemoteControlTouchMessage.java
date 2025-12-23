@@ -99,12 +99,8 @@ public final class DeviceRemoteControlTouchMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] isTouched_encoded = Encoder.encodeBool(isTouched);
-        System.arraycopy(isTouched_encoded, 0, buffer, offset, isTouched_encoded.length);
-        offset += isTouched_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeBool(buffer, offset, isTouched);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

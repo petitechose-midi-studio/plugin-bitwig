@@ -136,21 +136,11 @@ public final class TrackSendValueChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] sendIndex_encoded = Encoder.encodeUint8(sendIndex);
-        System.arraycopy(sendIndex_encoded, 0, buffer, offset, sendIndex_encoded.length);
-        offset += sendIndex_encoded.length;
-        byte[] sendValue_encoded = Encoder.encodeFloat32(sendValue);
-        System.arraycopy(sendValue_encoded, 0, buffer, offset, sendValue_encoded.length);
-        offset += sendValue_encoded.length;
-        byte[] sendDisplayValue_encoded = Encoder.encodeString(sendDisplayValue, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(sendDisplayValue_encoded, 0, buffer, offset, sendDisplayValue_encoded.length);
-        offset += sendDisplayValue_encoded.length;
-        byte[] isEcho_encoded = Encoder.encodeBool(isEcho);
-        System.arraycopy(isEcho_encoded, 0, buffer, offset, isEcho_encoded.length);
-        offset += isEcho_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeUint8(buffer, offset, sendIndex);
+        offset += Encoder.writeFloat32(buffer, offset, sendValue);
+        offset += Encoder.writeString(buffer, offset, sendDisplayValue, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeBool(buffer, offset, isEcho);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

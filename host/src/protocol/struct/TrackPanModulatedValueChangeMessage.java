@@ -99,12 +99,8 @@ public final class TrackPanModulatedValueChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] modulatedValue_encoded = Encoder.encodeFloat32(modulatedValue);
-        System.arraycopy(modulatedValue_encoded, 0, buffer, offset, modulatedValue_encoded.length);
-        offset += modulatedValue_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeFloat32(buffer, offset, modulatedValue);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -111,15 +111,9 @@ public final class TrackSendHasAutomationChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] sendIndex_encoded = Encoder.encodeUint8(sendIndex);
-        System.arraycopy(sendIndex_encoded, 0, buffer, offset, sendIndex_encoded.length);
-        offset += sendIndex_encoded.length;
-        byte[] hasAutomation_encoded = Encoder.encodeBool(hasAutomation);
-        System.arraycopy(hasAutomation_encoded, 0, buffer, offset, hasAutomation_encoded.length);
-        offset += hasAutomation_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeUint8(buffer, offset, sendIndex);
+        offset += Encoder.writeBool(buffer, offset, hasAutomation);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

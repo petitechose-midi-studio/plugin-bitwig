@@ -124,20 +124,12 @@ public final class SendDestinationsListMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] sendCount_encoded = Encoder.encodeUint8(sendCount);
-        System.arraycopy(sendCount_encoded, 0, buffer, offset, sendCount_encoded.length);
-        offset += sendCount_encoded.length;
-        byte[] sendDestinations_count = Encoder.encodeUint8(sendDestinations.size());
-        System.arraycopy(sendDestinations_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, sendCount);
+        offset += Encoder.writeUint8(buffer, offset, sendDestinations.size());
 
         for (SendDestinations item : sendDestinations) {
-    byte[] item_sendIndex_encoded = Encoder.encodeUint8(item.getSendIndex());
-            System.arraycopy(item_sendIndex_encoded, 0, buffer, offset, item_sendIndex_encoded.length);
-            offset += item_sendIndex_encoded.length;
-    byte[] item_sendDestinationName_encoded = Encoder.encodeString(item.getSendDestinationName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_sendDestinationName_encoded, 0, buffer, offset, item_sendDestinationName_encoded.length);
-            offset += item_sendDestinationName_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
+            offset += Encoder.writeString(buffer, offset, item.getSendDestinationName(), ProtocolConstants.STRING_MAX_LENGTH);
         }
 
 

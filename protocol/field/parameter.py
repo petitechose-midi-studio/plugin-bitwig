@@ -76,3 +76,8 @@ values_echo_mask = PrimitiveField('echoMask', type_name=Type.UINT8)
 # Uses NORM8 (1 byte per value) for minimal bandwidth
 # Total: 8 bytes instead of 40 bytes per batch (80% reduction)
 parameter_values_batch = PrimitiveField('values', type_name=Type.NORM8, array=8)
+
+# Array of 8 display values (one per remote control slot)
+# Used for LIST/BUTTON parameters to show the current discrete value name
+# KNOB parameters send empty strings (host skips update if empty)
+parameter_display_values_batch = PrimitiveField('displayValues', type_name=Type.STRING, array=8)

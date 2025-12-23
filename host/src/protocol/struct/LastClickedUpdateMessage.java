@@ -172,30 +172,14 @@ public final class LastClickedUpdateMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] parameterName_encoded = Encoder.encodeString(parameterName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
-        offset += parameterName_encoded.length;
-        byte[] parameterValue_encoded = Encoder.encodeFloat32(parameterValue);
-        System.arraycopy(parameterValue_encoded, 0, buffer, offset, parameterValue_encoded.length);
-        offset += parameterValue_encoded.length;
-        byte[] displayValue_encoded = Encoder.encodeString(displayValue, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(displayValue_encoded, 0, buffer, offset, displayValue_encoded.length);
-        offset += displayValue_encoded.length;
-        byte[] parameterOrigin_encoded = Encoder.encodeFloat32(parameterOrigin);
-        System.arraycopy(parameterOrigin_encoded, 0, buffer, offset, parameterOrigin_encoded.length);
-        offset += parameterOrigin_encoded.length;
-        byte[] parameterExists_encoded = Encoder.encodeBool(parameterExists);
-        System.arraycopy(parameterExists_encoded, 0, buffer, offset, parameterExists_encoded.length);
-        offset += parameterExists_encoded.length;
-        byte[] parameterType_encoded = Encoder.encodeUint8(parameterType);
-        System.arraycopy(parameterType_encoded, 0, buffer, offset, parameterType_encoded.length);
-        offset += parameterType_encoded.length;
-        byte[] discreteValueCount_encoded = Encoder.encodeInt16(discreteValueCount);
-        System.arraycopy(discreteValueCount_encoded, 0, buffer, offset, discreteValueCount_encoded.length);
-        offset += discreteValueCount_encoded.length;
-        byte[] currentValueIndex_encoded = Encoder.encodeUint8(currentValueIndex);
-        System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
-        offset += currentValueIndex_encoded.length;
+        offset += Encoder.writeString(buffer, offset, parameterName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeFloat32(buffer, offset, parameterValue);
+        offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
+        offset += Encoder.writeBool(buffer, offset, parameterExists);
+        offset += Encoder.writeUint8(buffer, offset, parameterType);
+        offset += Encoder.writeInt16(buffer, offset, discreteValueCount);
+        offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

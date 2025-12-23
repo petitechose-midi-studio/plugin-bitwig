@@ -112,15 +112,9 @@ public final class LastClickedValueChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] parameterValue_encoded = Encoder.encodeFloat32(parameterValue);
-        System.arraycopy(parameterValue_encoded, 0, buffer, offset, parameterValue_encoded.length);
-        offset += parameterValue_encoded.length;
-        byte[] displayValue_encoded = Encoder.encodeString(displayValue, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(displayValue_encoded, 0, buffer, offset, displayValue_encoded.length);
-        offset += displayValue_encoded.length;
-        byte[] isEcho_encoded = Encoder.encodeBool(isEcho);
-        System.arraycopy(isEcho_encoded, 0, buffer, offset, isEcho_encoded.length);
-        offset += isEcho_encoded.length;
+        offset += Encoder.writeFloat32(buffer, offset, parameterValue);
+        offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeBool(buffer, offset, isEcho);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

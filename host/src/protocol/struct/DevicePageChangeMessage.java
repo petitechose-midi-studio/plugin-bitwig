@@ -219,64 +219,28 @@ public final class DevicePageChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] pageInfo_devicePageIndex_encoded = Encoder.encodeUint8(pageInfo.getDevicePageIndex());
-        System.arraycopy(pageInfo_devicePageIndex_encoded, 0, buffer, offset, pageInfo_devicePageIndex_encoded.length);
-        offset += pageInfo_devicePageIndex_encoded.length;
-        byte[] pageInfo_devicePageCount_encoded = Encoder.encodeUint8(pageInfo.getDevicePageCount());
-        System.arraycopy(pageInfo_devicePageCount_encoded, 0, buffer, offset, pageInfo_devicePageCount_encoded.length);
-        offset += pageInfo_devicePageCount_encoded.length;
-        byte[] pageInfo_devicePageName_encoded = Encoder.encodeString(pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(pageInfo_devicePageName_encoded, 0, buffer, offset, pageInfo_devicePageName_encoded.length);
-        offset += pageInfo_devicePageName_encoded.length;
-        byte[] remoteControls_count = Encoder.encodeUint8(remoteControls.size());
-        System.arraycopy(remoteControls_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
+        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
+        offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeUint8(buffer, offset, remoteControls.size());
 
         for (RemoteControls item : remoteControls) {
-    byte[] item_remoteControlIndex_encoded = Encoder.encodeUint8(item.getRemoteControlIndex());
-            System.arraycopy(item_remoteControlIndex_encoded, 0, buffer, offset, item_remoteControlIndex_encoded.length);
-            offset += item_remoteControlIndex_encoded.length;
-    byte[] item_parameterValue_encoded = Encoder.encodeFloat32(item.getParameterValue());
-            System.arraycopy(item_parameterValue_encoded, 0, buffer, offset, item_parameterValue_encoded.length);
-            offset += item_parameterValue_encoded.length;
-    byte[] item_parameterName_encoded = Encoder.encodeString(item.getParameterName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_parameterName_encoded, 0, buffer, offset, item_parameterName_encoded.length);
-            offset += item_parameterName_encoded.length;
-    byte[] item_parameterOrigin_encoded = Encoder.encodeFloat32(item.getParameterOrigin());
-            System.arraycopy(item_parameterOrigin_encoded, 0, buffer, offset, item_parameterOrigin_encoded.length);
-            offset += item_parameterOrigin_encoded.length;
-    byte[] item_parameterExists_encoded = Encoder.encodeBool(item.getParameterExists());
-            System.arraycopy(item_parameterExists_encoded, 0, buffer, offset, item_parameterExists_encoded.length);
-            offset += item_parameterExists_encoded.length;
-    byte[] item_discreteValueCount_encoded = Encoder.encodeInt16(item.getDiscreteValueCount());
-            System.arraycopy(item_discreteValueCount_encoded, 0, buffer, offset, item_discreteValueCount_encoded.length);
-            offset += item_discreteValueCount_encoded.length;
-    byte[] item_displayValue_encoded = Encoder.encodeString(item.getDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_displayValue_encoded, 0, buffer, offset, item_displayValue_encoded.length);
-            offset += item_displayValue_encoded.length;
-    byte[] item_parameterType_encoded = Encoder.encodeUint8(item.getParameterType());
-            System.arraycopy(item_parameterType_encoded, 0, buffer, offset, item_parameterType_encoded.length);
-            offset += item_parameterType_encoded.length;
-            byte[] count_discreteValueNames = Encoder.encodeUint8((byte) item.getDiscreteValueNames().length);
-            System.arraycopy(count_discreteValueNames, 0, buffer, offset, 1);
-            offset += 1;
+            offset += Encoder.writeUint8(buffer, offset, item.getRemoteControlIndex());
+            offset += Encoder.writeFloat32(buffer, offset, item.getParameterValue());
+            offset += Encoder.writeString(buffer, offset, item.getParameterName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeFloat32(buffer, offset, item.getParameterOrigin());
+            offset += Encoder.writeBool(buffer, offset, item.getParameterExists());
+            offset += Encoder.writeInt16(buffer, offset, item.getDiscreteValueCount());
+            offset += Encoder.writeString(buffer, offset, item.getDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeUint8(buffer, offset, item.getParameterType());
+            offset += Encoder.writeUint8(buffer, offset, item.getDiscreteValueNames().length);
             for (String type : item.getDiscreteValueNames()) {
-        byte[] type_encoded = Encoder.encodeString(type, ProtocolConstants.STRING_MAX_LENGTH);
-                System.arraycopy(type_encoded, 0, buffer, offset, type_encoded.length);
-                offset += type_encoded.length;
+                offset += Encoder.writeString(buffer, offset, type, ProtocolConstants.STRING_MAX_LENGTH);
             }
-    byte[] item_currentValueIndex_encoded = Encoder.encodeUint8(item.getCurrentValueIndex());
-            System.arraycopy(item_currentValueIndex_encoded, 0, buffer, offset, item_currentValueIndex_encoded.length);
-            offset += item_currentValueIndex_encoded.length;
-    byte[] item_hasAutomation_encoded = Encoder.encodeBool(item.getHasAutomation());
-            System.arraycopy(item_hasAutomation_encoded, 0, buffer, offset, item_hasAutomation_encoded.length);
-            offset += item_hasAutomation_encoded.length;
-    byte[] item_modulatedValue_encoded = Encoder.encodeFloat32(item.getModulatedValue());
-            System.arraycopy(item_modulatedValue_encoded, 0, buffer, offset, item_modulatedValue_encoded.length);
-            offset += item_modulatedValue_encoded.length;
-    byte[] item_isModulated_encoded = Encoder.encodeBool(item.isModulated());
-            System.arraycopy(item_isModulated_encoded, 0, buffer, offset, item_isModulated_encoded.length);
-            offset += item_isModulated_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item.getCurrentValueIndex());
+            offset += Encoder.writeBool(buffer, offset, item.getHasAutomation());
+            offset += Encoder.writeFloat32(buffer, offset, item.getModulatedValue());
+            offset += Encoder.writeBool(buffer, offset, item.isModulated());
         }
 
 

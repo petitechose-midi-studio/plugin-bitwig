@@ -87,9 +87,7 @@ public final class TransportArrangerAutomationWriteEnabledChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isArrangerAutomationWriteEnabled_encoded = Encoder.encodeBool(isArrangerAutomationWriteEnabled);
-        System.arraycopy(isArrangerAutomationWriteEnabled_encoded, 0, buffer, offset, isArrangerAutomationWriteEnabled_encoded.length);
-        offset += isArrangerAutomationWriteEnabled_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isArrangerAutomationWriteEnabled);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

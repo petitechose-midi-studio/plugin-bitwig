@@ -87,9 +87,7 @@ public final class TransportPlayMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isPlaying_encoded = Encoder.encodeBool(isPlaying);
-        System.arraycopy(isPlaying_encoded, 0, buffer, offset, isPlaying_encoded.length);
-        offset += isPlaying_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isPlaying);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

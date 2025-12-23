@@ -87,9 +87,7 @@ public final class RequestTrackListWindowMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackStartIndex_encoded = Encoder.encodeUint8(trackStartIndex);
-        System.arraycopy(trackStartIndex_encoded, 0, buffer, offset, trackStartIndex_encoded.length);
-        offset += trackStartIndex_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, trackStartIndex);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

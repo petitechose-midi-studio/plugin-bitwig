@@ -208,39 +208,17 @@ public final class DeviceRemoteControlUpdateMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] remoteControlIndex_encoded = Encoder.encodeUint8(remoteControlIndex);
-        System.arraycopy(remoteControlIndex_encoded, 0, buffer, offset, remoteControlIndex_encoded.length);
-        offset += remoteControlIndex_encoded.length;
-        byte[] parameterName_encoded = Encoder.encodeString(parameterName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(parameterName_encoded, 0, buffer, offset, parameterName_encoded.length);
-        offset += parameterName_encoded.length;
-        byte[] parameterValue_encoded = Encoder.encodeFloat32(parameterValue);
-        System.arraycopy(parameterValue_encoded, 0, buffer, offset, parameterValue_encoded.length);
-        offset += parameterValue_encoded.length;
-        byte[] displayValue_encoded = Encoder.encodeString(displayValue, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(displayValue_encoded, 0, buffer, offset, displayValue_encoded.length);
-        offset += displayValue_encoded.length;
-        byte[] parameterOrigin_encoded = Encoder.encodeFloat32(parameterOrigin);
-        System.arraycopy(parameterOrigin_encoded, 0, buffer, offset, parameterOrigin_encoded.length);
-        offset += parameterOrigin_encoded.length;
-        byte[] parameterExists_encoded = Encoder.encodeBool(parameterExists);
-        System.arraycopy(parameterExists_encoded, 0, buffer, offset, parameterExists_encoded.length);
-        offset += parameterExists_encoded.length;
-        byte[] parameterType_encoded = Encoder.encodeUint8(parameterType);
-        System.arraycopy(parameterType_encoded, 0, buffer, offset, parameterType_encoded.length);
-        offset += parameterType_encoded.length;
-        byte[] discreteValueCount_encoded = Encoder.encodeInt16(discreteValueCount);
-        System.arraycopy(discreteValueCount_encoded, 0, buffer, offset, discreteValueCount_encoded.length);
-        offset += discreteValueCount_encoded.length;
-        byte[] currentValueIndex_encoded = Encoder.encodeUint8(currentValueIndex);
-        System.arraycopy(currentValueIndex_encoded, 0, buffer, offset, currentValueIndex_encoded.length);
-        offset += currentValueIndex_encoded.length;
-        byte[] hasAutomation_encoded = Encoder.encodeBool(hasAutomation);
-        System.arraycopy(hasAutomation_encoded, 0, buffer, offset, hasAutomation_encoded.length);
-        offset += hasAutomation_encoded.length;
-        byte[] modulatedValue_encoded = Encoder.encodeFloat32(modulatedValue);
-        System.arraycopy(modulatedValue_encoded, 0, buffer, offset, modulatedValue_encoded.length);
-        offset += modulatedValue_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.writeString(buffer, offset, parameterName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeFloat32(buffer, offset, parameterValue);
+        offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
+        offset += Encoder.writeBool(buffer, offset, parameterExists);
+        offset += Encoder.writeUint8(buffer, offset, parameterType);
+        offset += Encoder.writeInt16(buffer, offset, discreteValueCount);
+        offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
+        offset += Encoder.writeBool(buffer, offset, hasAutomation);
+        offset += Encoder.writeFloat32(buffer, offset, modulatedValue);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

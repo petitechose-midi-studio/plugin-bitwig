@@ -220,59 +220,25 @@ public final class TrackListMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] trackCount_encoded = Encoder.encodeUint8(trackCount);
-        System.arraycopy(trackCount_encoded, 0, buffer, offset, trackCount_encoded.length);
-        offset += trackCount_encoded.length;
-        byte[] trackIndex_encoded = Encoder.encodeUint8(trackIndex);
-        System.arraycopy(trackIndex_encoded, 0, buffer, offset, trackIndex_encoded.length);
-        offset += trackIndex_encoded.length;
-        byte[] isNested_encoded = Encoder.encodeBool(isNested);
-        System.arraycopy(isNested_encoded, 0, buffer, offset, isNested_encoded.length);
-        offset += isNested_encoded.length;
-        byte[] parentGroupName_encoded = Encoder.encodeString(parentGroupName, ProtocolConstants.STRING_MAX_LENGTH);
-        System.arraycopy(parentGroupName_encoded, 0, buffer, offset, parentGroupName_encoded.length);
-        offset += parentGroupName_encoded.length;
-        byte[] tracks_count = Encoder.encodeUint8(tracks.size());
-        System.arraycopy(tracks_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, trackCount);
+        offset += Encoder.writeUint8(buffer, offset, trackIndex);
+        offset += Encoder.writeBool(buffer, offset, isNested);
+        offset += Encoder.writeString(buffer, offset, parentGroupName, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.writeUint8(buffer, offset, tracks.size());
 
         for (Tracks item : tracks) {
-    byte[] item_trackIndex_encoded = Encoder.encodeUint8(item.getTrackIndex());
-            System.arraycopy(item_trackIndex_encoded, 0, buffer, offset, item_trackIndex_encoded.length);
-            offset += item_trackIndex_encoded.length;
-    byte[] item_trackName_encoded = Encoder.encodeString(item.getTrackName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_trackName_encoded, 0, buffer, offset, item_trackName_encoded.length);
-            offset += item_trackName_encoded.length;
-    byte[] item_color_encoded = Encoder.encodeUint32(item.getColor());
-            System.arraycopy(item_color_encoded, 0, buffer, offset, item_color_encoded.length);
-            offset += item_color_encoded.length;
-    byte[] item_isActivated_encoded = Encoder.encodeBool(item.isActivated());
-            System.arraycopy(item_isActivated_encoded, 0, buffer, offset, item_isActivated_encoded.length);
-            offset += item_isActivated_encoded.length;
-    byte[] item_isMute_encoded = Encoder.encodeBool(item.isMute());
-            System.arraycopy(item_isMute_encoded, 0, buffer, offset, item_isMute_encoded.length);
-            offset += item_isMute_encoded.length;
-    byte[] item_isSolo_encoded = Encoder.encodeBool(item.isSolo());
-            System.arraycopy(item_isSolo_encoded, 0, buffer, offset, item_isSolo_encoded.length);
-            offset += item_isSolo_encoded.length;
-    byte[] item_isMutedBySolo_encoded = Encoder.encodeBool(item.isMutedBySolo());
-            System.arraycopy(item_isMutedBySolo_encoded, 0, buffer, offset, item_isMutedBySolo_encoded.length);
-            offset += item_isMutedBySolo_encoded.length;
-    byte[] item_isArm_encoded = Encoder.encodeBool(item.isArm());
-            System.arraycopy(item_isArm_encoded, 0, buffer, offset, item_isArm_encoded.length);
-            offset += item_isArm_encoded.length;
-    byte[] item_isGroup_encoded = Encoder.encodeBool(item.isGroup());
-            System.arraycopy(item_isGroup_encoded, 0, buffer, offset, item_isGroup_encoded.length);
-            offset += item_isGroup_encoded.length;
-    byte[] item_trackType_encoded = Encoder.encodeUint8(item.getTrackType());
-            System.arraycopy(item_trackType_encoded, 0, buffer, offset, item_trackType_encoded.length);
-            offset += item_trackType_encoded.length;
-    byte[] item_volume_encoded = Encoder.encodeFloat32(item.getVolume());
-            System.arraycopy(item_volume_encoded, 0, buffer, offset, item_volume_encoded.length);
-            offset += item_volume_encoded.length;
-    byte[] item_pan_encoded = Encoder.encodeFloat32(item.getPan());
-            System.arraycopy(item_pan_encoded, 0, buffer, offset, item_pan_encoded.length);
-            offset += item_pan_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item.getTrackIndex());
+            offset += Encoder.writeString(buffer, offset, item.getTrackName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeUint32(buffer, offset, item.getColor());
+            offset += Encoder.writeBool(buffer, offset, item.isActivated());
+            offset += Encoder.writeBool(buffer, offset, item.isMute());
+            offset += Encoder.writeBool(buffer, offset, item.isSolo());
+            offset += Encoder.writeBool(buffer, offset, item.isMutedBySolo());
+            offset += Encoder.writeBool(buffer, offset, item.isArm());
+            offset += Encoder.writeBool(buffer, offset, item.isGroup());
+            offset += Encoder.writeUint8(buffer, offset, item.getTrackType());
+            offset += Encoder.writeFloat32(buffer, offset, item.getVolume());
+            offset += Encoder.writeFloat32(buffer, offset, item.getPan());
         }
 
 

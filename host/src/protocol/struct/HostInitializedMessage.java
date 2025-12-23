@@ -87,9 +87,7 @@ public final class HostInitializedMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] isHostActive_encoded = Encoder.encodeBool(isHostActive);
-        System.arraycopy(isHostActive_encoded, 0, buffer, offset, isHostActive_encoded.length);
-        offset += isHostActive_encoded.length;
+        offset += Encoder.writeBool(buffer, offset, isHostActive);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }

@@ -154,29 +154,15 @@ public final class DeviceChildrenMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceIndex_encoded = Encoder.encodeUint8(deviceIndex);
-        System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
-        offset += deviceIndex_encoded.length;
-        byte[] childType_encoded = Encoder.encodeUint8(childType);
-        System.arraycopy(childType_encoded, 0, buffer, offset, childType_encoded.length);
-        offset += childType_encoded.length;
-        byte[] childrenCount_encoded = Encoder.encodeUint8(childrenCount);
-        System.arraycopy(childrenCount_encoded, 0, buffer, offset, childrenCount_encoded.length);
-        offset += childrenCount_encoded.length;
-        byte[] children_count = Encoder.encodeUint8(children.size());
-        System.arraycopy(children_count, 0, buffer, offset, 1);
-        offset += 1;
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeUint8(buffer, offset, childType);
+        offset += Encoder.writeUint8(buffer, offset, childrenCount);
+        offset += Encoder.writeUint8(buffer, offset, children.size());
 
         for (Children item : children) {
-    byte[] item_childIndex_encoded = Encoder.encodeUint8(item.getChildIndex());
-            System.arraycopy(item_childIndex_encoded, 0, buffer, offset, item_childIndex_encoded.length);
-            offset += item_childIndex_encoded.length;
-    byte[] item_childName_encoded = Encoder.encodeString(item.getChildName(), ProtocolConstants.STRING_MAX_LENGTH);
-            System.arraycopy(item_childName_encoded, 0, buffer, offset, item_childName_encoded.length);
-            offset += item_childName_encoded.length;
-    byte[] item_itemType_encoded = Encoder.encodeUint8(item.getItemType());
-            System.arraycopy(item_itemType_encoded, 0, buffer, offset, item_itemType_encoded.length);
-            offset += item_itemType_encoded.length;
+            offset += Encoder.writeUint8(buffer, offset, item.getChildIndex());
+            offset += Encoder.writeString(buffer, offset, item.getChildName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.writeUint8(buffer, offset, item.getItemType());
         }
 
 

@@ -99,12 +99,8 @@ public final class DeviceStateChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        byte[] deviceIndex_encoded = Encoder.encodeUint8(deviceIndex);
-        System.arraycopy(deviceIndex_encoded, 0, buffer, offset, deviceIndex_encoded.length);
-        offset += deviceIndex_encoded.length;
-        byte[] isEnabled_encoded = Encoder.encodeBool(isEnabled);
-        System.arraycopy(isEnabled_encoded, 0, buffer, offset, isEnabled_encoded.length);
-        offset += isEnabled_encoded.length;
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeBool(buffer, offset, isEnabled);
 
         return java.util.Arrays.copyOf(buffer, offset);
     }
