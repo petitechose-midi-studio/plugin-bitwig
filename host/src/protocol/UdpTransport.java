@@ -90,10 +90,16 @@ public class UdpTransport implements ProtocolTransport {
 
     @Override
     public void send(byte[] data) {
+        send(data, 0, data.length);
+    }
+
+    @Override
+    public void send(byte[] buffer, int offset, int length) {
         if (!isActive.get() || socket.isClosed()) return;
 
         try {
-            DatagramPacket packet = new DatagramPacket(data, data.length, bridgeAddress, bridgePort);
+            // Zero-copy: DatagramPacket uses offset/length directly
+            DatagramPacket packet = new DatagramPacket(buffer, offset, length, bridgeAddress, bridgePort);
             socket.send(packet);
         } catch (IOException e) {
             host.errorln("[UDP Transport] Send error: " + e.getMessage());

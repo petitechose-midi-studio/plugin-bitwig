@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DeviceRemoteControlDiscreteValuesMessage - Auto-generated Protocol Message
@@ -39,7 +37,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     public boolean fromHost = false;
 
     private final int remoteControlIndex;
-    private final List<String> discreteValueNames;
+    private final String[] discreteValueNames;
     private final int currentValueIndex;
 
     // ============================================================================
@@ -53,7 +51,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
      * @param discreteValueNames The discreteValueNames value
      * @param currentValueIndex The currentValueIndex value
      */
-    public DeviceRemoteControlDiscreteValuesMessage(int remoteControlIndex, List<String> discreteValueNames, int currentValueIndex) {
+    public DeviceRemoteControlDiscreteValuesMessage(int remoteControlIndex, String[] discreteValueNames, int currentValueIndex) {
         this.remoteControlIndex = remoteControlIndex;
         this.discreteValueNames = discreteValueNames;
         this.currentValueIndex = currentValueIndex;
@@ -77,7 +75,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
      *
      * @return discreteValueNames
      */
-    public List<String> getDiscreteValueNames() {
+    public String[] getDiscreteValueNames() {
         return discreteValueNames;
     }
 
@@ -100,13 +98,14 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     public static final int MAX_PAYLOAD_SIZE = 1093;
 
     /**
-     * Encode message to MIDI-safe bytes
+     * Encode message directly into provided buffer (zero allocation)
      *
-     * @return Encoded byte array
+     * @param buffer Output buffer (must have enough space)
+     * @param startOffset Starting position in buffer
+     * @return Number of bytes written
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-        int offset = 0;
+    public int encode(byte[] buffer, int startOffset) {
+        int offset = startOffset;
 
         // Encode message name (length-prefixed string for bridge logging)
         buffer[offset++] = (byte) MESSAGE_NAME.length();
@@ -115,7 +114,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
         }
 
         offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
-        offset += Encoder.writeUint8(buffer, offset, discreteValueNames.size());
+        offset += Encoder.writeUint8(buffer, offset, discreteValueNames.length);
 
         for (String item : discreteValueNames) {
             offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
@@ -123,7 +122,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
 
         offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
 
-        return java.util.Arrays.copyOf(buffer, offset);
+        return offset - startOffset;
     }
 
     // ============================================================================
@@ -158,17 +157,16 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
         int count_discreteValueNames = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<String> discreteValueNames_list = new ArrayList<>();
+        String[] discreteValueNames = new String[count_discreteValueNames];
         for (int i = 0; i < count_discreteValueNames; i++) {
-    String item_discreteValueNames = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
-            offset += 1 + item_discreteValueNames.length();
-            discreteValueNames_list.add(item_discreteValueNames);
+            discreteValueNames[i] = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += 1 + discreteValueNames[i].length();
         }
 
         int currentValueIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames_list, currentValueIndex);
+        return new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames, currentValueIndex);
     }
 
     // ============================================================================
@@ -187,7 +185,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
         sb.append("deviceRemoteControlDiscreteValues:\n");
         sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
         sb.append("  discreteValueNames:");
-        if (getDiscreteValueNames().isEmpty()) {
+        if (getDiscreteValueNames().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");

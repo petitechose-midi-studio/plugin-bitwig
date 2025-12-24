@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DeviceRemoteControlsBatchMessage - Auto-generated Protocol Message
@@ -41,9 +39,9 @@ public final class DeviceRemoteControlsBatchMessage {
     private final int sequenceNumber;
     private final int dirtyMask;
     private final int echoMask;
-    private final List<Float> values;
-    private final List<Float> modulatedValues;
-    private final List<String> displayValues;
+    private final float[] values;
+    private final float[] modulatedValues;
+    private final String[] displayValues;
 
     // ============================================================================
     // Constructor
@@ -59,7 +57,7 @@ public final class DeviceRemoteControlsBatchMessage {
      * @param modulatedValues The modulatedValues value
      * @param displayValues The displayValues value
      */
-    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, List<Float> values, List<Float> modulatedValues, List<String> displayValues) {
+    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, float[] values, float[] modulatedValues, String[] displayValues) {
         this.sequenceNumber = sequenceNumber;
         this.dirtyMask = dirtyMask;
         this.echoMask = echoMask;
@@ -104,7 +102,7 @@ public final class DeviceRemoteControlsBatchMessage {
      *
      * @return values
      */
-    public List<Float> getValues() {
+    public float[] getValues() {
         return values;
     }
 
@@ -113,7 +111,7 @@ public final class DeviceRemoteControlsBatchMessage {
      *
      * @return modulatedValues
      */
-    public List<Float> getModulatedValues() {
+    public float[] getModulatedValues() {
         return modulatedValues;
     }
 
@@ -122,7 +120,7 @@ public final class DeviceRemoteControlsBatchMessage {
      *
      * @return displayValues
      */
-    public List<String> getDisplayValues() {
+    public String[] getDisplayValues() {
         return displayValues;
     }
 
@@ -136,13 +134,14 @@ public final class DeviceRemoteControlsBatchMessage {
     public static final int MAX_PAYLOAD_SIZE = 312;
 
     /**
-     * Encode message to MIDI-safe bytes
+     * Encode message directly into provided buffer (zero allocation)
      *
-     * @return Encoded byte array
+     * @param buffer Output buffer (must have enough space)
+     * @param startOffset Starting position in buffer
+     * @return Number of bytes written
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-        int offset = 0;
+    public int encode(byte[] buffer, int startOffset) {
+        int offset = startOffset;
 
         // Encode message name (length-prefixed string for bridge logging)
         buffer[offset++] = (byte) MESSAGE_NAME.length();
@@ -153,26 +152,26 @@ public final class DeviceRemoteControlsBatchMessage {
         offset += Encoder.writeUint8(buffer, offset, sequenceNumber);
         offset += Encoder.writeUint8(buffer, offset, dirtyMask);
         offset += Encoder.writeUint8(buffer, offset, echoMask);
-        offset += Encoder.writeUint8(buffer, offset, values.size());
+        offset += Encoder.writeUint8(buffer, offset, values.length);
 
         for (float item : values) {
             offset += Encoder.writeNorm8(buffer, offset, item);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, modulatedValues.size());
+        offset += Encoder.writeUint8(buffer, offset, modulatedValues.length);
 
         for (float item : modulatedValues) {
             offset += Encoder.writeNorm8(buffer, offset, item);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, displayValues.size());
+        offset += Encoder.writeUint8(buffer, offset, displayValues.length);
 
         for (String item : displayValues) {
             offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
         }
 
 
-        return java.util.Arrays.copyOf(buffer, offset);
+        return offset - startOffset;
     }
 
     // ============================================================================
@@ -211,35 +210,32 @@ public final class DeviceRemoteControlsBatchMessage {
         int count_values = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Float> values_list = new ArrayList<>();
+        float[] values = new float[count_values];
         for (int i = 0; i < count_values; i++) {
-    float item_values = Decoder.decodeNorm8(data, offset);
+            values[i] = Decoder.decodeNorm8(data, offset);
             offset += 1;
-            values_list.add(item_values);
         }
 
         int count_modulatedValues = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Float> modulatedValues_list = new ArrayList<>();
+        float[] modulatedValues = new float[count_modulatedValues];
         for (int i = 0; i < count_modulatedValues; i++) {
-    float item_modulatedValues = Decoder.decodeNorm8(data, offset);
+            modulatedValues[i] = Decoder.decodeNorm8(data, offset);
             offset += 1;
-            modulatedValues_list.add(item_modulatedValues);
         }
 
         int count_displayValues = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<String> displayValues_list = new ArrayList<>();
+        String[] displayValues = new String[count_displayValues];
         for (int i = 0; i < count_displayValues; i++) {
-    String item_displayValues = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
-            offset += 1 + item_displayValues.length();
-            displayValues_list.add(item_displayValues);
+            displayValues[i] = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += 1 + displayValues[i].length();
         }
 
 
-        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, values_list, modulatedValues_list, displayValues_list);
+        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, values, modulatedValues, displayValues);
     }
 
     // ============================================================================
@@ -272,7 +268,7 @@ public final class DeviceRemoteControlsBatchMessage {
         sb.append("  dirtyMask: ").append(getDirtyMask()).append("\n");
         sb.append("  echoMask: ").append(getEchoMask()).append("\n");
         sb.append("  values:");
-        if (getValues().isEmpty()) {
+        if (getValues().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");
@@ -281,7 +277,7 @@ public final class DeviceRemoteControlsBatchMessage {
             }
         }
         sb.append("  modulatedValues:");
-        if (getModulatedValues().isEmpty()) {
+        if (getModulatedValues().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");
@@ -290,7 +286,7 @@ public final class DeviceRemoteControlsBatchMessage {
             }
         }
         sb.append("  displayValues:");
-        if (getDisplayValues().isEmpty()) {
+        if (getDisplayValues().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");

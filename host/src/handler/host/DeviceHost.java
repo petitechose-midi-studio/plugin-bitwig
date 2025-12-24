@@ -58,10 +58,8 @@ public class DeviceHost {
     private int valuesEchoMask = 0;   // Bit mask: which parameters are echoes
     private boolean batchDirty = false; // True if any value or modulated value changed
 
-    // Pre-allocated lists for batch message (avoid allocation per tick)
-    private final List<Float> batchValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
-    private final List<Float> batchModulatedValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
-    private final List<String> batchDisplayValues = new ArrayList<>(BitwigConfig.MAX_PARAMETERS);
+    // Pre-allocated String array for display values (avoid null in message)
+    private final String[] batchDisplayValues = new String[BitwigConfig.MAX_PARAMETERS];
 
     public DeviceHost(
         ControllerHost host,
@@ -138,20 +136,13 @@ public class DeviceHost {
         if (!batchDirty) return;
         batchDirty = false;
 
-        // Build combined batch with values, modulated values, and display values
-        // Reuse pre-allocated lists (clear + add instead of new ArrayList)
-        batchValues.clear();
-        batchModulatedValues.clear();
-        batchDisplayValues.clear();
+        // Build display values array (replace nulls with empty strings)
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
-            batchValues.add(pendingValues[i]);
-            batchModulatedValues.add(modulatedValues[i]);
-            // Use empty string if null (KNOB parameters or not yet initialized)
-            batchDisplayValues.add(pendingDisplayValues[i] != null ? pendingDisplayValues[i] : "");
+            batchDisplayValues[i] = pendingDisplayValues[i] != null ? pendingDisplayValues[i] : "";
         }
 
-        // Send single combined message
-        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, batchValues, batchModulatedValues, batchDisplayValues));
+        // Send single combined message - zero allocation (arrays passed directly)
+        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, pendingValues, modulatedValues, batchDisplayValues));
 
         // Reset masks
         valuesDirtyMask = 0;
@@ -405,13 +396,14 @@ public class DeviceHost {
             }
 
             // Build window of up to 16 items (protocol encodes count prefix)
-            final List<String> windowNames = new ArrayList<>();
-            for (int i = 0; i < PAGE_WINDOW_SIZE && (startIndex + i) < totalCount; i++) {
+            int windowSize = Math.min(PAGE_WINDOW_SIZE, totalCount - startIndex);
+            final String[] windowNames = new String[windowSize];
+            for (int i = 0; i < windowSize; i++) {
                 int idx = startIndex + i;
                 if (pageNamesArray != null && idx < pageNamesArray.length) {
-                    windowNames.add(pageNamesArray[idx]);
+                    windowNames[i] = pageNamesArray[idx];
                 } else {
-                    windowNames.add("");
+                    windowNames[i] = "";
                 }
             }
 
@@ -631,23 +623,15 @@ public class DeviceHost {
             int pageIndex = remoteControls.selectedPageIndex().get();
             int pageCount = remoteControls.pageCount().get();
             String pageName = getPageName(pageIndex, pageCount);
-            List<Integer> childrenTypes = intArrayToList(getDeviceChildrenTypes(cursorDevice));
+            int[] childrenTypes = getDeviceChildrenTypes(cursorDevice);
 
             sendDeviceChangeHeader(deviceName, isEnabled, deviceType, pageIndex, pageCount, pageName, childrenTypes);
             sendPageChange();
         }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
-    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, int pageIndex, int pageCount, String pageName, List<Integer> childrenTypes) {
+    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, int pageIndex, int pageCount, String pageName, int[] childrenTypes) {
         protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes));
-    }
-
-    private List<Integer> intArrayToList(int[] array) {
-        List<Integer> list = new ArrayList<>();
-        for (int value : array) {
-            list.add(value);
-        }
-        return list;
     }
 
     private void sendDeviceCleared() {
@@ -662,7 +646,7 @@ public class DeviceHost {
                 false,                 // isEnabled
                 0,                     // deviceType (UNKNOWN)
                 new DeviceChangeHeaderMessage.PageInfo(0, 0, ""),  // empty page info
-                List.of(0, 0, 0, 0)   // no children types
+                new int[]{0, 0, 0, 0}  // no children types
             ));
 
             // Clear all parameters (mark as not visible)

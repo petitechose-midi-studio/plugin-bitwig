@@ -49,8 +49,13 @@ public class Protocol extends ProtocolCallbacks {
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     // Reflection cache for performance
+    // encode(byte[], int) returns bytes written - streaming, zero-allocation
     private record MessageMeta(MessageID messageId, Method encodeMethod) {}
     private final ConcurrentHashMap<Class<?>, MessageMeta> messageCache = new ConcurrentHashMap<>();
+
+    // Pre-allocated send buffer (Bitwig is single-threaded, no need for ThreadLocal)
+    private static final int MAX_SEND_BUFFER_SIZE = 4096;
+    private final byte[] sendBuffer = new byte[MAX_SEND_BUFFER_SIZE];
 
     // ========================================================================
     // Metrics (for bottleneck analysis)
@@ -170,30 +175,33 @@ public class Protocol extends ProtocolCallbacks {
             try {
                 Field messageIdField = c.getField("MESSAGE_ID");
                 MessageID id = (MessageID) messageIdField.get(null);
-                Method encode = c.getMethod("encode");
+                // encode(byte[], int) - streaming, zero-allocation
+                Method encode = c.getMethod("encode", byte[].class, int.class);
                 return new MessageMeta(id, encode);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to cache message type: " + c.getName(), e);
             }
         });
 
-        byte[] payload;
+        int frameLength;
         try {
-            payload = (byte[]) meta.encodeMethod().invoke(message);
+            // Frame header: [MessageID][fromHost]
+            sendBuffer[0] = meta.messageId().getValue();
+            sendBuffer[1] = 1;  // fromHost = true
+            // Encode payload starting at offset 2 (zero-allocation)
+            int payloadLength = (int) meta.encodeMethod().invoke(message, sendBuffer, 2);
+            frameLength = 2 + payloadLength;
         } catch (Exception e) {
             throw new RuntimeException("Failed to encode message: " + e.getMessage(), e);
         }
 
-        // Build Serial8 frame: [MessageID][fromHost][payload...]
-        byte[] frame = buildFrame(meta.messageId().getValue(), payload);
-
-        // Send via transport
-        transport.send(frame);
+        // Send via transport (pass buffer slice without allocation)
+        transport.send(sendBuffer, 0, frameLength);
 
         // Update metrics
         if (METRICS_ENABLED) {
             messageCount.incrementAndGet();
-            byteCount.addAndGet(frame.length);
+            byteCount.addAndGet(frameLength);
             maybeLogMetrics();
         }
     }
@@ -260,18 +268,6 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
     // Internal Helpers
     // ========================================================================
-
-    private byte[] buildFrame(byte messageId, byte[] payload) {
-        // Frame format: [MessageID][fromHost][payload...]
-        byte[] frame = new byte[2 + payload.length];
-
-        frame[0] = messageId;
-        frame[1] = 1;  // fromHost = true (we are the host)
-
-        System.arraycopy(payload, 0, frame, 2, payload.length);
-
-        return frame;
-    }
 
     /**
      * Check if connected
