@@ -176,13 +176,14 @@ public final class DeviceListWindowMessage {
     public static final int MAX_PAYLOAD_SIZE = 711;
 
     /**
-     * Encode message to MIDI-safe bytes
+     * Encode message directly into provided buffer (zero allocation)
      *
-     * @return Encoded byte array
+     * @param buffer Output buffer (must have enough space)
+     * @param startOffset Starting position in buffer
+     * @return Number of bytes written
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-        int offset = 0;
+    public int encode(byte[] buffer, int startOffset) {
+        int offset = startOffset;
 
         // Encode message name (length-prefixed string for bridge logging)
         buffer[offset++] = (byte) MESSAGE_NAME.length();
@@ -209,7 +210,7 @@ public final class DeviceListWindowMessage {
         }
 
 
-        return java.util.Arrays.copyOf(buffer, offset);
+        return offset - startOffset;
     }
 
     // ============================================================================

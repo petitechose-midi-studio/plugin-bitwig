@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DevicePageNamesWindowMessage - Auto-generated Protocol Message
@@ -41,7 +39,7 @@ public final class DevicePageNamesWindowMessage {
     private final int devicePageCount;
     private final int pageStartIndex;
     private final int devicePageIndex;
-    private final List<String> pageNames;
+    private final String[] pageNames;
 
     // ============================================================================
     // Constructor
@@ -55,7 +53,7 @@ public final class DevicePageNamesWindowMessage {
      * @param devicePageIndex The devicePageIndex value
      * @param pageNames The pageNames value
      */
-    public DevicePageNamesWindowMessage(int devicePageCount, int pageStartIndex, int devicePageIndex, List<String> pageNames) {
+    public DevicePageNamesWindowMessage(int devicePageCount, int pageStartIndex, int devicePageIndex, String[] pageNames) {
         this.devicePageCount = devicePageCount;
         this.pageStartIndex = pageStartIndex;
         this.devicePageIndex = devicePageIndex;
@@ -98,7 +96,7 @@ public final class DevicePageNamesWindowMessage {
      *
      * @return pageNames
      */
-    public List<String> getPageNames() {
+    public String[] getPageNames() {
         return pageNames;
     }
 
@@ -112,13 +110,14 @@ public final class DevicePageNamesWindowMessage {
     public static final int MAX_PAYLOAD_SIZE = 554;
 
     /**
-     * Encode message to MIDI-safe bytes
+     * Encode message directly into provided buffer (zero allocation)
      *
-     * @return Encoded byte array
+     * @param buffer Output buffer (must have enough space)
+     * @param startOffset Starting position in buffer
+     * @return Number of bytes written
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-        int offset = 0;
+    public int encode(byte[] buffer, int startOffset) {
+        int offset = startOffset;
 
         // Encode message name (length-prefixed string for bridge logging)
         buffer[offset++] = (byte) MESSAGE_NAME.length();
@@ -129,14 +128,14 @@ public final class DevicePageNamesWindowMessage {
         offset += Encoder.writeUint8(buffer, offset, devicePageCount);
         offset += Encoder.writeUint8(buffer, offset, pageStartIndex);
         offset += Encoder.writeUint8(buffer, offset, devicePageIndex);
-        offset += Encoder.writeUint8(buffer, offset, pageNames.size());
+        offset += Encoder.writeUint8(buffer, offset, pageNames.length);
 
         for (String item : pageNames) {
             offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
         }
 
 
-        return java.util.Arrays.copyOf(buffer, offset);
+        return offset - startOffset;
     }
 
     // ============================================================================
@@ -175,15 +174,14 @@ public final class DevicePageNamesWindowMessage {
         int count_pageNames = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<String> pageNames_list = new ArrayList<>();
+        String[] pageNames = new String[count_pageNames];
         for (int i = 0; i < count_pageNames; i++) {
-    String item_pageNames = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
-            offset += 1 + item_pageNames.length();
-            pageNames_list.add(item_pageNames);
+            pageNames[i] = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += 1 + pageNames[i].length();
         }
 
 
-        return new DevicePageNamesWindowMessage(devicePageCount, pageStartIndex, devicePageIndex, pageNames_list);
+        return new DevicePageNamesWindowMessage(devicePageCount, pageStartIndex, devicePageIndex, pageNames);
     }
 
     // ============================================================================
@@ -204,7 +202,7 @@ public final class DevicePageNamesWindowMessage {
         sb.append("  pageStartIndex: ").append(getPageStartIndex()).append("\n");
         sb.append("  devicePageIndex: ").append(getDevicePageIndex()).append("\n");
         sb.append("  pageNames:");
-        if (getPageNames().isEmpty()) {
+        if (getPageNames().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");

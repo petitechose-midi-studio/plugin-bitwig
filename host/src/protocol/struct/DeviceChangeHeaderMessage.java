@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DeviceChangeHeaderMessage - Auto-generated Protocol Message
@@ -70,7 +68,7 @@ public final class DeviceChangeHeaderMessage {
     private final boolean isEnabled;
     private final int deviceType;
     private final PageInfo pageInfo;
-    private final List<Integer> childrenTypes;
+    private final int[] childrenTypes;
 
     // ============================================================================
     // Constructor
@@ -85,7 +83,7 @@ public final class DeviceChangeHeaderMessage {
      * @param pageInfo The pageInfo value
      * @param childrenTypes The childrenTypes value
      */
-    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, int deviceType, PageInfo pageInfo, List<Integer> childrenTypes) {
+    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, int deviceType, PageInfo pageInfo, int[] childrenTypes) {
         this.deviceName = deviceName;
         this.isEnabled = isEnabled;
         this.deviceType = deviceType;
@@ -138,7 +136,7 @@ public final class DeviceChangeHeaderMessage {
      *
      * @return childrenTypes
      */
-    public List<Integer> getChildrenTypes() {
+    public int[] getChildrenTypes() {
         return childrenTypes;
     }
 
@@ -152,13 +150,14 @@ public final class DeviceChangeHeaderMessage {
     public static final int MAX_PAYLOAD_SIZE = 94;
 
     /**
-     * Encode message to MIDI-safe bytes
+     * Encode message directly into provided buffer (zero allocation)
      *
-     * @return Encoded byte array
+     * @param buffer Output buffer (must have enough space)
+     * @param startOffset Starting position in buffer
+     * @return Number of bytes written
      */
-    public byte[] encode() {
-        byte[] buffer = new byte[MAX_PAYLOAD_SIZE];
-        int offset = 0;
+    public int encode(byte[] buffer, int startOffset) {
+        int offset = startOffset;
 
         // Encode message name (length-prefixed string for bridge logging)
         buffer[offset++] = (byte) MESSAGE_NAME.length();
@@ -172,14 +171,14 @@ public final class DeviceChangeHeaderMessage {
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
         offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, childrenTypes.size());
+        offset += Encoder.writeUint8(buffer, offset, childrenTypes.length);
 
         for (int item : childrenTypes) {
             offset += Encoder.writeUint8(buffer, offset, item);
         }
 
 
-        return java.util.Arrays.copyOf(buffer, offset);
+        return offset - startOffset;
     }
 
     // ============================================================================
@@ -226,15 +225,14 @@ public final class DeviceChangeHeaderMessage {
         int count_childrenTypes = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Integer> childrenTypes_list = new ArrayList<>();
+        int[] childrenTypes = new int[count_childrenTypes];
         for (int i = 0; i < count_childrenTypes; i++) {
-    int item_childrenTypes = Decoder.decodeUint8(data, offset);
+            childrenTypes[i] = Decoder.decodeUint8(data, offset);
             offset += 1;
-            childrenTypes_list.add(item_childrenTypes);
         }
 
 
-        return new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, pageInfo, childrenTypes_list);
+        return new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, pageInfo, childrenTypes);
     }
 
     // ============================================================================
@@ -259,7 +257,7 @@ public final class DeviceChangeHeaderMessage {
         sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");
         sb.append("    devicePageName: \"").append(getPageInfo().getDevicePageName()).append("\"\n");
         sb.append("  childrenTypes:");
-        if (getChildrenTypes().isEmpty()) {
+        if (getChildrenTypes().length == 0) {
             sb.append(" []\n");
         } else {
             sb.append("\n");
