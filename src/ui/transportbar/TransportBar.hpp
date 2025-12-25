@@ -55,6 +55,7 @@ private:
     lv_obj_t* play_icon_ = nullptr;
     lv_obj_t* stop_icon_ = nullptr;
     lv_obj_t* record_icon_ = nullptr;
+    lv_obj_t* automation_override_icon_ = nullptr;
     std::unique_ptr<oc::ui::lvgl::Label> bpm_label_;
 
     // Setup
@@ -72,6 +73,7 @@ private:
     void setTempo(float tempo);
     void setMidiIn(bool active);
     void setMidiOut(bool active);
+    void setAutomationOverride(bool active);
 };
 
 }  // namespace bitwig

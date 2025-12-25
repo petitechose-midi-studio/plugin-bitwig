@@ -137,12 +137,17 @@ public class DeviceHost {
         batchDirty = false;
 
         // Build display values array (replace nulls with empty strings)
+        // Build hasAutomationMask from hasAutomationState array
+        int hasAutomationMask = 0;
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             batchDisplayValues[i] = pendingDisplayValues[i] != null ? pendingDisplayValues[i] : "";
+            if (hasAutomationState[i]) {
+                hasAutomationMask |= (1 << i);
+            }
         }
 
         // Send single combined message - zero allocation (arrays passed directly)
-        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, pendingValues, modulatedValues, batchDisplayValues));
+        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, hasAutomationMask, pendingValues, modulatedValues, batchDisplayValues));
 
         // Reset masks
         valuesDirtyMask = 0;
@@ -269,12 +274,11 @@ public class DeviceHost {
                 protocol.send(new DeviceRemoteControlNameChangeMessage(paramIndex, name));
             });
 
-            // Automation observers - granular updates (immediate, as automation changes are
-            // rare)
+            // Automation state observer - updates hasAutomationMask in batch
             param.hasAutomation().addValueObserver(hasAutomation -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain automation state
-                hasAutomationState[paramIndex] = hasAutomation; // Track for isModulated detection
-                protocol.send(new DeviceRemoteControlHasAutomationChangeMessage(paramIndex, hasAutomation));
+                hasAutomationState[paramIndex] = hasAutomation; // Track for batch mask
+                batchDirty = true;  // Ensure batch is sent with updated mask
                 // Check isModulated immediately (automation changes are rare)
                 checkAndSendIsModulatedChange(paramIndex);
             });
@@ -681,6 +685,9 @@ public class DeviceHost {
             new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
             remoteControlsList
         ));
+
+        // Ensure batch is sent with updated hasAutomationMask
+        batchDirty = true;
 
         // Resume individual observers
         deviceChangePending = false;

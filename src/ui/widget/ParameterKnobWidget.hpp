@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <oc/ui/lvgl/widget/KnobWidget.hpp>
+#include <oc/ui/lvgl/widget/StateIndicator.hpp>
 
 #include "BaseParameterWidget.hpp"
 
@@ -24,10 +25,15 @@ public:
     void setModulatedValue(float modulatedValue);
     void setIsModulated(bool isModulated);
 
+    // Automation indicator support
+    void setHasAutomation(bool hasAutomation) override;
+
 private:
     void createUI(lv_coord_t width, lv_coord_t height, bool centered);
 
     std::unique_ptr<oc::ui::lvgl::KnobWidget> knob_;
+    std::unique_ptr<oc::ui::lvgl::StateIndicator> automationIndicator_;
+    bool hasAutomation_ = false;
 };
 
 }  // namespace bitwig

@@ -38,6 +38,7 @@ struct DeviceRemoteControlsBatchMessage {
     uint8_t sequenceNumber;
     uint8_t dirtyMask;
     uint8_t echoMask;
+    uint8_t hasAutomationMask;
     std::array<float, 8> values;
     std::array<float, 8> modulatedValues;
     std::array<std::string, 8> displayValues;
@@ -48,12 +49,12 @@ struct DeviceRemoteControlsBatchMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 312;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 313;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 32;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 33;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -76,6 +77,7 @@ struct DeviceRemoteControlsBatchMessage {
         encodeUint8(ptr, sequenceNumber);
         encodeUint8(ptr, dirtyMask);
         encodeUint8(ptr, echoMask);
+        encodeUint8(ptr, hasAutomationMask);
         encodeUint8(ptr, values.size());
         for (const auto& item : values) {
             encodeNorm8(ptr, item);
@@ -121,6 +123,8 @@ struct DeviceRemoteControlsBatchMessage {
         if (!decodeUint8(ptr, remaining, dirtyMask)) return std::nullopt;
         uint8_t echoMask;
         if (!decodeUint8(ptr, remaining, echoMask)) return std::nullopt;
+        uint8_t hasAutomationMask;
+        if (!decodeUint8(ptr, remaining, hasAutomationMask)) return std::nullopt;
         std::array<float, 8> values_data;
         uint8_t count_values;
         if (!decodeUint8(ptr, remaining, count_values)) return std::nullopt;
@@ -140,7 +144,7 @@ struct DeviceRemoteControlsBatchMessage {
             if (!decodeString(ptr, remaining, displayValues_data[i])) return std::nullopt;
         }
 
-        return DeviceRemoteControlsBatchMessage{sequenceNumber, dirtyMask, echoMask, values_data, modulatedValues_data, displayValues_data};
+        return DeviceRemoteControlsBatchMessage{sequenceNumber, dirtyMask, echoMask, hasAutomationMask, values_data, modulatedValues_data, displayValues_data};
     }
 
 
@@ -161,6 +165,7 @@ struct DeviceRemoteControlsBatchMessage {
         ptr += snprintf(ptr, end - ptr, "  sequenceNumber: %lu\n", (unsigned long)sequenceNumber);
         ptr += snprintf(ptr, end - ptr, "  dirtyMask: %lu\n", (unsigned long)dirtyMask);
         ptr += snprintf(ptr, end - ptr, "  echoMask: %lu\n", (unsigned long)echoMask);
+        ptr += snprintf(ptr, end - ptr, "  hasAutomationMask: %lu\n", (unsigned long)hasAutomationMask);
         ptr += snprintf(ptr, end - ptr, "  values:");
         if (values.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");

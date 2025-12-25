@@ -136,6 +136,9 @@ void HandlerHostPage::setupProtocolCallbacks() {
             // Store offset (not absolute value) so ribbon follows optimistic updates
             slot.isModulated.set(rc.isModulated);
             slot.modulationOffset.set(rc.modulatedValue - rc.parameterValue);
+
+            // Automation state
+            slot.hasAutomation.set(rc.hasAutomation);
         }
     };
 }

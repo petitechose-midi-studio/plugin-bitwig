@@ -93,12 +93,18 @@ DEVICE_REMOTE_CONTROL_IS_MODULATED_CHANGE = Message(
     fields=[remote_control_index, parameter_is_modulated]
 )
 
+DEVICE_REMOTE_CONTROL_RESTORE_AUTOMATION = Message(
+    description='Controller requests host to restore automation playback for parameter (sets value to modulatedValue)',
+    fields=[remote_control_index]
+)
+
 DEVICE_REMOTE_CONTROLS_BATCH = Message(
     description='Combined batch update of all 8 remote control values and modulated values (sent at fixed rate ~50Hz)',
     fields=[
         batch_sequence_number,           # UINT8: Rolling sequence (0-255) for staleness detection
         values_dirty_mask,               # UINT8: Which values changed (bit 0-7)
         values_echo_mask,                # UINT8: Which are echoes from controller (bit 0-7)
+        has_automation_mask,             # UINT8: Which params have automation (bit 0-7) - host is source of truth
         parameter_values_batch,          # NORM8[8]: Parameter values for all 8 remote controls
         parameter_modulated_values_batch, # NORM8[8]: Modulated values for all 8 remote controls
         parameter_display_values_batch   # STRING[8]: Display values for LIST/BUTTON params (empty for KNOB)

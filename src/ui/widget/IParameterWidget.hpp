@@ -25,6 +25,9 @@ public:
     virtual void setValue(float value) = 0;
     virtual void setValueWithDisplay(float value, const char* displayValue) = 0;
     virtual void setVisible(bool visible) = 0;
+
+    // Automation indicator support (default: no-op for widgets that don't support it)
+    virtual void setHasAutomation(bool /*hasAutomation*/) {}
 };
 
 }  // namespace bitwig

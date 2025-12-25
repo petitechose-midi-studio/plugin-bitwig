@@ -39,6 +39,7 @@ public final class DeviceRemoteControlsBatchMessage {
     private final int sequenceNumber;
     private final int dirtyMask;
     private final int echoMask;
+    private final int hasAutomationMask;
     private final float[] values;
     private final float[] modulatedValues;
     private final String[] displayValues;
@@ -53,14 +54,16 @@ public final class DeviceRemoteControlsBatchMessage {
      * @param sequenceNumber The sequenceNumber value
      * @param dirtyMask The dirtyMask value
      * @param echoMask The echoMask value
+     * @param hasAutomationMask The hasAutomationMask value
      * @param values The values value
      * @param modulatedValues The modulatedValues value
      * @param displayValues The displayValues value
      */
-    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, float[] values, float[] modulatedValues, String[] displayValues) {
+    public DeviceRemoteControlsBatchMessage(int sequenceNumber, int dirtyMask, int echoMask, int hasAutomationMask, float[] values, float[] modulatedValues, String[] displayValues) {
         this.sequenceNumber = sequenceNumber;
         this.dirtyMask = dirtyMask;
         this.echoMask = echoMask;
+        this.hasAutomationMask = hasAutomationMask;
         this.values = values;
         this.modulatedValues = modulatedValues;
         this.displayValues = displayValues;
@@ -98,6 +101,15 @@ public final class DeviceRemoteControlsBatchMessage {
     }
 
     /**
+     * Get the hasAutomationMask value
+     *
+     * @return hasAutomationMask
+     */
+    public int getHasAutomationMask() {
+        return hasAutomationMask;
+    }
+
+    /**
      * Get the values value
      *
      * @return values
@@ -131,7 +143,7 @@ public final class DeviceRemoteControlsBatchMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 312;
+    public static final int MAX_PAYLOAD_SIZE = 313;
 
     /**
      * Encode message directly into provided buffer (zero allocation)
@@ -152,6 +164,7 @@ public final class DeviceRemoteControlsBatchMessage {
         offset += Encoder.writeUint8(buffer, offset, sequenceNumber);
         offset += Encoder.writeUint8(buffer, offset, dirtyMask);
         offset += Encoder.writeUint8(buffer, offset, echoMask);
+        offset += Encoder.writeUint8(buffer, offset, hasAutomationMask);
         offset += Encoder.writeUint8(buffer, offset, values.length);
 
         for (float item : values) {
@@ -181,7 +194,7 @@ public final class DeviceRemoteControlsBatchMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 32;
+    private static final int MIN_PAYLOAD_SIZE = 33;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -206,6 +219,8 @@ public final class DeviceRemoteControlsBatchMessage {
         int dirtyMask = Decoder.decodeUint8(data, offset);
         offset += 1;
         int echoMask = Decoder.decodeUint8(data, offset);
+        offset += 1;
+        int hasAutomationMask = Decoder.decodeUint8(data, offset);
         offset += 1;
         int count_values = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -235,7 +250,7 @@ public final class DeviceRemoteControlsBatchMessage {
         }
 
 
-        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, values, modulatedValues, displayValues);
+        return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, hasAutomationMask, values, modulatedValues, displayValues);
     }
 
     // ============================================================================
@@ -267,6 +282,7 @@ public final class DeviceRemoteControlsBatchMessage {
         sb.append("  sequenceNumber: ").append(getSequenceNumber()).append("\n");
         sb.append("  dirtyMask: ").append(getDirtyMask()).append("\n");
         sb.append("  echoMask: ").append(getEchoMask()).append("\n");
+        sb.append("  hasAutomationMask: ").append(getHasAutomationMask()).append("\n");
         sb.append("  values:");
         if (getValues().length == 0) {
             sb.append(" []\n");

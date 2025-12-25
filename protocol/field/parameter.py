@@ -72,6 +72,10 @@ values_dirty_mask = PrimitiveField('dirtyMask', type_name=Type.UINT8)
 # Echo mask - which parameters are echoes from controller changes (bit 0-7)
 values_echo_mask = PrimitiveField('echoMask', type_name=Type.UINT8)
 
+# Has automation mask - which parameters have automation data (bit 0-7)
+# Host is source of truth, always up-to-date
+has_automation_mask = PrimitiveField('hasAutomationMask', type_name=Type.UINT8)
+
 # Array of 8 parameter values (one per remote control slot)
 # Uses NORM8 (1 byte per value) for minimal bandwidth
 # Total: 8 bytes instead of 40 bytes per batch (80% reduction)

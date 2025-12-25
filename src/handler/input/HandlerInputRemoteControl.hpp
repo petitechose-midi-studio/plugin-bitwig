@@ -47,6 +47,7 @@ private:
     void setupBindings();
     void handleValueChange(uint8_t index, float value);
     void sendTouch(uint8_t index, bool touched);
+    void handleGlobalRestore();
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;

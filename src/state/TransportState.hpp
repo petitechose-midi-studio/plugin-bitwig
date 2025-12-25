@@ -23,12 +23,16 @@ struct TransportState {
     Signal<bool> midiInActive{false};
     Signal<bool> midiOutActive{false};
 
+    // Automation override: true when any parameter is touched/overriding automation
+    Signal<bool> automationOverrideActive{false};
+
     void reset() {
         playing.set(false);
         recording.set(false);
         tempo.set(120.0f);
         midiInActive.set(false);
         midiOutActive.set(false);
+        automationOverrideActive.set(false);
     }
 };
 

@@ -57,6 +57,13 @@ constexpr uint32_t DEVICE_TYPE_NOTE = 0x32B1DC;        // Blue for note effects
 
 constexpr uint32_t TRACK_MUTE = 0xFF8800;  // Orange for mute indicator
 constexpr uint32_t TRACK_SOLO = 0xFFDD00;  // Yellow for solo indicator
+
+// Automation colors
+constexpr uint32_t AUTOMATION_INDICATOR = 0xFF5555;  // Bright red - parameter has automation
+constexpr uint32_t AUTOMATION_OVERRIDE = 0x6FE569;   // Green - automation override active (Bitwig green)
+constexpr uint32_t AUTOMATION_VALUE = 0x992222;      // Dark red - knob value arc when following
+constexpr uint32_t AUTOMATION_TRACK = 0xFF4444;      // Bright red - knob track arc when following
+
 }  // namespace Color
 
 // =============================================================================
@@ -81,6 +88,7 @@ constexpr int16_t WIDGET_HEIGHT = 100;
 constexpr int16_t LEVEL_BAR_WIDTH = 60;
 constexpr int16_t COLOR_BAR_WIDTH = 4;
 constexpr int16_t INDICATOR_SIZE = 12;
+constexpr int16_t AUTOMATION_INDICATOR_SIZE = 8;  // Automation LED size (smaller)
 
 // Padding scale (4px base unit)
 constexpr int16_t PAD_XS = 2;

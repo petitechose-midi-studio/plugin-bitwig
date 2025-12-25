@@ -188,6 +188,16 @@ public:
                 }
             }
             break;
+        case MessageID::DEVICE_REMOTE_CONTROL_RESTORE_AUTOMATION:
+            if (callbacks.onDeviceRemoteControlRestoreAutomation) {
+                auto decoded = DeviceRemoteControlRestoreAutomationMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlRestoreAutomation(msg);
+                }
+            }
+            break;
         case MessageID::DEVICE_REMOTE_CONTROL_TOUCH:
             if (callbacks.onDeviceRemoteControlTouch) {
                 auto decoded = DeviceRemoteControlTouchMessage::decode(payload, payloadLen);
