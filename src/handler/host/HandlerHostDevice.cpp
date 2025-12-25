@@ -141,8 +141,20 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         // Update navigation state
         state_.deviceSelector.isNested.set(msg.isNested);
 
-        // Accumulate data at absolute indices
         uint8_t startIdx = msg.deviceStartIndex;
+
+        // On first window, resize to truncate old data if new list is shorter
+        if (startIdx == 0) {
+            uint8_t displaySize = msg.deviceCount + (msg.isNested ? 1 : 0);
+            state_.deviceSelector.names.resize(displaySize);
+            state_.deviceSelector.deviceTypes.resize(displaySize);
+            state_.deviceSelector.hasSlots.resize(displaySize);
+            state_.deviceSelector.hasLayers.resize(displaySize);
+            state_.deviceSelector.hasDrums.resize(displaySize);
+            state_.deviceSelector.loadedUpTo.set(0);  // Reset for new list
+        }
+
+        // Accumulate data at absolute indices
         for (uint8_t i = 0; i < LIST_WINDOW_SIZE; i++) {
             const auto& dev = msg.devices[i];
             if (dev.deviceName.empty()) break;  // End of valid data

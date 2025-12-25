@@ -45,59 +45,74 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
             state_.deviceSelector.showingChildren.set(false);
         }
     });
+
+    // Auto-reset BOTTOM_LEFT latch when TrackSelector closes
+    trackVisibleSub_ = state_.trackSelector.visible.subscribe([this](bool visible) {
+        if (!visible) {
+            buttons_.setLatch(ButtonID::BOTTOM_LEFT, false);
+        }
+    });
 }
 
 void HandlerInputDeviceSelector::setupBindings() {
-    // === VIEW-LEVEL BINDINGS (scopeElement_) ===
-    // These are lower priority and work when no overlay is capturing input
+    // Predicate: true when DeviceSelector is the current (top) overlay
+    auto isCurrent = [this]() {
+        return state_.overlays.current() == OverlayType::DEVICE_SELECTOR;
+    };
 
-    // Open device selector (latch behavior)
+    // === VIEW-LEVEL BINDING ===
+    // Open binding on view scope (works when overlay not yet visible)
     buttons_.button(ButtonID::LEFT_CENTER)
         .press()
         .latch()
         .scope(scope(scopeElement_))
         .then([this]() { requestDeviceList(); });
 
+    // === OVERLAY-LEVEL BINDINGS ===
+    // All use overlay scope + isCurrent check to handle stacking
+
     // Confirm and close on release
     buttons_.button(ButtonID::LEFT_CENTER)
         .release()
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayElement_))
         .then([this]() {
             select();
             close();
         });
 
-    // === OVERLAY-LEVEL BINDINGS (overlayElement_) ===
-    // These have higher priority and only fire when overlay is visible
-
-    // Cancel on LEFT_TOP (close without confirming)
+    // Cancel on LEFT_TOP
     buttons_.button(ButtonID::LEFT_TOP)
         .release()
         .scope(scope(overlayElement_))
         .then([this]() { close(); });
 
-    // Navigate devices with NAV encoder (scoped to overlay)
+    // Navigate devices - needs isCurrent check (encoder has no ownership)
     encoders_.encoder(EncoderID::NAV)
         .turn()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this](float delta) { navigate(delta); });
 
-    // Enter device children with NAV button (scoped to overlay)
+    // Enter device children
     buttons_.button(ButtonID::NAV)
         .release()
         .scope(scope(overlayElement_))
         .then([this]() { selectAndDive(); });
 
-    // Toggle device state (scoped to overlay)
+    // Toggle device state
     buttons_.button(ButtonID::BOTTOM_CENTER)
         .release()
         .scope(scope(overlayElement_))
         .then([this]() { toggleState(); });
 
-    // Request track list (scoped to overlay)
+    // Open TrackSelector with latch behavior (same as LEFT_CENTER for DeviceSelector)
+    // Short press: opens and latches, release does nothing
+    // Long press or second short press: release confirms and closes
     buttons_.button(ButtonID::BOTTOM_LEFT)
-        .release()
+        .press()
+        .latch()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this]() { requestTrackList(); });
 }
 
@@ -262,14 +277,18 @@ void HandlerInputDeviceSelector::requestTrackList() {
 
     if (ts.visible.get()) return;
 
+    // Reset LEFT_CENTER latch so TrackSelector can use it
+    buttons_.setLatch(ButtonID::LEFT_CENTER, false);
+
+    // Show track selector overlay immediately on user request
+    state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
+
     // Reset track cache for fresh load
     ts.names.clear();
     ts.totalCount.set(0);
     ts.loadedUpTo.set(0);
 
-    // Request first window - overlay will be shown when data arrives (prefetch pattern)
-    // This prevents flash between overlays by keeping device selector visible until
-    // track data is ready
+    // Request first window - data will populate in background
     protocol_.send(Protocol::RequestTrackListWindowMessage{0});
 }
 

@@ -17,6 +17,7 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
+using state::OverlayType;
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
                                      BitwigProtocol& protocol,
@@ -32,49 +33,67 @@ HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
 }
 
 void HandlerInputTrack::setupBindings() {
-    // === ALL OVERLAY-LEVEL BINDINGS ===
-    // All bindings are scoped to the track selector overlay.
-    // When the overlay is visible, these bindings capture input with highest priority.
-    // This matches the original behavior.
+    // Predicate: true when TrackSelector is the current (top) overlay
+    // Required for all bindings because DeviceSelector is visible underneath (stacked)
+    auto isCurrent = [this]() {
+        return state_.overlays.current() == OverlayType::TRACK_SELECTOR;
+    };
 
-    // Confirm selection and close on BOTTOM_LEFT release
-    buttons_.button(ButtonID::BOTTOM_LEFT)
+    // Close without confirming
+    buttons_.button(ButtonID::LEFT_TOP)
         .release()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
+        .then([this]() { close(); });
+
+    // Confirm selection and close
+    buttons_.button(ButtonID::LEFT_CENTER)
+        .press()
+        .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this]() {
             select();
             close();
         });
 
-    // Close without confirming on LEFT_TOP release
-    buttons_.button(ButtonID::LEFT_TOP)
-        .release()
-        .scope(scope(overlayElement_))
-        .then([this]() { close(); });
-
     // Navigate tracks
     encoders_.encoder(EncoderID::NAV)
         .turn()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this](float delta) { navigate(delta); });
 
     // Enter track group
     buttons_.button(ButtonID::NAV)
         .release()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this]() { selectAndDive(); });
 
     // Mute
     buttons_.button(ButtonID::BOTTOM_CENTER)
         .release()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this]() { toggleMute(); });
 
     // Solo
     buttons_.button(ButtonID::BOTTOM_RIGHT)
         .release()
         .scope(scope(overlayElement_))
+        .when(isCurrent)
         .then([this]() { toggleSolo(); });
+
+    // Confirm and close (same button that opened TrackSelector from DeviceSelector)
+    // Framework fallback: DeviceSelector has no BOTTOM_LEFT.release(), so it comes here
+    buttons_.button(ButtonID::BOTTOM_LEFT)
+        .release()
+        .scope(scope(overlayElement_))
+        .when(isCurrent)
+        .then([this]() {
+            select();
+            close();
+        });
 }
 
 void HandlerInputTrack::navigate(float delta) {
