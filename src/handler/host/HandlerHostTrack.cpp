@@ -79,8 +79,18 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         // Update navigation state
         state_.trackSelector.isNested.set(msg.isNested);
 
-        // Accumulate data at absolute indices
         uint8_t startIdx = msg.trackStartIndex;
+
+        // On first window, resize to truncate old data if new list is shorter
+        if (startIdx == 0) {
+            uint8_t displaySize = msg.trackCount + (msg.isNested ? 1 : 0);
+            state_.trackSelector.names.resize(displaySize);
+            state_.trackSelector.trackTypes.resize(displaySize);
+            state_.trackSelector.trackColors.resize(displaySize);
+            state_.trackSelector.loadedUpTo.set(0);  // Reset for new list
+        }
+
+        // Accumulate data at absolute indices
         for (uint8_t i = 0; i < LIST_WINDOW_SIZE; i++) {
             const auto& trk = msg.tracks[i];
             if (trk.trackName.empty()) break;  // End of valid data
@@ -122,12 +132,8 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         if (startIdx == 0) {
             int displayIndex = msg.isNested ? msg.trackIndex + 1 : msg.trackIndex;
             state_.trackSelector.currentIndex.set(displayIndex);
-
-            // Prefetch pattern: show overlay only when first window data arrives
-            // This prevents flash between overlays (device stays visible until track data ready)
-            if (!state_.trackSelector.visible.get()) {
-                state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
-            }
+            // NOTE: Overlay visibility is controlled by input handlers only (on user request)
+            // Data updates happen in background without auto-showing the overlay
         }
         state_.trackSelector.activeTrackIndex.set(msg.trackIndex);
 

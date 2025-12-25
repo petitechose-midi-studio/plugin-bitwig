@@ -11,7 +11,7 @@
  * - NAV encoder: navigate devices
  * - NAV button: enter device children
  * - BOTTOM_CENTER: toggle device state
- * - BOTTOM_LEFT: request track list
+ * - BOTTOM_LEFT: open track selector (stacked)
  */
 
 #include <array>
@@ -30,9 +30,11 @@ namespace bitwig::handler {
 /**
  * @brief Device selector input handler (Input -> Protocol)
  *
- * Uses two-level scoping like original:
- * - scopeElement: for LEFT_CENTER open/close (view level)
- * - overlayElement: for NAV, BOTTOM_CENTER, BOTTOM_LEFT (overlay level - higher priority)
+ * Two-level scoping:
+ * - scopeElement (view): For opening the overlay (LEFT_CENTER press)
+ * - overlayElement: For all other bindings when overlay is visible
+ *
+ * With stacked overlays, DeviceSelector stays visible underneath TrackSelector.
  */
 class HandlerInputDeviceSelector {
 public:
@@ -77,8 +79,9 @@ private:
     uint8_t currentDeviceIndex_ = 0;  // Device being navigated (for children mode)
     bool requested_ = false;
 
-    // Auto-reset latch when overlay hidden externally (by OverlayManager)
+    // Auto-reset latch when overlays hidden externally (by OverlayManager)
     oc::state::Subscription visibleSub_;
+    oc::state::Subscription trackVisibleSub_;
 };
 
 }  // namespace bitwig::handler
