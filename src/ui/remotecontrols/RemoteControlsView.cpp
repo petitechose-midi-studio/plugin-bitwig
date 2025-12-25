@@ -142,6 +142,7 @@ void RemoteControlsView::setupBindings() {
         paramGroup.watch(slot.origin);
         paramGroup.watch(slot.modulationOffset);
         paramGroup.watch(slot.isModulated);
+        paramGroup.watch(slot.hasAutomation);
     }
 
     // =========================================================================
@@ -274,6 +275,9 @@ void RemoteControlsView::updateParameter(uint8_t index) {
     // Update name and value
     widgets_[index]->setName(slot.name.get());
     widgets_[index]->setValueWithDisplay(slot.value.get(), slot.displayValue.get());
+
+    // Update automation indicator (all widget types)
+    widgets_[index]->setHasAutomation(slot.hasAutomation.get());
 
     // Update origin, modulated value, and modulation state for knob widgets
     if (type == bitwig::state::ParameterType::KNOB) {

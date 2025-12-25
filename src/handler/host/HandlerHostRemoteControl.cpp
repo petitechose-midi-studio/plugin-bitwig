@@ -39,6 +39,7 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
         slot.value.set(msg.parameterValue);
         slot.visible.set(msg.parameterExists);
         slot.loading.set(false);
+        slot.hasAutomation.set(msg.hasAutomation);
 
         // Configure encoder
         auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
@@ -111,6 +112,10 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
             for (size_t i = 0; i < PARAMETER_COUNT; ++i) {
                 auto& slot = state_.parameters.slots[i];
 
+                // Update automation state from host (source of truth)
+                bool hasAutomation = (msg.hasAutomationMask >> i) & 1;
+                slot.hasAutomation.set(hasAutomation);
+
                 // Update modulation offset (always, for ribbon display)
                 // Store offset so ribbon follows optimistic value updates
                 slot.modulationOffset.set(msg.modulatedValues[i] - slot.value.get());
@@ -162,6 +167,9 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
             if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
             state_.parameters.slots[msg.remoteControlIndex].isModulated.set(msg.isModulated);
         };
+
+    // Note: hasAutomation and automationActive are now updated via batch message
+    // (hasAutomationMask and touchedMask fields) for perfect synchronization
 }
 
 }  // namespace bitwig::handler

@@ -260,5 +260,27 @@ public class DeviceController {
                 deviceHost.setControllerViewState(msg.getViewType(), msg.getSelectorActive());
             }
         };
+
+        // ========================================================================
+        // Automation Restore Callback
+        // ========================================================================
+
+        // Restore automation playback globally (double tap on NAV button)
+        // Uses Bitwig's transport.resetAutomationOverrides() to restore ALL automation
+        protocol.onDeviceRemoteControlRestoreAutomation = msg -> {
+            if (msg.fromHost) return;
+
+            // Only process once (first message triggers global reset)
+            // Controller sends for all 8 params, but we only need to act once
+            if (msg.getRemoteControlIndex() != 0) return;
+
+            // Global automation reset via Bitwig API
+            transport.resetAutomationOverrides();
+
+            // Clear all touched states
+            for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
+                touchState[i] = false;
+            }
+        };
     }
 }

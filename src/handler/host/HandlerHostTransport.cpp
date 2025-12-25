@@ -1,5 +1,6 @@
 #include "HandlerHostTransport.hpp"
 
+#include "protocol/struct/TransportAutomationOverrideActiveChangeMessage.hpp"
 #include "protocol/struct/TransportPlayMessage.hpp"
 #include "protocol/struct/TransportRecordMessage.hpp"
 #include "protocol/struct/TransportStopMessage.hpp"
@@ -31,6 +32,11 @@ void HandlerHostTransport::setupProtocolCallbacks() {
     protocol_.onTransportTempo = [this](const TransportTempoMessage& msg) {
         state_.transport.tempo.set(msg.tempo);
     };
+
+    protocol_.onTransportAutomationOverrideActiveChange =
+        [this](const TransportAutomationOverrideActiveChangeMessage& msg) {
+            state_.transport.automationOverrideActive.set(msg.isAutomationOverrideActive);
+        };
 }
 
 }  // namespace bitwig::handler

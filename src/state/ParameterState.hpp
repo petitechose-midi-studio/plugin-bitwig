@@ -36,6 +36,7 @@ struct ParameterSlot {
     Signal<float> origin{0.0f};           // Bipolar center point
     Signal<float> modulationOffset{0.0f}; // Offset from value (modulatedValue = value + offset)
     Signal<bool> isModulated{false};      // True when modulation is active (automation, LFO, etc.)
+    Signal<bool> hasAutomation{false};    // True when parameter has automation data
     SignalLabel name;
     SignalTiny displayValue;
 
@@ -55,6 +56,7 @@ struct ParameterSlot {
         origin.set(0.0f);
         modulationOffset.set(0.0f);
         isModulated.set(false);
+        hasAutomation.set(false);
         name.set("");
         displayValue.set("");
         type.set(ParameterType::KNOB);

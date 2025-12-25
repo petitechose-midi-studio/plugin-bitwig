@@ -17,6 +17,7 @@ const lv_color_t COLOR_ACTIVE = lv_color_hex(Color::DATA_ACTIVE);
 const lv_color_t COLOR_PLAY = lv_color_hex(Color::MACRO_5);
 const lv_color_t COLOR_RECORD = lv_color_hex(Color::MACRO_1);
 const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
+const lv_color_t COLOR_AUTOMATION_OVERRIDE = lv_color_hex(Color::AUTOMATION_OVERRIDE);
 }  // namespace
 
 namespace bitwig {
@@ -47,7 +48,8 @@ void TransportBar::setupBindings() {
         .on(state_.recording, [this](bool recording) { setRecordState(recording); })
         .on(state_.tempo, [this](float tempo) { setTempo(tempo); })
         .on(state_.midiInActive, [this](bool active) { setMidiIn(active); })
-        .on(state_.midiOutActive, [this](bool active) { setMidiOut(active); });
+        .on(state_.midiOutActive, [this](bool active) { setMidiOut(active); })
+        .on(state_.automationOverrideActive, [this](bool active) { setAutomationOverride(active); });
 }
 
 void TransportBar::render() {
@@ -56,6 +58,7 @@ void TransportBar::render() {
     setTempo(state_.tempo.get());
     setMidiIn(state_.midiInActive.get());
     setMidiOut(state_.midiOutActive.get());
+    setAutomationOverride(state_.automationOverrideActive.get());
 }
 
 void TransportBar::setPlayState(bool playing) {
@@ -89,6 +92,14 @@ void TransportBar::setMidiOut(bool active) {
     if (midi_out_indicator_) {
         midi_out_indicator_->setState(active ? StateIndicator::State::ACTIVE
                                              : StateIndicator::State::OFF);
+    }
+}
+
+void TransportBar::setAutomationOverride(bool active) {
+    if (automation_override_icon_) {
+        lv_obj_set_style_text_color(automation_override_icon_,
+                                    active ? COLOR_AUTOMATION_OVERRIDE : COLOR_INACTIVE,
+                                    LV_STATE_DEFAULT);
     }
 }
 
@@ -157,6 +168,10 @@ void TransportBar::createTransportControls() {
     record_icon_ = lv_label_create(transport_container);
     Icon::set(record_icon_, Icon::TRANSPORT_RECORD, Icon::Size::L);
     lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
+
+    automation_override_icon_ = lv_label_create(transport_container);
+    Icon::set(automation_override_icon_, Icon::TRANSPORT_AUTOMATION_ABORT, Icon::Size::L);
+    lv_obj_set_style_text_color(automation_override_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 }
 
 void TransportBar::createTempoDisplay() {

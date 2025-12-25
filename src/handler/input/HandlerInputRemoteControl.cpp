@@ -4,6 +4,7 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
+#include "protocol/struct/DeviceRemoteControlRestoreAutomationMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlTouchMessage.hpp"
 #include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
 
@@ -45,17 +46,28 @@ void HandlerInputRemoteControl::setupBindings() {
             .scope(scope(scopeElement_))
             .then([this, i]() { sendTouch(i, false); });
     }
+
+    // NAV button double tap -> restore automation for all parameters
+    buttons_.button(Config::ButtonID::NAV)
+        .doubleTap()
+        .scope(scope(scopeElement_))
+        .then([this]() { handleGlobalRestore(); });
 }
 
 void HandlerInputRemoteControl::handleValueChange(uint8_t index, float value) {
     if (index >= PARAMETER_COUNT) return;
 
-    // Optimistic update
-    state_.parameters.slots[index].value.set(value);
+    auto& slot = state_.parameters.slots[index];
+
+    // Optimistic update for value
+    slot.value.set(value);
 
     // Hide modulation ribbon immediately when user moves the knob
     // This prevents visual latency while waiting for host roundtrip
-    state_.parameters.slots[index].isModulated.set(false);
+    slot.isModulated.set(false);
+
+    // Note: automationActive is now derived from host batch (touchedMask)
+    // Host is source of truth to avoid race conditions
 
     // Send to host
     protocol_.send(Protocol::DeviceRemoteControlValueChangeMessage{index, value, "", false});
@@ -65,6 +77,15 @@ void HandlerInputRemoteControl::sendTouch(uint8_t index, bool touched) {
     if (index >= PARAMETER_COUNT) return;
 
     protocol_.send(Protocol::DeviceRemoteControlTouchMessage{index, touched});
+}
+
+void HandlerInputRemoteControl::handleGlobalRestore() {
+    // Request host to restore automation for all parameters
+    // Host will set value = modulatedValue and update touchedMask
+    // automationActive will be updated via next batch (host is source of truth)
+    for (uint8_t i = 0; i < PARAMETER_COUNT; i++) {
+        protocol_.send(Protocol::DeviceRemoteControlRestoreAutomationMessage{i});
+    }
 }
 
 }  // namespace bitwig::handler

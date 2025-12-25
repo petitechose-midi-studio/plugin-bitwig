@@ -134,6 +134,13 @@ public class DecoderRegistry {
                     callbacks.onDeviceRemoteControlOriginChange.handle(msg);
                 }
                 break;
+            case DEVICE_REMOTE_CONTROL_RESTORE_AUTOMATION:
+                if (callbacks.onDeviceRemoteControlRestoreAutomation != null) {
+                    DeviceRemoteControlRestoreAutomationMessage msg = DeviceRemoteControlRestoreAutomationMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceRemoteControlRestoreAutomation.handle(msg);
+                }
+                break;
             case DEVICE_REMOTE_CONTROL_TOUCH:
                 if (callbacks.onDeviceRemoteControlTouch != null) {
                     DeviceRemoteControlTouchMessage msg = DeviceRemoteControlTouchMessage.decode(payload);

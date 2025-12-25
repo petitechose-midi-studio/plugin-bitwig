@@ -9,8 +9,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Protocol - Bitwig Serial8 Protocol Implementation
@@ -58,19 +56,6 @@ public class Protocol extends ProtocolCallbacks {
     private final byte[] sendBuffer = new byte[MAX_SEND_BUFFER_SIZE];
 
     // ========================================================================
-    // Metrics (for bottleneck analysis)
-    // ========================================================================
-
-    private static final boolean METRICS_ENABLED = true;
-    private static final int METRICS_INTERVAL_MS = 1000;
-
-    private final AtomicInteger messageCount = new AtomicInteger(0);
-    private final AtomicLong byteCount = new AtomicLong(0);
-    private final AtomicInteger peakMessageCount = new AtomicInteger(0);
-    private final AtomicLong peakByteCount = new AtomicLong(0);
-    private volatile long lastMetricsTime = System.currentTimeMillis();
-
-    // ========================================================================
     // Lifecycle
     // ========================================================================
 
@@ -114,7 +99,6 @@ public class Protocol extends ProtocolCallbacks {
 
         // Determine transport type from environment
         ProtocolTransport.Type transportType = getTransportTypeFromEnv();
-        host.println("[Protocol] Using transport: " + transportType);
 
         // Create transport
         ProtocolTransport.ReceiveCallback callback = this::dispatch;
@@ -197,41 +181,6 @@ public class Protocol extends ProtocolCallbacks {
 
         // Send via transport (pass buffer slice without allocation)
         transport.send(sendBuffer, 0, frameLength);
-
-        // Update metrics
-        if (METRICS_ENABLED) {
-            messageCount.incrementAndGet();
-            byteCount.addAndGet(frameLength);
-            maybeLogMetrics();
-        }
-    }
-
-    /**
-     * Log metrics if interval elapsed
-     */
-    private void maybeLogMetrics() {
-        long now = System.currentTimeMillis();
-        long elapsed = now - lastMetricsTime;
-
-        if (elapsed >= METRICS_INTERVAL_MS) {
-            int msgs = messageCount.getAndSet(0);
-            long bytes = byteCount.getAndSet(0);
-            lastMetricsTime = now;
-
-            // Track peaks
-            if (msgs > peakMessageCount.get()) {
-                peakMessageCount.set(msgs);
-            }
-            if (bytes > peakByteCount.get()) {
-                peakByteCount.set(bytes);
-            }
-
-            // Log current stats
-            double kbPerSec = bytes / 1024.0;
-            host.println(String.format("[Protocol] TX: %d msg/s, %.2f KB/s (peak: %d msg/s, %.2f KB/s)",
-                msgs, kbPerSec,
-                peakMessageCount.get(), peakByteCount.get() / 1024.0));
-        }
     }
 
     // ========================================================================

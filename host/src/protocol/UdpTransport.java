@@ -40,7 +40,7 @@ public class UdpTransport implements ProtocolTransport {
             // Send registration packet
             sendRegistration();
 
-            host.println("[UDP Transport] Started on port " + socket.getLocalPort() + " -> " + bridgeHost + ":" + bridgePort);
+            // Startup log disabled
         } catch (Exception e) {
             host.errorln("[UDP Transport] Failed to start: " + e.getMessage());
             throw new RuntimeException("Failed to start UDP transport", e);
