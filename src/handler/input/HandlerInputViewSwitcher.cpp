@@ -29,7 +29,7 @@ HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
     // Auto-reset latch when overlay hidden externally (by OverlayManager)
     visibleSub_ = state_.viewSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
-            buttons_.setLatch(ButtonID::LEFT_TOP, false);
+            buttons_.clearLatch(ButtonID::LEFT_TOP);
         }
     });
 }

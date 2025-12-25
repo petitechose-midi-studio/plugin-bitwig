@@ -39,7 +39,7 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
     // Auto-reset latch and state when overlay hidden externally (by OverlayManager)
     visibleSub_ = state_.deviceSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
-            buttons_.setLatch(ButtonID::LEFT_CENTER, false);
+            buttons_.clearLatch(ButtonID::LEFT_CENTER);
             requested_ = false;
             // Reset children view so next open shows device list, not stale children
             state_.deviceSelector.showingChildren.set(false);
@@ -49,7 +49,7 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
     // Auto-reset BOTTOM_LEFT latch when TrackSelector closes
     trackVisibleSub_ = state_.trackSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
-            buttons_.setLatch(ButtonID::BOTTOM_LEFT, false);
+            buttons_.clearLatch(ButtonID::BOTTOM_LEFT);
         }
     });
 }
@@ -277,10 +277,8 @@ void HandlerInputDeviceSelector::requestTrackList() {
 
     if (ts.visible.get()) return;
 
-    // Reset LEFT_CENTER latch so TrackSelector can use it
-    buttons_.setLatch(ButtonID::LEFT_CENTER, false);
-
     // Show track selector overlay immediately on user request
+    // NOTE: No need to reset LEFT_CENTER latch - scope-aware latch handles this
     state_.overlays.show(OverlayType::TRACK_SELECTOR, true);
 
     // Reset track cache for fresh load

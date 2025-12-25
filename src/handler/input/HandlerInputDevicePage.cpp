@@ -32,7 +32,7 @@ HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
     // Auto-reset latch when overlay hidden externally (by OverlayManager)
     visibleSub_ = state_.pageSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
-            buttons_.setLatch(ButtonID::LEFT_BOTTOM, false);
+            buttons_.clearLatch(ButtonID::LEFT_BOTTOM);
         }
     });
 }
