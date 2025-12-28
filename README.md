@@ -8,15 +8,28 @@ MIDI Studio connects Bitwig with custom hardware:
 
 - **Bitwig Extension**: Java plugin using Bitwig Extension API v25
 - **Teensy Firmware**: C++ embedded application with LVGL interface
-- **SysEx Protocol**: Type-safe auto-generated communication layer
+- **High-Bandwidth Protocol**: Serial8 (8-bit binary) via [oc-bridge](https://github.com/open-control/bridge)
 
 ### Key Features
 
 - Transport control (Play, Stop, Record)
 - Device/track navigation with visual feedback
-- 8 encoder macro control (Remote Controls)
+- 8 encoder Remote Controls with automation indicators
+- Multiple views (RemoteControls, Mix, Clip)
+- Stacked overlays with virtualized lists
 - ILI9341 display with custom LVGL interface
-- Real-time Host ↔ Device synchronization
+- Real-time Host ↔ Device synchronization (~50Hz batch updates)
+
+## Architecture
+
+```
+┌──────────────┐    USB Serial     ┌────────────┐      UDP       ┌─────────────┐
+│   Teensy     │◄─────────────────►│  oc-bridge │◄──────────────►│   Bitwig    │
+│  Controller  │   COBS framing    │  (Rust)    │   :9000        │  Extension  │
+└──────────────┘                   └────────────┘                └─────────────┘
+```
+
+**Protocol Layer**: Messages defined in Python, auto-generated to C++ and Java using [protocol-codegen](https://github.com/open-control/protocol-codegen).
 
 ## Prerequisites
 
@@ -24,8 +37,8 @@ MIDI Studio connects Bitwig with custom hardware:
 
 #### Windows
 ```powershell
-# OpenJDK 25
-winget install Microsoft.OpenJDK.25
+# OpenJDK 21
+winget install Microsoft.OpenJDK.21
 
 # Maven
 winget install Apache.Maven
@@ -33,8 +46,8 @@ winget install Apache.Maven
 
 #### Linux (Fedora/RHEL)
 ```bash
-# OpenJDK 25
-sudo dnf install java-25-openjdk.x86_64
+# OpenJDK 21
+sudo dnf install java-21-openjdk.x86_64
 
 # Maven
 sudo dnf install maven
@@ -42,9 +55,9 @@ sudo dnf install maven
 
 #### Linux (Ubuntu/Debian)
 ```bash
-# OpenJDK 25
+# OpenJDK 21
 sudo apt update
-sudo apt install openjdk-25-jdk
+sudo apt install openjdk-21-jdk
 
 # Maven
 sudo apt install maven
@@ -52,15 +65,23 @@ sudo apt install maven
 
 #### Verify Installation
 ```bash
-java -version   # Should show OpenJDK 25
+java -version   # Should show OpenJDK 21
 mvn -version    # Should show Maven 3.9+
 ```
 
+### Bridge
+
+Download [oc-bridge](https://github.com/open-control/bridge/releases) for your platform:
+- `oc-bridge-windows.exe`
+- `oc-bridge-linux`
+
+Or build from source: `cargo build --release`
+
 ### Device Development
 
-See [Core README](https://github.com/petitechose-midi-studio/core#prerequisites) for:
+See [open-control/framework](https://github.com/open-control/framework) for:
 - **PlatformIO** installation
-- **Python 3.11+** with **uv**
+- **Python 3.13+** with **uv**
 - **Teensy board support**
 
 Quick summary:
@@ -74,13 +95,11 @@ pip install uv
 
 ### Hardware
 
-See [Core README](https://github.com/petitechose-midi-studio/core#hardware) for hardware requirements (Teensy 4.1, display, encoders, etc.)
+See [midi-studio/core](../core/) for hardware requirements (Teensy 4.1, display, encoders, etc.)
 
 ### Bitwig Studio
 
-- **Bitwig Studio 6 Beta**: Currently in development for Bitwig 6
-  - Uses latest API features (text value lists, etc.)
-  - Bitwig 5 backport may be considered if needed
+- **Bitwig Studio 6**: Uses latest API features (API v25)
 
 ## Project Structure
 
@@ -96,24 +115,36 @@ plugin-bitwig/
 │
 ├── src/                    # Teensy Firmware (C++)
 │   ├── main.cpp            # Entry point
+│   ├── context/            # BitwigContext
 │   ├── handler/            # Protocol handlers
+│   │   ├── host/           # Host → Controller
+│   │   └── input/          # User → Bitwig
+│   ├── state/              # State management
+│   │   ├── BitwigState.hpp
+│   │   ├── OverlayManager.hpp
+│   │   └── ViewManager.hpp
 │   ├── protocol/           # Generated protocol (namespace: Protocol)
 │   └── ui/                 # LVGL interface
+│       ├── remotecontrols/ # RemoteControlsView
+│       ├── device/         # DeviceSelector
+│       ├── track/          # TrackSelector
+│       ├── view/           # ViewSelector
+│       └── widget/         # Shared widgets
 │
 ├── protocol/               # Protocol Definitions (Python)
 │   ├── message/            # Message definitions
 │   ├── field/              # Field definitions
 │   ├── plugin_paths.py     # Output configuration
-│   └── sysex_protocol_config.py
+│   └── serial8_protocol_config.py  # Serial8 config
 │
-└── script/bash/            # Build & generation scripts
+└── script/                 # Build & generation scripts
     ├── extension/          # Java build scripts
     └── protocol/           # Protocol generator
 ```
 
 ## Quick Start
 
-### Install dependencies
+### 1. Install dependencies
 
 ```bash
 # Python
@@ -123,10 +154,10 @@ uv sync
 pio lib install
 ```
 
-### Build Extension
+### 2. Build Extension
 
 ```bash
-./script/bash/extension/bitwig-package.sh
+./script/extension/bitwig-package.sh
 # or
 cd host && mvn package
 ```
@@ -136,94 +167,145 @@ Extension is auto-deployed to:
 - **macOS**: `~/Documents/Bitwig Studio/Extensions`
 - **Linux**: `~/Bitwig Studio/Extensions`
 
-### Build & Upload Firmware
+### 3. Build & Upload Firmware
 
 ```bash
 # Production
 pio run -e prod -t upload
-
-# Debug (with logs)
-pio run -e debug -t upload
-pio device monitor
 ```
 
-### Activate in Bitwig
+### 4. Start Bridge
+
+```bash
+# Launch with TUI (auto-detects Teensy)
+oc-bridge
+
+# Or headless
+oc-bridge --headless
+```
+
+### 5. Activate in Bitwig
 
 1. Settings → Controllers → Add controller
 2. Search "petitechose.audio" vendor and select "MIDI Studio"
 
    ![Extension Selection](asset/extension_select.png)
 
-3. Configure MIDI ports (Input/Output)
+3. Extension shows "MIDI Studio : Connected"
 
-   ![Extension I/O Configuration](asset/extension_io.png)
+## Protocol
 
-4. Extension shows "MIDI Studio : Connected"
+Messages are defined in Python and auto-generated to C++ and Java.
+
+### Message Types
+
+| Category | Examples |
+|----------|----------|
+| Device | `DEVICE_CHANGE_HEADER`, `DEVICE_REMOTE_CONTROL_UPDATE` |
+| Remote Controls | `DEVICE_REMOTE_CONTROLS_BATCH`, `DEVICE_REMOTE_CONTROL_TOUCH` |
+| Navigation | `DEVICE_LIST_WINDOW`, `DEVICE_PAGE_NAMES_WINDOW` |
+| Track | `TRACK_*` messages |
+| Transport | `TRANSPORT_*` messages |
+| View State | `VIEW_STATE_CHANGE` |
+
+### Optimized Types
+
+| Type | Usage |
+|------|-------|
+| `norm8` | Parameter values (1 byte, ~0.8% precision) |
+| `norm16` | High-precision values (2 bytes) |
+
+### Batch Updates
+
+Remote control values are sent at ~50Hz using `DEVICE_REMOTE_CONTROLS_BATCH`:
+- `parameter_values_batch`: 8× norm8 values
+- `parameter_modulated_values_batch`: 8× norm8 modulated values
+- `parameter_display_values_batch`: 8× strings (for LIST/BUTTON types)
+
+### Generate Protocol
+
+```bash
+./script/protocol/generate_protocol.sh
+```
+
+## UI Architecture
+
+### Views
+
+| View | Description |
+|------|-------------|
+| `RemoteControlsView` | 8 parameter widgets with automation indicators |
+| `MixView` | (Stub) Channel strip view |
+| `ClipView` | (Stub) Clip launching view |
+
+### State Management
+
+Uses reactive `Signal<T>` and `SignalVector<T>` from open-control/framework:
+
+```cpp
+// In state struct
+Signal<std::string> deviceName{""};
+SignalVector<std::string, 32> pageNames;
+
+// Subscribe in view
+watcher_.watchAll([this]() { updateUI(); }, state.deviceName, state.pageNames);
+```
+
+### Overlay System
+
+`OverlayManager` handles stacked overlays with event ownership:
+- DeviceSelector
+- TrackSelector
+- PageSelector
+- ListOverlay (for parameter discrete values)
 
 ## Development
-
-### Architecture
-
-```
-Bitwig Studio (API)
-        ↕ MIDI SysEx
-Protocol Layer (C++)
-        ↕
-    Handlers
-        ↕
-   UI (LVGL)
-```
-
-**Handler Pattern**: Fire-and-forget
-- Handlers register with Bitwig API and stay alive via API references
-- Extension doesn't hold references (avoids memory leaks)
-
-**Separation**:
-- `handler/controller/`: Device → Bitwig commands
-- `handler/host/`: Bitwig → Device observations
 
 ### Add New Message
 
 1. Define in `protocol/message/`:
 ```python
-class MyMessage(Message):
-    message_id: int = 0x42
-    value: int
+MY_NEW_MESSAGE = Message(
+    description='Description of message',
+    fields=[field1, field2]
+)
 ```
 
-2. Generate code:
+2. Register in `protocol/message/__init__.py`
+
+3. Generate code:
 ```bash
-./script/bash/protocol/generate_protocol.sh
+./script/protocol/generate_protocol.sh
 ```
 
-3. Implement handlers (Java & C++):
+4. Implement handlers (Java & C++):
 ```java
-protocol.onMyMessage = msg -> device.setSomething(msg.value);
+// Java (host/)
+callbacks.onMyNewMessage = msg -> { /* handle */ };
 ```
 ```cpp
-protocol.onMyMessage = [](const MyMessage& msg) { /* ... */ };
+// C++ (src/)
+protocol.onMyNewMessage = [](const MyNewMessageMessage& msg) { /* handle */ };
 ```
 
 ### Debugging
 
 **Bitwig logs**: `~/Documents/Bitwig Studio/log/BitwigStudio.log`
 
-**Teensy logs**:
-```bash
-pio run -e debug -t upload
-pio device monitor
-```
+**Bridge logs**: Run `oc-bridge` with TUI, use filters (1/2/3 keys)
+
+**Teensy logs**: Enable `OC_LOG` in platformio.ini, view via bridge TUI
 
 ### Build Scripts
 
 ```bash
 # Extension
-./script/bash/extension/bitwig-compile.sh   # Compile only
-./script/bash/extension/bitwig-package.sh   # Build & deploy
-./script/bash/extension/bitwig-clean.sh     # Clean
+./script/extension/bitwig-compile.sh   # Compile only
+./script/extension/bitwig-package.sh   # Build & deploy
+./script/extension/bitwig-clean.sh     # Clean
 
 # Protocol
-./script/bash/protocol/generate_protocol.sh # Regenerate messages
+./script/protocol/generate_protocol.sh # Regenerate messages
 ```
 
 ## Guidelines
@@ -233,11 +315,11 @@ pio device monitor
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat: add device bypass toggle
+feat: add automation indicator support
 fix: correct parameter scaling
-refactor: simplify host initialization
+refactor: extract handler to SRP modules
 docs: update README
-chore: upgrade to Java 25
+chore: upgrade dependencies
 ```
 
 ### Code Style
@@ -263,14 +345,15 @@ cd host && mvn clean package
 
 ### "Unsupported class file major version"
 
-Check Java version: `java -version`
+Check Java version: `java -version` (should be 21)
 
 ### No Host ↔ Device communication
 
-1. Check MIDI ports in Bitwig Settings
-2. Check device logs: `pio device monitor`
-3. Regenerate protocol: `./script/bash/protocol/generate_protocol.sh`
-4. Rebuild both: `mvn package && pio run -e prod -t upload`
+1. Check bridge is running: `oc-bridge`
+2. Check bridge detects Teensy (should show in TUI)
+3. Check Bitwig extension is active (logs show "Connected")
+4. Regenerate protocol: `./script/protocol/generate_protocol.sh`
+5. Rebuild both: `mvn package && pio run -t upload`
 
 ### Maven "Guice/Unsafe" warnings
 
@@ -282,9 +365,11 @@ export MAVEN_OPTS="--sun-misc-unsafe-memory-access=allow"
 ## Resources
 
 - [Bitwig Extension API](https://github.com/bitwig/bitwig-extensions)
-- [PlatformIO Teensy](https://docs.platformio.org/en/latest/platforms/teensy.html)
+- [open-control/framework](https://github.com/open-control/framework) - Embedded framework
+- [open-control/bridge](https://github.com/open-control/bridge) - Serial-to-UDP bridge
+- [protocol-codegen](https://github.com/open-control/protocol-codegen) - Protocol generator
 - [LVGL Documentation](https://docs.lvgl.io/)
-- [DrivenByMoss](https://github.com/git-moss/DrivenByMoss) - Reference extension framework
+- [DrivenByMoss](https://github.com/git-moss/DrivenByMoss) - Reference extension
 
 ---
 
