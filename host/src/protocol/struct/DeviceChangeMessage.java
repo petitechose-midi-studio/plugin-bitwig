@@ -150,9 +150,6 @@ public final class DeviceChangeMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final String deviceTrackName;
     private final String deviceName;
     private final boolean isEnabled;

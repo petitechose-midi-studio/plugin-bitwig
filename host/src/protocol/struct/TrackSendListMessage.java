@@ -91,9 +91,6 @@ public final class TrackSendListMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int trackIndex;
     private final int sendCount;
     private final Sends[] sends;

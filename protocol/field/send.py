@@ -1,6 +1,6 @@
 from protocol_codegen.core.field import PrimitiveField, CompositeField, Type
 from field.color import color_rgb
-from field.parameter import parameter_touched, parameter_is_echo, parameter_has_automation, parameter_modulated_value
+from field.parameter import parameter_touched, parameter_has_automation, parameter_modulated_value
 
 # ============================================================================
 # SEND FIELDS

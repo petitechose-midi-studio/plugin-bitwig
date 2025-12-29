@@ -34,9 +34,6 @@ struct RequestSendDestinationsMessage {
     static constexpr const char* MESSAGE_NAME = "RequestSendDestinations";
 
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

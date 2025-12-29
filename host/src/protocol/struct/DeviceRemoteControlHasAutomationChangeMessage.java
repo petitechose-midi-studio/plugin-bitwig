@@ -32,9 +32,6 @@ public final class DeviceRemoteControlHasAutomationChangeMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int remoteControlIndex;
     private final boolean hasAutomation;
 

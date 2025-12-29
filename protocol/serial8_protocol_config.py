@@ -12,8 +12,7 @@ from protocol_codegen.methods.serial8 import Serial8Config, Serial8Limits, Seria
 PROTOCOL_CONFIG = Serial8Config(
     structure=Serial8Structure(
         message_type_offset=0,  # First byte = MessageID
-        from_host_offset=1,     # Second byte = direction flag
-        payload_offset=2,       # Payload starts at byte 2
+        payload_offset=1,       # Payload starts at byte 1
     ),
     limits=Serial8Limits(
         string_max_length=32,    # Match SysEx config

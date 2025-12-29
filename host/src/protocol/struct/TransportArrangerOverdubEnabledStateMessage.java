@@ -32,9 +32,6 @@ public final class TransportArrangerOverdubEnabledStateMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final boolean isArrangerOverdubEnabled;
 
     // ============================================================================

@@ -73,9 +73,6 @@ public final class DeviceListWindowMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int deviceCount;
     private final int deviceStartIndex;
     private final int deviceIndex;

@@ -27,14 +27,11 @@ public final class ProtocolConstants {
     /** Position of MessageID byte in message */
     public static final int MESSAGE_TYPE_OFFSET = 0;
 
-    /** Position of fromHost flag in message */
-    public static final int FROM_HOST_OFFSET = 1;
-
     /** Start of payload data in message */
-    public static final int PAYLOAD_OFFSET = 2;
+    public static final int PAYLOAD_OFFSET = 1;
 
     /** Minimum valid message length */
-    public static final int MIN_MESSAGE_LENGTH = 2;
+    public static final int MIN_MESSAGE_LENGTH = 1;
 
     // ============================================================================
     // ENCODING LIMITS

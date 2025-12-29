@@ -1,6 +1,6 @@
 from protocol_codegen.core.field import PrimitiveField, CompositeField, Type
 from field.color import color_rgb
-from field.parameter import parameter_has_automation, parameter_modulated_value, parameter_touched, parameter_is_echo
+from field.parameter import parameter_has_automation, parameter_modulated_value, parameter_touched
 
 # ============================================================================
 # TRACK FIELDS
@@ -50,7 +50,6 @@ track_is_muted_by_solo = PrimitiveField('isMutedBySolo', type_name=Type.BOOL)
 # - parameter_has_automation (hasAutomation)
 # - parameter_modulated_value (modulatedValue)
 # - parameter_touched (isTouched)
-# - parameter_is_echo (isEcho)
 
 # Parameter selector for volume/pan granular messages
 # 0 = volume, 1 = pan

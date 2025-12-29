@@ -30,9 +30,6 @@ public final class ExitToParentMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
 
     // ============================================================================
     // Constructor

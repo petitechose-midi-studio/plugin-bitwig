@@ -37,9 +37,6 @@ struct TrackSendPreFaderStateMessage {
     uint8_t sendIndex;
     bool sendIsPreFader;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

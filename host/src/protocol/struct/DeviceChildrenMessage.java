@@ -61,9 +61,6 @@ public final class DeviceChildrenMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int deviceIndex;
     private final int childType;
     private final int childrenCount;

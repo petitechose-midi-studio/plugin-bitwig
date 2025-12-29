@@ -100,9 +100,9 @@ void BitwigContext::onConnected() {
     OC_LOG_INFO("BitwigContext activated");
 
     // Request current state from Bitwig
-    protocol_->send(Protocol::RequestHostStatusMessage{});
-    protocol_->send(Protocol::RequestDeviceListWindowMessage{0});
-    protocol_->send(Protocol::RequestTrackListWindowMessage{0});
+    protocol_->requestHostStatus();
+    protocol_->requestDeviceListWindow(0);
+    protocol_->requestTrackListWindow(0);
 }
 
 void BitwigContext::onDisconnected() {

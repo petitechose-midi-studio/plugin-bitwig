@@ -115,9 +115,6 @@ public final class TrackListWindowMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int trackCount;
     private final int trackStartIndex;
     private final int trackIndex;

@@ -33,9 +33,6 @@ public final class DeviceRemoteControlsBatchMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int sequenceNumber;
     private final int dirtyMask;
     private final int echoMask;

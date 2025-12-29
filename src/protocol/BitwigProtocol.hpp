@@ -13,12 +13,9 @@
  * // In BitwigContext
  * BitwigProtocol protocol(serial());
  *
- * // Send messages using explicit API (preferred)
+ * // Send messages using explicit API
  * protocol.transportPlay(true);
  * protocol.deviceSelect(index);
- *
- * // Or using generic send (still available)
- * protocol.send(TransportPlayMessage{true});
  *
  * // Register callbacks (inherited from ProtocolCallbacks)
  * protocol.onTransportPlayingState = [this](const TransportPlayingStateMessage& msg) {
@@ -70,18 +67,18 @@ public:
     BitwigProtocol(BitwigProtocol&&) = delete;
     BitwigProtocol& operator=(BitwigProtocol&&) = delete;
 
+    // =========================================================================
+    // Explicit API methods (generated) - e.g. transportPlay(bool), deviceSelect(uint8_t)
+    // =========================================================================
+#include "ProtocolMethods.inl"
+
+private:
+    oc::hal::ISerialTransport& transport_;
+
     /**
-     * @brief Send a protocol message
+     * @brief Send a protocol message (internal use only)
      *
-     * Auto-detects MessageID from message type's MESSAGE_ID constant.
-     *
-     * @tparam T Message type (must have MESSAGE_ID and encode())
-     * @param message Message to send
-     *
-     * @code
-     * protocol.send(TransportPlayMessage{true});
-     * protocol.send(DeviceMacroValueChangeMessage{index, value});
-     * @endcode
+     * Use explicit API methods instead (e.g. transportPlay(), deviceSelect()).
      */
     template <typename T>
     void send(const T& message) {
@@ -93,12 +90,11 @@ public:
         uint8_t payload[T::MAX_PAYLOAD_SIZE];
         uint16_t payloadLen = message.encode(payload, sizeof(payload));
 
-        // Build frame: [MessageID][fromHost][payload...]
+        // Build frame: [MessageID][payload...]
         uint8_t frame[MAX_MESSAGE_SIZE];
         uint16_t offset = 0;
 
         frame[offset++] = static_cast<uint8_t>(messageId);
-        frame[offset++] = 0;  // fromHost = false (we are the controller)
 
         std::memcpy(frame + offset, payload, payloadLen);
         offset += payloadLen;
@@ -106,14 +102,6 @@ public:
         // Send via transport (COBS framing handled by transport)
         transport_.send(frame, offset);
     }
-
-    // =========================================================================
-    // Explicit API methods (generated) - e.g. transportPlay(bool), deviceSelect(uint8_t)
-    // =========================================================================
-#include "ProtocolMethods.inl"
-
-private:
-    oc::hal::ISerialTransport& transport_;
 
     /**
      * @brief Dispatch incoming frame to callbacks
@@ -123,7 +111,6 @@ private:
     void dispatch(const uint8_t* data, size_t len) {
         using Protocol::MIN_MESSAGE_LENGTH;
         using Protocol::MESSAGE_TYPE_OFFSET;
-        using Protocol::FROM_HOST_OFFSET;
         using Protocol::PAYLOAD_OFFSET;
         using Protocol::MessageID;
         using Protocol::DecoderRegistry;
@@ -134,12 +121,11 @@ private:
         }
 
         MessageID messageId = static_cast<MessageID>(data[MESSAGE_TYPE_OFFSET]);
-        bool fromHost = (data[FROM_HOST_OFFSET] != 0);
 
         uint16_t payloadLen = len - PAYLOAD_OFFSET;
         const uint8_t* payload = data + PAYLOAD_OFFSET;
 
-        DecoderRegistry::dispatch(*this, messageId, payload, payloadLen, fromHost);
+        DecoderRegistry::dispatch(*this, messageId, payload, payloadLen);
     }
 };
 

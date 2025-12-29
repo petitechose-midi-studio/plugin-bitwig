@@ -33,9 +33,6 @@ public final class DeviceRemoteControlUpdateMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int remoteControlIndex;
     private final String parameterName;
     private final float parameterValue;

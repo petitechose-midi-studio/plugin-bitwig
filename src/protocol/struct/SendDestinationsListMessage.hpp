@@ -47,9 +47,6 @@ struct SendDestinationsListMessage {
     uint8_t sendCount;
     std::array<SendDestinations, 8> sendDestinations;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

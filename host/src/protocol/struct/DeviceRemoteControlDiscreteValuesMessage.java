@@ -33,9 +33,6 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int remoteControlIndex;
     private final String[] discreteValueNames;
     private final int currentValueIndex;

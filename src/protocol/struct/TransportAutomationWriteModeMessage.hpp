@@ -35,9 +35,6 @@ struct TransportAutomationWriteModeMessage {
 
     uint8_t automationWriteMode;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

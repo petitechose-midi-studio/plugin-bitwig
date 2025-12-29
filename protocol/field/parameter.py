@@ -21,7 +21,6 @@ parameter_display_value = PrimitiveField('displayValue', type_name=Type.STRING)
 parameter_origin = PrimitiveField('parameterOrigin', type_name=Type.FLOAT32)
 parameter_exists = PrimitiveField('parameterExists', type_name=Type.BOOL)
 parameter_touched = PrimitiveField('isTouched', type_name=Type.BOOL)
-parameter_is_echo = PrimitiveField('isEcho', type_name=Type.BOOL)
 
 # Parameter type detection
 parameter_type = PrimitiveField('parameterType', type_name=Type.UINT8)

@@ -55,9 +55,6 @@ public final class SendDestinationsListMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int sendCount;
     private final SendDestinations[] sendDestinations;
 
