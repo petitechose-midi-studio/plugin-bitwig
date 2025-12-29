@@ -4,9 +4,7 @@
 #include <vector>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/DevicePageChangeMessage.hpp"
-#include "protocol/struct/DevicePageNamesMessage.hpp"
-#include "protocol/struct/DevicePageNamesWindowMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -43,26 +41,9 @@ void HandlerHostPage::updateRemoteControlEncoderModes(const RemoteControlArray& 
 }
 
 void HandlerHostPage::setupProtocolCallbacks() {
-    // DEPRECATED: Legacy full page names (use windowed version)
-    protocol_.onDevicePageNames = [this](const DevicePageNamesMessage& msg) {
-        if (!msg.fromHost) return;
-
-        std::vector<std::string> names;
-        for (uint8_t i = 0; i < msg.devicePageCount; i++) {
-            names.push_back(std::string(msg.pageNames[i].data()));
-        }
-
-        state_.pageSelector.names.set(names.data(), names.size());
-        state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
-        // Legacy: also update totalCount for compatibility
-        state_.pageSelector.totalCount.set(msg.devicePageCount);
-        state_.pageSelector.loadedUpTo.set(msg.devicePageCount);
-    };
-
-    // NEW: Windowed page names (accumulates in cache)
+    // Windowed page names (accumulates in cache)
     protocol_.onDevicePageNamesWindow = [this](const DevicePageNamesWindowMessage& msg) {
-        OC_LOG_INFO("[Page] Window fH={} c={}", msg.fromHost, msg.devicePageCount);
-        if (!msg.fromHost) return;
+        OC_LOG_DEBUG("[Page] Window c={}", msg.devicePageCount);
 
         // Update total count
         state_.pageSelector.totalCount.set(msg.devicePageCount);

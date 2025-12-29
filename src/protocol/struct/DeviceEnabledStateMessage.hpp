@@ -1,10 +1,10 @@
 /**
- * DevicePageSelectByIndexMessage.hpp - Auto-generated Protocol Struct
+ * DeviceEnabledStateMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_PAGE_SELECT_BY_INDEX message
+ * Description: DEVICE_ENABLED_STATE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 8-bit binary (Serial8). Performance is identical to inline
@@ -26,14 +26,15 @@ namespace Protocol {
 
 
 
-struct DevicePageSelectByIndexMessage {
+struct DeviceEnabledStateMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_PAGE_SELECT_BY_INDEX;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_ENABLED_STATE;
 
     // Message name for logging (encoded in payload)
-    static constexpr const char* MESSAGE_NAME = "DevicePageSelectByIndex";
+    static constexpr const char* MESSAGE_NAME = "DeviceEnabledState";
 
-    uint8_t devicePageIndex;
+    uint8_t deviceIndex;
+    bool isEnabled;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +42,12 @@ struct DevicePageSelectByIndexMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 25;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 21;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 25;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 21;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -66,7 +67,8 @@ struct DevicePageSelectByIndexMessage {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, devicePageIndex);
+        encodeUint8(ptr, deviceIndex);
+        encodeBool(ptr, isEnabled);
 
         return ptr - buffer;
     }
@@ -78,7 +80,7 @@ struct DevicePageSelectByIndexMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DevicePageSelectByIndexMessage> decode(
+    static std::optional<DeviceEnabledStateMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -94,10 +96,12 @@ struct DevicePageSelectByIndexMessage {
         remaining -= nameLen;
 
         // Decode fields
-        uint8_t devicePageIndex;
-        if (!decodeUint8(ptr, remaining, devicePageIndex)) return std::nullopt;
+        uint8_t deviceIndex;
+        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
+        bool isEnabled;
+        if (!decodeBool(ptr, remaining, isEnabled)) return std::nullopt;
 
-        return DevicePageSelectByIndexMessage{devicePageIndex};
+        return DeviceEnabledStateMessage{deviceIndex, isEnabled};
     }
 
 
@@ -113,9 +117,10 @@ struct DevicePageSelectByIndexMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DevicePageSelectByIndex\ndevicePageSelectByIndex:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceEnabledState\ndeviceEnabledState:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  devicePageIndex: %lu\n", (unsigned long)devicePageIndex);
+        ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
+        ptr += snprintf(ptr, end - ptr, "  isEnabled: %s\n", isEnabled ? "true" : "false");
 
         *ptr = '\0';
         return g_logBuffer;

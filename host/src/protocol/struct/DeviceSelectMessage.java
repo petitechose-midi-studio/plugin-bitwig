@@ -5,27 +5,27 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * DevicePageSelectByIndexMessage - Auto-generated Protocol Message
+ * DeviceSelectMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_PAGE_SELECT_BY_INDEX message
+ * Description: DEVICE_SELECT message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 8-bit binary (Serial8).
  */
-public final class DevicePageSelectByIndexMessage {
+public final class DeviceSelectMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_PAGE_SELECT_BY_INDEX;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_SELECT;
 
     // Message name for logging (encoded in payload)
-    public static final String MESSAGE_NAME = "DevicePageSelectByIndex";
+    public static final String MESSAGE_NAME = "DeviceSelect";
 
 
     // ============================================================================
@@ -35,19 +35,19 @@ public final class DevicePageSelectByIndexMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int devicePageIndex;
+    private final int deviceIndex;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new DevicePageSelectByIndexMessage
+     * Construct a new DeviceSelectMessage
      *
-     * @param devicePageIndex The devicePageIndex value
+     * @param deviceIndex The deviceIndex value
      */
-    public DevicePageSelectByIndexMessage(int devicePageIndex) {
-        this.devicePageIndex = devicePageIndex;
+    public DeviceSelectMessage(int deviceIndex) {
+        this.deviceIndex = deviceIndex;
     }
 
     // ============================================================================
@@ -55,12 +55,12 @@ public final class DevicePageSelectByIndexMessage {
     // ============================================================================
 
     /**
-     * Get the devicePageIndex value
+     * Get the deviceIndex value
      *
-     * @return devicePageIndex
+     * @return deviceIndex
      */
-    public int getDevicePageIndex() {
-        return devicePageIndex;
+    public int getDeviceIndex() {
+        return deviceIndex;
     }
 
     // ============================================================================
@@ -70,7 +70,7 @@ public final class DevicePageSelectByIndexMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 25;
+    public static final int MAX_PAYLOAD_SIZE = 14;
 
     /**
      * Encode message directly into provided buffer (zero allocation)
@@ -88,7 +88,7 @@ public final class DevicePageSelectByIndexMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, devicePageIndex);
+        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
 
         return offset - startOffset;
     }
@@ -100,18 +100,18 @@ public final class DevicePageSelectByIndexMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 25;
+    private static final int MIN_PAYLOAD_SIZE = 14;
 
     /**
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DevicePageSelectByIndexMessage instance
+     * @return Decoded DeviceSelectMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DevicePageSelectByIndexMessage decode(byte[] data) {
+    public static DeviceSelectMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DevicePageSelectByIndexMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceSelectMessage decode");
         }
 
         int offset = 0;
@@ -120,10 +120,10 @@ public final class DevicePageSelectByIndexMessage {
         int nameLen = data[offset++] & 0xFF;
         offset += nameLen;
 
-        int devicePageIndex = Decoder.decodeUint8(data, offset);
+        int deviceIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new DevicePageSelectByIndexMessage(devicePageIndex);
+        return new DeviceSelectMessage(deviceIndex);
     }
 
     // ============================================================================
@@ -138,9 +138,9 @@ public final class DevicePageSelectByIndexMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DevicePageSelectByIndex\n");
-        sb.append("devicePageSelectByIndex:\n");
-        sb.append("  devicePageIndex: ").append(getDevicePageIndex()).append("\n");
+        sb.append("# DeviceSelect\n");
+        sb.append("deviceSelect:\n");
+        sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
         return sb.toString();
     }
 }  // class Message

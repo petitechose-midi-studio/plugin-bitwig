@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DevicePageChangeMessage - Auto-generated Protocol Message
@@ -156,7 +154,7 @@ public final class DevicePageChangeMessage {
     public boolean fromHost = false;
 
     private final PageInfo pageInfo;
-    private final List<RemoteControls> remoteControls;
+    private final RemoteControls[] remoteControls;
 
     // ============================================================================
     // Constructor
@@ -168,7 +166,7 @@ public final class DevicePageChangeMessage {
      * @param pageInfo The pageInfo value
      * @param remoteControls The remoteControls value
      */
-    public DevicePageChangeMessage(PageInfo pageInfo, List<RemoteControls> remoteControls) {
+    public DevicePageChangeMessage(PageInfo pageInfo, RemoteControls[] remoteControls) {
         this.pageInfo = pageInfo;
         this.remoteControls = remoteControls;
     }
@@ -191,7 +189,7 @@ public final class DevicePageChangeMessage {
      *
      * @return remoteControls
      */
-    public List<RemoteControls> getRemoteControls() {
+    public RemoteControls[] getRemoteControls() {
         return remoteControls;
     }
 
@@ -223,7 +221,7 @@ public final class DevicePageChangeMessage {
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
         offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, remoteControls.size());
+        offset += Encoder.writeUint8(buffer, offset, remoteControls.length);
 
         for (RemoteControls item : remoteControls) {
             offset += Encoder.writeUint8(buffer, offset, item.getRemoteControlIndex());
@@ -286,7 +284,7 @@ public final class DevicePageChangeMessage {
         int count_remoteControls = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<RemoteControls> remoteControls_list = new ArrayList<>();
+        RemoteControls[] remoteControls = new RemoteControls[count_remoteControls];
         for (int i = 0; i < count_remoteControls; i++) {
     int item_remoteControlIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -320,11 +318,11 @@ public final class DevicePageChangeMessage {
             offset += 4;
     boolean item_isModulated = Decoder.decodeBool(data, offset);
             offset += 1;
-            remoteControls_list.add(new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue, item_isModulated));
+            remoteControls[i] = new RemoteControls(item_remoteControlIndex, item_parameterValue, item_parameterName, item_parameterOrigin, item_parameterExists, item_discreteValueCount, item_displayValue, item_parameterType, item_discreteValueNames, item_currentValueIndex, item_hasAutomation, item_modulatedValue, item_isModulated);
         }
 
 
-        return new DevicePageChangeMessage(pageInfo, remoteControls_list);
+        return new DevicePageChangeMessage(pageInfo, remoteControls);
     }
 
     // ============================================================================

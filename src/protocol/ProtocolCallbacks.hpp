@@ -6,6 +6,8 @@
  * Base class providing typed callbacks for each message type.
  * Protocol inherits this and DecoderRegistry calls these callbacks.
  *
+ * For explicit send methods, include ProtocolMethods.inl in your Protocol class.
+ *
  * Usage:
  *   protocol.onTransportPlay = [](const TransportPlayMessage& msg) {
  *       // Handle message
@@ -31,10 +33,11 @@ public:
     std::function<void(const DeviceChangeMessage&)> onDeviceChange;
     std::function<void(const DeviceChangeHeaderMessage&)> onDeviceChangeHeader;
     std::function<void(const DeviceChildrenMessage&)> onDeviceChildren;
+    std::function<void(const DeviceEnabledStateMessage&)> onDeviceEnabledState;
     std::function<void(const DeviceListWindowMessage&)> onDeviceListWindow;
     std::function<void(const DevicePageChangeMessage&)> onDevicePageChange;
     std::function<void(const DevicePageNamesWindowMessage&)> onDevicePageNamesWindow;
-    std::function<void(const DevicePageSelectByIndexMessage&)> onDevicePageSelectByIndex;
+    std::function<void(const DevicePageSelectMessage&)> onDevicePageSelect;
     std::function<void(const DeviceRemoteControlsBatchMessage&)> onDeviceRemoteControlsBatch;
     std::function<void(const DeviceRemoteControlDiscreteValuesMessage&)> onDeviceRemoteControlDiscreteValues;
     std::function<void(const DeviceRemoteControlHasAutomationChangeMessage&)> onDeviceRemoteControlHasAutomationChange;
@@ -44,8 +47,8 @@ public:
     std::function<void(const DeviceRemoteControlRestoreAutomationMessage&)> onDeviceRemoteControlRestoreAutomation;
     std::function<void(const DeviceRemoteControlTouchMessage&)> onDeviceRemoteControlTouch;
     std::function<void(const DeviceRemoteControlUpdateMessage&)> onDeviceRemoteControlUpdate;
-    std::function<void(const DeviceSelectByIndexMessage&)> onDeviceSelectByIndex;
-    std::function<void(const DeviceStateChangeMessage&)> onDeviceStateChange;
+    std::function<void(const DeviceSelectMessage&)> onDeviceSelect;
+    std::function<void(const DeviceStateMessage&)> onDeviceState;
     std::function<void(const EnterDeviceChildMessage&)> onEnterDeviceChild;
     std::function<void(const ExitToParentMessage&)> onExitToParent;
     std::function<void(const RemoteControlValueMessage&)> onRemoteControlValue;
@@ -53,7 +56,7 @@ public:
     std::function<void(const RequestDeviceChildrenMessage&)> onRequestDeviceChildren;
     std::function<void(const RequestDeviceListWindowMessage&)> onRequestDeviceListWindow;
     std::function<void(const RequestDevicePageNamesWindowMessage&)> onRequestDevicePageNamesWindow;
-    std::function<void(const ViewStateChangeMessage&)> onViewStateChange;
+    std::function<void(const ViewStateMessage&)> onViewState;
     std::function<void(const LastClickedTouchMessage&)> onLastClickedTouch;
     std::function<void(const LastClickedUpdateMessage&)> onLastClickedUpdate;
     std::function<void(const LastClickedValueMessage&)> onLastClickedValue;
@@ -81,7 +84,7 @@ public:
     std::function<void(const TrackPanModulatedValueStateMessage&)> onTrackPanModulatedValueState;
     std::function<void(const TrackPanStateMessage&)> onTrackPanState;
     std::function<void(const TrackPanTouchMessage&)> onTrackPanTouch;
-    std::function<void(const TrackSelectByIndexMessage&)> onTrackSelectByIndex;
+    std::function<void(const TrackSelectMessage&)> onTrackSelect;
     std::function<void(const TrackSendEnabledMessage&)> onTrackSendEnabled;
     std::function<void(const TrackSendEnabledStateMessage&)> onTrackSendEnabledState;
     std::function<void(const TrackSendHasAutomationStateMessage&)> onTrackSendHasAutomationState;

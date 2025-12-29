@@ -5,27 +5,27 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * ViewStateChangeMessage - Auto-generated Protocol Message
+ * DevicePageSelectMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: VIEW_STATE_CHANGE message
+ * Description: DEVICE_PAGE_SELECT message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 8-bit binary (Serial8).
  */
-public final class ViewStateChangeMessage {
+public final class DevicePageSelectMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.VIEW_STATE_CHANGE;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_PAGE_SELECT;
 
     // Message name for logging (encoded in payload)
-    public static final String MESSAGE_NAME = "ViewStateChange";
+    public static final String MESSAGE_NAME = "DevicePageSelect";
 
 
     // ============================================================================
@@ -35,22 +35,19 @@ public final class ViewStateChangeMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final int viewType;
-    private final boolean selectorActive;
+    private final int devicePageIndex;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new ViewStateChangeMessage
+     * Construct a new DevicePageSelectMessage
      *
-     * @param viewType The viewType value
-     * @param selectorActive The selectorActive value
+     * @param devicePageIndex The devicePageIndex value
      */
-    public ViewStateChangeMessage(int viewType, boolean selectorActive) {
-        this.viewType = viewType;
-        this.selectorActive = selectorActive;
+    public DevicePageSelectMessage(int devicePageIndex) {
+        this.devicePageIndex = devicePageIndex;
     }
 
     // ============================================================================
@@ -58,21 +55,12 @@ public final class ViewStateChangeMessage {
     // ============================================================================
 
     /**
-     * Get the viewType value
+     * Get the devicePageIndex value
      *
-     * @return viewType
+     * @return devicePageIndex
      */
-    public int getViewType() {
-        return viewType;
-    }
-
-    /**
-     * Get the selectorActive value
-     *
-     * @return selectorActive
-     */
-    public boolean getSelectorActive() {
-        return selectorActive;
+    public int getDevicePageIndex() {
+        return devicePageIndex;
     }
 
     // ============================================================================
@@ -100,8 +88,7 @@ public final class ViewStateChangeMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, viewType);
-        offset += Encoder.writeBool(buffer, offset, selectorActive);
+        offset += Encoder.writeUint8(buffer, offset, devicePageIndex);
 
         return offset - startOffset;
     }
@@ -119,12 +106,12 @@ public final class ViewStateChangeMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded ViewStateChangeMessage instance
+     * @return Decoded DevicePageSelectMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static ViewStateChangeMessage decode(byte[] data) {
+    public static DevicePageSelectMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for ViewStateChangeMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DevicePageSelectMessage decode");
         }
 
         int offset = 0;
@@ -133,12 +120,10 @@ public final class ViewStateChangeMessage {
         int nameLen = data[offset++] & 0xFF;
         offset += nameLen;
 
-        int viewType = Decoder.decodeUint8(data, offset);
-        offset += 1;
-        boolean selectorActive = Decoder.decodeBool(data, offset);
+        int devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new ViewStateChangeMessage(viewType, selectorActive);
+        return new DevicePageSelectMessage(devicePageIndex);
     }
 
     // ============================================================================
@@ -153,10 +138,9 @@ public final class ViewStateChangeMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# ViewStateChange\n");
-        sb.append("viewStateChange:\n");
-        sb.append("  viewType: ").append(getViewType()).append("\n");
-        sb.append("  selectorActive: ").append(getSelectorActive() ? "true" : "false").append("\n");
+        sb.append("# DevicePageSelect\n");
+        sb.append("devicePageSelect:\n");
+        sb.append("  devicePageIndex: ").append(getDevicePageIndex()).append("\n");
         return sb.toString();
     }
 }  // class Message

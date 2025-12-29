@@ -1,10 +1,6 @@
 #include "HandlerHostTransport.hpp"
 
-#include "protocol/struct/TransportAutomationOverrideActiveChangeMessage.hpp"
-#include "protocol/struct/TransportPlayMessage.hpp"
-#include "protocol/struct/TransportRecordMessage.hpp"
-#include "protocol/struct/TransportStopMessage.hpp"
-#include "protocol/struct/TransportTempoMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {
 
@@ -16,25 +12,20 @@ HandlerHostTransport::HandlerHostTransport(state::BitwigState& state, BitwigProt
 }
 
 void HandlerHostTransport::setupProtocolCallbacks() {
-    protocol_.onTransportPlay = [this](const TransportPlayMessage& msg) {
+    protocol_.onTransportPlayingState = [this](const TransportPlayingStateMessage& msg) {
         state_.transport.playing.set(msg.isPlaying);
     };
 
-    protocol_.onTransportRecord = [this](const TransportRecordMessage& msg) {
+    protocol_.onTransportRecordingState = [this](const TransportRecordingStateMessage& msg) {
         state_.transport.recording.set(msg.isRecording);
     };
 
-    protocol_.onTransportStop = [this](const TransportStopMessage&) {
-        state_.transport.playing.set(false);
-        state_.transport.recording.set(false);
-    };
-
-    protocol_.onTransportTempo = [this](const TransportTempoMessage& msg) {
+    protocol_.onTransportTempoState = [this](const TransportTempoStateMessage& msg) {
         state_.transport.tempo.set(msg.tempo);
     };
 
-    protocol_.onTransportAutomationOverrideActiveChange =
-        [this](const TransportAutomationOverrideActiveChangeMessage& msg) {
+    protocol_.onTransportAutomationOverrideActiveState =
+        [this](const TransportAutomationOverrideActiveStateMessage& msg) {
             state_.transport.automationOverrideActive.set(msg.isAutomationOverrideActive);
         };
 }

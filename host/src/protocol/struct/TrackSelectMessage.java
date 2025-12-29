@@ -5,27 +5,27 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * TrackSelectByIndexMessage - Auto-generated Protocol Message
+ * TrackSelectMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: TRACK_SELECT_BY_INDEX message
+ * Description: TRACK_SELECT message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 8-bit binary (Serial8).
  */
-public final class TrackSelectByIndexMessage {
+public final class TrackSelectMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.TRACK_SELECT_BY_INDEX;
+    public static final MessageID MESSAGE_ID = MessageID.TRACK_SELECT;
 
     // Message name for logging (encoded in payload)
-    public static final String MESSAGE_NAME = "TrackSelectByIndex";
+    public static final String MESSAGE_NAME = "TrackSelect";
 
 
     // ============================================================================
@@ -42,11 +42,11 @@ public final class TrackSelectByIndexMessage {
     // ============================================================================
 
     /**
-     * Construct a new TrackSelectByIndexMessage
+     * Construct a new TrackSelectMessage
      *
      * @param trackIndex The trackIndex value
      */
-    public TrackSelectByIndexMessage(int trackIndex) {
+    public TrackSelectMessage(int trackIndex) {
         this.trackIndex = trackIndex;
     }
 
@@ -70,7 +70,7 @@ public final class TrackSelectByIndexMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 20;
+    public static final int MAX_PAYLOAD_SIZE = 13;
 
     /**
      * Encode message directly into provided buffer (zero allocation)
@@ -100,18 +100,18 @@ public final class TrackSelectByIndexMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 20;
+    private static final int MIN_PAYLOAD_SIZE = 13;
 
     /**
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded TrackSelectByIndexMessage instance
+     * @return Decoded TrackSelectMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static TrackSelectByIndexMessage decode(byte[] data) {
+    public static TrackSelectMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for TrackSelectByIndexMessage decode");
+            throw new IllegalArgumentException("Insufficient data for TrackSelectMessage decode");
         }
 
         int offset = 0;
@@ -123,7 +123,7 @@ public final class TrackSelectByIndexMessage {
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        return new TrackSelectByIndexMessage(trackIndex);
+        return new TrackSelectMessage(trackIndex);
     }
 
     // ============================================================================
@@ -138,8 +138,8 @@ public final class TrackSelectByIndexMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackSelectByIndex\n");
-        sb.append("trackSelectByIndex:\n");
+        sb.append("# TrackSelect\n");
+        sb.append("trackSelect:\n");
         sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
         return sb.toString();
     }

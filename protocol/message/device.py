@@ -39,21 +39,21 @@ from protocol_codegen.core.message import Message
 # COMMANDS (Controller → Host)
 # ============================================================================
 
-DEVICE_SELECT_BY_INDEX = Message(
+DEVICE_SELECT = Message(
     direction=Direction.TO_HOST,
     intent=Intent.COMMAND,
     description='Select device by index in current chain',
     fields=[device_index]
 )
 
-DEVICE_STATE_CHANGE = Message(
+DEVICE_STATE = Message(
     direction=Direction.TO_HOST,
     intent=Intent.COMMAND,
     description='Toggle device enabled/bypassed by index',
     fields=[device_index, device_state]
 )
 
-DEVICE_PAGE_SELECT_BY_INDEX = Message(
+DEVICE_PAGE_SELECT = Message(
     direction=Direction.TO_HOST,
     intent=Intent.COMMAND,
     description='Select device page by index (modulo pageCount)',
@@ -95,7 +95,7 @@ EXIT_TO_PARENT = Message(
     fields=[]
 )
 
-VIEW_STATE_CHANGE = Message(
+VIEW_STATE = Message(
     direction=Direction.TO_HOST,
     intent=Intent.COMMAND,
     description='Controller view state changed (view type or selector visibility)',
@@ -191,6 +191,13 @@ DEVICE_CHANGE_HEADER = Message(
     intent=Intent.NOTIFY,
     description='Device change header - lightweight message with device identity only',
     fields=[device_name, device_state, device_type, page_info, children_types]
+)
+
+DEVICE_ENABLED_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='Device enabled state changed notification',
+    fields=[device_index, device_state]
 )
 
 # Remote control notifications

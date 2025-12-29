@@ -37,7 +37,7 @@ from protocol_codegen.core.message import Message
 # COMMANDS (Controller → Host)
 # ============================================================================
 
-TRACK_SELECT_BY_INDEX = Message(
+TRACK_SELECT = Message(
     direction=Direction.TO_HOST,
     intent=Intent.COMMAND,
     description='Select track by index in current context',

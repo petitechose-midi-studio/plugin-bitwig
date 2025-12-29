@@ -8,14 +8,17 @@ import protocol.struct.*;
  * AUTO-GENERATED - DO NOT EDIT
  *
  * Base class providing typed callbacks for each message type.
+ * Extends ProtocolMethods for explicit send API.
  * Protocol extends this and DecoderRegistry calls these callbacks.
+ *
+ * Inheritance: ProtocolMethods -> ProtocolCallbacks -> Protocol
  *
  * Usage:
  *   protocol.onTransportPlay = msg -> {
  *       System.out.println("Playing: " + msg.isPlaying());
  *   };
  */
-public class ProtocolCallbacks {
+public abstract class ProtocolCallbacks extends ProtocolMethods {
 
     /**
      * Functional interface for message handlers
@@ -32,10 +35,11 @@ public class ProtocolCallbacks {
     public MessageHandler<DeviceChangeMessage> onDeviceChange;
     public MessageHandler<DeviceChangeHeaderMessage> onDeviceChangeHeader;
     public MessageHandler<DeviceChildrenMessage> onDeviceChildren;
+    public MessageHandler<DeviceEnabledStateMessage> onDeviceEnabledState;
     public MessageHandler<DeviceListWindowMessage> onDeviceListWindow;
     public MessageHandler<DevicePageChangeMessage> onDevicePageChange;
     public MessageHandler<DevicePageNamesWindowMessage> onDevicePageNamesWindow;
-    public MessageHandler<DevicePageSelectByIndexMessage> onDevicePageSelectByIndex;
+    public MessageHandler<DevicePageSelectMessage> onDevicePageSelect;
     public MessageHandler<DeviceRemoteControlsBatchMessage> onDeviceRemoteControlsBatch;
     public MessageHandler<DeviceRemoteControlDiscreteValuesMessage> onDeviceRemoteControlDiscreteValues;
     public MessageHandler<DeviceRemoteControlHasAutomationChangeMessage> onDeviceRemoteControlHasAutomationChange;
@@ -45,8 +49,8 @@ public class ProtocolCallbacks {
     public MessageHandler<DeviceRemoteControlRestoreAutomationMessage> onDeviceRemoteControlRestoreAutomation;
     public MessageHandler<DeviceRemoteControlTouchMessage> onDeviceRemoteControlTouch;
     public MessageHandler<DeviceRemoteControlUpdateMessage> onDeviceRemoteControlUpdate;
-    public MessageHandler<DeviceSelectByIndexMessage> onDeviceSelectByIndex;
-    public MessageHandler<DeviceStateChangeMessage> onDeviceStateChange;
+    public MessageHandler<DeviceSelectMessage> onDeviceSelect;
+    public MessageHandler<DeviceStateMessage> onDeviceState;
     public MessageHandler<EnterDeviceChildMessage> onEnterDeviceChild;
     public MessageHandler<ExitToParentMessage> onExitToParent;
     public MessageHandler<RemoteControlValueMessage> onRemoteControlValue;
@@ -54,7 +58,7 @@ public class ProtocolCallbacks {
     public MessageHandler<RequestDeviceChildrenMessage> onRequestDeviceChildren;
     public MessageHandler<RequestDeviceListWindowMessage> onRequestDeviceListWindow;
     public MessageHandler<RequestDevicePageNamesWindowMessage> onRequestDevicePageNamesWindow;
-    public MessageHandler<ViewStateChangeMessage> onViewStateChange;
+    public MessageHandler<ViewStateMessage> onViewState;
     public MessageHandler<LastClickedTouchMessage> onLastClickedTouch;
     public MessageHandler<LastClickedUpdateMessage> onLastClickedUpdate;
     public MessageHandler<LastClickedValueMessage> onLastClickedValue;
@@ -82,7 +86,7 @@ public class ProtocolCallbacks {
     public MessageHandler<TrackPanModulatedValueStateMessage> onTrackPanModulatedValueState;
     public MessageHandler<TrackPanStateMessage> onTrackPanState;
     public MessageHandler<TrackPanTouchMessage> onTrackPanTouch;
-    public MessageHandler<TrackSelectByIndexMessage> onTrackSelectByIndex;
+    public MessageHandler<TrackSelectMessage> onTrackSelect;
     public MessageHandler<TrackSendEnabledMessage> onTrackSendEnabled;
     public MessageHandler<TrackSendEnabledStateMessage> onTrackSendEnabledState;
     public MessageHandler<TrackSendHasAutomationStateMessage> onTrackSendHasAutomationState;

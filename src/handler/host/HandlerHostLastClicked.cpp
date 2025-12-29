@@ -2,8 +2,7 @@
 
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/LastClickedUpdateMessage.hpp"
-#include "protocol/struct/LastClickedValueChangeMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -21,13 +20,11 @@ HandlerHostLastClicked::HandlerHostLastClicked(state::BitwigState& state,
 
 void HandlerHostLastClicked::setupProtocolCallbacks() {
     protocol_.onLastClickedUpdate = [this](const LastClickedUpdateMessage& msg) {
-        if (!msg.fromHost) return;
         handleLastClickedUpdate(msg);
     };
 
-    protocol_.onLastClickedValueChange = [this](const LastClickedValueChangeMessage& msg) {
-        if (!msg.fromHost) return;
-        handleLastClickedValueChange(msg);
+    protocol_.onLastClickedValueState = [this](const LastClickedValueStateMessage& msg) {
+        handleLastClickedValueState(msg);
     };
 }
 
@@ -49,13 +46,8 @@ void HandlerHostLastClicked::handleLastClickedUpdate(const LastClickedUpdateMess
                                  msg.parameterValue);
 }
 
-void HandlerHostLastClicked::handleLastClickedValueChange(const LastClickedValueChangeMessage& msg) {
+void HandlerHostLastClicked::handleLastClickedValueState(const LastClickedValueStateMessage& msg) {
     auto& lc = state_.lastClicked;
-
-    // Skip echo updates (value changes from controller reflected back)
-    if (msg.isEcho) {
-        return;
-    }
 
     lc.value.set(msg.parameterValue);
     lc.displayValue.set(std::string(msg.displayValue.data()));

@@ -4,13 +4,7 @@
 #include <cmath>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/DeviceRemoteControlDiscreteValuesMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlIsModulatedChangeMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlNameChangeMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlOriginChangeMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlsBatchMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlUpdateMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {
 
@@ -68,28 +62,20 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
         slot.currentValueIndex.set(msg.currentValueIndex);
     };
 
-    protocol_.onDeviceRemoteControlValueChange = [this](const DeviceRemoteControlValueChangeMessage& msg) {
-        if (!msg.fromHost) { return; }
+    // Value state notification from host (confirmation with display value)
+    protocol_.onRemoteControlValueState = [this](const RemoteControlValueStateMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) { return; }
 
         auto& slot = state_.parameters.slots[msg.remoteControlIndex];
-        auto currentType = slot.type.get();
         auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
 
-        if (msg.isEcho) {
-            // Echo: only update display value for non-knob parameters
-            if (currentType != state::ParameterType::KNOB) {
-                slot.value.set(msg.parameterValue);
-                slot.displayValue.set(msg.displayValue.c_str());
-            }
-        } else {
-            // External change: update value and encoder position
-            slot.value.set(msg.parameterValue);
-            slot.displayValue.set(msg.displayValue.c_str());
+        // Update value and display
+        slot.value.set(msg.parameterValue);
+        slot.displayValue.set(msg.displayValue.c_str());
 
-            if (encoderId != EncoderID{0}) {
-                encoders_.setPosition(encoderId, msg.parameterValue);
-            }
+        // Update encoder position
+        if (encoderId != EncoderID{0}) {
+            encoders_.setPosition(encoderId, msg.parameterValue);
         }
     };
 
@@ -99,7 +85,6 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
     };
 
     protocol_.onDeviceRemoteControlOriginChange = [this](const DeviceRemoteControlOriginChangeMessage& msg) {
-        if (!msg.fromHost) return;
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
         state_.parameters.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
     };
@@ -107,7 +92,6 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
     // Combined batch: values + modulated values in single synchronized update
     protocol_.onDeviceRemoteControlsBatch =
         [this](const DeviceRemoteControlsBatchMessage& msg) {
-            if (!msg.fromHost) return;
 
             for (size_t i = 0; i < PARAMETER_COUNT; ++i) {
                 auto& slot = state_.parameters.slots[i];

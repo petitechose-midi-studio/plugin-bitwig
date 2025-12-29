@@ -20,6 +20,7 @@
 #include <oc/state/Signal.hpp>
 
 #include "state/BitwigState.hpp"
+#include "state/OverlayController.hpp"
 
 namespace bitwig::handler {
 
@@ -33,6 +34,7 @@ namespace bitwig::handler {
 class HandlerInputViewSwitcher {
 public:
     HandlerInputViewSwitcher(state::BitwigState& state,
+                             state::OverlayController& overlays,
                              oc::api::EncoderAPI& encoders,
                              oc::api::ButtonAPI& buttons,
                              lv_obj_t* scopeElement,
@@ -54,6 +56,7 @@ private:
     void cancel();
 
     state::BitwigState& state_;
+    state::OverlayController& overlays_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
     lv_obj_t* scopeElement_;
@@ -62,9 +65,6 @@ private:
     // Static view names
     static constexpr const char* VIEW_NAMES[] = {"Remote Controls", "Mix", "Clip"};
     static constexpr size_t VIEW_COUNT = 3;
-
-    // Auto-reset latch when overlay hidden externally (by OverlayManager)
-    oc::state::Subscription visibleSub_;
 };
 
 }  // namespace bitwig::handler

@@ -4,9 +4,6 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/DeviceRemoteControlRestoreAutomationMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlTouchMessage.hpp"
-#include "protocol/struct/DeviceRemoteControlValueChangeMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -69,14 +66,14 @@ void HandlerInputRemoteControl::handleValueChange(uint8_t index, float value) {
     // Note: automationActive is now derived from host batch (touchedMask)
     // Host is source of truth to avoid race conditions
 
-    // Send to host
-    protocol_.send(Protocol::DeviceRemoteControlValueChangeMessage{index, value, "", false});
+    // Send to host using explicit method
+    protocol_.remoteControlValue(index, value);
 }
 
 void HandlerInputRemoteControl::sendTouch(uint8_t index, bool touched) {
     if (index >= PARAMETER_COUNT) return;
 
-    protocol_.send(Protocol::DeviceRemoteControlTouchMessage{index, touched});
+    protocol_.deviceRemoteControlTouch(index, touched);
 }
 
 void HandlerInputRemoteControl::handleGlobalRestore() {
@@ -84,7 +81,7 @@ void HandlerInputRemoteControl::handleGlobalRestore() {
     // Host will set value = modulatedValue and update touchedMask
     // automationActive will be updated via next batch (host is source of truth)
     for (uint8_t i = 0; i < PARAMETER_COUNT; i++) {
-        protocol_.send(Protocol::DeviceRemoteControlRestoreAutomationMessage{i});
+        protocol_.deviceRemoteControlRestoreAutomation(i);
     }
 }
 

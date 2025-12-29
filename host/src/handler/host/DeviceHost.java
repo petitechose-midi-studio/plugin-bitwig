@@ -2,7 +2,10 @@ package handler.host;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
-import protocol.struct.*;
+import protocol.struct.DeviceChangeHeaderMessage;
+import protocol.struct.DeviceChildrenMessage;
+import protocol.struct.DeviceListWindowMessage;
+import protocol.struct.DevicePageChangeMessage;
 import config.BitwigConfig;
 import util.DeviceTypeUtils;
 import java.util.List;
@@ -108,7 +111,7 @@ public class DeviceHost {
 
         if (isModulated != previousIsModulated[paramIndex]) {
             previousIsModulated[paramIndex] = isModulated;
-            protocol.send(new DeviceRemoteControlIsModulatedChangeMessage(paramIndex, isModulated));
+            protocol.deviceRemoteControlIsModulatedChange(paramIndex, isModulated);
         }
     }
 
@@ -147,7 +150,7 @@ public class DeviceHost {
         }
 
         // Send single combined message - zero allocation (arrays passed directly)
-        protocol.send(new DeviceRemoteControlsBatchMessage(0, valuesDirtyMask, valuesEchoMask, hasAutomationMask, pendingValues, modulatedValues, batchDisplayValues));
+        protocol.deviceRemoteControlsBatch(0, valuesDirtyMask, valuesEchoMask, hasAutomationMask, pendingValues, modulatedValues, batchDisplayValues);
 
         // Reset masks
         valuesDirtyMask = 0;
@@ -271,7 +274,7 @@ public class DeviceHost {
 
             param.name().addValueObserver(name -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain all names
-                protocol.send(new DeviceRemoteControlNameChangeMessage(paramIndex, name));
+                protocol.deviceRemoteControlNameChange(paramIndex, name);
             });
 
             // Automation state observer - updates hasAutomationMask in batch
@@ -292,7 +295,7 @@ public class DeviceHost {
             // Origin observer - sends lightweight origin-only message
             param.value().getOrigin().addValueObserver(origin -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain origin
-                protocol.send(new DeviceRemoteControlOriginChangeMessage(paramIndex, (float) origin));
+                protocol.deviceRemoteControlOriginChange(paramIndex, (float) origin);
             });
         }
     }
@@ -314,10 +317,10 @@ public class DeviceHost {
             Device device = deviceBank.getItemAt(i);
             markDeviceInterested(device);
 
-            // Device enabled state observer
+            // Device enabled state observer - sends notification to controller
             device.isEnabled().addValueObserver(isEnabled -> {
                 if (device.exists().get()) {
-                    protocol.send(new DeviceStateChangeMessage(deviceIndex, isEnabled));
+                    protocol.deviceEnabledState(deviceIndex, isEnabled);
                 }
             });
         }
@@ -411,12 +414,12 @@ public class DeviceHost {
                 }
             }
 
-            protocol.send(new DevicePageNamesWindowMessage(
+            protocol.devicePageNamesWindow(
                 totalCount,     // Total pages (absolute)
                 startIndex,     // Actual start index (may be clamped)
                 currentIndex,   // Currently selected page
                 windowNames     // This window's page names (up to 16)
-            ));
+            );
 
             // Resume value/modulation sends after response sent
             selectorRequestActive = false;
@@ -449,23 +452,23 @@ public class DeviceHost {
             }
 
             // Build windowed device list
-            final List<DeviceListWindowMessage.Devices> windowDevices = buildDevicesListWindow(startIndex);
+            final DeviceListWindowMessage.Devices[] windowDevices = buildDevicesListWindow(startIndex);
 
-            protocol.send(new DeviceListWindowMessage(
+            protocol.deviceListWindow(
                 totalDeviceCount,
                 startIndex,
                 currentDevicePosition,
                 isNested,
                 parentName,
                 windowDevices
-            ));
+            );
 
             // Resume value/modulation sends after response sent
             selectorRequestActive = false;
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
-    private List<DeviceListWindowMessage.Devices> buildDevicesListWindow(int startIndex) {
+    private DeviceListWindowMessage.Devices[] buildDevicesListWindow(int startIndex) {
         List<DeviceListWindowMessage.Devices> list = new ArrayList<>();
         int bankSize = deviceBank.getSizeOfBank();
         int endIndex = Math.min(startIndex + BitwigConfig.LIST_WINDOW_SIZE, bankSize);
@@ -486,7 +489,7 @@ public class DeviceHost {
             ));
         }
 
-        return list;
+        return list.toArray(new DeviceListWindowMessage.Devices[0]);
     }
 
     private int[] getDeviceChildrenTypes(Device device) {
@@ -503,7 +506,7 @@ public class DeviceHost {
         host.scheduleTask(() -> {
             final Device device = deviceBank.getItemAt(deviceIndex);
             if (!device.exists().get()) {
-                protocol.send(new DeviceChildrenMessage(deviceIndex, 0, 0, new ArrayList<>()));
+                protocol.deviceChildren(deviceIndex, 0, 0, new DeviceChildrenMessage.Children[0]);
                 return;
             }
 
@@ -534,7 +537,7 @@ public class DeviceHost {
                 allChildren.add(drum);
             }
 
-            protocol.send(new DeviceChildrenMessage(deviceIndex, 0, allChildren.size(), allChildren));
+            protocol.deviceChildren(deviceIndex, 0, allChildren.size(), allChildren.toArray(new DeviceChildrenMessage.Children[0]));
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
@@ -635,7 +638,7 @@ public class DeviceHost {
     }
 
     private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, int pageIndex, int pageCount, String pageName, int[] childrenTypes) {
-        protocol.send(new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes));
+        protocol.deviceChangeHeader(deviceName, isEnabled, deviceType, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes);
     }
 
     private void sendDeviceCleared() {
@@ -645,17 +648,17 @@ public class DeviceHost {
         // Send "No Device" state to controller
         host.scheduleTask(() -> {
             // Send header with "No Device" and empty state
-            protocol.send(new DeviceChangeHeaderMessage(
+            protocol.deviceChangeHeader(
                 "No Device",           // deviceName
                 false,                 // isEnabled
                 0,                     // deviceType (UNKNOWN)
                 new DeviceChangeHeaderMessage.PageInfo(0, 0, ""),  // empty page info
                 new int[]{0, 0, 0, 0}  // no children types
-            ));
+            );
 
             // Clear all parameters (mark as not visible)
             for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
-                protocol.send(new DeviceRemoteControlUpdateMessage(
+                protocol.deviceRemoteControlUpdate(
                     i,                 // remoteControlIndex
                     "",                // parameterName
                     0.0f,              // parameterValue
@@ -667,7 +670,7 @@ public class DeviceHost {
                     0,                 // currentValueIndex
                     false,             // hasAutomation
                     0.0f               // modulatedValue
-                ));
+                );
             }
 
             // Resume observers
@@ -681,10 +684,10 @@ public class DeviceHost {
         final String pageName = remoteControls.getName().get();
         final List<DevicePageChangeMessage.RemoteControls> remoteControlsList = buildRemoteControlsListForPageChange();
 
-        protocol.send(new DevicePageChangeMessage(
+        protocol.devicePageChange(
             new DevicePageChangeMessage.PageInfo(pageIndex, pageCount, pageName),
-            remoteControlsList
-        ));
+            remoteControlsList.toArray(new DevicePageChangeMessage.RemoteControls[0])
+        );
 
         // Ensure batch is sent with updated hasAutomationMask
         batchDirty = true;

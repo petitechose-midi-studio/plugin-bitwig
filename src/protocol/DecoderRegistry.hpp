@@ -68,6 +68,16 @@ public:
                 }
             }
             break;
+        case MessageID::DEVICE_ENABLED_STATE:
+            if (callbacks.onDeviceEnabledState) {
+                auto decoded = DeviceEnabledStateMessage::decode(payload, payloadLen);
+                if (decoded.has_value()) {
+                    auto& msg = decoded.value();  // Reference to avoid copy
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceEnabledState(msg);
+                }
+            }
+            break;
         case MessageID::DEVICE_LIST_WINDOW:
             if (callbacks.onDeviceListWindow) {
                 auto decoded = DeviceListWindowMessage::decode(payload, payloadLen);
@@ -98,13 +108,13 @@ public:
                 }
             }
             break;
-        case MessageID::DEVICE_PAGE_SELECT_BY_INDEX:
-            if (callbacks.onDevicePageSelectByIndex) {
-                auto decoded = DevicePageSelectByIndexMessage::decode(payload, payloadLen);
+        case MessageID::DEVICE_PAGE_SELECT:
+            if (callbacks.onDevicePageSelect) {
+                auto decoded = DevicePageSelectMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDevicePageSelectByIndex(msg);
+                    callbacks.onDevicePageSelect(msg);
                 }
             }
             break;
@@ -198,23 +208,23 @@ public:
                 }
             }
             break;
-        case MessageID::DEVICE_SELECT_BY_INDEX:
-            if (callbacks.onDeviceSelectByIndex) {
-                auto decoded = DeviceSelectByIndexMessage::decode(payload, payloadLen);
+        case MessageID::DEVICE_SELECT:
+            if (callbacks.onDeviceSelect) {
+                auto decoded = DeviceSelectMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceSelectByIndex(msg);
+                    callbacks.onDeviceSelect(msg);
                 }
             }
             break;
-        case MessageID::DEVICE_STATE_CHANGE:
-            if (callbacks.onDeviceStateChange) {
-                auto decoded = DeviceStateChangeMessage::decode(payload, payloadLen);
+        case MessageID::DEVICE_STATE:
+            if (callbacks.onDeviceState) {
+                auto decoded = DeviceStateMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceStateChange(msg);
+                    callbacks.onDeviceState(msg);
                 }
             }
             break;
@@ -288,13 +298,13 @@ public:
                 }
             }
             break;
-        case MessageID::VIEW_STATE_CHANGE:
-            if (callbacks.onViewStateChange) {
-                auto decoded = ViewStateChangeMessage::decode(payload, payloadLen);
+        case MessageID::VIEW_STATE:
+            if (callbacks.onViewState) {
+                auto decoded = ViewStateMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onViewStateChange(msg);
+                    callbacks.onViewState(msg);
                 }
             }
             break;
@@ -568,13 +578,13 @@ public:
                 }
             }
             break;
-        case MessageID::TRACK_SELECT_BY_INDEX:
-            if (callbacks.onTrackSelectByIndex) {
-                auto decoded = TrackSelectByIndexMessage::decode(payload, payloadLen);
+        case MessageID::TRACK_SELECT:
+            if (callbacks.onTrackSelect) {
+                auto decoded = TrackSelectMessage::decode(payload, payloadLen);
                 if (decoded.has_value()) {
                     auto& msg = decoded.value();  // Reference to avoid copy
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onTrackSelectByIndex(msg);
+                    callbacks.onTrackSelect(msg);
                 }
             }
             break;

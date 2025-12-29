@@ -2,13 +2,13 @@ package handler.host;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
-import protocol.struct.*;
+import protocol.struct.SendDestinationsListMessage;
+import protocol.struct.TrackListWindowMessage;
 import config.BitwigConfig;
 import util.ColorUtils;
 import util.TrackTypeUtils;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.stream.IntStream;
 
 /**
  * TrackHost - Observes Bitwig Tracks and sends updates TO controller
@@ -49,8 +49,6 @@ public class TrackHost {
     private long pendingMuteTimestamp = 0;
     private int pendingSoloTrackIndex = -1;
     private long pendingSoloTimestamp = 0;
-    
-    private boolean trackListPending = false;  // Debounce for sendTrackList
 
     public TrackHost(
         ControllerHost host,
@@ -191,40 +189,40 @@ public class TrackHost {
             track.volume().displayedValue().addValueObserver(display -> {
                 if (!track.exists().get()) return;
                 float value = (float) track.volume().value().get();
-                protocol.send(new TrackVolumeChangeMessage(trackIndex, value, display, false));
+                protocol.trackVolumeState(trackIndex, value, display);
             });
 
             track.volume().hasAutomation().addValueObserver(hasAuto -> {
                 if (!track.exists().get()) return;
-                protocol.send(new TrackVolumeHasAutomationChangeMessage(trackIndex, hasAuto));
+                protocol.trackVolumeHasAutomationState(trackIndex, hasAuto);
             });
 
             track.volume().modulatedValue().addValueObserver(modVal -> {
                 if (!track.exists().get()) return;
-                protocol.send(new TrackVolumeModulatedValueChangeMessage(trackIndex, (float) modVal));
+                protocol.trackVolumeModulatedValueState(trackIndex, (float) modVal);
             });
 
             // Pan observers
             track.pan().displayedValue().addValueObserver(display -> {
                 if (!track.exists().get()) return;
                 float value = (float) track.pan().value().get();
-                protocol.send(new TrackPanChangeMessage(trackIndex, value, display, false));
+                protocol.trackPanState(trackIndex, value, display);
             });
 
             track.pan().hasAutomation().addValueObserver(hasAuto -> {
                 if (!track.exists().get()) return;
-                protocol.send(new TrackPanHasAutomationChangeMessage(trackIndex, hasAuto));
+                protocol.trackPanHasAutomationState(trackIndex, hasAuto);
             });
 
             track.pan().modulatedValue().addValueObserver(modVal -> {
                 if (!track.exists().get()) return;
-                protocol.send(new TrackPanModulatedValueChangeMessage(trackIndex, (float) modVal));
+                protocol.trackPanModulatedValueState(trackIndex, (float) modVal);
             });
 
             // Arm observer
             track.arm().addValueObserver(isArm -> {
                 if (!track.exists().get()) return;
-                protocol.send(new TrackArmChangeMessage(trackIndex, isArm));
+                protocol.trackArmState(trackIndex, isArm);
             });
 
             // Send observers with filtering
@@ -247,35 +245,35 @@ public class TrackHost {
                 if (sendIndex != selectedMixSendIndex) return;
                 if (!track.exists().get() || !send.exists().get()) return;
                 float value = (float) send.value().get();
-                protocol.send(new TrackSendValueChangeMessage(trackIndex, sendIndex, value, display, false));
+                protocol.trackSendValueState(trackIndex, sendIndex, value, display);
             });
 
             // Has automation - FILTERED
             send.hasAutomation().addValueObserver(hasAuto -> {
                 if (sendIndex != selectedMixSendIndex) return;
                 if (!track.exists().get() || !send.exists().get()) return;
-                protocol.send(new TrackSendHasAutomationChangeMessage(trackIndex, sendIndex, hasAuto));
+                protocol.trackSendHasAutomationState(trackIndex, sendIndex, hasAuto);
             });
 
             // Modulated value - FILTERED
             send.modulatedValue().addValueObserver(modVal -> {
                 if (sendIndex != selectedMixSendIndex) return;
                 if (!track.exists().get() || !send.exists().get()) return;
-                protocol.send(new TrackSendModulatedValueChangeMessage(trackIndex, sendIndex, (float) modVal));
+                protocol.trackSendModulatedValueState(trackIndex, sendIndex, (float) modVal);
             });
 
             // Enabled - FILTERED
             send.isEnabled().addValueObserver(isEnabled -> {
                 if (sendIndex != selectedMixSendIndex) return;
                 if (!track.exists().get() || !send.exists().get()) return;
-                protocol.send(new TrackSendEnabledChangeMessage(trackIndex, sendIndex, isEnabled));
+                protocol.trackSendEnabledState(trackIndex, sendIndex, isEnabled);
             });
 
             // Pre-fader - FILTERED
             send.isPreFader().addValueObserver(isPreFader -> {
                 if (sendIndex != selectedMixSendIndex) return;
                 if (!track.exists().get() || !send.exists().get()) return;
-                protocol.send(new TrackSendPreFaderChangeMessage(trackIndex, sendIndex, isPreFader));
+                protocol.trackSendPreFaderState(trackIndex, sendIndex, isPreFader);
             });
         }
     }
@@ -341,7 +339,7 @@ public class TrackHost {
             long elapsed = System.currentTimeMillis() - pendingMuteTimestamp;
             if (pendingMuteTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingMuteTrackIndex = -1;
-                protocol.send(new TrackMuteMessage(trackIndex, isMuted));
+                protocol.trackMuteState(trackIndex, isMuted);
             }
         });
 
@@ -350,7 +348,7 @@ public class TrackHost {
             long elapsed = System.currentTimeMillis() - pendingSoloTimestamp;
             if (pendingSoloTrackIndex == trackIndex && track.exists().get() && elapsed < BitwigConfig.TOGGLE_CONFIRM_TIMEOUT_MS) {
                 pendingSoloTrackIndex = -1;
-                protocol.send(new TrackSoloMessage(trackIndex, isSoloed));
+                protocol.trackSoloState(trackIndex, isSoloed);
             }
         });
     }
@@ -369,30 +367,6 @@ public class TrackHost {
      */
     private boolean hasParentGroup() {
         return navigator.hasParentGroup();
-    }
-
-    /**
-     * Send track list to controller
-     * @deprecated Use sendTrackListWindow() for windowed loading
-     */
-    @Deprecated
-    public void sendTrackList() {
-        // Debounce: skip if already pending
-        if (trackListPending) return;
-        trackListPending = true;
-
-        // Delay to let Bitwig API update values (cursorTrack.position(), etc.)
-        host.scheduleTask(() -> {
-            trackListPending = false;
-            // Capture API data AFTER delay
-            final TrackBank bank = getCurrentBank();
-            final boolean hasParent = hasParentGroup();
-            final String parentName = hasParent ? parentTrack.name().get() : "";
-            final List<TrackListMessage.Tracks> tracks = buildTrackList(bank);
-            final int selectedIndex = findSelectedTrackIndex(tracks);
-
-            protocol.send(new TrackListMessage(tracks.size(), selectedIndex, hasParent, parentName, tracks));
-        }, BitwigConfig.TRACK_SELECT_DELAY_MS);
     }
 
     /**
@@ -419,20 +393,20 @@ public class TrackHost {
             }
 
             // Build windowed track list
-            final List<TrackListWindowMessage.Tracks> windowTracks = buildTrackListWindow(bank, startIndex);
+            final TrackListWindowMessage.Tracks[] windowTracks = buildTrackListWindow(bank, startIndex);
 
-            protocol.send(new TrackListWindowMessage(
+            protocol.trackListWindow(
                 totalTrackCount,
                 startIndex,
                 cursorPosition,
                 hasParent,
                 parentName,
                 windowTracks
-            ));
+            );
         }, BitwigConfig.TRACK_SELECT_DELAY_MS);
     }
 
-    private List<TrackListWindowMessage.Tracks> buildTrackListWindow(TrackBank bank, int startIndex) {
+    private TrackListWindowMessage.Tracks[] buildTrackListWindow(TrackBank bank, int startIndex) {
         final List<TrackListWindowMessage.Tracks> tracks = new ArrayList<>();
         int endIndex = Math.min(startIndex + BitwigConfig.LIST_WINDOW_SIZE, bank.getSizeOfBank());
 
@@ -456,41 +430,7 @@ public class TrackHost {
             }
         }
 
-        return tracks;
-    }
-
-    private List<TrackListMessage.Tracks> buildTrackList(TrackBank bank) {
-        final List<TrackListMessage.Tracks> tracks = new ArrayList<>();
-
-        for (int i = 0; i < bank.getSizeOfBank(); i++) {
-            Track track = bank.getItemAt(i);
-            if (track.exists().get()) {
-                tracks.add(new TrackListMessage.Tracks(
-                    track.position().get(),
-                    track.name().get(),
-                    ColorUtils.toUint32Hex(track.color().get()),
-                    track.isActivated().get(),
-                    track.mute().get(),
-                    track.solo().get(),
-                    track.isMutedBySolo().get(),
-                    track.arm().get(),
-                    track.isGroup().get(),
-                    TrackTypeUtils.toInt(track.trackType().get()),
-                    (float) track.volume().value().get(),
-                    (float) track.pan().value().get()
-                ));
-            }
-        }
-
-        return tracks;
-    }
-
-    private int findSelectedTrackIndex(List<TrackListMessage.Tracks> tracks) {
-        final int cursorPosition = cursorTrack.position().get();
-        return IntStream.range(0, tracks.size())
-            .filter(i -> tracks.get(i).getTrackIndex() == cursorPosition)
-            .findFirst()
-            .orElse(0);
+        return tracks.toArray(new TrackListWindowMessage.Tracks[0]);
     }
 
     /**
@@ -512,11 +452,11 @@ public class TrackHost {
         final float pan = (float) cursorTrack.pan().value().get();
         final String panDisplay = cursorTrack.pan().displayedValue().get();
 
-        protocol.send(new TrackChangeMessage(
+        protocol.trackChange(
             trackName, trackColor, trackPosition, trackType,
             isActivated, isMute, isSolo, isMutedBySolo, isArm,
             volume, volumeDisplay, pan, panDisplay
-        ));
+        );
     }
 
     /**
@@ -562,7 +502,7 @@ public class TrackHost {
             pendingMuteTimestamp = System.currentTimeMillis();
             boolean currentState = track.mute().get();
             track.mute().set(!currentState);
-            // Observer (addTrackObservers) will send TrackMuteMessage confirmation
+            // Observer (addTrackObservers) will send trackMuteState confirmation
         }
     }
 
@@ -577,7 +517,7 @@ public class TrackHost {
             pendingSoloTimestamp = System.currentTimeMillis();
             boolean currentState = track.solo().get();
             track.solo().set(!currentState);
-            // Observer (addTrackObservers) will send TrackSoloMessage confirmation
+            // Observer (addTrackObservers) will send trackSoloState confirmation
         }
     }
 
@@ -613,11 +553,11 @@ public class TrackHost {
             if (send.exists().get()) {
                 float value = (float) send.value().get();
                 String display = send.displayedValue().get();
-                protocol.send(new TrackSendValueChangeMessage(t, selectedMixSendIndex, value, display, false));
-                protocol.send(new TrackSendHasAutomationChangeMessage(t, selectedMixSendIndex, send.hasAutomation().get()));
-                protocol.send(new TrackSendModulatedValueChangeMessage(t, selectedMixSendIndex, (float) send.modulatedValue().get()));
-                protocol.send(new TrackSendEnabledChangeMessage(t, selectedMixSendIndex, send.isEnabled().get()));
-                protocol.send(new TrackSendPreFaderChangeMessage(t, selectedMixSendIndex, send.isPreFader().get()));
+                protocol.trackSendValueState(t, selectedMixSendIndex, value, display);
+                protocol.trackSendHasAutomationState(t, selectedMixSendIndex, send.hasAutomation().get());
+                protocol.trackSendModulatedValueState(t, selectedMixSendIndex, (float) send.modulatedValue().get());
+                protocol.trackSendEnabledState(t, selectedMixSendIndex, send.isEnabled().get());
+                protocol.trackSendPreFaderState(t, selectedMixSendIndex, send.isPreFader().get());
             }
         }
     }
@@ -639,6 +579,8 @@ public class TrackHost {
             }
         }
 
-        protocol.send(new SendDestinationsListMessage(destinations.size(), destinations));
+        SendDestinationsListMessage.SendDestinations[] destArray =
+            destinations.toArray(new SendDestinationsListMessage.SendDestinations[0]);
+        protocol.sendDestinationsList(destArray.length, destArray);
     }
 }

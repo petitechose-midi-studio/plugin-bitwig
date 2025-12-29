@@ -1,10 +1,10 @@
 /**
- * DeviceSelectByIndexMessage.hpp - Auto-generated Protocol Struct
+ * ViewStateMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_SELECT_BY_INDEX message
+ * Description: VIEW_STATE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 8-bit binary (Serial8). Performance is identical to inline
@@ -26,14 +26,15 @@ namespace Protocol {
 
 
 
-struct DeviceSelectByIndexMessage {
+struct ViewStateMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_SELECT_BY_INDEX;
+    static constexpr MessageID MESSAGE_ID = MessageID::VIEW_STATE;
 
     // Message name for logging (encoded in payload)
-    static constexpr const char* MESSAGE_NAME = "DeviceSelectByIndex";
+    static constexpr const char* MESSAGE_NAME = "ViewState";
 
-    uint8_t deviceIndex;
+    uint8_t viewType;
+    bool selectorActive;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,12 +42,12 @@ struct DeviceSelectByIndexMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 21;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 12;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 21;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 12;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -66,7 +67,8 @@ struct DeviceSelectByIndexMessage {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, deviceIndex);
+        encodeUint8(ptr, viewType);
+        encodeBool(ptr, selectorActive);
 
         return ptr - buffer;
     }
@@ -78,7 +80,7 @@ struct DeviceSelectByIndexMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<DeviceSelectByIndexMessage> decode(
+    static std::optional<ViewStateMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -94,10 +96,12 @@ struct DeviceSelectByIndexMessage {
         remaining -= nameLen;
 
         // Decode fields
-        uint8_t deviceIndex;
-        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
+        uint8_t viewType;
+        if (!decodeUint8(ptr, remaining, viewType)) return std::nullopt;
+        bool selectorActive;
+        if (!decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
 
-        return DeviceSelectByIndexMessage{deviceIndex};
+        return ViewStateMessage{viewType, selectorActive};
     }
 
 
@@ -113,9 +117,10 @@ struct DeviceSelectByIndexMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# DeviceSelectByIndex\ndeviceSelectByIndex:\n");
+        ptr += snprintf(ptr, end - ptr, "# ViewState\nviewState:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
+        ptr += snprintf(ptr, end - ptr, "  viewType: %lu\n", (unsigned long)viewType);
+        ptr += snprintf(ptr, end - ptr, "  selectorActive: %s\n", selectorActive ? "true" : "false");
 
         *ptr = '\0';
         return g_logBuffer;

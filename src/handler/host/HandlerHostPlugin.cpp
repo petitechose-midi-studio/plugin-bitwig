@@ -11,7 +11,7 @@ using namespace Protocol;
 HandlerHostPlugin::HandlerHostPlugin(state::BitwigState& state, BitwigProtocol& protocol)
     : state_(state), protocol_(protocol) {
     setupProtocolCallbacks();
-    protocol_.send(RequestHostStatusMessage{});
+    protocol_.requestHostStatus();
 }
 
 void HandlerHostPlugin::setupProtocolCallbacks() {
@@ -40,9 +40,9 @@ void HandlerHostPlugin::setupProtocolCallbacks() {
 
             // Request initial windows (uses windowed loading internally)
             OC_LOG_INFO("[HostPlugin] Requesting initial windows");
-            protocol_.send(RequestDeviceListWindowMessage{0});
-            protocol_.send(RequestDevicePageNamesWindowMessage{0});
-            protocol_.send(RequestTrackListWindowMessage{0});
+            protocol_.requestDeviceListWindow(0);
+            protocol_.requestDevicePageNamesWindow(0);
+            protocol_.requestTrackListWindow(0);
         }
     };
 

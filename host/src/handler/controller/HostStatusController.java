@@ -1,7 +1,6 @@
 package handler.controller;
 
 import protocol.Protocol;
-import protocol.struct.HostInitializedMessage;
 import handler.host.*;
 
 /**
@@ -37,7 +36,6 @@ public class HostStatusController {
 
     private void setupProtocolCallbacks() {
         protocol.onRequestHostStatus = msg -> {
-            if (msg.fromHost) return;
             sendFullState();
         };
     }
@@ -47,7 +45,7 @@ public class HostStatusController {
      * Called on initial connection and on resync request
      */
     public void sendFullState() {
-        protocol.send(new HostInitializedMessage(true));
+        protocol.hostInitialized(true);
         transportHost.sendInitialState();
         deviceHost.sendInitialState();
         trackHost.sendInitialState();

@@ -130,8 +130,10 @@ public class Protocol extends ProtocolCallbacks {
 
     /**
      * Send a protocol message (auto-encodes and auto-detects MessageID)
+     * Implements abstract method from ProtocolMethods
      */
-    public <T> void send(T message) {
+    @Override
+    protected void send(Object message) {
         if (!isActive.get()) return;
         sendInternal(message);
     }

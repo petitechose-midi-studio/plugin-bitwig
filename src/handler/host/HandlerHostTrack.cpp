@@ -3,12 +3,7 @@
 #include <vector>
 
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/struct/RequestTrackListWindowMessage.hpp"
-#include "protocol/struct/TrackChangeMessage.hpp"
-#include "protocol/struct/TrackListMessage.hpp"
-#include "protocol/struct/TrackListWindowMessage.hpp"
-#include "protocol/struct/TrackMuteMessage.hpp"
-#include "protocol/struct/TrackSoloMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -29,49 +24,8 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         state_.currentTrack.trackType.set(static_cast<state::TrackType>(msg.trackType));
     };
 
-    protocol_.onTrackList = [this](const TrackListMessage& msg) {
-        if (!msg.fromHost) return;
-
-        // Update navigation state
-        state_.trackSelector.isNested.set(msg.isNested);
-        state_.trackSelector.activeTrackIndex.set(msg.trackIndex);
-
-        // Build temporary lists for bulk data
-        std::vector<std::string> names;
-        std::vector<uint8_t> trackTypes;
-        std::vector<uint32_t> trackColors;
-
-        uint8_t displayIndex = 0;
-        if (msg.isNested) {
-            names.push_back(BACK_TO_PARENT);
-            trackTypes.push_back(0);
-            trackColors.push_back(0xFFFFFF);
-            state_.trackSelector.muteStates[displayIndex].set(false);
-            state_.trackSelector.soloStates[displayIndex].set(false);
-            displayIndex++;
-        }
-
-        for (uint8_t i = 0; i < msg.trackCount && displayIndex < MAX_TRACKS; i++) {
-            names.push_back(std::string(msg.tracks[i].trackName.data()));
-            trackTypes.push_back(msg.tracks[i].trackType);
-            trackColors.push_back(msg.tracks[i].color);
-            state_.trackSelector.muteStates[displayIndex].set(msg.tracks[i].isMute);
-            state_.trackSelector.soloStates[displayIndex].set(msg.tracks[i].isSolo);
-            displayIndex++;
-        }
-
-        // Update SignalVectors (bulk data)
-        state_.trackSelector.names.set(names.data(), names.size());
-        state_.trackSelector.trackTypes.set(trackTypes.data(), trackTypes.size());
-        state_.trackSelector.trackColors.set(trackColors.data(), trackColors.size());
-
-        state_.trackSelector.currentIndex.set(msg.isNested ? msg.trackIndex + 1 : msg.trackIndex);
-        // NOTE: visibility is controlled by input handlers, not host handlers
-    };
-
-    // NEW: Windowed track list (accumulates in cache)
+    // Windowed track list (accumulates in cache)
     protocol_.onTrackListWindow = [this](const TrackListWindowMessage& msg) {
-        if (!msg.fromHost) return;
 
         // Update total count
         state_.trackSelector.totalCount.set(msg.trackCount);
@@ -143,22 +97,18 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         if (msg.trackIndex >= currentLoadedUpTo &&
             currentLoadedUpTo < msg.trackCount) {
             // Request next window to cover current selection
-            protocol_.send(Protocol::RequestTrackListWindowMessage{currentLoadedUpTo});
+            protocol_.requestTrackListWindow(currentLoadedUpTo);
         }
     };
 
-    protocol_.onTrackMute = [this](const TrackMuteMessage& msg) {
-        if (!msg.fromHost) return;
-
+    protocol_.onTrackMuteState = [this](const TrackMuteStateMessage& msg) {
         int displayIndex = utils::toDisplayIndex(msg.trackIndex, state_.trackSelector.isNested.get());
         if (displayIndex >= 0 && displayIndex < MAX_TRACKS) {
             state_.trackSelector.muteStates[displayIndex].set(msg.isMute);
         }
     };
 
-    protocol_.onTrackSolo = [this](const TrackSoloMessage& msg) {
-        if (!msg.fromHost) return;
-
+    protocol_.onTrackSoloState = [this](const TrackSoloStateMessage& msg) {
         int displayIndex = utils::toDisplayIndex(msg.trackIndex, state_.trackSelector.isNested.get());
         if (displayIndex >= 0 && displayIndex < MAX_TRACKS) {
             state_.trackSelector.soloStates[displayIndex].set(msg.isSolo);

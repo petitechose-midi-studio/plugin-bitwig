@@ -7,14 +7,7 @@
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/struct/DeviceSelectByIndexMessage.hpp"
 #include "state/Constants.hpp"
-#include "protocol/struct/DeviceStateChangeMessage.hpp"
-#include "protocol/struct/EnterDeviceChildMessage.hpp"
-#include "protocol/struct/ExitToParentMessage.hpp"
-#include "protocol/struct/RequestDeviceChildrenMessage.hpp"
-#include "protocol/struct/RequestDeviceListWindowMessage.hpp"
-#include "protocol/struct/RequestTrackListWindowMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -24,12 +17,14 @@ using EncoderID = Config::EncoderID;
 using OverlayType = state::OverlayType;
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
+                                                       state::OverlayController& overlays,
                                                        BitwigProtocol& protocol,
                                                        oc::api::EncoderAPI& encoders,
                                                        oc::api::ButtonAPI& buttons,
                                                        lv_obj_t* scopeElement,
                                                        lv_obj_t* overlayElement)
     : state_(state)
+    , overlays_(overlays)
     , protocol_(protocol)
     , encoders_(encoders)
     , buttons_(buttons)
@@ -37,20 +32,13 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
     , overlayElement_(overlayElement) {
     setupBindings();
 
-    // Auto-reset latch and state when overlay hidden externally (by OverlayManager)
+    // Auto-reset local state when overlay hidden externally
+    // Note: Latch clearing is handled by OverlayController
     visibleSub_ = state_.deviceSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
-            buttons_.clearLatch(ButtonID::LEFT_CENTER);
             requested_ = false;
             // Reset children view so next open shows device list, not stale children
             state_.deviceSelector.showingChildren.set(false);
-        }
-    });
-
-    // Auto-reset BOTTOM_LEFT latch when TrackSelector closes
-    trackVisibleSub_ = state_.trackSelector.visible.subscribe([this](bool visible) {
-        if (!visible) {
-            buttons_.clearLatch(ButtonID::BOTTOM_LEFT);
         }
     });
 }
@@ -134,7 +122,7 @@ void HandlerInputDeviceSelector::requestDeviceList() {
         ds.loadedUpTo.set(0);
         ds.loading.set(true);  // Mark as loading until host responds
         // Request first window (windowed loading)
-        protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
+        protocol_.requestDeviceListWindow(0);
         requested_ = true;
     }
 }
@@ -177,7 +165,7 @@ void HandlerInputDeviceSelector::navigate(float delta) {
     // Only prefetch if we have a valid device index approaching the loaded boundary
     if (deviceIndex >= 0 &&
         shouldPrefetch<state::PREFETCH_THRESHOLD>(deviceIndex, loadedUpTo, totalCount)) {
-        protocol_.send(Protocol::RequestDeviceListWindowMessage{loadedUpTo});
+        protocol_.requestDeviceListWindow(loadedUpTo);
     }
 }
 
@@ -197,13 +185,13 @@ void HandlerInputDeviceSelector::select() {
 
     if (!isShowingChildren()) {
         if (ds.isNested.get() && index == 0) {
-            protocol_.send(Protocol::ExitToParentMessage{});
+            protocol_.exitToParent();
             return;
         }
         int deviceIndex = getAdjustedDeviceIndex(index);
         size_t count = ds.names.size();
         if (deviceIndex >= 0 && static_cast<size_t>(deviceIndex) < count) {
-            protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
+            protocol_.deviceSelect(static_cast<uint8_t>(deviceIndex));
         }
     } else {
         enterChildAtIndex(index);
@@ -214,7 +202,7 @@ void HandlerInputDeviceSelector::enterDeviceAtIndex(int selectorIndex) {
     auto& ds = state_.deviceSelector;
 
     if (ds.isNested.get() && selectorIndex == 0) {
-        protocol_.send(Protocol::ExitToParentMessage{});
+        protocol_.exitToParent();
         return;
     }
 
@@ -226,10 +214,10 @@ void HandlerInputDeviceSelector::enterDeviceAtIndex(int selectorIndex) {
         // Store which device we're entering children of (raw bank index for host)
         currentDeviceIndex_ = static_cast<uint8_t>(deviceIndex);
         // Request children - HostHandler will set showingChildren=true when response arrives
-        protocol_.send(Protocol::RequestDeviceChildrenMessage{static_cast<uint8_t>(deviceIndex), 0});
+        protocol_.requestDeviceChildren(static_cast<uint8_t>(deviceIndex), 0);
     } else {
         // No children - select/focus this device directly
-        protocol_.send(Protocol::DeviceSelectByIndexMessage{static_cast<uint8_t>(deviceIndex)});
+        protocol_.deviceSelect(static_cast<uint8_t>(deviceIndex));
     }
 }
 
@@ -241,7 +229,7 @@ void HandlerInputDeviceSelector::enterChildAtIndex(int selectorIndex) {
         ds.names.clear();
         ds.totalCount.set(0);
         ds.loadedUpTo.set(0);
-        protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
+        protocol_.requestDeviceListWindow(0);
         return;
     }
 
@@ -255,7 +243,7 @@ void HandlerInputDeviceSelector::enterChildAtIndex(int selectorIndex) {
     // childIndex for host is 0-based (selectorIndex=1 → childIndex=0)
     uint8_t childIndex = static_cast<uint8_t>(selectorIndex - 1);
 
-    protocol_.send(Protocol::EnterDeviceChildMessage{currentDeviceIndex_, itemType, childIndex});
+    protocol_.enterDeviceChild(currentDeviceIndex_, itemType, childIndex);
 }
 
 void HandlerInputDeviceSelector::toggleState() {
@@ -267,7 +255,7 @@ void HandlerInputDeviceSelector::toggleState() {
     size_t count = ds.names.size();
 
     if (deviceIndex >= 0 && static_cast<size_t>(deviceIndex) < count) {
-        protocol_.send(Protocol::DeviceStateChangeMessage{static_cast<uint8_t>(deviceIndex), true});
+        protocol_.deviceState(static_cast<uint8_t>(deviceIndex), true);
     }
 }
 
@@ -286,14 +274,12 @@ void HandlerInputDeviceSelector::requestTrackList() {
     ts.loadedUpTo.set(0);
 
     // Request first window - data will populate in background
-    protocol_.send(Protocol::RequestTrackListWindowMessage{0});
+    protocol_.requestTrackListWindow(0);
 }
 
 void HandlerInputDeviceSelector::close() {
-    // INVARIANT: Overlay close must clear latches
-    // The visibility subscription (line 40-47) handles latch cleanup automatically.
-    // hideAll() sets visible=false, which triggers the subscription, which clears the latch.
-    state_.overlays.hideAll();
+    // OverlayController handles latch cleanup synchronously before hiding
+    overlays_.hideAll();
 
     // Verify cleanup happened (debug builds only)
     OC_ASSERT_OVERLAY_LIFECYCLE(

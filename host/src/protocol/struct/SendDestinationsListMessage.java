@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * SendDestinationsListMessage - Auto-generated Protocol Message
@@ -61,7 +59,7 @@ public final class SendDestinationsListMessage {
     public boolean fromHost = false;
 
     private final int sendCount;
-    private final List<SendDestinations> sendDestinations;
+    private final SendDestinations[] sendDestinations;
 
     // ============================================================================
     // Constructor
@@ -73,7 +71,7 @@ public final class SendDestinationsListMessage {
      * @param sendCount The sendCount value
      * @param sendDestinations The sendDestinations value
      */
-    public SendDestinationsListMessage(int sendCount, List<SendDestinations> sendDestinations) {
+    public SendDestinationsListMessage(int sendCount, SendDestinations[] sendDestinations) {
         this.sendCount = sendCount;
         this.sendDestinations = sendDestinations;
     }
@@ -96,7 +94,7 @@ public final class SendDestinationsListMessage {
      *
      * @return sendDestinations
      */
-    public List<SendDestinations> getSendDestinations() {
+    public SendDestinations[] getSendDestinations() {
         return sendDestinations;
     }
 
@@ -126,7 +124,7 @@ public final class SendDestinationsListMessage {
         }
 
         offset += Encoder.writeUint8(buffer, offset, sendCount);
-        offset += Encoder.writeUint8(buffer, offset, sendDestinations.size());
+        offset += Encoder.writeUint8(buffer, offset, sendDestinations.length);
 
         for (SendDestinations item : sendDestinations) {
             offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
@@ -169,17 +167,17 @@ public final class SendDestinationsListMessage {
         int count_sendDestinations = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<SendDestinations> sendDestinations_list = new ArrayList<>();
+        SendDestinations[] sendDestinations = new SendDestinations[count_sendDestinations];
         for (int i = 0; i < count_sendDestinations; i++) {
     int item_sendIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
     String item_sendDestinationName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_sendDestinationName.length();
-            sendDestinations_list.add(new SendDestinations(item_sendIndex, item_sendDestinationName));
+            sendDestinations[i] = new SendDestinations(item_sendIndex, item_sendDestinationName);
         }
 
 
-        return new SendDestinationsListMessage(sendCount, sendDestinations_list);
+        return new SendDestinationsListMessage(sendCount, sendDestinations);
     }
 
     // ============================================================================

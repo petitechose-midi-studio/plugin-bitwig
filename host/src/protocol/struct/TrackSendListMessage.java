@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * TrackSendListMessage - Auto-generated Protocol Message
@@ -98,7 +96,7 @@ public final class TrackSendListMessage {
 
     private final int trackIndex;
     private final int sendCount;
-    private final List<Sends> sends;
+    private final Sends[] sends;
 
     // ============================================================================
     // Constructor
@@ -111,7 +109,7 @@ public final class TrackSendListMessage {
      * @param sendCount The sendCount value
      * @param sends The sends value
      */
-    public TrackSendListMessage(int trackIndex, int sendCount, List<Sends> sends) {
+    public TrackSendListMessage(int trackIndex, int sendCount, Sends[] sends) {
         this.trackIndex = trackIndex;
         this.sendCount = sendCount;
         this.sends = sends;
@@ -144,7 +142,7 @@ public final class TrackSendListMessage {
      *
      * @return sends
      */
-    public List<Sends> getSends() {
+    public Sends[] getSends() {
         return sends;
     }
 
@@ -175,7 +173,7 @@ public final class TrackSendListMessage {
 
         offset += Encoder.writeUint8(buffer, offset, trackIndex);
         offset += Encoder.writeUint8(buffer, offset, sendCount);
-        offset += Encoder.writeUint8(buffer, offset, sends.size());
+        offset += Encoder.writeUint8(buffer, offset, sends.length);
 
         for (Sends item : sends) {
             offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
@@ -226,7 +224,7 @@ public final class TrackSendListMessage {
         int count_sends = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Sends> sends_list = new ArrayList<>();
+        Sends[] sends = new Sends[count_sends];
         for (int i = 0; i < count_sends; i++) {
     int item_sendIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -244,11 +242,11 @@ public final class TrackSendListMessage {
             offset += 1 + item_sendMode.length();
     boolean item_sendIsPreFader = Decoder.decodeBool(data, offset);
             offset += 1;
-            sends_list.add(new Sends(item_sendIndex, item_sendName, item_color, item_sendValue, item_sendDisplayValue, item_sendIsEnabled, item_sendMode, item_sendIsPreFader));
+            sends[i] = new Sends(item_sendIndex, item_sendName, item_color, item_sendValue, item_sendDisplayValue, item_sendIsEnabled, item_sendMode, item_sendIsPreFader);
         }
 
 
-        return new TrackSendListMessage(trackIndex, sendCount, sends_list);
+        return new TrackSendListMessage(trackIndex, sendCount, sends);
     }
 
     // ============================================================================

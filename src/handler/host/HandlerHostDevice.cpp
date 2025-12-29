@@ -6,13 +6,7 @@
 #include <oc/log/Log.hpp>
 
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/struct/DeviceChangeHeaderMessage.hpp"
-#include "protocol/struct/DeviceChildrenMessage.hpp"
-#include "protocol/struct/DeviceListMessage.hpp"
-#include "protocol/struct/DeviceListWindowMessage.hpp"
-#include "protocol/struct/DeviceStateChangeMessage.hpp"
-#include "protocol/struct/RequestDeviceListWindowMessage.hpp"
-#include "protocol/struct/RequestDevicePageNamesWindowMessage.hpp"
+#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -53,10 +47,10 @@ void HandlerHostDevice::setupProtocolCallbacks() {
 
         // Preload first window of page names for immediate availability
         OC_LOG_INFO("[HandlerHostDevice] Sending RequestDevicePageNamesWindow(0)");
-        protocol_.send(RequestDevicePageNamesWindowMessage{0});
+        protocol_.requestDevicePageNamesWindow(0);
     };
 
-    protocol_.onDeviceStateChange = [this](const DeviceStateChangeMessage& msg) {
+    protocol_.onDeviceEnabledState = [this](const DeviceEnabledStateMessage& msg) {
         int activeIndex = state_.deviceSelector.activeDeviceIndex.get();
         if (static_cast<int>(msg.deviceIndex) == activeIndex) {
             state_.device.enabled.set(msg.isEnabled);
@@ -68,69 +62,8 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         }
     };
 
-    protocol_.onDeviceList = [this](const DeviceListMessage& msg) {
-        if (!msg.fromHost) return;
-
-        // Update active device info
-        if (msg.deviceIndex < msg.deviceCount) {
-            uint8_t flags = getChildTypeFlags(msg.devices[msg.deviceIndex].childrenTypes);
-            bool hasChildren = (flags & (static_cast<uint8_t>(ChildType::SLOTS) |
-                                         static_cast<uint8_t>(ChildType::LAYERS) |
-                                         static_cast<uint8_t>(ChildType::DRUMS))) != 0;
-            state_.device.hasChildren.set(hasChildren);
-            state_.deviceSelector.activeDeviceIndex.set(msg.deviceIndex);
-        }
-
-        // Update navigation state
-        state_.deviceSelector.isNested.set(msg.isNested);
-
-        // Build temporary lists for bulk data
-        std::vector<std::string> names;
-        std::vector<uint8_t> deviceTypes;
-        std::array<bool, MAX_DEVICES> hasSlots{};
-        std::array<bool, MAX_DEVICES> hasLayers{};
-        std::array<bool, MAX_DEVICES> hasDrums{};
-
-        uint8_t displayIndex = 0;
-        if (msg.isNested) {
-            names.push_back(BACK_TO_PARENT);
-            deviceTypes.push_back(0);
-            hasSlots[displayIndex] = false;
-            hasLayers[displayIndex] = false;
-            hasDrums[displayIndex] = false;
-            state_.deviceSelector.deviceStates[displayIndex].set(false);
-            displayIndex++;
-        }
-
-        for (uint8_t i = 0; i < msg.deviceCount && displayIndex < MAX_DEVICES; i++) {
-            OC_LOG_DEBUG("[DeviceList] {} -> deviceType={}",
-                        msg.devices[i].deviceName.c_str(), msg.devices[i].deviceType);
-            names.push_back(std::string(msg.devices[i].deviceName.data()));
-            deviceTypes.push_back(msg.devices[i].deviceType);
-            state_.deviceSelector.deviceStates[displayIndex].set(msg.devices[i].isEnabled);
-
-            uint8_t flags = getChildTypeFlags(msg.devices[i].childrenTypes);
-            hasSlots[displayIndex] = flags & static_cast<uint8_t>(ChildType::SLOTS);
-            hasLayers[displayIndex] = flags & static_cast<uint8_t>(ChildType::LAYERS);
-            hasDrums[displayIndex] = flags & static_cast<uint8_t>(ChildType::DRUMS);
-            displayIndex++;
-        }
-
-        // Update SignalVectors (bulk data)
-        state_.deviceSelector.names.set(names.data(), names.size());
-        state_.deviceSelector.deviceTypes.set(deviceTypes.data(), deviceTypes.size());
-        state_.deviceSelector.hasSlots.set(hasSlots.data(), displayIndex);
-        state_.deviceSelector.hasLayers.set(hasLayers.data(), displayIndex);
-        state_.deviceSelector.hasDrums.set(hasDrums.data(), displayIndex);
-
-        state_.deviceSelector.currentIndex.set(msg.isNested ? msg.deviceIndex + 1 : msg.deviceIndex);
-        state_.deviceSelector.showingChildren.set(false);
-        // NOTE: visibility is controlled by input handlers, not host handlers
-    };
-
-    // NEW: Windowed device list (accumulates in cache)
+    // Windowed device list (accumulates in cache)
     protocol_.onDeviceListWindow = [this](const DeviceListWindowMessage& msg) {
-        if (!msg.fromHost) return;
 
         // Mark loading complete (host responded)
         state_.deviceSelector.loading.set(false);
@@ -212,7 +145,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
         if (msg.deviceIndex >= currentLoadedUpTo &&
             currentLoadedUpTo < msg.deviceCount) {
             // Request next window to cover current selection
-            protocol_.send(Protocol::RequestDeviceListWindowMessage{currentLoadedUpTo});
+            protocol_.requestDeviceListWindow(currentLoadedUpTo);
         }
 
         // Update hasChildren for active device
@@ -228,8 +161,6 @@ void HandlerHostDevice::setupProtocolCallbacks() {
     };
 
     protocol_.onDeviceChildren = [this](const DeviceChildrenMessage& msg) {
-        if (!msg.fromHost) return;
-
         std::vector<std::string> names;
         std::vector<uint8_t> types;
 

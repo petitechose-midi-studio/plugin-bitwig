@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * TrackListWindowMessage - Auto-generated Protocol Message
@@ -125,7 +123,7 @@ public final class TrackListWindowMessage {
     private final int trackIndex;
     private final boolean isNested;
     private final String parentGroupName;
-    private final List<Tracks> tracks;
+    private final Tracks[] tracks;
 
     // ============================================================================
     // Constructor
@@ -141,7 +139,7 @@ public final class TrackListWindowMessage {
      * @param parentGroupName The parentGroupName value
      * @param tracks The tracks value
      */
-    public TrackListWindowMessage(int trackCount, int trackStartIndex, int trackIndex, boolean isNested, String parentGroupName, List<Tracks> tracks) {
+    public TrackListWindowMessage(int trackCount, int trackStartIndex, int trackIndex, boolean isNested, String parentGroupName, Tracks[] tracks) {
         this.trackCount = trackCount;
         this.trackStartIndex = trackStartIndex;
         this.trackIndex = trackIndex;
@@ -204,7 +202,7 @@ public final class TrackListWindowMessage {
      *
      * @return tracks
      */
-    public List<Tracks> getTracks() {
+    public Tracks[] getTracks() {
         return tracks;
     }
 
@@ -238,7 +236,7 @@ public final class TrackListWindowMessage {
         offset += Encoder.writeUint8(buffer, offset, trackIndex);
         offset += Encoder.writeBool(buffer, offset, isNested);
         offset += Encoder.writeString(buffer, offset, parentGroupName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, tracks.size());
+        offset += Encoder.writeUint8(buffer, offset, tracks.length);
 
         for (Tracks item : tracks) {
             offset += Encoder.writeUint8(buffer, offset, item.getTrackIndex());
@@ -299,7 +297,7 @@ public final class TrackListWindowMessage {
         int count_tracks = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Tracks> tracks_list = new ArrayList<>();
+        Tracks[] tracks = new Tracks[count_tracks];
         for (int i = 0; i < count_tracks; i++) {
     int item_trackIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -325,11 +323,11 @@ public final class TrackListWindowMessage {
             offset += 4;
     float item_pan = Decoder.decodeFloat32(data, offset);
             offset += 4;
-            tracks_list.add(new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isMutedBySolo, item_isArm, item_isGroup, item_trackType, item_volume, item_pan));
+            tracks[i] = new Tracks(item_trackIndex, item_trackName, item_color, item_isActivated, item_isMute, item_isSolo, item_isMutedBySolo, item_isArm, item_isGroup, item_trackType, item_volume, item_pan);
         }
 
 
-        return new TrackListWindowMessage(trackCount, trackStartIndex, trackIndex, isNested, parentGroupName, tracks_list);
+        return new TrackListWindowMessage(trackCount, trackStartIndex, trackIndex, isNested, parentGroupName, tracks);
     }
 
     // ============================================================================

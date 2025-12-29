@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DeviceChildrenMessage - Auto-generated Protocol Message
@@ -69,7 +67,7 @@ public final class DeviceChildrenMessage {
     private final int deviceIndex;
     private final int childType;
     private final int childrenCount;
-    private final List<Children> children;
+    private final Children[] children;
 
     // ============================================================================
     // Constructor
@@ -83,7 +81,7 @@ public final class DeviceChildrenMessage {
      * @param childrenCount The childrenCount value
      * @param children The children value
      */
-    public DeviceChildrenMessage(int deviceIndex, int childType, int childrenCount, List<Children> children) {
+    public DeviceChildrenMessage(int deviceIndex, int childType, int childrenCount, Children[] children) {
         this.deviceIndex = deviceIndex;
         this.childType = childType;
         this.childrenCount = childrenCount;
@@ -126,7 +124,7 @@ public final class DeviceChildrenMessage {
      *
      * @return children
      */
-    public List<Children> getChildren() {
+    public Children[] getChildren() {
         return children;
     }
 
@@ -158,7 +156,7 @@ public final class DeviceChildrenMessage {
         offset += Encoder.writeUint8(buffer, offset, deviceIndex);
         offset += Encoder.writeUint8(buffer, offset, childType);
         offset += Encoder.writeUint8(buffer, offset, childrenCount);
-        offset += Encoder.writeUint8(buffer, offset, children.size());
+        offset += Encoder.writeUint8(buffer, offset, children.length);
 
         for (Children item : children) {
             offset += Encoder.writeUint8(buffer, offset, item.getChildIndex());
@@ -206,7 +204,7 @@ public final class DeviceChildrenMessage {
         int count_children = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Children> children_list = new ArrayList<>();
+        Children[] children = new Children[count_children];
         for (int i = 0; i < count_children; i++) {
     int item_childIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -214,11 +212,11 @@ public final class DeviceChildrenMessage {
             offset += 1 + item_childName.length();
     int item_itemType = Decoder.decodeUint8(data, offset);
             offset += 1;
-            children_list.add(new Children(item_childIndex, item_childName, item_itemType));
+            children[i] = new Children(item_childIndex, item_childName, item_itemType);
         }
 
 
-        return new DeviceChildrenMessage(deviceIndex, childType, childrenCount, children_list);
+        return new DeviceChildrenMessage(deviceIndex, childType, childrenCount, children);
     }
 
     // ============================================================================

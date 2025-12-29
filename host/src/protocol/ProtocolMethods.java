@@ -25,18 +25,18 @@ public abstract class ProtocolMethods {
     // COMMANDS (Controller -> Host) - Callbacks
     // =========================================================================
 
-    public Consumer<DevicePageSelectByIndexMessage> onDevicePageSelect = null;
+    public Consumer<DevicePageSelectMessage> onDevicePageSelect = null;
     public Consumer<DeviceRemoteControlRestoreAutomationMessage> onDeviceRemoteControlRestoreAutomation = null;
     public Consumer<DeviceRemoteControlTouchMessage> onDeviceRemoteControlTouch = null;
-    public Consumer<DeviceSelectByIndexMessage> onDeviceSelect = null;
-    public Consumer<DeviceStateChangeMessage> onDeviceState = null;
+    public Consumer<DeviceSelectMessage> onDeviceSelect = null;
+    public Consumer<DeviceStateMessage> onDeviceState = null;
     public Consumer<EnterDeviceChildMessage> onEnterDeviceChild = null;
     public Consumer<ExitToParentMessage> onExitToParent = null;
     public Consumer<RemoteControlValueMessage> onRemoteControlValue = null;
     public Consumer<RequestDeviceChildrenMessage> onRequestDeviceChildren = null;
     public Consumer<RequestDeviceListWindowMessage> onRequestDeviceListWindow = null;
     public Consumer<RequestDevicePageNamesWindowMessage> onRequestDevicePageNamesWindow = null;
-    public Consumer<ViewStateChangeMessage> onViewState = null;
+    public Consumer<ViewStateMessage> onViewState = null;
     public Consumer<LastClickedTouchMessage> onLastClickedTouch = null;
     public Consumer<LastClickedValueMessage> onLastClickedValue = null;
     public Consumer<RequestHostStatusMessage> onRequestHostStatus = null;
@@ -51,7 +51,7 @@ public abstract class ProtocolMethods {
     public Consumer<TrackMuteMessage> onTrackMute = null;
     public Consumer<TrackPanMessage> onTrackPan = null;
     public Consumer<TrackPanTouchMessage> onTrackPanTouch = null;
-    public Consumer<TrackSelectByIndexMessage> onTrackSelect = null;
+    public Consumer<TrackSelectMessage> onTrackSelect = null;
     public Consumer<TrackSendEnabledMessage> onTrackSendEnabled = null;
     public Consumer<TrackSendModeMessage> onTrackSendMode = null;
     public Consumer<TrackSendTouchMessage> onTrackSendTouch = null;
@@ -74,7 +74,7 @@ public abstract class ProtocolMethods {
     // NOTIFICATIONS (Host -> Controller) - Send Methods
     // =========================================================================
 
-    public void device(String deviceTrackName, String deviceName, boolean isEnabled, DeviceChangeMessage.PageInfo pageInfo, DeviceChangeMessage.RemoteControls[] remoteControls) {
+    public void deviceChange(String deviceTrackName, String deviceName, boolean isEnabled, DeviceChangeMessage.PageInfo pageInfo, DeviceChangeMessage.RemoteControls[] remoteControls) {
         send(new DeviceChangeMessage(deviceTrackName, deviceName, isEnabled, pageInfo, remoteControls));
     }
 
@@ -86,11 +86,15 @@ public abstract class ProtocolMethods {
         send(new DeviceChildrenMessage(deviceIndex, childType, childrenCount, children));
     }
 
+    public void deviceEnabledState(int deviceIndex, boolean isEnabled) {
+        send(new DeviceEnabledStateMessage(deviceIndex, isEnabled));
+    }
+
     public void deviceListWindow(int deviceCount, int deviceStartIndex, int deviceIndex, boolean isNested, String parentName, DeviceListWindowMessage.Devices[] devices) {
         send(new DeviceListWindowMessage(deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices));
     }
 
-    public void devicePage(DevicePageChangeMessage.PageInfo pageInfo, DevicePageChangeMessage.RemoteControls[] remoteControls) {
+    public void devicePageChange(DevicePageChangeMessage.PageInfo pageInfo, DevicePageChangeMessage.RemoteControls[] remoteControls) {
         send(new DevicePageChangeMessage(pageInfo, remoteControls));
     }
 
@@ -98,7 +102,7 @@ public abstract class ProtocolMethods {
         send(new DevicePageNamesWindowMessage(devicePageCount, pageStartIndex, devicePageIndex, pageNames));
     }
 
-    public void deviceRemoteControlsBatch(int sequenceNumber, int dirtyMask, int echoMask, int hasAutomationMask, int[] values, int[] modulatedValues, String[] displayValues) {
+    public void deviceRemoteControlsBatch(int sequenceNumber, int dirtyMask, int echoMask, int hasAutomationMask, float[] values, float[] modulatedValues, String[] displayValues) {
         send(new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, hasAutomationMask, values, modulatedValues, displayValues));
     }
 
@@ -106,23 +110,23 @@ public abstract class ProtocolMethods {
         send(new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames, currentValueIndex));
     }
 
-    public void deviceRemoteControlHasAutomation(int remoteControlIndex, boolean hasAutomation) {
+    public void deviceRemoteControlHasAutomationChange(int remoteControlIndex, boolean hasAutomation) {
         send(new DeviceRemoteControlHasAutomationChangeMessage(remoteControlIndex, hasAutomation));
     }
 
-    public void deviceRemoteControlIsModulated(int remoteControlIndex, boolean isModulated) {
+    public void deviceRemoteControlIsModulatedChange(int remoteControlIndex, boolean isModulated) {
         send(new DeviceRemoteControlIsModulatedChangeMessage(remoteControlIndex, isModulated));
     }
 
-    public void deviceRemoteControlName(int remoteControlIndex, String parameterName) {
+    public void deviceRemoteControlNameChange(int remoteControlIndex, String parameterName) {
         send(new DeviceRemoteControlNameChangeMessage(remoteControlIndex, parameterName));
     }
 
-    public void deviceRemoteControlOrigin(int remoteControlIndex, float parameterOrigin) {
+    public void deviceRemoteControlOriginChange(int remoteControlIndex, float parameterOrigin) {
         send(new DeviceRemoteControlOriginChangeMessage(remoteControlIndex, parameterOrigin));
     }
 
-    public void deviceRemoteControlUpdate(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, int discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
+    public void deviceRemoteControlUpdate(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
         send(new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue));
     }
 
@@ -130,7 +134,7 @@ public abstract class ProtocolMethods {
         send(new RemoteControlValueStateMessage(remoteControlIndex, parameterValue, displayValue));
     }
 
-    public void lastClickedUpdate(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, int discreteValueCount, int currentValueIndex) {
+    public void lastClickedUpdate(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
         send(new LastClickedUpdateMessage(parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex));
     }
 
@@ -154,7 +158,7 @@ public abstract class ProtocolMethods {
         send(new TrackArmStateMessage(trackIndex, isArm));
     }
 
-    public void track(String trackName, int color, int trackIndex, int trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
+    public void trackChange(String trackName, long color, int trackIndex, int trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
         send(new TrackChangeMessage(trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay));
     }
 
