@@ -33,7 +33,6 @@ struct TransportStopMessage {
     // Message name for logging (encoded in payload)
     static constexpr const char* MESSAGE_NAME = "TransportStop";
 
-    bool isStopping;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -41,15 +40,15 @@ struct TransportStopMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 15;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 14;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 15;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 14;
 
     /**
-     * Encode struct to MIDI-safe bytes
+     * Encode struct to MIDI-safe bytes (message name only, no fields)
      *
      * @param buffer Output buffer (must have >= MAX_PAYLOAD_SIZE bytes)
      * @param bufferSize Size of output buffer
@@ -66,21 +65,17 @@ struct TransportStopMessage {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeBool(ptr, isStopping);
-
         return ptr - buffer;
     }
 
     /**
-     * Decode struct from MIDI-safe bytes
+     * Decode struct from MIDI-safe bytes (message name only, no fields)
      *
      * @param data Input buffer with encoded data
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<TransportStopMessage> decode(
-        const uint8_t* data, uint16_t len) {
-
+    static std::optional<TransportStopMessage> decode(const uint8_t* data, uint16_t len) {
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
 
         const uint8_t* ptr = data;
@@ -93,11 +88,7 @@ struct TransportStopMessage {
         ptr += nameLen;
         remaining -= nameLen;
 
-        // Decode fields
-        bool isStopping;
-        if (!decodeBool(ptr, remaining, isStopping)) return std::nullopt;
-
-        return TransportStopMessage{isStopping};
+        return TransportStopMessage{};
     }
 
 
@@ -115,7 +106,6 @@ struct TransportStopMessage {
 
         ptr += snprintf(ptr, end - ptr, "# TransportStop\ntransportStop:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  isStopping: %s\n", isStopping ? "true" : "false");
 
         *ptr = '\0';
         return g_logBuffer;

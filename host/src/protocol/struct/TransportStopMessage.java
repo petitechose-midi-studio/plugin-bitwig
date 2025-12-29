@@ -1,8 +1,6 @@
 package protocol.struct;
 
 import protocol.MessageID;
-import protocol.Encoder;
-import protocol.Decoder;
 
 /**
  * TransportStopMessage - Auto-generated Protocol Message
@@ -35,7 +33,6 @@ public final class TransportStopMessage {
     // Origin tracking (set by DecoderRegistry during decode)
     public boolean fromHost = false;
 
-    private final boolean isStopping;
 
     // ============================================================================
     // Constructor
@@ -44,24 +41,13 @@ public final class TransportStopMessage {
     /**
      * Construct a new TransportStopMessage
      *
-     * @param isStopping The isStopping value
      */
-    public TransportStopMessage(boolean isStopping) {
-        this.isStopping = isStopping;
+    public TransportStopMessage() {
     }
 
     // ============================================================================
     // Getters
     // ============================================================================
-
-    /**
-     * Get the isStopping value
-     *
-     * @return isStopping
-     */
-    public boolean isStopping() {
-        return isStopping;
-    }
 
     // ============================================================================
     // Encoding
@@ -70,7 +56,7 @@ public final class TransportStopMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 15;
+    public static final int MAX_PAYLOAD_SIZE = 14;
 
     /**
      * Encode message directly into provided buffer (zero allocation)
@@ -88,8 +74,6 @@ public final class TransportStopMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeBool(buffer, offset, isStopping);
-
         return offset - startOffset;
     }
 
@@ -98,15 +82,14 @@ public final class TransportStopMessage {
     // ============================================================================
 
     /**
-     * Minimum payload size in bytes (with empty strings)
+     * Minimum payload size in bytes (message name only)
      */
-    private static final int MIN_PAYLOAD_SIZE = 15;
+    private static final int MIN_PAYLOAD_SIZE = 14;
 
     /**
-     * Decode message from MIDI-safe bytes
-     *
-     * @param data Input buffer with encoded data
-     * @return Decoded TransportStopMessage instance
+     * Decode message from MIDI-safe bytes (message name only, no fields)
+     * @param data Input buffer
+     * @return New TransportStopMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
     public static TransportStopMessage decode(byte[] data) {
@@ -120,10 +103,7 @@ public final class TransportStopMessage {
         int nameLen = data[offset++] & 0xFF;
         offset += nameLen;
 
-        boolean isStopping = Decoder.decodeBool(data, offset);
-        offset += 1;
-
-        return new TransportStopMessage(isStopping);
+        return new TransportStopMessage();
     }
 
     // ============================================================================
@@ -140,7 +120,6 @@ public final class TransportStopMessage {
         StringBuilder sb = new StringBuilder(256);
         sb.append("# TransportStop\n");
         sb.append("transportStop:\n");
-        sb.append("  isStopping: ").append(isStopping() ? "true" : "false").append("\n");
         return sb.toString();
     }
 }  // class Message
