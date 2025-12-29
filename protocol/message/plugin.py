@@ -11,6 +11,7 @@ MESSAGES:
 """
 
 from field.plugin import *
+from protocol_codegen.core.enums import Direction, Intent
 from protocol_codegen.core.message import Message
 
 
@@ -19,6 +20,8 @@ from protocol_codegen.core.message import Message
 # ============================================================================
 
 REQUEST_HOST_STATUS = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.QUERY,
     description='Request current host status (triggers HOST_INITIALIZED response)',
     fields=[]  # No payload - simple ping/request
 )
@@ -29,11 +32,15 @@ REQUEST_HOST_STATUS = Message(
 # ============================================================================
 
 HOST_INITIALIZED = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
     description='Host plugin initialized and active',
     fields=[host_active]  # isHostActive = true
 )
 
 HOST_DEACTIVATED = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
     description='Host plugin deactivating',
     fields=[host_active]  # isHostActive = false
 )

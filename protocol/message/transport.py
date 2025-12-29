@@ -1,101 +1,178 @@
 """
 Transport Control Messages
 
-Bidirectional messages for transport state synchronization between
-Bitwig and the hardware controller.
+Separated into explicit directions:
+- COMMANDS (Controller → Host): User actions to change transport state
+- NOTIFICATIONS (Host → Controller): State feedback from Bitwig
 
-MESSAGES:
-- TRANSPORT_PLAY: Play/pause state (bidirectional)
-- TRANSPORT_RECORD: Record arm state (bidirectional)
-- TRANSPORT_STOP: Stop transport (bidirectional)
-- TRANSPORT_TEMPO: Tempo in BPM (bidirectional)
+TRANSPORT MESSAGES:
+- TRANSPORT_PLAY: Set play state (Controller → Host)
+- TRANSPORT_PLAYING_STATE: Play state changed (Host → Controller)
+- TRANSPORT_STOP: Stop transport (Controller → Host)
+- TRANSPORT_RECORD: Set record state (Controller → Host)
+- TRANSPORT_RECORDING_STATE: Record state changed (Host → Controller)
+- TRANSPORT_TEMPO: Adjust tempo (Controller → Host)
+- TRANSPORT_TEMPO_STATE: Tempo value notification (Host → Controller)
 
-AUTOMATION MESSAGES (Granular - Bidirectional for Settable values):
-- TRANSPORT_AUTOMATION_OVERRIDE_ACTIVE_CHANGE: Global override state (Host → Controller only)
-- TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_CHANGE: Arranger write armed (bidirectional)
-- TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED_CHANGE: Clip launcher write armed (bidirectional)
-- TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE: Write mode latch/touch/write (bidirectional)
-- RESET_AUTOMATION_OVERRIDES: Controller → Host request to reset all overrides
+AUTOMATION MESSAGES:
+- TRANSPORT_AUTOMATION_OVERRIDE_ACTIVE_STATE: Override state (Host → Controller)
+- TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED: Set arranger write (Controller → Host)
+- TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_STATE: Arranger write state (Host → Controller)
+- etc.
 
-OVERDUB MESSAGES (Granular - Bidirectional):
-- TRANSPORT_ARRANGER_OVERDUB_ENABLED_CHANGE: Arranger overdub enabled (bidirectional)
-- TRANSPORT_CLIP_LAUNCHER_OVERDUB_ENABLED_CHANGE: Clip launcher overdub enabled (bidirectional)
+OVERDUB MESSAGES:
+- TRANSPORT_ARRANGER_OVERDUB_ENABLED: Set arranger overdub (Controller → Host)
+- TRANSPORT_ARRANGER_OVERDUB_ENABLED_STATE: Arranger overdub state (Host → Controller)
+- etc.
 """
 
 from field.transport import *
+from protocol_codegen.core.enums import Direction, Intent
 from protocol_codegen.core.message import Message
 
 
 # ============================================================================
-# Transport State (Bidirectional)
+# COMMANDS (Controller → Host)
 # ============================================================================
 
 TRANSPORT_PLAY = Message(
-    description='Transport play/pause state',
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set transport play state',
     fields=[transport_play]
 )
 
+TRANSPORT_STOP = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Stop transport',
+    fields=[]
+)
+
 TRANSPORT_RECORD = Message(
-    description='Transport Record Request',
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set transport record state',
     fields=[transport_record]
 )
 
-TRANSPORT_STOP = Message(
-    description='Transport Stop Request',
-    fields=[transport_stop]
-)
-
 TRANSPORT_TEMPO = Message(
-    description='Tempo in BPM (bidirectional)',
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Adjust tempo (relative or absolute)',
     fields=[tempo_value]
 )
 
-# ============================================================================
-# Transport Automation State (Granular)
-# ============================================================================
-# Aligned with Bitwig API Transport.java naming
-# Settable values are bidirectional (Controller can toggle)
-
-TRANSPORT_AUTOMATION_OVERRIDE_ACTIVE_CHANGE = Message(
-    description='isAutomationOverrideActive() state changed (Host → Controller only)',
-    fields=[is_automation_override_active]
-)
-
-TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_CHANGE = Message(
-    description='isArrangerAutomationWriteEnabled() state (bidirectional)',
-    fields=[is_arranger_automation_write_enabled]
-)
-
-TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED_CHANGE = Message(
-    description='isClipLauncherAutomationWriteEnabled() state (bidirectional)',
-    fields=[is_clip_launcher_automation_write_enabled]
-)
-
-TRANSPORT_AUTOMATION_WRITE_MODE_CHANGE = Message(
-    description='automationWriteMode() latch/touch/write (bidirectional)',
-    fields=[automation_write_mode]
-)
-
-# ============================================================================
-# Transport Automation Control (Controller → Host)
-# ============================================================================
-
 RESET_AUTOMATION_OVERRIDES = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
     description='Reset all automation overrides globally (resetAutomationOverrides())',
     fields=[]
 )
 
-# ============================================================================
-# Transport Overdub State (Granular - Bidirectional)
-# ============================================================================
-# Aligned with Bitwig API Transport.java naming
+# Automation write enable commands
+TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set arranger automation write enabled state',
+    fields=[is_arranger_automation_write_enabled]
+)
 
-TRANSPORT_ARRANGER_OVERDUB_ENABLED_CHANGE = Message(
-    description='isArrangerOverdubEnabled() state (bidirectional)',
+TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set clip launcher automation write enabled state',
+    fields=[is_clip_launcher_automation_write_enabled]
+)
+
+TRANSPORT_AUTOMATION_WRITE_MODE = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set automation write mode (latch/touch/write)',
+    fields=[automation_write_mode]
+)
+
+# Overdub enable commands
+TRANSPORT_ARRANGER_OVERDUB_ENABLED = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set arranger overdub enabled state',
     fields=[is_arranger_overdub_enabled]
 )
 
-TRANSPORT_CLIP_LAUNCHER_OVERDUB_ENABLED_CHANGE = Message(
-    description='isClipLauncherOverdubEnabled() state (bidirectional)',
+TRANSPORT_CLIP_LAUNCHER_OVERDUB_ENABLED = Message(
+    direction=Direction.TO_HOST,
+    intent=Intent.COMMAND,
+    description='Set clip launcher overdub enabled state',
+    fields=[is_clip_launcher_overdub_enabled]
+)
+
+
+# ============================================================================
+# NOTIFICATIONS (Host → Controller)
+# ============================================================================
+
+TRANSPORT_PLAYING_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='Transport playing state changed',
+    fields=[transport_play]
+)
+
+TRANSPORT_RECORDING_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='Transport recording state changed',
+    fields=[transport_record]
+)
+
+TRANSPORT_TEMPO_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='Tempo value notification',
+    fields=[tempo_value]
+)
+
+# Automation state notifications
+TRANSPORT_AUTOMATION_OVERRIDE_ACTIVE_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='isAutomationOverrideActive() state changed',
+    fields=[is_automation_override_active]
+)
+
+TRANSPORT_ARRANGER_AUTOMATION_WRITE_ENABLED_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='isArrangerAutomationWriteEnabled() state changed',
+    fields=[is_arranger_automation_write_enabled]
+)
+
+TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='isClipLauncherAutomationWriteEnabled() state changed',
+    fields=[is_clip_launcher_automation_write_enabled]
+)
+
+TRANSPORT_AUTOMATION_WRITE_MODE_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='automationWriteMode() state changed',
+    fields=[automation_write_mode]
+)
+
+# Overdub state notifications
+TRANSPORT_ARRANGER_OVERDUB_ENABLED_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='isArrangerOverdubEnabled() state changed',
+    fields=[is_arranger_overdub_enabled]
+)
+
+TRANSPORT_CLIP_LAUNCHER_OVERDUB_ENABLED_STATE = Message(
+    direction=Direction.TO_CONTROLLER,
+    intent=Intent.NOTIFY,
+    description='isClipLauncherOverdubEnabled() state changed',
     fields=[is_clip_launcher_overdub_enabled]
 )
