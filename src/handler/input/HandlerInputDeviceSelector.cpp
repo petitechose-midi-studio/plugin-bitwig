@@ -1,5 +1,6 @@
 #include "HandlerInputDeviceSelector.hpp"
 
+#include <oc/debug/InvariantAssert.hpp>
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
@@ -175,9 +176,7 @@ void HandlerInputDeviceSelector::navigate(float delta) {
 
     // Only prefetch if we have a valid device index approaching the loaded boundary
     if (deviceIndex >= 0 &&
-        loadedUpTo > state::PREFETCH_THRESHOLD &&
-        static_cast<uint8_t>(deviceIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
-        loadedUpTo < totalCount) {
+        shouldPrefetch<state::PREFETCH_THRESHOLD>(deviceIndex, loadedUpTo, totalCount)) {
         protocol_.send(Protocol::RequestDeviceListWindowMessage{loadedUpTo});
     }
 }
@@ -291,8 +290,16 @@ void HandlerInputDeviceSelector::requestTrackList() {
 }
 
 void HandlerInputDeviceSelector::close() {
-    // Hide all overlays via OverlayManager (subscription handles latch reset)
+    // INVARIANT: Overlay close must clear latches
+    // The visibility subscription (line 40-47) handles latch cleanup automatically.
+    // hideAll() sets visible=false, which triggers the subscription, which clears the latch.
     state_.overlays.hideAll();
+
+    // Verify cleanup happened (debug builds only)
+    OC_ASSERT_OVERLAY_LIFECYCLE(
+        !buttons_.isLatched(ButtonID::LEFT_CENTER),
+        "DeviceSelector latch should be cleared after hideAll()"
+    );
 }
 
 bool HandlerInputDeviceSelector::hasChildrenAtDisplayIndex(int displayIndex) const {

@@ -1,5 +1,6 @@
 #include "HandlerInputDevicePage.hpp"
 
+#include <oc/debug/InvariantAssert.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "config/App.hpp"
@@ -102,9 +103,7 @@ void HandlerInputDevicePage::navigate(float delta) {
     // Prefetch next window if approaching end of loaded data
     uint8_t loadedUpTo = state_.pageSelector.loadedUpTo.get();
     if (newIndex >= 0 &&
-        static_cast<uint8_t>(newIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
-        loadedUpTo < totalCount) {
-        // Request next window starting at loadedUpTo
+        shouldPrefetch<state::PREFETCH_THRESHOLD>(newIndex, loadedUpTo, totalCount)) {
         protocol_.send(Protocol::RequestDevicePageNamesWindowMessage{loadedUpTo});
     }
 }
@@ -124,13 +123,25 @@ void HandlerInputDevicePage::closeSelector() {
         protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
     }
 
+    // INVARIANT: Overlay close must clear latches
     // Hide page selector via OverlayManager (subscription handles latch reset)
     state_.overlays.hide();
+
+    OC_ASSERT_OVERLAY_LIFECYCLE(
+        !buttons_.isLatched(ButtonID::LEFT_BOTTOM),
+        "PageSelector latch should be cleared after hide()"
+    );
 }
 
 void HandlerInputDevicePage::cancel() {
+    // INVARIANT: Overlay close must clear latches
     // Hide page selector via OverlayManager (subscription handles latch reset)
     state_.overlays.hide();
+
+    OC_ASSERT_OVERLAY_LIFECYCLE(
+        !buttons_.isLatched(ButtonID::LEFT_BOTTOM),
+        "PageSelector latch should be cleared after hide()"
+    );
 }
 
 }  // namespace bitwig::handler
