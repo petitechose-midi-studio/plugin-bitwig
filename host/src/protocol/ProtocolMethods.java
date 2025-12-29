@@ -74,23 +74,23 @@ public abstract class ProtocolMethods {
     // NOTIFICATIONS (Host -> Controller) - Send Methods
     // =========================================================================
 
-    public void device(String deviceTrackName, String deviceName, boolean isEnabled, Pageinfo pageInfo, Remotecontrols[] remoteControls) {
+    public void device(String deviceTrackName, String deviceName, boolean isEnabled, DeviceChangeMessage.PageInfo pageInfo, DeviceChangeMessage.RemoteControls[] remoteControls) {
         send(new DeviceChangeMessage(deviceTrackName, deviceName, isEnabled, pageInfo, remoteControls));
     }
 
-    public void deviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, Pageinfo pageInfo, int[] childrenTypes) {
+    public void deviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, DeviceChangeHeaderMessage.PageInfo pageInfo, int[] childrenTypes) {
         send(new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, pageInfo, childrenTypes));
     }
 
-    public void deviceChildren(int deviceIndex, int childType, int childrenCount, Children[] children) {
+    public void deviceChildren(int deviceIndex, int childType, int childrenCount, DeviceChildrenMessage.Children[] children) {
         send(new DeviceChildrenMessage(deviceIndex, childType, childrenCount, children));
     }
 
-    public void deviceListWindow(int deviceCount, int deviceStartIndex, int deviceIndex, boolean isNested, String parentName, Devices[] devices) {
+    public void deviceListWindow(int deviceCount, int deviceStartIndex, int deviceIndex, boolean isNested, String parentName, DeviceListWindowMessage.Devices[] devices) {
         send(new DeviceListWindowMessage(deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices));
     }
 
-    public void devicePage(Pageinfo pageInfo, Remotecontrols[] remoteControls) {
+    public void devicePage(DevicePageChangeMessage.PageInfo pageInfo, DevicePageChangeMessage.RemoteControls[] remoteControls) {
         send(new DevicePageChangeMessage(pageInfo, remoteControls));
     }
 
@@ -146,7 +146,7 @@ public abstract class ProtocolMethods {
         send(new HostInitializedMessage(isHostActive));
     }
 
-    public void sendDestinationsList(int sendCount, Senddestinations[] sendDestinations) {
+    public void sendDestinationsList(int sendCount, SendDestinationsListMessage.SendDestinations[] sendDestinations) {
         send(new SendDestinationsListMessage(sendCount, sendDestinations));
     }
 
@@ -158,7 +158,7 @@ public abstract class ProtocolMethods {
         send(new TrackChangeMessage(trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay));
     }
 
-    public void trackListWindow(int trackCount, int trackStartIndex, int trackIndex, boolean isNested, String parentGroupName, Tracks[] tracks) {
+    public void trackListWindow(int trackCount, int trackStartIndex, int trackIndex, boolean isNested, String parentGroupName, TrackListWindowMessage.Tracks[] tracks) {
         send(new TrackListWindowMessage(trackCount, trackStartIndex, trackIndex, isNested, parentGroupName, tracks));
     }
 
@@ -190,7 +190,7 @@ public abstract class ProtocolMethods {
         send(new TrackSendHasAutomationStateMessage(trackIndex, sendIndex, hasAutomation));
     }
 
-    public void trackSendList(int trackIndex, int sendCount, Sends[] sends) {
+    public void trackSendList(int trackIndex, int sendCount, TrackSendListMessage.Sends[] sends) {
         send(new TrackSendListMessage(trackIndex, sendCount, sends));
     }
 
