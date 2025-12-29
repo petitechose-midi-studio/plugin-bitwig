@@ -33,9 +33,6 @@ public final class DevicePageNamesWindowMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int devicePageCount;
     private final int pageStartIndex;
     private final int devicePageIndex;

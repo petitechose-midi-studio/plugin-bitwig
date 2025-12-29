@@ -32,9 +32,6 @@ public final class DeviceRemoteControlRestoreAutomationMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int remoteControlIndex;
 
     // ============================================================================

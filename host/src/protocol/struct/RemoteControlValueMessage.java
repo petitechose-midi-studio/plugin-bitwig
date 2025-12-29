@@ -32,9 +32,6 @@ public final class RemoteControlValueMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final int remoteControlIndex;
     private final float parameterValue;
 

@@ -54,9 +54,6 @@ struct DeviceListWindowMessage {
     std::string parentName;
     std::array<Devices, 16> devices;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

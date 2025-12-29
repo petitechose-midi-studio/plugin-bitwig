@@ -32,9 +32,6 @@ public final class LastClickedValueMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final float parameterValue;
 
     // ============================================================================

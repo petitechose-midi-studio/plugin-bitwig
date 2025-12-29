@@ -32,9 +32,6 @@ public final class TransportTempoStateMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final float tempo;
 
     // ============================================================================

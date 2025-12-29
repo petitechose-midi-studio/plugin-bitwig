@@ -37,9 +37,6 @@ struct TrackSendValueMessage {
     uint8_t sendIndex;
     float sendValue;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

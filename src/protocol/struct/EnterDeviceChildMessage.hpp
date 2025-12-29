@@ -37,9 +37,6 @@ struct EnterDeviceChildMessage {
     uint8_t childType;
     uint8_t childIndex;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

@@ -40,9 +40,6 @@ struct DevicePageNamesWindowMessage {
     uint8_t devicePageIndex;
     std::array<std::string, 16> pageNames;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

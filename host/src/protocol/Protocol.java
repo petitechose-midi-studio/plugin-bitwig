@@ -19,15 +19,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Set MIDI_STUDIO_TRANSPORT=tcp or MIDI_STUDIO_TRANSPORT=udp (default: udp)
  *
  * Usage:
- *   Protocol protocol = new Protocol(host, "127.0.0.1", 9000);
+ * Protocol protocol = new Protocol(host, "127.0.0.1", 9000);
  *
- *   // Assign callbacks
- *   protocol.onTransportPlay = msg -> {
- *       System.out.println("Playing: " + msg.isPlaying());
- *   };
+ * // Assign callbacks for commands from controller
+ * protocol.onTransportPlay = msg -> {
+ * System.out.println("Playing: " + msg.isPlaying());
+ * };
  *
- *   // Send
- *   protocol.send(new TransportPlayMessage(true));
+ * // Send notifications to controller using explicit API
+ * protocol.transportPlayingState(true);
+ * protocol.deviceChange(name, enabled, ...);
  */
 public class Protocol extends ProtocolCallbacks {
 
@@ -36,7 +37,6 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
 
     private static final int DEFAULT_BRIDGE_PORT = 9000;
-    private static final String TRANSPORT_ENV_VAR = "MIDI_STUDIO_TRANSPORT";
 
     // ========================================================================
     // Dependencies
@@ -125,12 +125,13 @@ public class Protocol extends ProtocolCallbacks {
     }
 
     // ========================================================================
-    // Send API
+    // Internal Send (used by generated explicit API methods)
     // ========================================================================
 
     /**
-     * Send a protocol message (auto-encodes and auto-detects MessageID)
-     * Implements abstract method from ProtocolMethods
+     * Send a protocol message (internal use only)
+     * Use explicit API methods instead (e.g. transportPlayingState(),
+     * deviceChange())
      */
     @Override
     protected void send(Object message) {
@@ -171,12 +172,11 @@ public class Protocol extends ProtocolCallbacks {
 
         int frameLength;
         try {
-            // Frame header: [MessageID][fromHost]
+            // Frame header: [MessageID]
             sendBuffer[0] = meta.messageId().getValue();
-            sendBuffer[1] = 1;  // fromHost = true
-            // Encode payload starting at offset 2 (zero-allocation)
-            int payloadLength = (int) meta.encodeMethod().invoke(message, sendBuffer, 2);
-            frameLength = 2 + payloadLength;
+            // Encode payload starting at offset 1 (zero-allocation)
+            int payloadLength = (int) meta.encodeMethod().invoke(message, sendBuffer, 1);
+            frameLength = 1 + payloadLength;
         } catch (Exception e) {
             throw new RuntimeException("Failed to encode message: " + e.getMessage(), e);
         }
@@ -205,15 +205,13 @@ public class Protocol extends ProtocolCallbacks {
             return;
         }
 
-        boolean fromHost = (frame[ProtocolConstants.FROM_HOST_OFFSET] != 0);
-
         // Extract payload
         int payloadLength = frame.length - ProtocolConstants.PAYLOAD_OFFSET;
         byte[] payload = new byte[payloadLength];
         System.arraycopy(frame, ProtocolConstants.PAYLOAD_OFFSET, payload, 0, payloadLength);
 
         // Dispatch to callbacks
-        DecoderRegistry.dispatch(this, messageId, payload, fromHost);
+        DecoderRegistry.dispatch(this, messageId, payload);
     }
 
     // ========================================================================

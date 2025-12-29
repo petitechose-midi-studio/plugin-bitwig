@@ -39,9 +39,6 @@ struct DeviceRemoteControlDiscreteValuesMessage {
     std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */

@@ -23,9 +23,8 @@ namespace Protocol {
 // ============================================================================
 
 constexpr uint8_t MESSAGE_TYPE_OFFSET = 0;  // Position of MessageID byte
-constexpr uint8_t FROM_HOST_OFFSET = 1;      // Position of fromHost flag
-constexpr uint8_t PAYLOAD_OFFSET = 2;          // Start of payload data
-constexpr uint8_t MIN_MESSAGE_LENGTH = 2;  // Minimum valid message size
+constexpr uint8_t PAYLOAD_OFFSET = 1;          // Start of payload data
+constexpr uint8_t MIN_MESSAGE_LENGTH = 1;  // Minimum valid message size
 
 // ============================================================================
 // ENCODING LIMITS

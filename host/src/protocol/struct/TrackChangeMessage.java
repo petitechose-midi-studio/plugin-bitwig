@@ -33,9 +33,6 @@ public final class TrackChangeMessage {
     // Fields
     // ============================================================================
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    public boolean fromHost = false;
-
     private final String trackName;
     private final long color;
     private final int trackIndex;

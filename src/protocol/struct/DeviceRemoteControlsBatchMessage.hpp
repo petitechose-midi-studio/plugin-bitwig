@@ -43,9 +43,6 @@ struct DeviceRemoteControlsBatchMessage {
     std::array<float, 8> modulatedValues;
     std::array<std::string, 8> displayValues;
 
-    // Origin tracking (set by DecoderRegistry during decode)
-    bool fromHost = false;
-
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
