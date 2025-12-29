@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <oc/api/EncoderAPI.hpp>
+#include <oc/util/Index.hpp>
 
 #include "config/App.hpp"
 #include "state/Constants.hpp"
@@ -74,17 +75,10 @@ inline void configureEncoderForParameter(oc::api::EncoderAPI& encoders,
 }
 
 // =============================================================================
-// Index Utilities
+// Index Utilities (re-exported from framework)
 // =============================================================================
 
-/**
- * @brief Wrap index within range [0, modulo) with proper negative handling
- * @param value Index to wrap
- * @param modulo Range size (must be > 0)
- * @return Wrapped index
- */
-inline int wrapIndex(int value, int modulo) {
-    return ((value % modulo) + modulo) % modulo;
-}
+using oc::util::wrapIndex;
+using oc::util::shouldPrefetch;
 
 }  // namespace bitwig::handler

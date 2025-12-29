@@ -1,5 +1,6 @@
 #include "HandlerInputTrack.hpp"
 
+#include <oc/debug/InvariantAssert.hpp>
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
@@ -121,9 +122,7 @@ void HandlerInputTrack::navigate(float delta) {
 
     // Only prefetch if we have a valid track index approaching the loaded boundary
     if (trackIndex >= 0 &&
-        loadedUpTo > state::PREFETCH_THRESHOLD &&
-        static_cast<uint8_t>(trackIndex) >= loadedUpTo - state::PREFETCH_THRESHOLD &&
-        loadedUpTo < totalCount) {
+        shouldPrefetch<state::PREFETCH_THRESHOLD>(trackIndex, loadedUpTo, totalCount)) {
         protocol_.send(Protocol::RequestTrackListWindowMessage{loadedUpTo});
     }
 }

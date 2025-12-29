@@ -3,6 +3,7 @@
 #include <oc/log/Log.hpp>
 #include <ui/font/FontLoader.hpp>  // Core's font system
 
+#include "config/App.hpp"
 #include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
 
@@ -36,6 +37,7 @@ bool BitwigContext::initialize() {
     createProtocol();
     createHostHandlers();
     createViews();
+    createOverlayController();
     createInputHandlers();
 
     OC_LOG_INFO("BitwigContext initialized");
@@ -65,6 +67,9 @@ void BitwigContext::cleanup() {
     // Global overlays (subscriptions first, then widget)
     viewSelectorSubs_.clear();
     viewSelector_.reset();
+
+    // Overlay controller
+    overlayController_.reset();
 
     // Views (reset ViewManager first to deactivate, then destroy)
     state_.views.reset();
@@ -123,6 +128,56 @@ void BitwigContext::createHostHandlers() {
     hostRemoteControl_ = std::make_unique<handler::HandlerHostRemoteControl>(state_, *protocol_, encoders());
     hostLastClicked_ = std::make_unique<handler::HandlerHostLastClicked>(state_, *protocol_, encoders());
     hostMidi_ = std::make_unique<handler::HandlerHostMidi>(state_, midi());
+}
+
+void BitwigContext::createOverlayController() {
+    using state::OverlayType;
+    using ButtonID = Config::ButtonID;
+
+    // Create controller wrapping the state's OverlayManager
+    overlayController_ = std::make_unique<state::OverlayController>(state_.overlays, buttons());
+
+    // Get scope IDs from overlay elements
+    lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
+    lv_obj_t* trackSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getTrackSelectorElement() : nullptr;
+    lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
+    lv_obj_t* viewSelectorOverlay = viewSelector_ ? viewSelector_->getElement() : nullptr;
+
+    // Register cleanup info for each overlay
+    // Note: static_cast needed to convert Config::ButtonID enum to oc::hal::ButtonID
+    if (pageSelectorOverlay) {
+        overlayController_->registerCleanup(
+            OverlayType::PAGE_SELECTOR,
+            reinterpret_cast<oc::core::ScopeID>(pageSelectorOverlay),
+            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_BOTTOM)
+        );
+    }
+
+    if (deviceSelectorOverlay) {
+        overlayController_->registerCleanup(
+            OverlayType::DEVICE_SELECTOR,
+            reinterpret_cast<oc::core::ScopeID>(deviceSelectorOverlay),
+            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_CENTER)
+        );
+    }
+
+    if (trackSelectorOverlay) {
+        overlayController_->registerCleanup(
+            OverlayType::TRACK_SELECTOR,
+            reinterpret_cast<oc::core::ScopeID>(trackSelectorOverlay),
+            static_cast<oc::hal::ButtonID>(ButtonID::BOTTOM_LEFT)
+        );
+    }
+
+    if (viewSelectorOverlay) {
+        overlayController_->registerCleanup(
+            OverlayType::VIEW_SELECTOR,
+            reinterpret_cast<oc::core::ScopeID>(viewSelectorOverlay),
+            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_TOP)
+        );
+    }
+
+    OC_LOG_INFO("OverlayController created with {} overlays registered", 4);
 }
 
 void BitwigContext::createInputHandlers() {
