@@ -5,27 +5,27 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * DeviceSelectByIndexMessage - Auto-generated Protocol Message
+ * DeviceEnabledStateMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_SELECT_BY_INDEX message
+ * Description: DEVICE_ENABLED_STATE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 8-bit binary (Serial8).
  */
-public final class DeviceSelectByIndexMessage {
+public final class DeviceEnabledStateMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_SELECT_BY_INDEX;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_ENABLED_STATE;
 
     // Message name for logging (encoded in payload)
-    public static final String MESSAGE_NAME = "DeviceSelectByIndex";
+    public static final String MESSAGE_NAME = "DeviceEnabledState";
 
 
     // ============================================================================
@@ -36,18 +36,21 @@ public final class DeviceSelectByIndexMessage {
     public boolean fromHost = false;
 
     private final int deviceIndex;
+    private final boolean isEnabled;
 
     // ============================================================================
     // Constructor
     // ============================================================================
 
     /**
-     * Construct a new DeviceSelectByIndexMessage
+     * Construct a new DeviceEnabledStateMessage
      *
      * @param deviceIndex The deviceIndex value
+     * @param isEnabled The isEnabled value
      */
-    public DeviceSelectByIndexMessage(int deviceIndex) {
+    public DeviceEnabledStateMessage(int deviceIndex, boolean isEnabled) {
         this.deviceIndex = deviceIndex;
+        this.isEnabled = isEnabled;
     }
 
     // ============================================================================
@@ -61,6 +64,15 @@ public final class DeviceSelectByIndexMessage {
      */
     public int getDeviceIndex() {
         return deviceIndex;
+    }
+
+    /**
+     * Get the isEnabled value
+     *
+     * @return isEnabled
+     */
+    public boolean isEnabled() {
+        return isEnabled;
     }
 
     // ============================================================================
@@ -89,6 +101,7 @@ public final class DeviceSelectByIndexMessage {
         }
 
         offset += Encoder.writeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.writeBool(buffer, offset, isEnabled);
 
         return offset - startOffset;
     }
@@ -106,12 +119,12 @@ public final class DeviceSelectByIndexMessage {
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceSelectByIndexMessage instance
+     * @return Decoded DeviceEnabledStateMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceSelectByIndexMessage decode(byte[] data) {
+    public static DeviceEnabledStateMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceSelectByIndexMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceEnabledStateMessage decode");
         }
 
         int offset = 0;
@@ -122,8 +135,10 @@ public final class DeviceSelectByIndexMessage {
 
         int deviceIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
+        boolean isEnabled = Decoder.decodeBool(data, offset);
+        offset += 1;
 
-        return new DeviceSelectByIndexMessage(deviceIndex);
+        return new DeviceEnabledStateMessage(deviceIndex, isEnabled);
     }
 
     // ============================================================================
@@ -138,9 +153,10 @@ public final class DeviceSelectByIndexMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceSelectByIndex\n");
-        sb.append("deviceSelectByIndex:\n");
+        sb.append("# DeviceEnabledState\n");
+        sb.append("deviceEnabledState:\n");
         sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
+        sb.append("  isEnabled: ").append(isEnabled() ? "true" : "false").append("\n");
         return sb.toString();
     }
 }  // class Message

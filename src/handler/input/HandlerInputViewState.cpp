@@ -2,11 +2,8 @@
 
 #include <oc/log/Log.hpp>
 
-#include "protocol/struct/ViewStateChangeMessage.hpp"
-
 namespace bitwig::handler {
 
-using namespace Protocol;
 using namespace bitwig::state;
 
 HandlerInputViewState::HandlerInputViewState(state::BitwigState& state,
@@ -58,10 +55,7 @@ void HandlerInputViewState::sendViewState() {
     OC_LOG_DEBUG("[ViewState] Sending: view={}, selectorActive={}",
                  static_cast<int>(currentView), selectorActive);
 
-    protocol_.send(ViewStateChangeMessage{
-        static_cast<uint8_t>(currentView),
-        selectorActive
-    });
+    protocol_.viewState(static_cast<uint8_t>(currentView), selectorActive);
 }
 
 }  // namespace bitwig::handler

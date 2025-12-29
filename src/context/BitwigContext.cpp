@@ -195,17 +195,17 @@ void BitwigContext::createInputHandlers() {
 
     // ViewSwitcher: scope = mainZone (parent of all views), overlay = ViewSelector
     inputViewSwitcher_ = std::make_unique<handler::HandlerInputViewSwitcher>(
-        state_, encoders(), buttons(), mainZone, viewSelectorOverlay);
+        state_, *overlayController_, encoders(), buttons(), mainZone, viewSelectorOverlay);
 
     // View + overlay scopes
     inputDeviceSelector_ = std::make_unique<handler::HandlerInputDeviceSelector>(
-        state_, *protocol_, encoders(), buttons(), scopeElement, deviceSelectorOverlay);
+        state_, *overlayController_, *protocol_, encoders(), buttons(), scopeElement, deviceSelectorOverlay);
     inputRemoteControl_ = std::make_unique<handler::HandlerInputRemoteControl>(
         state_, *protocol_, encoders(), buttons(), scopeElement);
     inputTrack_ = std::make_unique<handler::HandlerInputTrack>(
-        state_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
+        state_, *overlayController_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
     inputDevicePage_ = std::make_unique<handler::HandlerInputDevicePage>(
-        state_, *protocol_, encoders(), buttons(), scopeElement, pageSelectorOverlay);
+        state_, *overlayController_, *protocol_, encoders(), buttons(), scopeElement, pageSelectorOverlay);
 
     // LastClicked: OPT encoder for adjusting last clicked parameter
     inputLastClicked_ = std::make_unique<handler::HandlerInputLastClicked>(

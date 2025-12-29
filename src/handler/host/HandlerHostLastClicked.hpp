@@ -37,7 +37,7 @@ public:
 private:
     void setupProtocolCallbacks();
     void handleLastClickedUpdate(const Protocol::LastClickedUpdateMessage& msg);
-    void handleLastClickedValueChange(const Protocol::LastClickedValueChangeMessage& msg);
+    void handleLastClickedValueState(const Protocol::LastClickedValueStateMessage& msg);
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;

@@ -3,7 +3,6 @@ package handler.host;
 import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extension.controller.api.ControllerHost;
 import protocol.Protocol;
-import protocol.struct.*;
 
 /**
  * TransportHost - Observes Bitwig Transport and sends updates TO controller
@@ -49,15 +48,15 @@ public class TransportHost {
         transport.tempo().markInterested();
 
         transport.isPlaying().addValueObserver(isPlaying -> {
-            protocol.send(new TransportPlayMessage(isPlaying));
+            protocol.transportPlayingState(isPlaying);
         });
 
         transport.isArrangerRecordEnabled().addValueObserver(isRecording -> {
-            protocol.send(new TransportRecordMessage(isRecording));
+            protocol.transportRecordingState(isRecording);
         });
 
         transport.tempo().value().addRawValueObserver(tempo -> {
-            protocol.send(new TransportTempoMessage((float) tempo));
+            protocol.transportTempoState((float) tempo);
         });
     }
 
@@ -68,19 +67,19 @@ public class TransportHost {
         transport.automationWriteMode().markInterested();
 
         transport.isAutomationOverrideActive().addValueObserver(isActive -> {
-            protocol.send(new TransportAutomationOverrideActiveChangeMessage(isActive));
+            protocol.transportAutomationOverrideActiveState(isActive);
         });
 
         transport.isArrangerAutomationWriteEnabled().addValueObserver(isEnabled -> {
-            protocol.send(new TransportArrangerAutomationWriteEnabledChangeMessage(isEnabled));
+            protocol.transportArrangerAutomationWriteEnabledState(isEnabled);
         });
 
         transport.isClipLauncherAutomationWriteEnabled().addValueObserver(isEnabled -> {
-            protocol.send(new TransportClipLauncherAutomationWriteEnabledChangeMessage(isEnabled));
+            protocol.transportClipLauncherAutomationWriteEnabledState(isEnabled);
         });
 
         transport.automationWriteMode().addValueObserver(mode -> {
-            protocol.send(new TransportAutomationWriteModeChangeMessage(writeModeToInt(mode)));
+            protocol.transportAutomationWriteModeState(writeModeToInt(mode));
         });
     }
 
@@ -89,11 +88,11 @@ public class TransportHost {
         transport.isClipLauncherOverdubEnabled().markInterested();
 
         transport.isArrangerOverdubEnabled().addValueObserver(isEnabled -> {
-            protocol.send(new TransportArrangerOverdubEnabledChangeMessage(isEnabled));
+            protocol.transportArrangerOverdubEnabledState(isEnabled);
         });
 
         transport.isClipLauncherOverdubEnabled().addValueObserver(isEnabled -> {
-            protocol.send(new TransportClipLauncherOverdubEnabledChangeMessage(isEnabled));
+            protocol.transportClipLauncherOverdubEnabledState(isEnabled);
         });
     }
 
@@ -111,9 +110,9 @@ public class TransportHost {
         boolean isRecording = transport.isArrangerRecordEnabled().get();
         double tempo = transport.tempo().getRaw();
 
-        protocol.send(new TransportPlayMessage(isPlaying));
-        protocol.send(new TransportRecordMessage(isRecording));
-        protocol.send(new TransportTempoMessage((float) tempo));
+        protocol.transportPlayingState(isPlaying);
+        protocol.transportRecordingState(isRecording);
+        protocol.transportTempoState((float) tempo);
     }
 
     private void sendAutomationState() {
@@ -122,18 +121,18 @@ public class TransportHost {
         boolean clipLauncherWriteEnabled = transport.isClipLauncherAutomationWriteEnabled().get();
         String writeMode = transport.automationWriteMode().get();
 
-        protocol.send(new TransportAutomationOverrideActiveChangeMessage(overrideActive));
-        protocol.send(new TransportArrangerAutomationWriteEnabledChangeMessage(arrangerWriteEnabled));
-        protocol.send(new TransportClipLauncherAutomationWriteEnabledChangeMessage(clipLauncherWriteEnabled));
-        protocol.send(new TransportAutomationWriteModeChangeMessage(writeModeToInt(writeMode)));
+        protocol.transportAutomationOverrideActiveState(overrideActive);
+        protocol.transportArrangerAutomationWriteEnabledState(arrangerWriteEnabled);
+        protocol.transportClipLauncherAutomationWriteEnabledState(clipLauncherWriteEnabled);
+        protocol.transportAutomationWriteModeState(writeModeToInt(writeMode));
     }
 
     private void sendOverdubState() {
         boolean arrangerOverdub = transport.isArrangerOverdubEnabled().get();
         boolean clipLauncherOverdub = transport.isClipLauncherOverdubEnabled().get();
 
-        protocol.send(new TransportArrangerOverdubEnabledChangeMessage(arrangerOverdub));
-        protocol.send(new TransportClipLauncherOverdubEnabledChangeMessage(clipLauncherOverdub));
+        protocol.transportArrangerOverdubEnabledState(arrangerOverdub);
+        protocol.transportClipLauncherOverdubEnabledState(clipLauncherOverdub);
     }
 
     /**

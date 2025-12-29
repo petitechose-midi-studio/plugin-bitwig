@@ -4,8 +4,6 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * DeviceListWindowMessage - Auto-generated Protocol Message
@@ -83,7 +81,7 @@ public final class DeviceListWindowMessage {
     private final int deviceIndex;
     private final boolean isNested;
     private final String parentName;
-    private final List<Devices> devices;
+    private final Devices[] devices;
 
     // ============================================================================
     // Constructor
@@ -99,7 +97,7 @@ public final class DeviceListWindowMessage {
      * @param parentName The parentName value
      * @param devices The devices value
      */
-    public DeviceListWindowMessage(int deviceCount, int deviceStartIndex, int deviceIndex, boolean isNested, String parentName, List<Devices> devices) {
+    public DeviceListWindowMessage(int deviceCount, int deviceStartIndex, int deviceIndex, boolean isNested, String parentName, Devices[] devices) {
         this.deviceCount = deviceCount;
         this.deviceStartIndex = deviceStartIndex;
         this.deviceIndex = deviceIndex;
@@ -162,7 +160,7 @@ public final class DeviceListWindowMessage {
      *
      * @return devices
      */
-    public List<Devices> getDevices() {
+    public Devices[] getDevices() {
         return devices;
     }
 
@@ -196,7 +194,7 @@ public final class DeviceListWindowMessage {
         offset += Encoder.writeUint8(buffer, offset, deviceIndex);
         offset += Encoder.writeBool(buffer, offset, isNested);
         offset += Encoder.writeString(buffer, offset, parentName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, devices.size());
+        offset += Encoder.writeUint8(buffer, offset, devices.length);
 
         for (Devices item : devices) {
             offset += Encoder.writeUint8(buffer, offset, item.getDeviceIndex());
@@ -253,7 +251,7 @@ public final class DeviceListWindowMessage {
         int count_devices = Decoder.decodeUint8(data, offset);
         offset += 1;
 
-        List<Devices> devices_list = new ArrayList<>();
+        Devices[] devices = new Devices[count_devices];
         for (int i = 0; i < count_devices; i++) {
     int item_deviceIndex = Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -271,11 +269,11 @@ public final class DeviceListWindowMessage {
                 offset += 1;
                 item_childrenTypes[j] = item_childrenTypes_j;
             }
-            devices_list.add(new Devices(item_deviceIndex, item_deviceName, item_isEnabled, item_deviceType, item_childrenTypes));
+            devices[i] = new Devices(item_deviceIndex, item_deviceName, item_isEnabled, item_deviceType, item_childrenTypes);
         }
 
 
-        return new DeviceListWindowMessage(deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices_list);
+        return new DeviceListWindowMessage(deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices);
     }
 
     // ============================================================================

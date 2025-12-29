@@ -50,6 +50,13 @@ public class DecoderRegistry {
                     callbacks.onDeviceChildren.handle(msg);
                 }
                 break;
+            case DEVICE_ENABLED_STATE:
+                if (callbacks.onDeviceEnabledState != null) {
+                    DeviceEnabledStateMessage msg = DeviceEnabledStateMessage.decode(payload);
+                    msg.fromHost = fromHost;  // Inject origin flag
+                    callbacks.onDeviceEnabledState.handle(msg);
+                }
+                break;
             case DEVICE_LIST_WINDOW:
                 if (callbacks.onDeviceListWindow != null) {
                     DeviceListWindowMessage msg = DeviceListWindowMessage.decode(payload);
@@ -71,11 +78,11 @@ public class DecoderRegistry {
                     callbacks.onDevicePageNamesWindow.handle(msg);
                 }
                 break;
-            case DEVICE_PAGE_SELECT_BY_INDEX:
-                if (callbacks.onDevicePageSelectByIndex != null) {
-                    DevicePageSelectByIndexMessage msg = DevicePageSelectByIndexMessage.decode(payload);
+            case DEVICE_PAGE_SELECT:
+                if (callbacks.onDevicePageSelect != null) {
+                    DevicePageSelectMessage msg = DevicePageSelectMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDevicePageSelectByIndex.handle(msg);
+                    callbacks.onDevicePageSelect.handle(msg);
                 }
                 break;
             case DEVICE_REMOTE_CONTROLS_BATCH:
@@ -141,18 +148,18 @@ public class DecoderRegistry {
                     callbacks.onDeviceRemoteControlUpdate.handle(msg);
                 }
                 break;
-            case DEVICE_SELECT_BY_INDEX:
-                if (callbacks.onDeviceSelectByIndex != null) {
-                    DeviceSelectByIndexMessage msg = DeviceSelectByIndexMessage.decode(payload);
+            case DEVICE_SELECT:
+                if (callbacks.onDeviceSelect != null) {
+                    DeviceSelectMessage msg = DeviceSelectMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceSelectByIndex.handle(msg);
+                    callbacks.onDeviceSelect.handle(msg);
                 }
                 break;
-            case DEVICE_STATE_CHANGE:
-                if (callbacks.onDeviceStateChange != null) {
-                    DeviceStateChangeMessage msg = DeviceStateChangeMessage.decode(payload);
+            case DEVICE_STATE:
+                if (callbacks.onDeviceState != null) {
+                    DeviceStateMessage msg = DeviceStateMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onDeviceStateChange.handle(msg);
+                    callbacks.onDeviceState.handle(msg);
                 }
                 break;
             case ENTER_DEVICE_CHILD:
@@ -204,11 +211,11 @@ public class DecoderRegistry {
                     callbacks.onRequestDevicePageNamesWindow.handle(msg);
                 }
                 break;
-            case VIEW_STATE_CHANGE:
-                if (callbacks.onViewStateChange != null) {
-                    ViewStateChangeMessage msg = ViewStateChangeMessage.decode(payload);
+            case VIEW_STATE:
+                if (callbacks.onViewState != null) {
+                    ViewStateMessage msg = ViewStateMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onViewStateChange.handle(msg);
+                    callbacks.onViewState.handle(msg);
                 }
                 break;
             case LAST_CLICKED_TOUCH:
@@ -400,11 +407,11 @@ public class DecoderRegistry {
                     callbacks.onTrackPanTouch.handle(msg);
                 }
                 break;
-            case TRACK_SELECT_BY_INDEX:
-                if (callbacks.onTrackSelectByIndex != null) {
-                    TrackSelectByIndexMessage msg = TrackSelectByIndexMessage.decode(payload);
+            case TRACK_SELECT:
+                if (callbacks.onTrackSelect != null) {
+                    TrackSelectMessage msg = TrackSelectMessage.decode(payload);
                     msg.fromHost = fromHost;  // Inject origin flag
-                    callbacks.onTrackSelectByIndex.handle(msg);
+                    callbacks.onTrackSelect.handle(msg);
                 }
                 break;
             case TRACK_SEND_ENABLED:

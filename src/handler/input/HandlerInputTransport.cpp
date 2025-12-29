@@ -43,23 +43,23 @@ void HandlerInputTransport::setupBindings() {
 void HandlerInputTransport::togglePlay() {
     bool newState = !state_.transport.playing.get();
     state_.transport.playing.set(newState);
-    protocol_.send(Protocol::TransportPlayMessage{newState});
+    protocol_.transportPlay(newState);
 }
 
 void HandlerInputTransport::stop() {
     state_.transport.playing.set(false);
     state_.transport.recording.set(false);
-    protocol_.send(Protocol::TransportStopMessage{});
+    protocol_.transportStop();
 }
 
 void HandlerInputTransport::toggleRecord() {
     bool newState = !state_.transport.recording.get();
     state_.transport.recording.set(newState);
-    protocol_.send(Protocol::TransportRecordMessage{newState});
+    protocol_.transportRecord(newState);
 }
 
 void HandlerInputTransport::adjustTempo(float delta) {
-    protocol_.send(Protocol::TransportTempoMessage{delta});
+    protocol_.transportTempo(delta);
 }
 
 }  // namespace bitwig::handler

@@ -15,23 +15,18 @@ using OverlayType = state::OverlayType;
 using ViewType = state::ViewType;
 
 HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
+                                                   state::OverlayController& overlays,
                                                    oc::api::EncoderAPI& encoders,
                                                    oc::api::ButtonAPI& buttons,
                                                    lv_obj_t* scopeElement,
                                                    lv_obj_t* overlayElement)
     : state_(state)
+    , overlays_(overlays)
     , encoders_(encoders)
     , buttons_(buttons)
     , scopeElement_(scopeElement)
     , overlayElement_(overlayElement) {
     setupBindings();
-
-    // Auto-reset latch when overlay hidden externally (by OverlayManager)
-    visibleSub_ = state_.viewSelector.visible.subscribe([this](bool visible) {
-        if (!visible) {
-            buttons_.clearLatch(ButtonID::LEFT_TOP);
-        }
-    });
 }
 
 void HandlerInputViewSwitcher::setupBindings() {
@@ -104,13 +99,13 @@ void HandlerInputViewSwitcher::closeSelector() {
         OC_LOG_INFO("[ViewSwitcher] Switched to: {}", VIEW_NAMES[index]);
     }
 
-    // Hide view selector via OverlayManager (subscription handles latch reset)
-    state_.overlays.hide();
+    // OverlayController handles latch cleanup synchronously before hiding
+    overlays_.hide();
 }
 
 void HandlerInputViewSwitcher::cancel() {
-    // Hide view selector via OverlayManager (subscription handles latch reset)
-    state_.overlays.hide();
+    // OverlayController handles latch cleanup synchronously before hiding
+    overlays_.hide();
     OC_LOG_DEBUG("[ViewSwitcher] Cancelled");
 }
 

@@ -1,10 +1,10 @@
 /**
- * TrackSelectByIndexMessage.hpp - Auto-generated Protocol Struct
+ * TrackSelectMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: TRACK_SELECT_BY_INDEX message
+ * Description: TRACK_SELECT message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 8-bit binary (Serial8). Performance is identical to inline
@@ -26,12 +26,12 @@ namespace Protocol {
 
 
 
-struct TrackSelectByIndexMessage {
+struct TrackSelectMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::TRACK_SELECT_BY_INDEX;
+    static constexpr MessageID MESSAGE_ID = MessageID::TRACK_SELECT;
 
     // Message name for logging (encoded in payload)
-    static constexpr const char* MESSAGE_NAME = "TrackSelectByIndex";
+    static constexpr const char* MESSAGE_NAME = "TrackSelect";
 
     uint8_t trackIndex;
 
@@ -41,12 +41,12 @@ struct TrackSelectByIndexMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 20;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 13;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 20;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 13;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -78,7 +78,7 @@ struct TrackSelectByIndexMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<TrackSelectByIndexMessage> decode(
+    static std::optional<TrackSelectMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -97,7 +97,7 @@ struct TrackSelectByIndexMessage {
         uint8_t trackIndex;
         if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
 
-        return TrackSelectByIndexMessage{trackIndex};
+        return TrackSelectMessage{trackIndex};
     }
 
 
@@ -113,7 +113,7 @@ struct TrackSelectByIndexMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# TrackSelectByIndex\ntrackSelectByIndex:\n");
+        ptr += snprintf(ptr, end - ptr, "# TrackSelect\ntrackSelect:\n");
 
         ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
 

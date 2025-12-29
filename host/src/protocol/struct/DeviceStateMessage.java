@@ -5,27 +5,27 @@ import protocol.Encoder;
 import protocol.Decoder;
 
 /**
- * DeviceStateChangeMessage - Auto-generated Protocol Message
+ * DeviceStateMessage - Auto-generated Protocol Message
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: DEVICE_STATE_CHANGE message
+ * Description: DEVICE_STATE message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
  * All encoding is 8-bit binary (Serial8).
  */
-public final class DeviceStateChangeMessage {
+public final class DeviceStateMessage {
 
 
     // ============================================================================
     // Auto-detected MessageID for protocol.send()
     // ============================================================================
 
-    public static final MessageID MESSAGE_ID = MessageID.DEVICE_STATE_CHANGE;
+    public static final MessageID MESSAGE_ID = MessageID.DEVICE_STATE;
 
     // Message name for logging (encoded in payload)
-    public static final String MESSAGE_NAME = "DeviceStateChange";
+    public static final String MESSAGE_NAME = "DeviceState";
 
 
     // ============================================================================
@@ -43,12 +43,12 @@ public final class DeviceStateChangeMessage {
     // ============================================================================
 
     /**
-     * Construct a new DeviceStateChangeMessage
+     * Construct a new DeviceStateMessage
      *
      * @param deviceIndex The deviceIndex value
      * @param isEnabled The isEnabled value
      */
-    public DeviceStateChangeMessage(int deviceIndex, boolean isEnabled) {
+    public DeviceStateMessage(int deviceIndex, boolean isEnabled) {
         this.deviceIndex = deviceIndex;
         this.isEnabled = isEnabled;
     }
@@ -82,7 +82,7 @@ public final class DeviceStateChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    public static final int MAX_PAYLOAD_SIZE = 20;
+    public static final int MAX_PAYLOAD_SIZE = 14;
 
     /**
      * Encode message directly into provided buffer (zero allocation)
@@ -113,18 +113,18 @@ public final class DeviceStateChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 20;
+    private static final int MIN_PAYLOAD_SIZE = 14;
 
     /**
      * Decode message from MIDI-safe bytes
      *
      * @param data Input buffer with encoded data
-     * @return Decoded DeviceStateChangeMessage instance
+     * @return Decoded DeviceStateMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
      */
-    public static DeviceStateChangeMessage decode(byte[] data) {
+    public static DeviceStateMessage decode(byte[] data) {
         if (data.length < MIN_PAYLOAD_SIZE) {
-            throw new IllegalArgumentException("Insufficient data for DeviceStateChangeMessage decode");
+            throw new IllegalArgumentException("Insufficient data for DeviceStateMessage decode");
         }
 
         int offset = 0;
@@ -138,7 +138,7 @@ public final class DeviceStateChangeMessage {
         boolean isEnabled = Decoder.decodeBool(data, offset);
         offset += 1;
 
-        return new DeviceStateChangeMessage(deviceIndex, isEnabled);
+        return new DeviceStateMessage(deviceIndex, isEnabled);
     }
 
     // ============================================================================
@@ -153,8 +153,8 @@ public final class DeviceStateChangeMessage {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceStateChange\n");
-        sb.append("deviceStateChange:\n");
+        sb.append("# DeviceState\n");
+        sb.append("deviceState:\n");
         sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
         sb.append("  isEnabled: ").append(isEnabled() ? "true" : "false").append("\n");
         return sb.toString();

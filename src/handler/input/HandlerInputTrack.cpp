@@ -6,14 +6,7 @@
 
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/struct/EnterTrackGroupMessage.hpp"
 #include "state/Constants.hpp"
-#include "protocol/struct/ExitTrackGroupMessage.hpp"
-#include "protocol/struct/RequestDeviceListWindowMessage.hpp"
-#include "protocol/struct/RequestTrackListWindowMessage.hpp"
-#include "protocol/struct/TrackMuteMessage.hpp"
-#include "protocol/struct/TrackSelectByIndexMessage.hpp"
-#include "protocol/struct/TrackSoloMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -21,11 +14,13 @@ using namespace oc::ui::lvgl;
 using state::OverlayType;
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
+                                     state::OverlayController& overlays,
                                      BitwigProtocol& protocol,
                                      oc::api::EncoderAPI& encoders,
                                      oc::api::ButtonAPI& buttons,
                                      lv_obj_t* overlayElement)
     : state_(state)
+    , overlays_(overlays)
     , protocol_(protocol)
     , encoders_(encoders)
     , buttons_(buttons)
@@ -123,7 +118,7 @@ void HandlerInputTrack::navigate(float delta) {
     // Only prefetch if we have a valid track index approaching the loaded boundary
     if (trackIndex >= 0 &&
         shouldPrefetch<state::PREFETCH_THRESHOLD>(trackIndex, loadedUpTo, totalCount)) {
-        protocol_.send(Protocol::RequestTrackListWindowMessage{loadedUpTo});
+        protocol_.requestTrackListWindow(loadedUpTo);
     }
 }
 
@@ -132,12 +127,12 @@ void HandlerInputTrack::select() {
     int selectedIndex = ts.currentIndex.get();
 
     if (ts.isNested.get() && selectedIndex == 0) {
-        protocol_.send(Protocol::ExitTrackGroupMessage{});
+        protocol_.exitTrackGroup();
     } else {
         int trackIndex = getAdjustedTrackIndex(selectedIndex);
         size_t count = ts.names.size();
         if (trackIndex >= 0 && static_cast<size_t>(trackIndex) < count) {
-            protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
+            protocol_.trackSelect(static_cast<uint8_t>(trackIndex));
         }
     }
 }
@@ -147,12 +142,12 @@ void HandlerInputTrack::close() {
 
     if (!ts.visible.get()) return;
 
-    // Hide track selector via OverlayManager (restores device selector from stack)
-    state_.overlays.hide();
+    // OverlayController handles latch cleanup and restores device selector from stack
+    overlays_.hide();
 
     // Request fresh device list - don't clear cache to avoid flash
     // Old data remains visible until new data arrives
-    protocol_.send(Protocol::RequestDeviceListWindowMessage{0});
+    protocol_.requestDeviceListWindow(0);
 }
 
 void HandlerInputTrack::selectAndDive() {
@@ -161,15 +156,15 @@ void HandlerInputTrack::selectAndDive() {
 
     if (ts.isNested.get() && selectedIndex == 0) {
         // Exit to parent group
-        protocol_.send(Protocol::ExitTrackGroupMessage{});
+        protocol_.exitTrackGroup();
     } else {
         int trackIndex = getAdjustedTrackIndex(selectedIndex);
         size_t count = ts.names.size();
         if (trackIndex >= 0 && static_cast<size_t>(trackIndex) < count) {
             // Select the track
-            protocol_.send(Protocol::TrackSelectByIndexMessage{static_cast<uint8_t>(trackIndex)});
+            protocol_.trackSelect(static_cast<uint8_t>(trackIndex));
             // If it's a group, also enter inside
-            protocol_.send(Protocol::EnterTrackGroupMessage{static_cast<uint8_t>(trackIndex)});
+            protocol_.enterTrackGroup(static_cast<uint8_t>(trackIndex));
         }
     }
 
@@ -177,20 +172,20 @@ void HandlerInputTrack::selectAndDive() {
     ts.names.clear();
     ts.totalCount.set(0);
     ts.loadedUpTo.set(0);
-    protocol_.send(Protocol::RequestTrackListWindowMessage{0});
+    protocol_.requestTrackListWindow(0);
 }
 
 void HandlerInputTrack::toggleMute() {
     int trackIndex = getSelectedTrackIndex();
     if (trackIndex >= 0) {
-        protocol_.send(Protocol::TrackMuteMessage{static_cast<uint8_t>(trackIndex), true});
+        protocol_.trackMute(static_cast<uint8_t>(trackIndex), true);
     }
 }
 
 void HandlerInputTrack::toggleSolo() {
     int trackIndex = getSelectedTrackIndex();
     if (trackIndex >= 0) {
-        protocol_.send(Protocol::TrackSoloMessage{static_cast<uint8_t>(trackIndex), true});
+        protocol_.trackSolo(static_cast<uint8_t>(trackIndex), true);
     }
 }
 

@@ -3,7 +3,6 @@
 #include <oc/ui/lvgl/Scope.hpp>
 
 #include "config/App.hpp"
-#include "protocol/struct/LastClickedValueChangeMessage.hpp"
 
 namespace bitwig::handler {
 
@@ -32,8 +31,8 @@ void HandlerInputLastClicked::handleEncoderTurn(float value) {
     // Optimistic update
     state_.lastClicked.value.set(value);
 
-    // Send to host
-    protocol_.send(Protocol::LastClickedValueChangeMessage{value, "", false});
+    // Send to host using explicit method
+    protocol_.lastClickedValue(value);
 }
 
 }  // namespace bitwig::handler

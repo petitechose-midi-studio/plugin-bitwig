@@ -24,6 +24,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
+#include "state/OverlayController.hpp"
 
 namespace bitwig::handler {
 
@@ -39,6 +40,7 @@ namespace bitwig::handler {
 class HandlerInputDeviceSelector {
 public:
     HandlerInputDeviceSelector(state::BitwigState& state,
+                               state::OverlayController& overlays,
                                BitwigProtocol& protocol,
                                oc::api::EncoderAPI& encoders,
                                oc::api::ButtonAPI& buttons,
@@ -69,6 +71,7 @@ private:
     bool isShowingChildren() const;
 
     state::BitwigState& state_;
+    state::OverlayController& overlays_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
@@ -79,9 +82,8 @@ private:
     uint8_t currentDeviceIndex_ = 0;  // Device being navigated (for children mode)
     bool requested_ = false;
 
-    // Auto-reset latch when overlays hidden externally (by OverlayManager)
+    // Auto-reset local state when overlay hidden externally
     oc::state::Subscription visibleSub_;
-    oc::state::Subscription trackVisibleSub_;
 };
 
 }  // namespace bitwig::handler

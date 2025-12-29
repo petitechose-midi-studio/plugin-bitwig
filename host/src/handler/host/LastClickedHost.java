@@ -2,7 +2,6 @@ package handler.host;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
-import protocol.struct.*;
 import handler.controller.LastClickedController;
 
 /**
@@ -11,7 +10,7 @@ import handler.controller.LastClickedController;
  * RESPONSIBILITY: Bitwig → Controller (Last Clicked Parameter)
  * - Observes parameter changes (via name() observer)
  * - Sends full update when different param clicked
- * - Observes value changes and sends ValueChange with echo detection
+ * - Observes value changes and sends ValueState with echo detection
  * - NEVER receives protocol callbacks (that's LastClickedController's job)
  */
 public class LastClickedHost {
@@ -69,7 +68,7 @@ public class LastClickedHost {
             if (lastClickedController != null && lastClickedController.consumeEcho()) return;
 
             double value = lastClicked.parameter().value().get();
-            protocol.send(new LastClickedValueChangeMessage((float) value, displayValue, false));
+            protocol.lastClickedValueState((float) value, displayValue);
         });
     }
 
@@ -114,31 +113,31 @@ public class LastClickedHost {
 
         final int currentValueIndex = discreteCount > 0 ? (int)(value * discreteCount) : 0;
 
-        protocol.send(new LastClickedUpdateMessage(
+        protocol.lastClickedUpdate(
             name,
             (float) value,
             displayValue,
             (float) origin,
             exists,
-            (byte) paramType,
+            paramType,
             (short) discreteCount,
-            (byte) currentValueIndex
-        ));
+            currentValueIndex
+        );
     }
 
     /**
      * Send cleared message (when parameter deselected)
      */
     private void sendLastClickedCleared() {
-        protocol.send(new LastClickedUpdateMessage(
+        protocol.lastClickedUpdate(
             "",
             0.0f,
             "",
             0.0f,
             false,
-            (byte) 0,
+            0,
             (short) 0,
-            (byte) 0
-        ));
+            0
+        );
     }
 }

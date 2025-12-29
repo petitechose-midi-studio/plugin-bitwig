@@ -9,7 +9,7 @@ import config.BitwigConfig;
  * LastClickedController - Handles LastClicked commands FROM controller
  *
  * RESPONSIBILITY: Controller → Bitwig (Last Clicked Parameter)
- * - Receives protocol callbacks (protocol.onLastClickedValueChange)
+ * - Receives protocol callbacks (protocol.onLastClickedValue)
  * - Applies value changes to the parameter
  * - Tracks echo timing for value changes
  * - NEVER observes Bitwig API directly (that's LastClickedHost's job)
@@ -49,10 +49,18 @@ public class LastClickedController {
     }
 
     private void setupProtocolCallbacks() {
-        protocol.onLastClickedValueChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onLastClickedValue = msg -> {
             markControllerChange();
             handleValueChange(msg.getParameterValue());
+        };
+
+        protocol.onLastClickedTouch = msg -> {
+            if (lastClickedHost != null) {
+                Parameter param = lastClickedHost.getParameter();
+                if (param != null && param.exists().get()) {
+                    param.touch(msg.isTouched());
+                }
+            }
         };
     }
 

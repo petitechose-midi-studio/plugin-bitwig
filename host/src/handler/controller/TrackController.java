@@ -10,7 +10,6 @@ import handler.host.DeviceHost;
  *
  * RESPONSIBILITY: Controller → Bitwig (Tracks)
  * - Receives protocol callbacks (protocol.onXXX)
- * - Checks fromHost flag (returns early if true)
  * - Executes Bitwig API actions (select, toggle, etc.)
  * - Delegates navigation to TrackHost (needs siblingTrackBank)
  * - NEVER observes Bitwig API directly
@@ -51,25 +50,15 @@ public class TrackController {
     }
 
     private void setupProtocolCallbacks() {
-        // Request track list FROM controller (legacy - redirect to windowed)
-        protocol.onRequestTrackList = msg -> {
-            if (msg.fromHost) return;
-            if (trackHost != null) {
-                trackHost.sendTrackListWindow(0);  // Redirect legacy to windowed
-            }
-        };
-
-        // Request windowed track list FROM controller (new)
+        // Request windowed track list FROM controller
         protocol.onRequestTrackListWindow = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.sendTrackListWindow(msg.getTrackStartIndex());
             }
         };
 
         // Select track by index FROM controller
-        protocol.onTrackSelectByIndex = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackSelect = msg -> {
             int trackIndex = msg.getTrackIndex();
 
             // Use TrackHost to get track from correct bank (siblings or main)
@@ -93,7 +82,6 @@ public class TrackController {
 
         // Enter track group FROM controller
         protocol.onEnterTrackGroup = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.enterTrackGroup(msg.getTrackIndex());
             }
@@ -101,7 +89,6 @@ public class TrackController {
 
         // Exit track group FROM controller
         protocol.onExitTrackGroup = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.exitTrackGroup();
             }
@@ -109,7 +96,6 @@ public class TrackController {
 
         // Toggle track mute FROM controller
         protocol.onTrackMute = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.toggleMute(msg.getTrackIndex());
                 // Confirmation will be sent by observer in TrackHost
@@ -118,7 +104,6 @@ public class TrackController {
 
         // Toggle track solo FROM controller
         protocol.onTrackSolo = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.toggleSolo(msg.getTrackIndex());
                 // Confirmation will be sent by observer in TrackHost
@@ -127,8 +112,6 @@ public class TrackController {
 
         // Toggle track activated FROM controller
         protocol.onTrackActivate = msg -> {
-            if (msg.fromHost) return;
-
             // Use TrackHost to get track from correct bank (siblings or main)
             Track track = (trackHost != null) ? trackHost.getTrackAtIndex(msg.getTrackIndex()) : trackBank.getItemAt(msg.getTrackIndex());
 
@@ -143,7 +126,6 @@ public class TrackController {
 
         // Select which send to observe for MixView
         protocol.onSelectMixSend = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.setSelectedMixSend(msg.getSendIndex());
             }
@@ -151,15 +133,13 @@ public class TrackController {
 
         // Request send destinations (effect track names)
         protocol.onRequestSendDestinations = msg -> {
-            if (msg.fromHost) return;
             if (trackHost != null) {
                 trackHost.sendSendDestinations();
             }
         };
 
         // Volume change FROM controller
-        protocol.onTrackVolumeChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackVolume = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 track.volume().value().set(msg.getVolume());
@@ -168,7 +148,6 @@ public class TrackController {
 
         // Volume touch FROM controller
         protocol.onTrackVolumeTouch = msg -> {
-            if (msg.fromHost) return;
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 track.volume().touch(msg.isTouched());
@@ -176,8 +155,7 @@ public class TrackController {
         };
 
         // Pan change FROM controller
-        protocol.onTrackPanChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackPan = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 track.pan().value().set(msg.getPan());
@@ -186,7 +164,6 @@ public class TrackController {
 
         // Pan touch FROM controller
         protocol.onTrackPanTouch = msg -> {
-            if (msg.fromHost) return;
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 track.pan().touch(msg.isTouched());
@@ -194,8 +171,7 @@ public class TrackController {
         };
 
         // Arm change FROM controller
-        protocol.onTrackArmChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackArm = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 track.arm().set(msg.isArm());
@@ -203,8 +179,7 @@ public class TrackController {
         };
 
         // Send value change FROM controller
-        protocol.onTrackSendValueChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackSendValue = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 Send send = track.sendBank().getItemAt(msg.getSendIndex());
@@ -216,7 +191,6 @@ public class TrackController {
 
         // Send touch FROM controller
         protocol.onTrackSendTouch = msg -> {
-            if (msg.fromHost) return;
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 Send send = track.sendBank().getItemAt(msg.getSendIndex());
@@ -227,8 +201,7 @@ public class TrackController {
         };
 
         // Send enabled change FROM controller
-        protocol.onTrackSendEnabledChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackSendEnabled = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 Send send = track.sendBank().getItemAt(msg.getSendIndex());
@@ -239,8 +212,7 @@ public class TrackController {
         };
 
         // Send mode change FROM controller
-        protocol.onTrackSendModeChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTrackSendMode = msg -> {
             Track track = trackBank.getItemAt(msg.getTrackIndex());
             if (track != null && track.exists().get()) {
                 Send send = track.sendBank().getItemAt(msg.getSendIndex());

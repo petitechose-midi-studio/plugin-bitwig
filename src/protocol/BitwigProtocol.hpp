@@ -13,13 +13,16 @@
  * // In BitwigContext
  * BitwigProtocol protocol(serial());
  *
- * // Send messages
+ * // Send messages using explicit API (preferred)
+ * protocol.transportPlay(true);
+ * protocol.deviceSelect(index);
+ *
+ * // Or using generic send (still available)
  * protocol.send(TransportPlayMessage{true});
- * protocol.send(DeviceSelectByIndexMessage{index});
  *
  * // Register callbacks (inherited from ProtocolCallbacks)
- * protocol.onDeviceChange = [this](const DeviceChangeMessage& msg) {
- *     state_.device.name.set(msg.deviceName);
+ * protocol.onTransportPlayingState = [this](const TransportPlayingStateMessage& msg) {
+ *     state_.transport.playing.set(msg.isPlaying);
  * };
  * ```
  */
@@ -103,6 +106,11 @@ public:
         // Send via transport (COBS framing handled by transport)
         transport_.send(frame, offset);
     }
+
+    // =========================================================================
+    // Explicit API methods (generated) - e.g. transportPlay(bool), deviceSelect(uint8_t)
+    // =========================================================================
+#include "ProtocolMethods.inl"
 
 private:
     oc::hal::ISerialTransport& transport_;

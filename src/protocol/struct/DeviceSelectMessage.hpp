@@ -1,10 +1,10 @@
 /**
- * ViewStateChangeMessage.hpp - Auto-generated Protocol Struct
+ * DeviceSelectMessage.hpp - Auto-generated Protocol Struct
  *
  * AUTO-GENERATED - DO NOT EDIT
  * Generated from: types.yaml
  *
- * Description: VIEW_STATE_CHANGE message
+ * Description: DEVICE_SELECT message
  *
  * This struct uses encode/decode functions from Protocol namespace.
  * All encoding is 8-bit binary (Serial8). Performance is identical to inline
@@ -26,15 +26,14 @@ namespace Protocol {
 
 
 
-struct ViewStateChangeMessage {
+struct DeviceSelectMessage {
     // Auto-detected MessageID for protocol.send()
-    static constexpr MessageID MESSAGE_ID = MessageID::VIEW_STATE_CHANGE;
+    static constexpr MessageID MESSAGE_ID = MessageID::DEVICE_SELECT;
 
     // Message name for logging (encoded in payload)
-    static constexpr const char* MESSAGE_NAME = "ViewStateChange";
+    static constexpr const char* MESSAGE_NAME = "DeviceSelect";
 
-    uint8_t viewType;
-    bool selectorActive;
+    uint8_t deviceIndex;
 
     // Origin tracking (set by DecoderRegistry during decode)
     bool fromHost = false;
@@ -42,12 +41,12 @@ struct ViewStateChangeMessage {
     /**
      * Maximum payload size in bytes (8-bit encoded)
      */
-    static constexpr uint16_t MAX_PAYLOAD_SIZE = 18;
+    static constexpr uint16_t MAX_PAYLOAD_SIZE = 14;
 
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    static constexpr uint16_t MIN_PAYLOAD_SIZE = 18;
+    static constexpr uint16_t MIN_PAYLOAD_SIZE = 14;
 
     /**
      * Encode struct to MIDI-safe bytes
@@ -67,8 +66,7 @@ struct ViewStateChangeMessage {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, viewType);
-        encodeBool(ptr, selectorActive);
+        encodeUint8(ptr, deviceIndex);
 
         return ptr - buffer;
     }
@@ -80,7 +78,7 @@ struct ViewStateChangeMessage {
      * @param len Length of input buffer
      * @return Decoded struct, or std::nullopt if invalid/insufficient data
      */
-    static std::optional<ViewStateChangeMessage> decode(
+    static std::optional<DeviceSelectMessage> decode(
         const uint8_t* data, uint16_t len) {
 
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
@@ -96,12 +94,10 @@ struct ViewStateChangeMessage {
         remaining -= nameLen;
 
         // Decode fields
-        uint8_t viewType;
-        if (!decodeUint8(ptr, remaining, viewType)) return std::nullopt;
-        bool selectorActive;
-        if (!decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
+        uint8_t deviceIndex;
+        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
 
-        return ViewStateChangeMessage{viewType, selectorActive};
+        return DeviceSelectMessage{deviceIndex};
     }
 
 
@@ -117,10 +113,9 @@ struct ViewStateChangeMessage {
         char* ptr = g_logBuffer;
         const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
 
-        ptr += snprintf(ptr, end - ptr, "# ViewStateChange\nviewStateChange:\n");
+        ptr += snprintf(ptr, end - ptr, "# DeviceSelect\ndeviceSelect:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  viewType: %lu\n", (unsigned long)viewType);
-        ptr += snprintf(ptr, end - ptr, "  selectorActive: %s\n", selectorActive ? "true" : "false");
+        ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
 
         *ptr = '\0';
         return g_logBuffer;

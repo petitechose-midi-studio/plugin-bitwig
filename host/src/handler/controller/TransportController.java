@@ -34,7 +34,6 @@ public class TransportController {
 
     private void setupTransportCallbacks() {
         protocol.onTransportPlay = msg -> {
-            if (msg.fromHost) return;
             if (msg.isPlaying()) {
                 transport.play();
             } else {
@@ -43,53 +42,44 @@ public class TransportController {
         };
 
         protocol.onTransportRecord = msg -> {
-            if (msg.fromHost) return;
             transport.record();
         };
 
         protocol.onTransportStop = msg -> {
-            if (msg.fromHost) return;
             transport.stop();
         };
 
         protocol.onTransportTempo = msg -> {
-            if (msg.fromHost) return;
             transport.tempo().incRaw(msg.getTempo());
         };
     }
 
     private void setupAutomationCallbacks() {
-        protocol.onTransportArrangerAutomationWriteEnabledChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTransportArrangerAutomationWriteEnabled = msg -> {
             transport.isArrangerAutomationWriteEnabled().set(msg.isArrangerAutomationWriteEnabled());
         };
 
-        protocol.onTransportClipLauncherAutomationWriteEnabledChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTransportClipLauncherAutomationWriteEnabled = msg -> {
             transport.isClipLauncherAutomationWriteEnabled().set(msg.isClipLauncherAutomationWriteEnabled());
         };
 
-        protocol.onTransportAutomationWriteModeChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTransportAutomationWriteMode = msg -> {
             int modeInt = msg.getAutomationWriteMode();
             String mode = (modeInt >= 0 && modeInt < WRITE_MODES.length) ? WRITE_MODES[modeInt] : "latch";
             transport.automationWriteMode().set(mode);
         };
 
         protocol.onResetAutomationOverrides = msg -> {
-            if (msg.fromHost) return;
             transport.resetAutomationOverrides();
         };
     }
 
     private void setupOverdubCallbacks() {
-        protocol.onTransportArrangerOverdubEnabledChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTransportArrangerOverdubEnabled = msg -> {
             transport.isArrangerOverdubEnabled().set(msg.isArrangerOverdubEnabled());
         };
 
-        protocol.onTransportClipLauncherOverdubEnabledChange = msg -> {
-            if (msg.fromHost) return;
+        protocol.onTransportClipLauncherOverdubEnabled = msg -> {
             transport.isClipLauncherOverdubEnabled().set(msg.isClipLauncherOverdubEnabled());
         };
     }

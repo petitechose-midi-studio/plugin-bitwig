@@ -5,8 +5,6 @@
 
 #include "config/App.hpp"
 #include "handler/InputUtils.hpp"
-#include "protocol/struct/DevicePageSelectByIndexMessage.hpp"
-#include "protocol/struct/RequestDevicePageNamesWindowMessage.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -17,25 +15,20 @@ using EncoderID = Config::EncoderID;
 using OverlayType = state::OverlayType;
 
 HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
+                                               state::OverlayController& overlays,
                                                BitwigProtocol& protocol,
                                                oc::api::EncoderAPI& encoders,
                                                oc::api::ButtonAPI& buttons,
                                                lv_obj_t* scopeElement,
                                                lv_obj_t* overlayElement)
     : state_(state)
+    , overlays_(overlays)
     , protocol_(protocol)
     , encoders_(encoders)
     , buttons_(buttons)
     , scopeElement_(scopeElement)
     , overlayElement_(overlayElement) {
     setupBindings();
-
-    // Auto-reset latch when overlay hidden externally (by OverlayManager)
-    visibleSub_ = state_.pageSelector.visible.subscribe([this](bool visible) {
-        if (!visible) {
-            buttons_.clearLatch(ButtonID::LEFT_BOTTOM);
-        }
-    });
 }
 
 void HandlerInputDevicePage::setupBindings() {
@@ -104,14 +97,14 @@ void HandlerInputDevicePage::navigate(float delta) {
     uint8_t loadedUpTo = state_.pageSelector.loadedUpTo.get();
     if (newIndex >= 0 &&
         shouldPrefetch<state::PREFETCH_THRESHOLD>(newIndex, loadedUpTo, totalCount)) {
-        protocol_.send(Protocol::RequestDevicePageNamesWindowMessage{loadedUpTo});
+        protocol_.requestDevicePageNamesWindow(loadedUpTo);
     }
 }
 
 void HandlerInputDevicePage::confirmSelection() {
     int index = state_.pageSelector.selectedIndex.get();
     if (index >= 0) {
-        protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
+        protocol_.devicePageSelect(static_cast<uint8_t>(index));
     }
 }
 
@@ -120,12 +113,11 @@ void HandlerInputDevicePage::closeSelector() {
 
     // Confirm selection on close
     if (index >= 0) {
-        protocol_.send(Protocol::DevicePageSelectByIndexMessage{static_cast<uint8_t>(index)});
+        protocol_.devicePageSelect(static_cast<uint8_t>(index));
     }
 
-    // INVARIANT: Overlay close must clear latches
-    // Hide page selector via OverlayManager (subscription handles latch reset)
-    state_.overlays.hide();
+    // OverlayController handles latch cleanup synchronously before hiding
+    overlays_.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(
         !buttons_.isLatched(ButtonID::LEFT_BOTTOM),
@@ -134,9 +126,8 @@ void HandlerInputDevicePage::closeSelector() {
 }
 
 void HandlerInputDevicePage::cancel() {
-    // INVARIANT: Overlay close must clear latches
-    // Hide page selector via OverlayManager (subscription handles latch reset)
-    state_.overlays.hide();
+    // OverlayController handles latch cleanup synchronously before hiding
+    overlays_.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(
         !buttons_.isLatched(ButtonID::LEFT_BOTTOM),

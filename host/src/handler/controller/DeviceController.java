@@ -10,7 +10,6 @@ import config.BitwigConfig;
  *
  * RESPONSIBILITY: Controller → Bitwig (Device)
  * - Receives protocol callbacks (protocol.onXXX)
- * - Checks fromHost flag (returns early if true)
  * - Executes Bitwig API actions (parameter changes, page selection, device selection)
  * - Delegates navigation to DeviceHost (needs layerBank/drumPadBank)
  * - NEVER observes Bitwig API directly
@@ -104,10 +103,8 @@ public class DeviceController {
     }
 
     private void setupProtocolCallbacks() {
-        protocol.onDeviceRemoteControlValueChange = msg -> {
-            if (msg.fromHost)
-                return;
-
+        // Remote control value FROM controller
+        protocol.onRemoteControlValue = msg -> {
             int index = msg.getRemoteControlIndex();
             if (index < 0 || index >= BitwigConfig.MAX_PARAMETERS) return;
 
@@ -127,9 +124,7 @@ public class DeviceController {
         };
 
         // Toggle device state FROM controller
-        protocol.onDeviceStateChange = msg -> {
-            if (msg.fromHost) return;
-
+        protocol.onDeviceState = msg -> {
             int deviceIndex = msg.getDeviceIndex();
             Device device = deviceBank.getItemAt(deviceIndex);
 
@@ -142,8 +137,6 @@ public class DeviceController {
         };
 
         protocol.onDeviceRemoteControlTouch = msg -> {
-            if (msg.fromHost) return;
-
             int paramIndex = msg.getRemoteControlIndex();
             if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS)
                 return;
@@ -168,17 +161,15 @@ public class DeviceController {
             }
         };
 
-        // Request windowed page names FROM controller (new)
+        // Request windowed page names FROM controller
         protocol.onRequestDevicePageNamesWindow = msg -> {
-            if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.sendPageNamesWindow(msg.getPageStartIndex());
             }
         };
 
         // Select page by index FROM controller (with modulo wrap)
-        protocol.onDevicePageSelectByIndex = msg -> {
-            if (msg.fromHost) return;
+        protocol.onDevicePageSelect = msg -> {
             int requestedIndex = msg.getDevicePageIndex();
             int pageCount = remoteControls.pageCount().get();
             if (pageCount > 0) {
@@ -192,17 +183,8 @@ public class DeviceController {
         // Hierarchical Device Navigation Callbacks
         // ========================================================================
 
-        // Request device list FROM controller (legacy - redirect to windowed)
-        protocol.onRequestDeviceList = msg -> {
-            if (msg.fromHost) return;
-            if (deviceHost != null) {
-                deviceHost.sendDeviceListWindow(0);  // Redirect legacy to windowed
-            }
-        };
-
-        // Request windowed device list FROM controller (new)
+        // Request windowed device list FROM controller
         protocol.onRequestDeviceListWindow = msg -> {
-            if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.sendDeviceListWindow(msg.getDeviceStartIndex());
             }
@@ -210,7 +192,6 @@ public class DeviceController {
 
         // Request device children (slots/layers/drum pads) FROM controller
         protocol.onRequestDeviceChildren = msg -> {
-            if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.sendDeviceChildren(msg.getDeviceIndex(), msg.getChildType());
             }
@@ -218,7 +199,6 @@ public class DeviceController {
 
         // Enter device child (navigate into slot/layer/drum pad) FROM controller
         protocol.onEnterDeviceChild = msg -> {
-            if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.enterDeviceChild(
                     msg.getDeviceIndex(),
@@ -230,15 +210,13 @@ public class DeviceController {
 
         // Exit to parent device FROM controller
         protocol.onExitToParent = msg -> {
-            if (msg.fromHost) return;
             if (deviceHost != null) {
                 deviceHost.exitToParent();
             }
         };
 
         // Select device by index FROM controller
-        protocol.onDeviceSelectByIndex = msg -> {
-            if (msg.fromHost) return;
+        protocol.onDeviceSelect = msg -> {
             int deviceIndex = msg.getDeviceIndex();
             Device device = deviceBank.getItemAt(deviceIndex);
             if (device.exists().get()) {
@@ -253,9 +231,7 @@ public class DeviceController {
         // ========================================================================
 
         // Controller view state changed - controls batch modulated values send
-        protocol.onViewStateChange = msg -> {
-            if (msg.fromHost)
-                return;
+        protocol.onViewState = msg -> {
             if (deviceHost != null) {
                 deviceHost.setControllerViewState(msg.getViewType(), msg.getSelectorActive());
             }
@@ -268,8 +244,6 @@ public class DeviceController {
         // Restore automation playback globally (double tap on NAV button)
         // Uses Bitwig's transport.resetAutomationOverrides() to restore ALL automation
         protocol.onDeviceRemoteControlRestoreAutomation = msg -> {
-            if (msg.fromHost) return;
-
             // Only process once (first message triggers global reset)
             // Controller sends for all 8 params, but we only need to act once
             if (msg.getRemoteControlIndex() != 0) return;
