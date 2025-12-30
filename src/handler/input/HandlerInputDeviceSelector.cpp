@@ -44,11 +44,6 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
 }
 
 void HandlerInputDeviceSelector::setupBindings() {
-    // Predicate: true when DeviceSelector is the current (top) overlay
-    auto isCurrent = [this]() {
-        return state_.overlays.current() == OverlayType::DEVICE_SELECTOR;
-    };
-
     // === VIEW-LEVEL BINDING ===
     // Open binding on view scope (works when overlay not yet visible)
     buttons_.button(ButtonID::LEFT_CENTER)
@@ -58,7 +53,6 @@ void HandlerInputDeviceSelector::setupBindings() {
         .then([this]() { requestDeviceList(); });
 
     // === OVERLAY-LEVEL BINDINGS ===
-    // All use overlay scope + isCurrent check to handle stacking
 
     // Confirm and close on release
     buttons_.button(ButtonID::LEFT_CENTER)
@@ -75,11 +69,10 @@ void HandlerInputDeviceSelector::setupBindings() {
         .scope(scope(overlayElement_))
         .then([this]() { close(); });
 
-    // Navigate devices - needs isCurrent check (encoder has no ownership)
+    // Navigate devices
     encoders_.encoder(EncoderID::NAV)
         .turn()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this](float delta) { navigate(delta); });
 
     // Enter device children
@@ -101,7 +94,6 @@ void HandlerInputDeviceSelector::setupBindings() {
         .press()
         .latch()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() { requestTrackList(); });
 }
 

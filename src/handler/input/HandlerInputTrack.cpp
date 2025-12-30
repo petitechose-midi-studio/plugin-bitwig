@@ -29,24 +29,16 @@ HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
 }
 
 void HandlerInputTrack::setupBindings() {
-    // Predicate: true when TrackSelector is the current (top) overlay
-    // Required for all bindings because DeviceSelector is visible underneath (stacked)
-    auto isCurrent = [this]() {
-        return state_.overlays.current() == OverlayType::TRACK_SELECTOR;
-    };
-
     // Close without confirming
     buttons_.button(ButtonID::LEFT_TOP)
         .release()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() { close(); });
 
     // Confirm selection and close
     buttons_.button(ButtonID::LEFT_CENTER)
         .press()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() {
             select();
             close();
@@ -56,36 +48,30 @@ void HandlerInputTrack::setupBindings() {
     encoders_.encoder(EncoderID::NAV)
         .turn()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this](float delta) { navigate(delta); });
 
     // Enter track group
     buttons_.button(ButtonID::NAV)
         .release()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() { selectAndDive(); });
 
     // Mute
     buttons_.button(ButtonID::BOTTOM_CENTER)
         .release()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() { toggleMute(); });
 
     // Solo
     buttons_.button(ButtonID::BOTTOM_RIGHT)
         .release()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() { toggleSolo(); });
 
     // Confirm and close (same button that opened TrackSelector from DeviceSelector)
-    // Framework fallback: DeviceSelector has no BOTTOM_LEFT.release(), so it comes here
     buttons_.button(ButtonID::BOTTOM_LEFT)
         .release()
         .scope(scope(overlayElement_))
-        .when(isCurrent)
         .then([this]() {
             select();
             close();

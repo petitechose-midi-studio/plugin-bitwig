@@ -4,6 +4,8 @@
 
 #include <lvgl.h>
 
+#include <oc/ui/lvgl/IWidget.hpp>
+
 #include "ui/theme/BitwigTheme.hpp"
 
 namespace bitwig {
@@ -19,15 +21,22 @@ struct LevelBarProps {
  *
  * Displays a colored bar with configurable opacity representing a value.
  * Used for track volume/level display in TrackListOverlay.
+ * Implements IWidget for consistent element access.
  */
-class LevelBar {
+class LevelBar : public oc::ui::lvgl::IWidget {
 public:
     LevelBar(lv_obj_t *parent, lv_coord_t width = 60, lv_coord_t height = LV_PCT(100));
-    ~LevelBar();
+    ~LevelBar() override;
+
+    LevelBar(const LevelBar&) = delete;
+    LevelBar& operator=(const LevelBar&) = delete;
 
     void render(const LevelBarProps &props);
+
+    // IWidget
+    lv_obj_t* getElement() const override { return bar_; }
+
 private:
-    lv_obj_t *parent_ = nullptr;
     lv_obj_t *bar_ = nullptr;
     lv_coord_t width_ = 60;
     lv_coord_t height_ = 12;

@@ -177,6 +177,9 @@ void BitwigContext::createOverlayController() {
         );
     }
 
+    // Connect authority resolver to InputBinding for automatic scope filtering
+    buttons().setAuthorityResolver(&overlayController_->authority());
+
     OC_LOG_INFO("OverlayController created with {} overlays registered", 4);
 }
 

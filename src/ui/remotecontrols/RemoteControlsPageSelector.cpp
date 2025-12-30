@@ -76,9 +76,11 @@ void RemoteControlsPageSelector::render(const RemoteControlsPageSelectorProps& p
     int totalCount = props.totalCount > 0 ? props.totalCount : static_cast<int>(props.names.size());
 
     // Update list (even if empty - data may arrive later)
-    list_->setTotalCount(totalCount);
+    bool countChanged = list_->setTotalCount(totalCount);
     list_->setSelectedIndex(props.selectedIndex);
-    list_->invalidate();  // Force rebind to pick up any changes
+    if (!countChanged) {
+        list_->invalidate();
+    }
 
     // Show overlay and list
     if (!visible_) show();
@@ -171,7 +173,7 @@ void RemoteControlsPageSelector::bindSlot(VirtualSlot& slot, int index, bool isS
 
     // Update index label (1-based display)
     if (widgets.indexLabel) {
-        char indexStr[8];
+        char indexStr[12];  // Enough for int32 + null
         snprintf(indexStr, sizeof(indexStr), "%d", index + 1);
         lv_label_set_text(widgets.indexLabel, indexStr);
     }

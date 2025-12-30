@@ -150,9 +150,11 @@ void DeviceSelector::renderDeviceList(const DeviceSelectorProps &props) {
     }
     list_->show();
 
-    list_->setTotalCount(static_cast<int>(props.names.size()));
+    bool countChanged = list_->setTotalCount(static_cast<int>(props.names.size()));
     list_->setSelectedIndex(props.selectedIndex);
-    list_->invalidate();  // Force rebind to pick up state changes
+    if (!countChanged) {
+        list_->invalidate();
+    }
 
     if (!visible_) show();
 
@@ -172,9 +174,11 @@ void DeviceSelector::renderChildren(const DeviceSelectorProps &props) {
     }
     list_->show();
 
-    list_->setTotalCount(static_cast<int>(props.childrenNames.size()));
+    bool countChanged = list_->setTotalCount(static_cast<int>(props.childrenNames.size()));
     list_->setSelectedIndex(props.selectedIndex);
-    list_->invalidate();  // Force rebind to pick up any changes
+    if (!countChanged) {
+        list_->invalidate();
+    }
 
     renderHeader(props);
 

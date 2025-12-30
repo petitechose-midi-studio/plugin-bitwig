@@ -12,6 +12,7 @@
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/widget/VirtualList.hpp>
 
+#include "ui/widget/BackButton.hpp"
 #include "ui/widget/HintBar.hpp"
 
 namespace bitwig {
@@ -80,6 +81,7 @@ private:
     // Virtual list
     std::unique_ptr<VirtualList> list_;
     std::vector<std::unique_ptr<TrackTitleItem>> slotItems_;
+    std::vector<std::unique_ptr<BackButton>> backButtons_;  // Back navigation buttons (one per slot)
 
     // Footer
     std::unique_ptr<HintBar> footer_;
