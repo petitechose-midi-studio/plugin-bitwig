@@ -9,10 +9,10 @@ using namespace bitwig::theme;
 namespace bitwig {
 
 LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
-    : parent_(parent), width_(width), height_(height) {
-    if (!parent_) return;
+    : width_(width), height_(height) {
+    if (!parent) return;
 
-    bar_ = lv_bar_create(parent_);
+    bar_ = lv_bar_create(parent);
     if (!bar_) return;
 
     lv_obj_set_size(bar_, width_, height_);

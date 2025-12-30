@@ -10,10 +10,10 @@ namespace style = oc::ui::lvgl::style;
 
 namespace bitwig {
 
-DeviceStateBar::DeviceStateBar(lv_obj_t *parent) : parent_(parent) {
-    if (!parent_) return;
+DeviceStateBar::DeviceStateBar(lv_obj_t *parent) {
+    if (!parent) return;
 
-    container_ = lv_obj_create(parent_);
+    container_ = lv_obj_create(parent);
     if (!container_) return;
 
     lv_obj_set_size(container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);

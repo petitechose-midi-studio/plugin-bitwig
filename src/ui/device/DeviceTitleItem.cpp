@@ -13,20 +13,34 @@ namespace style = oc::ui::lvgl::style;
 namespace bitwig {
 
 DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
-    : parent_(parent), icon_size_(iconSize) {
-    if (!parent_) return;
+    : icon_size_(iconSize) {
+    if (!parent) return;
+
+    // Create container that holds all child elements
+    container_ = lv_obj_create(parent);
+    if (!container_) return;
+
+    // Style container as transparent flex row
+    lv_obj_set_size(container_, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
+    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(container_, 4, LV_STATE_DEFAULT);
+    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
 
     // Order: type_icon -> state_icon -> folder_icon -> label
-    type_icon_ = lv_label_create(parent_);
+    type_icon_ = lv_label_create(container_);
     if (!type_icon_) return;
 
-    state_icon_ = lv_label_create(parent_);
+    state_icon_ = lv_label_create(container_);
 
-    folder_icon_ = lv_label_create(parent_);
+    folder_icon_ = lv_label_create(container_);
     if (folder_icon_) lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
 
     // Use framework Label widget with auto-scroll for overflow text
-    label_ = std::make_unique<oc::ui::lvgl::Label>(parent_);
+    label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
     label_->alignment(LV_TEXT_ALIGN_LEFT)
            .color(Color::TEXT_LIGHT)
            .font(bitwig_fonts.device_label)
@@ -34,18 +48,11 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
 }
 
 DeviceTitleItem::~DeviceTitleItem() {
-    // label_ is unique_ptr with ownsLvglObjects(false) - LVGL parent handles cleanup
-    if (type_icon_) {
-        lv_obj_delete(type_icon_);
-        type_icon_ = nullptr;
-    }
-    if (state_icon_) {
-        lv_obj_delete(state_icon_);
-        state_icon_ = nullptr;
-    }
-    if (folder_icon_) {
-        lv_obj_delete(folder_icon_);
-        folder_icon_ = nullptr;
+    // Delete container - this also deletes all children
+    // label_ unique_ptr is cleaned up automatically (ownsLvglObjects=false means LVGL handles it)
+    if (container_) {
+        lv_obj_delete(container_);
+        container_ = nullptr;
     }
 }
 
@@ -117,6 +124,28 @@ lv_coord_t DeviceTitleItem::getContentWidth() const {
     if (label_) width += Layout::GAP_MD + lv_obj_get_width(label_->getElement());
 
     return width;
+}
+
+void DeviceTitleItem::show() {
+    if (container_) {
+        lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
+    }
+    visible_ = true;
+}
+
+void DeviceTitleItem::hide() {
+    if (container_) {
+        lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
+    }
+    visible_ = false;
+}
+
+void DeviceTitleItem::setHighlighted(bool highlighted) {
+    highlighted_ = highlighted;
+    if (label_) {
+        uint32_t labelColor = highlighted ? Color::TEXT_PRIMARY : Color::TEXT_LIGHT;
+        label_->color(labelColor);
+    }
 }
 
 }  // namespace bitwig

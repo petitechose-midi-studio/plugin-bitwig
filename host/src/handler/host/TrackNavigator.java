@@ -1,6 +1,7 @@
 package handler.host;
 
 import com.bitwig.extension.controller.api.*;
+import config.BitwigConfig;
 
 /**
  * TrackNavigator - Handles track group navigation
@@ -14,6 +15,7 @@ import com.bitwig.extension.controller.api.*;
  * Consistency with DeviceNavigator pattern.
  */
 public class TrackNavigator {
+    private final ControllerHost host;
     private final CursorTrack cursorTrack;
     private final TrackBank mainTrackBank;
     private final TrackBank siblingTrackBank;
@@ -29,6 +31,7 @@ public class TrackNavigator {
         TrackBank siblingTrackBank,
         Track parentTrack
     ) {
+        this.host = host;
         this.cursorTrack = cursorTrack;
         this.mainTrackBank = mainTrackBank;
         this.siblingTrackBank = siblingTrackBank;
@@ -65,18 +68,21 @@ public class TrackNavigator {
      * @param onComplete Callback after navigation (for list refresh)
      */
     public void enterTrackGroup(int trackIndex, Runnable onComplete) {
-        TrackBank currentBank = getCurrentBank();
-        Track track = currentBank.getItemAt(trackIndex);
+        // Delay to let Bitwig API update track banks after selection
+        host.scheduleTask(() -> {
+            TrackBank currentBank = getCurrentBank();
+            Track track = currentBank.getItemAt(trackIndex);
 
-        if (!track.exists().get() || !track.isGroup().get()) {
-            if (onComplete != null) onComplete.run();
-            return;
-        }
+            if (!track.exists().get() || !track.isGroup().get()) {
+                if (onComplete != null) onComplete.run();
+                return;
+            }
 
-        navigationDepth++;
-        cursorTrack.selectChannel(track);
-        cursorTrack.selectFirstChild();
-        // itemCount observer will trigger list refresh
+            navigationDepth++;
+            cursorTrack.selectChannel(track);
+            cursorTrack.selectFirstChild();
+            // itemCount observer will trigger list refresh
+        }, BitwigConfig.TRACK_ENTER_GROUP_MS);
     }
 
     /**
@@ -91,6 +97,10 @@ public class TrackNavigator {
 
         navigationDepth--;
         cursorTrack.selectParent();
-        // itemCount observer will trigger list refresh
+
+        // Delay before callback to let Bitwig API update after selectParent()
+        host.scheduleTask(() -> {
+            if (onComplete != null) onComplete.run();
+        }, BitwigConfig.TRACK_EXIT_GROUP_MS);
     }
 }

@@ -39,14 +39,16 @@ TrackSelector::TrackSelector(lv_obj_t *parent) : parent_(parent) {
             updateSlotHighlight(slot, isSelected);
         });
 
-    // Pre-allocate slot items
+    // Pre-allocate slot items and back buttons
     slotItems_.resize(VISIBLE_SLOTS);
+    backButtons_.resize(VISIBLE_SLOTS);
 
     createFooter();
 }
 
 TrackSelector::~TrackSelector() {
     slotItems_.clear();
+    backButtons_.clear();
     list_.reset();
     footer_.reset();
 
@@ -71,9 +73,12 @@ void TrackSelector::render(const TrackSelectorProps &props) {
     // Store current props for access in callbacks
     currentProps_ = props;
 
-    // Update list
-    list_->setTotalCount(static_cast<int>(props.names.size()));
+    // Update list - invalidate only if count didn't change (avoid double-rebind)
+    bool countChanged = list_->setTotalCount(static_cast<int>(props.names.size()));
     list_->setSelectedIndex(props.selectedIndex);
+    if (!countChanged) {
+        list_->invalidate();
+    }
 
     // Show overlay and list
     if (!visible_) show();
@@ -190,7 +195,7 @@ void TrackSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
     int slotIndex = index - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
-    // Ensure TrackTitleItem exists for this slot
+    // Ensure widgets exist for this slot
     ensureSlotWidgets(slotIndex);
 
     // Get data for this index
@@ -198,30 +203,52 @@ void TrackSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
     const char *name = index < static_cast<int>(props.names.size())
                            ? props.names[index].c_str()
                            : "";
-    uint32_t color = index < static_cast<int>(props.trackColors.size())
-                         ? props.trackColors[index]
-                         : 0xFFFFFF;
-    uint8_t trackType = index < static_cast<int>(props.trackTypes.size())
-                            ? props.trackTypes[index]
-                            : 0;
-    bool isMuted = index < static_cast<int>(props.muteStates.size())
-                       ? props.muteStates[index]
-                       : false;
-    bool isSoloed = index < static_cast<int>(props.soloStates.size())
-                        ? props.soloStates[index]
-                        : false;
 
-    // Render the track item
-    slotItems_[slotIndex]->render({
-        .name = name,
-        .color = color,
-        .trackType = trackType,
-        .isMuted = isMuted,
-        .isSoloed = isSoloed,
-        .level = 0.0f,
-        .highlighted = isSelected,
-        .hideIndicators = false
-    });
+    // Check if this is the back button
+    bool isBack = (index == 0) && (std::string(name) == Icon::UI_ARROW_LEFT);
+
+    if (isBack) {
+        // Show back button, hide TrackTitleItem
+        if (backButtons_[slotIndex]) {
+            backButtons_[slotIndex]->show();
+            backButtons_[slotIndex]->setHighlighted(isSelected);
+        }
+        if (slotItems_[slotIndex]) {
+            slotItems_[slotIndex]->hide();
+        }
+    } else {
+        // Hide back button, show TrackTitleItem
+        if (backButtons_[slotIndex]) {
+            backButtons_[slotIndex]->hide();
+        }
+        if (slotItems_[slotIndex]) {
+            slotItems_[slotIndex]->show();
+        }
+
+        uint32_t color = index < static_cast<int>(props.trackColors.size())
+                             ? props.trackColors[index]
+                             : 0xFFFFFF;
+        uint8_t trackType = index < static_cast<int>(props.trackTypes.size())
+                                ? props.trackTypes[index]
+                                : 0;
+        bool isMuted = index < static_cast<int>(props.muteStates.size())
+                           ? props.muteStates[index]
+                           : false;
+        bool isSoloed = index < static_cast<int>(props.soloStates.size())
+                            ? props.soloStates[index]
+                            : false;
+
+        slotItems_[slotIndex]->render({
+            .name = name,
+            .color = color,
+            .trackType = trackType,
+            .isMuted = isMuted,
+            .isSoloed = isSoloed,
+            .level = 0.0f,
+            .highlighted = isSelected,
+            .hideIndicators = false
+        });
+    }
 }
 
 void TrackSelector::updateSlotHighlight(VirtualSlot &slot, bool isSelected) {
@@ -234,19 +261,24 @@ void TrackSelector::updateSlotHighlight(VirtualSlot &slot, bool isSelected) {
 void TrackSelector::ensureSlotWidgets(int slotIndex) {
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
+    const auto &slots = list_->getSlots();
+    if (slotIndex >= static_cast<int>(slots.size())) return;
+
+    lv_obj_t *container = slots[slotIndex].container;
+
+    // Create BackButton if not exists (hidden by default)
+    if (!backButtons_[slotIndex]) {
+        backButtons_[slotIndex] = std::make_unique<BackButton>(container);
+    }
+
     // Create TrackTitleItem if not exists
     if (!slotItems_[slotIndex]) {
-        const auto &slots = list_->getSlots();
-        if (slotIndex < static_cast<int>(slots.size())) {
-            lv_obj_t *container = slots[slotIndex].container;
-            slotItems_[slotIndex] = std::make_unique<TrackTitleItem>(container, true, 12);
-        }
+        slotItems_[slotIndex] = std::make_unique<TrackTitleItem>(container, true, 12);
     }
 }
 
 void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
-    if (!slotItems_[slotIndex]) return;
 
     // Get current data for this slot
     int logicalIndex = list_->getWindowStart() + slotIndex;
@@ -255,30 +287,43 @@ void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
     const char *name = logicalIndex < static_cast<int>(props.names.size())
                            ? props.names[logicalIndex].c_str()
                            : "";
-    uint32_t color = logicalIndex < static_cast<int>(props.trackColors.size())
-                         ? props.trackColors[logicalIndex]
-                         : 0xFFFFFF;
-    uint8_t trackType = logicalIndex < static_cast<int>(props.trackTypes.size())
-                            ? props.trackTypes[logicalIndex]
-                            : 0;
-    bool isMuted = logicalIndex < static_cast<int>(props.muteStates.size())
-                       ? props.muteStates[logicalIndex]
-                       : false;
-    bool isSoloed = logicalIndex < static_cast<int>(props.soloStates.size())
-                        ? props.soloStates[logicalIndex]
-                        : false;
 
-    // Re-render with updated highlight state
-    slotItems_[slotIndex]->render({
-        .name = name,
-        .color = color,
-        .trackType = trackType,
-        .isMuted = isMuted,
-        .isSoloed = isSoloed,
-        .level = 0.0f,
-        .highlighted = isSelected,
-        .hideIndicators = false
-    });
+    // Check if this is the back button
+    bool isBack = (logicalIndex == 0) && (std::string(name) == Icon::UI_ARROW_LEFT);
+
+    if (isBack) {
+        // Update back button highlight
+        if (backButtons_[slotIndex]) {
+            backButtons_[slotIndex]->setHighlighted(isSelected);
+        }
+    } else {
+        // Update TrackTitleItem highlight
+        if (!slotItems_[slotIndex]) return;
+
+        uint32_t color = logicalIndex < static_cast<int>(props.trackColors.size())
+                             ? props.trackColors[logicalIndex]
+                             : 0xFFFFFF;
+        uint8_t trackType = logicalIndex < static_cast<int>(props.trackTypes.size())
+                                ? props.trackTypes[logicalIndex]
+                                : 0;
+        bool isMuted = logicalIndex < static_cast<int>(props.muteStates.size())
+                           ? props.muteStates[logicalIndex]
+                           : false;
+        bool isSoloed = logicalIndex < static_cast<int>(props.soloStates.size())
+                            ? props.soloStates[logicalIndex]
+                            : false;
+
+        slotItems_[slotIndex]->render({
+            .name = name,
+            .color = color,
+            .trackType = trackType,
+            .isMuted = isMuted,
+            .isSoloed = isSoloed,
+            .level = 0.0f,
+            .highlighted = isSelected,
+            .hideIndicators = false
+        });
+    }
 }
 
 }  // namespace bitwig
