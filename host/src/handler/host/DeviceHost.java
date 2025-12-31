@@ -7,7 +7,8 @@ import protocol.struct.DeviceChildrenMessage;
 import protocol.struct.DeviceListWindowMessage;
 import protocol.struct.DevicePageChangeMessage;
 import config.BitwigConfig;
-import util.DeviceTypeUtils;
+import protocol.DeviceType;
+import protocol.ParameterType;
 import java.util.List;
 import java.util.ArrayList;
 import handler.controller.DeviceController;
@@ -478,13 +479,13 @@ public class DeviceHost {
             if (!device.exists().get()) continue;
 
             String deviceTypeRaw = device.deviceType().get();
-            int deviceTypeInt = DeviceTypeUtils.toInt(deviceTypeRaw);
+            DeviceType deviceType = DeviceType.fromString(deviceTypeRaw);
 
             list.add(new DeviceListWindowMessage.Devices(
                 device.position().get(),
                 device.name().get(),
                 device.isEnabled().get(),
-                deviceTypeInt,
+                deviceType,
                 getDeviceChildrenTypes(device)
             ));
         }
@@ -626,7 +627,7 @@ public class DeviceHost {
             String deviceName = cursorDevice.name().get();
             boolean isEnabled = cursorDevice.isEnabled().get();
             String deviceTypeRaw = cursorDevice.deviceType().get();
-            int deviceType = DeviceTypeUtils.toInt(deviceTypeRaw);
+            DeviceType deviceType = DeviceType.fromString(deviceTypeRaw);
             int pageIndex = remoteControls.selectedPageIndex().get();
             int pageCount = remoteControls.pageCount().get();
             String pageName = getPageName(pageIndex, pageCount);
@@ -637,7 +638,7 @@ public class DeviceHost {
         }, BitwigConfig.DEVICE_CHANGE_HEADER_MS);
     }
 
-    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, int pageIndex, int pageCount, String pageName, int[] childrenTypes) {
+    private void sendDeviceChangeHeader(String deviceName, boolean isEnabled, DeviceType deviceType, int pageIndex, int pageCount, String pageName, int[] childrenTypes) {
         protocol.deviceChangeHeader(deviceName, isEnabled, deviceType, new DeviceChangeHeaderMessage.PageInfo(pageIndex, pageCount, pageName), childrenTypes);
     }
 
@@ -651,7 +652,7 @@ public class DeviceHost {
             protocol.deviceChangeHeader(
                 "No Device",           // deviceName
                 false,                 // isEnabled
-                0,                     // deviceType (UNKNOWN)
+                DeviceType.UNKNOWN,    // deviceType (UNKNOWN)
                 new DeviceChangeHeaderMessage.PageInfo(0, 0, ""),  // empty page info
                 new int[]{0, 0, 0, 0}  // no children types
             );
@@ -665,7 +666,7 @@ public class DeviceHost {
                     "",                // displayValue
                     0.0f,              // parameterOrigin
                     false,             // parameterExists (NOT visible)
-                    0,                 // parameterType
+                    ParameterType.KNOB,    // parameterType
                     (short) 0,         // discreteValueCount
                     0,                 // currentValueIndex
                     false,             // hasAutomation
@@ -727,7 +728,7 @@ public class DeviceHost {
                 data.exists,
                 (short) data.discreteCount,
                 data.displayedValue,
-                data.typeInfo.parameterType,
+                ParameterType.fromValue(data.typeInfo.parameterType),
                 data.typeInfo.discreteValueNames,
                 data.typeInfo.currentValueIndex,
                 data.hasAutomation,

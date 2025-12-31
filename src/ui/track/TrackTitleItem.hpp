@@ -10,12 +10,14 @@
 #include <oc/ui/lvgl/IListItem.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
 
+#include "protocol/TrackType.hpp"
+
 namespace bitwig {
 
 struct TrackTitleItemProps {
     const char *name = "";
     uint32_t color = 0xFFFFFF;
-    uint8_t trackType = 0;
+    TrackType trackType = TrackType::AUDIO;
     bool isMuted = false;
     bool isSoloed = false;
     float level = 0.0f;
@@ -49,7 +51,7 @@ public:
     bool isVisible() const override { return visible_; }
     lv_obj_t* getElement() const override { return container_; }
 
-    static const char *getTrackTypeIcon(uint8_t trackType);
+    static const char *getTrackTypeIcon(TrackType trackType);
 
 private:
     void updateIndicatorOpacity(bool isMuted, bool isSoloed, bool highlighted);

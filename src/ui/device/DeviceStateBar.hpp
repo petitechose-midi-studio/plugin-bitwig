@@ -9,13 +9,14 @@
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
+#include "protocol/DeviceType.hpp"
 #include "ui/widget/TitleItem.hpp"
 
 namespace bitwig {
 
 struct DeviceStateBarProps {
     const char *deviceName = "";
-    uint8_t deviceType = 0;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
+    DeviceType deviceType = DeviceType::UNKNOWN;
     bool deviceEnabled = false;
     bool deviceHasChildren = false;
     const char *pageName = "";

@@ -1,6 +1,6 @@
-from protocol_codegen.core.field import PrimitiveField, CompositeField, Type
+from protocol_codegen.core.field import PrimitiveField, CompositeField, EnumField, Type
 from field.color import color_rgb
-from field.parameter import parameter_has_automation, parameter_modulated_value, parameter_touched
+from enums.track import TrackType
 
 # ============================================================================
 # TRACK FIELDS
@@ -17,8 +17,8 @@ track_is_activated = PrimitiveField('isActivated', type_name=Type.BOOL)
 track_is_mute = PrimitiveField('isMute', type_name=Type.BOOL)
 track_is_solo = PrimitiveField('isSolo', type_name=Type.BOOL)
 track_is_group = PrimitiveField('isGroup', type_name=Type.BOOL)
-# Track type: 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
-track_type = PrimitiveField('trackType', type_name=Type.UINT8)
+# Track type enum (uses TrackType from enum/track.py)
+track_type = EnumField('trackType', enum_def=TrackType)
 
 # Navigation context
 track_is_nested = PrimitiveField('isNested', type_name=Type.BOOL)
@@ -71,7 +71,7 @@ track_info = [
     track_is_muted_by_solo,# Muted by another solo (bool, read-only)
     track_is_arm,          # Record arm state (bool)
     track_is_group,        # Is this track a group? (bool)
-    track_type,            # Track type: 0=Audio, 1=Instrument, 2=Hybrid, 3=Group, 4=Effect, 5=Master
+    track_type,            # Track type enum (TrackType)
     track_volume,          # Volume (float32, 0.0-1.0)
     track_pan              # Pan (float32, 0.0-1.0, center=0.5)
 ]

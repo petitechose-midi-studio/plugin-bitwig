@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../ParameterType.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -50,7 +51,7 @@ struct RemoteControls {
     bool parameterExists;
     int16_t discreteValueCount;
     std::string displayValue;
-    uint8_t parameterType;
+    ParameterType parameterType;
     std::vector<std::string> discreteValueNames;
     uint8_t currentValueIndex;
     bool hasAutomation;
@@ -116,7 +117,7 @@ struct DeviceChangeMessage {
             encodeBool(ptr, item.parameterExists);
             encodeInt16(ptr, item.discreteValueCount);
             encodeString(ptr, item.displayValue);
-            encodeUint8(ptr, item.parameterType);
+            encodeUint8(ptr, static_cast<uint8_t>(item.parameterType));
             encodeUint8(ptr, item.discreteValueNames.size());
             for (const auto& type : item.discreteValueNames) {
                 encodeString(ptr, type);
@@ -175,7 +176,9 @@ struct DeviceChangeMessage {
             if (!decodeBool(ptr, remaining, item.parameterExists)) return std::nullopt;
             if (!decodeInt16(ptr, remaining, item.discreteValueCount)) return std::nullopt;
             if (!decodeString(ptr, remaining, item.displayValue)) return std::nullopt;
-            if (!decodeUint8(ptr, remaining, item.parameterType)) return std::nullopt;
+            uint8_t parameterType_raw;
+            if (!decodeUint8(ptr, remaining, parameterType_raw)) return std::nullopt;
+            item.parameterType = static_cast<ParameterType>(parameterType_raw);
             uint8_t count_discreteValueNames;
             if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
             for (uint8_t j = 0; j < count_discreteValueNames && j < 32; ++j) {
@@ -232,7 +235,7 @@ struct DeviceChangeMessage {
         ptr += snprintf(ptr, end - ptr, "      parameterExists: %s\n", remoteControls[i].parameterExists ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      discreteValueCount: %ld\n", (long)remoteControls[i].discreteValueCount);
         ptr += snprintf(ptr, end - ptr, "      displayValue: \"%s\"\n", remoteControls[i].displayValue.c_str());
-        ptr += snprintf(ptr, end - ptr, "      parameterType: %lu\n", (unsigned long)remoteControls[i].parameterType);
+        ptr += snprintf(ptr, end - ptr, "      parameterType: %d\n", static_cast<int>(remoteControls[i].parameterType));
         ptr += snprintf(ptr, end - ptr, "      discreteValueNames:");
         if (remoteControls[i].discreteValueNames.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");

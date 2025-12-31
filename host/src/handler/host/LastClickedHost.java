@@ -2,6 +2,7 @@ package handler.host;
 
 import com.bitwig.extension.controller.api.*;
 import protocol.Protocol;
+import protocol.ParameterType;
 import handler.controller.LastClickedController;
 
 /**
@@ -102,13 +103,13 @@ public class LastClickedHost {
         final int discreteCount = param.value().discreteValueCount().get();
 
         // Parameter type: 0=continuous, 1=list (>2 values), -1=unknown
-        final int paramType;
+        final ParameterType paramType;
         if (discreteCount > 2) {
-            paramType = 1;  // List selector
+            paramType = ParameterType.LIST;  // List selector
         } else if (discreteCount < 0) {
-            paramType = -1; // Unknown/continuous
+            paramType = ParameterType.KNOB; // Unknown/continuous
         } else {
-            paramType = 0;  // Button or continuous
+            paramType = ParameterType.KNOB;  // Button or continuous
         }
 
         final int currentValueIndex = discreteCount > 0 ? (int)(value * discreteCount) : 0;
@@ -135,7 +136,7 @@ public class LastClickedHost {
             "",
             0.0f,
             false,
-            0,
+            ParameterType.KNOB,
             (short) 0,
             0
         );

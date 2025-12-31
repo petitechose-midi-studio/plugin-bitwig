@@ -12,7 +12,7 @@ using namespace oc::ui::lvgl;
 using ButtonID = Config::ButtonID;
 using EncoderID = Config::EncoderID;
 using OverlayType = state::OverlayType;
-using ViewType = state::ViewType;
+// ViewType is in global scope from protocol/ViewType.hpp
 
 HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
                                                    state::OverlayController& overlays,
@@ -30,8 +30,7 @@ HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
 }
 
 void HandlerInputViewSwitcher::setupBindings() {
-    // === VIEW-LEVEL BINDINGS (scopeElement_ = mainZone) ===
-
+    // === VIEW-LEVEL BINDING ===
     // Open view selector (latch behavior for toggle)
     buttons_.button(ButtonID::LEFT_TOP)
         .press()
@@ -39,13 +38,13 @@ void HandlerInputViewSwitcher::setupBindings() {
         .scope(scope(scopeElement_))
         .then([this]() { openSelector(); });
 
+    // === OVERLAY-LEVEL BINDINGS ===
+
     // Close and confirm on release (long press or second toggle press)
     buttons_.button(ButtonID::LEFT_TOP)
         .release()
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayElement_))
         .then([this]() { closeSelector(); });
-
-    // === OVERLAY-LEVEL BINDINGS (overlayElement_ = ViewSelector) ===
 
     // Navigate views (scoped to overlay - active while overlay visible)
     encoders_.encoder(EncoderID::NAV)
@@ -78,13 +77,13 @@ void HandlerInputViewSwitcher::openSelector() {
 void HandlerInputViewSwitcher::navigate(float delta) {
     int currentIndex = state_.viewSelector.selectedIndex.get();
     int newIndex = currentIndex + static_cast<int>(delta);
-    newIndex = wrapIndex(newIndex, static_cast<int>(VIEW_COUNT));
+    newIndex = wrapIndex(newIndex, static_cast<int>(state::VIEW_TYPE_COUNT));
     state_.viewSelector.selectedIndex.set(newIndex);
 }
 
 void HandlerInputViewSwitcher::confirmSelection() {
     int index = state_.viewSelector.selectedIndex.get();
-    if (index >= 0 && index < static_cast<int>(VIEW_COUNT)) {
+    if (index >= 0 && index < static_cast<int>(state::VIEW_TYPE_COUNT)) {
         state_.views.switchTo(static_cast<ViewType>(index));
         OC_LOG_INFO("[ViewSwitcher] Confirmed view: {}", VIEW_NAMES[index]);
     }
@@ -94,7 +93,7 @@ void HandlerInputViewSwitcher::closeSelector() {
     int index = state_.viewSelector.selectedIndex.get();
 
     // Confirm selection on close
-    if (index >= 0 && index < static_cast<int>(VIEW_COUNT)) {
+    if (index >= 0 && index < static_cast<int>(state::VIEW_TYPE_COUNT)) {
         state_.views.switchTo(static_cast<ViewType>(index));
         OC_LOG_INFO("[ViewSwitcher] Switched to: {}", VIEW_NAMES[index]);
     }

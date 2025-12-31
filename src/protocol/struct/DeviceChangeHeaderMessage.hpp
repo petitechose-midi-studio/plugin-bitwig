@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../DeviceType.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -47,7 +48,7 @@ struct DeviceChangeHeaderMessage {
 
     std::string deviceName;
     bool isEnabled;
-    uint8_t deviceType;
+    DeviceType deviceType;
     PageInfo pageInfo;
     std::array<uint8_t, 4> childrenTypes;
 
@@ -81,7 +82,7 @@ struct DeviceChangeHeaderMessage {
 
         encodeString(ptr, deviceName);
         encodeBool(ptr, isEnabled);
-        encodeUint8(ptr, deviceType);
+        encodeUint8(ptr, static_cast<uint8_t>(deviceType));
         encodeUint8(ptr, pageInfo.devicePageIndex);
         encodeUint8(ptr, pageInfo.devicePageCount);
         encodeString(ptr, pageInfo.devicePageName);
@@ -120,8 +121,9 @@ struct DeviceChangeHeaderMessage {
         if (!decodeString(ptr, remaining, deviceName)) return std::nullopt;
         bool isEnabled;
         if (!decodeBool(ptr, remaining, isEnabled)) return std::nullopt;
-        uint8_t deviceType;
-        if (!decodeUint8(ptr, remaining, deviceType)) return std::nullopt;
+        uint8_t deviceType_raw;
+        if (!decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
+        DeviceType deviceType = static_cast<DeviceType>(deviceType_raw);
         PageInfo pageInfo_data;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
         if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
@@ -153,7 +155,7 @@ struct DeviceChangeHeaderMessage {
 
         ptr += snprintf(ptr, end - ptr, "  deviceName: \"%s\"\n", deviceName.c_str());
         ptr += snprintf(ptr, end - ptr, "  isEnabled: %s\n", isEnabled ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  deviceType: %lu\n", (unsigned long)deviceType);
+        ptr += snprintf(ptr, end - ptr, "  deviceType: %d\n", static_cast<int>(deviceType));
         ptr += snprintf(ptr, end - ptr, "  pageInfo:\n");
         ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
         ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);

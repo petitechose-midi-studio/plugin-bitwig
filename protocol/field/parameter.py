@@ -1,4 +1,5 @@
-from protocol_codegen.core.field import PrimitiveField, Type
+from protocol_codegen.core.field import PrimitiveField, EnumField, Type
+from enums.device import ParameterType
 
 # ============================================================================
 # GENERIC PARAMETER FIELDS
@@ -9,10 +10,10 @@ from protocol_codegen.core.field import PrimitiveField, Type
 # - Mixer parameters (future)
 # - Transport parameters (future)
 #
-# Parameter types:
-# - 0: Knob (continuous or unrecognized discrete)
-# - 1: Button (discreteCount == 2 AND values are On/Off)
-# - 2: List (discreteCount > 2)
+# Parameter types (ParameterType enum from enum/device.py):
+# - KNOB (0): Continuous parameter or unrecognized discrete
+# - BUTTON (1): discreteCount == 2 AND values are On/Off
+# - LIST (2): discreteCount > 2
 
 # Core parameter fields
 parameter_value = PrimitiveField('parameterValue', type_name=Type.FLOAT32)
@@ -22,8 +23,8 @@ parameter_origin = PrimitiveField('parameterOrigin', type_name=Type.FLOAT32)
 parameter_exists = PrimitiveField('parameterExists', type_name=Type.BOOL)
 parameter_touched = PrimitiveField('isTouched', type_name=Type.BOOL)
 
-# Parameter type detection
-parameter_type = PrimitiveField('parameterType', type_name=Type.UINT8)
+# Parameter type detection (ParameterType enum: KNOB=0, BUTTON=1, LIST=2)
+parameter_type = EnumField('parameterType', enum_def=ParameterType)
 
 # Discrete values (for List/Button parameters)
 parameter_discrete_count = PrimitiveField('discreteValueCount', type_name=Type.INT16)

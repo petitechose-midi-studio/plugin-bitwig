@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.ParameterType;
 
 /**
  * LastClickedUpdateMessage - Auto-generated Protocol Message
@@ -38,7 +39,7 @@ public final class LastClickedUpdateMessage {
     private final String displayValue;
     private final float parameterOrigin;
     private final boolean parameterExists;
-    private final int parameterType;
+    private final ParameterType parameterType;
     private final short discreteValueCount;
     private final int currentValueIndex;
 
@@ -58,7 +59,7 @@ public final class LastClickedUpdateMessage {
      * @param discreteValueCount The discreteValueCount value
      * @param currentValueIndex The currentValueIndex value
      */
-    public LastClickedUpdateMessage(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
+    public LastClickedUpdateMessage(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, ParameterType parameterType, short discreteValueCount, int currentValueIndex) {
         this.parameterName = parameterName;
         this.parameterValue = parameterValue;
         this.displayValue = displayValue;
@@ -123,7 +124,7 @@ public final class LastClickedUpdateMessage {
      *
      * @return parameterType
      */
-    public int getParameterType() {
+    public ParameterType getParameterType() {
         return parameterType;
     }
 
@@ -175,7 +176,7 @@ public final class LastClickedUpdateMessage {
         offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
         offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
         offset += Encoder.writeBool(buffer, offset, parameterExists);
-        offset += Encoder.writeUint8(buffer, offset, parameterType);
+        offset += Encoder.writeUint8(buffer, offset, parameterType.getValue());
         offset += Encoder.writeInt16(buffer, offset, discreteValueCount);
         offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
 
@@ -219,8 +220,9 @@ public final class LastClickedUpdateMessage {
         offset += 4;
         boolean parameterExists = Decoder.decodeBool(data, offset);
         offset += 1;
-        int parameterType = Decoder.decodeUint8(data, offset);
+        ParameterType parameterType = ParameterType.fromValue(Decoder.decodeUint8(data, offset));
         offset += 1;
+
         short discreteValueCount = Decoder.decodeInt16(data, offset);
         offset += 2;
         int currentValueIndex = Decoder.decodeUint8(data, offset);
@@ -260,7 +262,7 @@ public final class LastClickedUpdateMessage {
         sb.append("  displayValue: \"").append(getDisplayValue()).append("\"\n");
         sb.append("  parameterOrigin: ").append(formatFloat(getParameterOrigin())).append("\n");
         sb.append("  parameterExists: ").append(getParameterExists() ? "true" : "false").append("\n");
-        sb.append("  parameterType: ").append(getParameterType()).append("\n");
+        sb.append("  parameterType: ").append(getParameterType().ordinal()).append("\n");
         sb.append("  discreteValueCount: ").append(getDiscreteValueCount()).append("\n");
         sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
         return sb.toString();

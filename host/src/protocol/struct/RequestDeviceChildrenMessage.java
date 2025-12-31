@@ -135,6 +135,7 @@ public final class RequestDeviceChildrenMessage {
         int childType = Decoder.decodeUint8(data, offset);
         offset += 1;
 
+
         return new RequestDeviceChildrenMessage(deviceIndex, childType);
     }
 

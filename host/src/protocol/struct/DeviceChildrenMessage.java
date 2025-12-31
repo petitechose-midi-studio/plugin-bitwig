@@ -196,6 +196,7 @@ public final class DeviceChildrenMessage {
         offset += 1;
         int childType = Decoder.decodeUint8(data, offset);
         offset += 1;
+
         int childrenCount = Decoder.decodeUint8(data, offset);
         offset += 1;
         int count_children = Decoder.decodeUint8(data, offset);

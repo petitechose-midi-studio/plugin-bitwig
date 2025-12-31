@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.ParameterType;
 
 /**
  * DeviceChangeMessage - Auto-generated Protocol Message
@@ -69,14 +70,14 @@ public final class DeviceChangeMessage {
         private final boolean parameterExists;
         private final short discreteValueCount;
         private final String displayValue;
-        private final int parameterType;
+        private final ParameterType parameterType;
         private final String[] discreteValueNames;
         private final int currentValueIndex;
         private final boolean hasAutomation;
         private final float modulatedValue;
         private final boolean isModulated;
 
-        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, int parameterType, String[] discreteValueNames, int currentValueIndex, boolean hasAutomation, float modulatedValue, boolean isModulated) {
+        public RemoteControls(int remoteControlIndex, float parameterValue, String parameterName, float parameterOrigin, boolean parameterExists, short discreteValueCount, String displayValue, ParameterType parameterType, String[] discreteValueNames, int currentValueIndex, boolean hasAutomation, float modulatedValue, boolean isModulated) {
             this.remoteControlIndex = remoteControlIndex;
             this.parameterValue = parameterValue;
             this.parameterName = parameterName;
@@ -120,7 +121,7 @@ public final class DeviceChangeMessage {
             return displayValue;
         }
 
-        public int getParameterType() {
+        public ParameterType getParameterType() {
             return parameterType;
         }
 
@@ -267,7 +268,7 @@ public final class DeviceChangeMessage {
             offset += Encoder.writeBool(buffer, offset, item.getParameterExists());
             offset += Encoder.writeInt16(buffer, offset, item.getDiscreteValueCount());
             offset += Encoder.writeString(buffer, offset, item.getDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeUint8(buffer, offset, item.getParameterType());
+            offset += Encoder.writeUint8(buffer, offset, item.getParameterType().getValue());
             offset += Encoder.writeUint8(buffer, offset, item.getDiscreteValueNames().length);
             for (String type : item.getDiscreteValueNames()) {
                 offset += Encoder.writeString(buffer, offset, type, ProtocolConstants.STRING_MAX_LENGTH);
@@ -342,7 +343,7 @@ public final class DeviceChangeMessage {
             offset += 2;
     String item_displayValue = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
             offset += 1 + item_displayValue.length();
-    int item_parameterType = Decoder.decodeUint8(data, offset);
+            ParameterType item_parameterType = ParameterType.fromValue(Decoder.decodeUint8(data, offset));
             offset += 1;
             byte count_discreteValueNames = (byte) Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -409,7 +410,7 @@ public final class DeviceChangeMessage {
             sb.append("      parameterExists: ").append(item.getParameterExists() ? "true" : "false").append("\n");
             sb.append("      discreteValueCount: ").append(item.getDiscreteValueCount()).append("\n");
             sb.append("      displayValue: \"").append(item.getDisplayValue()).append("\"\n");
-            sb.append("      parameterType: ").append(item.getParameterType()).append("\n");
+            sb.append("      parameterType: ").append(item.getParameterType().ordinal()).append("\n");
             sb.append("      currentValueIndex: ").append(item.getCurrentValueIndex()).append("\n");
             sb.append("      hasAutomation: ").append(item.getHasAutomation() ? "true" : "false").append("\n");
             sb.append("      modulatedValue: ").append(formatFloat(item.getModulatedValue())).append("\n");

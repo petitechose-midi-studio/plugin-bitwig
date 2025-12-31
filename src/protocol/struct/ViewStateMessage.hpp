@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../ViewType.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -33,7 +34,7 @@ struct ViewStateMessage {
     // Message name for logging (encoded in payload)
     static constexpr const char* MESSAGE_NAME = "ViewState";
 
-    uint8_t viewType;
+    ViewType viewType;
     bool selectorActive;
 
     /**
@@ -64,7 +65,7 @@ struct ViewStateMessage {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, viewType);
+        encodeUint8(ptr, static_cast<uint8_t>(viewType));
         encodeBool(ptr, selectorActive);
 
         return ptr - buffer;
@@ -93,8 +94,9 @@ struct ViewStateMessage {
         remaining -= nameLen;
 
         // Decode fields
-        uint8_t viewType;
-        if (!decodeUint8(ptr, remaining, viewType)) return std::nullopt;
+        uint8_t viewType_raw;
+        if (!decodeUint8(ptr, remaining, viewType_raw)) return std::nullopt;
+        ViewType viewType = static_cast<ViewType>(viewType_raw);
         bool selectorActive;
         if (!decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
 
@@ -116,7 +118,7 @@ struct ViewStateMessage {
 
         ptr += snprintf(ptr, end - ptr, "# ViewState\nviewState:\n");
 
-        ptr += snprintf(ptr, end - ptr, "  viewType: %lu\n", (unsigned long)viewType);
+        ptr += snprintf(ptr, end - ptr, "  viewType: %d\n", static_cast<int>(viewType));
         ptr += snprintf(ptr, end - ptr, "  selectorActive: %s\n", selectorActive ? "true" : "false");
 
         *ptr = '\0';

@@ -66,7 +66,7 @@
         send(Protocol::RequestDevicePageNamesWindowMessage{pageStartIndex});
     }
 
-    void viewState(uint8_t viewType, bool selectorActive) {
+    void viewState(ViewType viewType, bool selectorActive) {
         send(Protocol::ViewStateMessage{viewType, selectorActive});
     }
 

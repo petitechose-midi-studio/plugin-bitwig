@@ -21,6 +21,7 @@
 #include <oc/state/SignalWatcher.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
+#include "protocol/ParameterType.hpp"
 #include "RemoteControlsPageSelector.hpp"
 #include "state/BitwigState.hpp"
 #include "ui/device/DeviceSelector.hpp"
@@ -84,7 +85,7 @@ private:
     lv_obj_t* body_container_{nullptr};
 
     std::array<std::unique_ptr<IParameterWidget>, bitwig::state::PARAMETER_COUNT> widgets_;
-    std::array<bitwig::state::ParameterType, bitwig::state::PARAMETER_COUNT> widgetTypes_{};
+    std::array<ParameterType, bitwig::state::PARAMETER_COUNT> widgetTypes_{};
     std::unique_ptr<DeviceStateBar> top_bar_component_;
     std::unique_ptr<RemoteControlsPageSelector> page_selector_;
     std::unique_ptr<DeviceSelector> device_selector_;

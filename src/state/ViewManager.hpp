@@ -19,20 +19,15 @@
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
+#include "protocol/ViewType.hpp"
+
 namespace bitwig::state {
 
 using oc::state::Signal;
 using oc::ui::lvgl::IView;
 
-/**
- * @brief Available view types in the application
- */
-enum class ViewType : uint8_t {
-    REMOTE_CONTROLS = 0,  // Device remote controls (8 parameters)
-    MIX,                  // Mixer view (volume, pan, sends)
-    CLIP,                 // Clip/Scene launcher
-    COUNT                 // Sentinel for iteration
-};
+/// Number of view types (for array sizing)
+inline constexpr size_t VIEW_TYPE_COUNT = 3;
 
 /**
  * @brief Get display name for a view type
@@ -56,7 +51,6 @@ inline const char* viewTypeName(ViewType type) {
  */
 class ViewManager {
 public:
-    static constexpr size_t VIEW_COUNT = static_cast<size_t>(ViewType::COUNT);
 
     ViewManager() = default;
 
@@ -77,7 +71,7 @@ public:
      */
     void registerView(ViewType type, IView* view) {
         auto idx = static_cast<size_t>(type);
-        if (idx < VIEW_COUNT) {
+        if (idx < VIEW_TYPE_COUNT) {
             views_[idx] = view;
             OC_LOG_DEBUG("[ViewManager] Registered view '{}' for type {}",
                          view ? view->getViewId() : "null", static_cast<int>(type));
@@ -93,7 +87,7 @@ public:
      * @param type The view to switch to
      */
     void switchTo(ViewType type) {
-        if (type == ViewType::COUNT) return;
+        if (static_cast<size_t>(type) >= VIEW_TYPE_COUNT) return;
         if (type == current_.get()) return;
 
         auto oldIdx = static_cast<size_t>(current_.get());
@@ -120,7 +114,7 @@ public:
      */
     void next() {
         auto idx = static_cast<size_t>(current_.get());
-        auto nextIdx = (idx + 1) % VIEW_COUNT;
+        auto nextIdx = (idx + 1) % VIEW_TYPE_COUNT;
         switchTo(static_cast<ViewType>(nextIdx));
     }
 
@@ -129,7 +123,7 @@ public:
      */
     void previous() {
         auto idx = static_cast<size_t>(current_.get());
-        auto prevIdx = (idx + VIEW_COUNT - 1) % VIEW_COUNT;
+        auto prevIdx = (idx + VIEW_TYPE_COUNT - 1) % VIEW_TYPE_COUNT;
         switchTo(static_cast<ViewType>(prevIdx));
     }
 
@@ -153,7 +147,7 @@ public:
      */
     IView* getView(ViewType type) const {
         auto idx = static_cast<size_t>(type);
-        return (idx < VIEW_COUNT) ? views_[idx] : nullptr;
+        return (idx < VIEW_TYPE_COUNT) ? views_[idx] : nullptr;
     }
 
     /**
@@ -169,7 +163,7 @@ public:
      */
     void initialize() {
         // Find first registered view and activate it
-        for (size_t i = 0; i < VIEW_COUNT; ++i) {
+        for (size_t i = 0; i < VIEW_TYPE_COUNT; ++i) {
             if (views_[i] != nullptr) {
                 auto type = static_cast<ViewType>(i);
                 views_[i]->onActivate();
@@ -196,7 +190,7 @@ public:
     }
 
 private:
-    std::array<IView*, VIEW_COUNT> views_{};
+    std::array<IView*, VIEW_TYPE_COUNT> views_{};
     Signal<ViewType> current_{ViewType::REMOTE_CONTROLS};
 };
 

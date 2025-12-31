@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.DeviceType;
 
 /**
  * DeviceListWindowMessage - Auto-generated Protocol Message
@@ -36,10 +37,10 @@ public final class DeviceListWindowMessage {
         private final int deviceIndex;
         private final String deviceName;
         private final boolean isEnabled;
-        private final int deviceType;
+        private final DeviceType deviceType;
         private final int[] childrenTypes;
 
-        public Devices(int deviceIndex, String deviceName, boolean isEnabled, int deviceType, int[] childrenTypes) {
+        public Devices(int deviceIndex, String deviceName, boolean isEnabled, DeviceType deviceType, int[] childrenTypes) {
             this.deviceIndex = deviceIndex;
             this.deviceName = deviceName;
             this.isEnabled = isEnabled;
@@ -59,7 +60,7 @@ public final class DeviceListWindowMessage {
             return isEnabled;
         }
 
-        public int getDeviceType() {
+        public DeviceType getDeviceType() {
             return deviceType;
         }
 
@@ -197,7 +198,7 @@ public final class DeviceListWindowMessage {
             offset += Encoder.writeUint8(buffer, offset, item.getDeviceIndex());
             offset += Encoder.writeString(buffer, offset, item.getDeviceName(), ProtocolConstants.STRING_MAX_LENGTH);
             offset += Encoder.writeBool(buffer, offset, item.isEnabled());
-            offset += Encoder.writeUint8(buffer, offset, item.getDeviceType());
+            offset += Encoder.writeUint8(buffer, offset, item.getDeviceType().getValue());
             offset += Encoder.writeUint8(buffer, offset, item.getChildrenTypes().length);
             for (int type : item.getChildrenTypes()) {
                 offset += Encoder.writeUint8(buffer, offset, type);
@@ -256,7 +257,7 @@ public final class DeviceListWindowMessage {
             offset += 1 + item_deviceName.length();
     boolean item_isEnabled = Decoder.decodeBool(data, offset);
             offset += 1;
-    int item_deviceType = Decoder.decodeUint8(data, offset);
+            DeviceType item_deviceType = DeviceType.fromValue(Decoder.decodeUint8(data, offset));
             offset += 1;
             byte count_childrenTypes = (byte) Decoder.decodeUint8(data, offset);
             offset += 1;
@@ -297,7 +298,7 @@ public final class DeviceListWindowMessage {
             sb.append("    - deviceIndex: ").append(item.getDeviceIndex()).append("\n");
             sb.append("      deviceName: \"").append(item.getDeviceName()).append("\"\n");
             sb.append("      isEnabled: ").append(item.isEnabled() ? "true" : "false").append("\n");
-            sb.append("      deviceType: ").append(item.getDeviceType()).append("\n");
+            sb.append("      deviceType: ").append(item.getDeviceType().ordinal()).append("\n");
         }
         return sb.toString();
     }

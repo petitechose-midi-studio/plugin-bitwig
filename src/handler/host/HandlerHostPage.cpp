@@ -26,8 +26,7 @@ void HandlerHostPage::updateRemoteControlEncoderModes(const RemoteControlArray& 
         if (paramIndex >= PARAMETER_COUNT) continue;
 
         // Update parameter type in state
-        state_.parameters.slots[paramIndex].type.set(
-            static_cast<state::ParameterType>(remoteControls[i].parameterType));
+        state_.parameters.slots[paramIndex].type.set(remoteControls[i].parameterType);
 
         // Configure encoder mode
         auto encoderId = getEncoderIdForParameter(paramIndex);
@@ -103,7 +102,7 @@ void HandlerHostPage::setupProtocolCallbacks() {
             slot.discreteValues.set(tempDiscreteValues.data(), count);
 
             // NOW set type - this triggers widget creation with correct metadata
-            slot.type.set(static_cast<state::ParameterType>(rc.parameterType));
+            slot.type.set(rc.parameterType);
 
             // Set remaining display properties
             slot.displayValue.set(rc.displayValue.c_str());

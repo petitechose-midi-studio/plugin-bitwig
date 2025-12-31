@@ -383,10 +383,10 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
 
     // Type icon (index 0)
     if (isDevice && widgets.typeIcon) {
-        uint8_t deviceType = index < static_cast<int>(currentProps_.deviceTypes.size())
-                                 ? currentProps_.deviceTypes[index]
-                                 : 0;
-        auto info = DeviceType::get(deviceType);
+        DeviceType deviceType = index < static_cast<int>(currentProps_.deviceTypes.size())
+                                    ? currentProps_.deviceTypes[index]
+                                    : DeviceType::UNKNOWN;
+        auto info = DeviceTypeHelper::get(deviceType);
         if (info.visible) {
             Icon::set(widgets.typeIcon, info.icon);
             style::apply(widgets.typeIcon).textColor(info.color);
