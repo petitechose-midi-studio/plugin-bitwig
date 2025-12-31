@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../TrackType.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -40,7 +41,7 @@ struct Tracks {
     bool isMutedBySolo;
     bool isArm;
     bool isGroup;
-    uint8_t trackType;
+    TrackType trackType;
     float volume;
     float pan;
 };
@@ -105,7 +106,7 @@ struct TrackListWindowMessage {
             encodeBool(ptr, item.isMutedBySolo);
             encodeBool(ptr, item.isArm);
             encodeBool(ptr, item.isGroup);
-            encodeUint8(ptr, item.trackType);
+            encodeUint8(ptr, static_cast<uint8_t>(item.trackType));
             encodeFloat32(ptr, item.volume);
             encodeFloat32(ptr, item.pan);
         }
@@ -160,7 +161,9 @@ struct TrackListWindowMessage {
             if (!decodeBool(ptr, remaining, item.isMutedBySolo)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isArm)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isGroup)) return std::nullopt;
-            if (!decodeUint8(ptr, remaining, item.trackType)) return std::nullopt;
+            uint8_t trackType_raw;
+            if (!decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
+            item.trackType = static_cast<TrackType>(trackType_raw);
             if (!decodeFloat32(ptr, remaining, item.volume)) return std::nullopt;
             if (!decodeFloat32(ptr, remaining, item.pan)) return std::nullopt;
             tracks_data[i] = item;
@@ -200,7 +203,7 @@ struct TrackListWindowMessage {
         ptr += snprintf(ptr, end - ptr, "      isMutedBySolo: %s\n", tracks[i].isMutedBySolo ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isArm: %s\n", tracks[i].isArm ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "      isGroup: %s\n", tracks[i].isGroup ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      trackType: %lu\n", (unsigned long)tracks[i].trackType);
+        ptr += snprintf(ptr, end - ptr, "      trackType: %d\n", static_cast<int>(tracks[i].trackType));
         {
             char floatBuf_tracks_i_volume[16];
             floatToString(floatBuf_tracks_i_volume, sizeof(floatBuf_tracks_i_volume), tracks[i].volume);

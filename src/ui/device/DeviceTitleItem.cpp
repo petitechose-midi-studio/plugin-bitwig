@@ -68,10 +68,10 @@ void DeviceTitleItem::render(const DeviceTitleItemProps &props) {
     updateFolderIcon(props.hasChildren);
 }
 
-void DeviceTitleItem::updateTypeIcon(uint8_t deviceType) {
+void DeviceTitleItem::updateTypeIcon(DeviceType deviceType) {
     if (!type_icon_) return;
 
-    auto info = DeviceType::get(deviceType);
+    auto info = DeviceTypeHelper::get(deviceType);
     if (!info.visible) {
         lv_obj_add_flag(type_icon_, LV_OBJ_FLAG_HIDDEN);
         return;

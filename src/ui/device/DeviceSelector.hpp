@@ -9,9 +9,10 @@
 
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
-
 #include <oc/ui/lvgl/widget/VirtualList.hpp>
 
+#include "protocol/DeviceType.hpp"
+#include "protocol/TrackType.hpp"
 #include "ui/track/TrackTitleItem.hpp"
 #include "ui/widget/HintBar.hpp"
 
@@ -25,7 +26,7 @@ using oc::ui::lvgl::widget::ScrollMode;
 struct DeviceSelectorProps {
     // Device list mode
     std::vector<std::string> names;
-    std::vector<uint8_t> deviceTypes;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
+    std::vector<DeviceType> deviceTypes;
     std::vector<bool> deviceStates;
     std::vector<bool> hasSlots;
     std::vector<bool> hasLayers;
@@ -38,7 +39,7 @@ struct DeviceSelectorProps {
     // Track header
     const char *trackName = nullptr;
     uint32_t trackColor = 0xFFFFFF;
-    uint8_t trackType = 0;
+    TrackType trackType = TrackType::AUDIO;
 
     int selectedIndex = 0;
     int totalCount = 0;      // Total devices (for pagination display)

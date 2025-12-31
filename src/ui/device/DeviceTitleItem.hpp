@@ -8,11 +8,13 @@
 #include <oc/ui/lvgl/IListItem.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
 
+#include "protocol/DeviceType.hpp"
+
 namespace bitwig {
 
 struct DeviceTitleItemProps {
     const char *name = "";
-    uint8_t deviceType = 0;  // 0=Unknown, 1=Audio, 2=Instrument, 3=Note
+    DeviceType deviceType = DeviceType::UNKNOWN;
     bool enabled = false;
     bool hasChildren = false;
 };
@@ -46,7 +48,7 @@ public:
     lv_obj_t* getElement() const override { return container_; }
 
 private:
-    void updateTypeIcon(uint8_t deviceType);
+    void updateTypeIcon(DeviceType deviceType);
     void updateStateIcon(bool enabled);
     void updateFolderIcon(bool hasChildren);
 

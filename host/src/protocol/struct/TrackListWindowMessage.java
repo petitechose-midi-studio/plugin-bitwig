@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.TrackType;
 
 /**
  * TrackListWindowMessage - Auto-generated Protocol Message
@@ -42,11 +43,11 @@ public final class TrackListWindowMessage {
         private final boolean isMutedBySolo;
         private final boolean isArm;
         private final boolean isGroup;
-        private final int trackType;
+        private final TrackType trackType;
         private final float volume;
         private final float pan;
 
-        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, boolean isGroup, int trackType, float volume, float pan) {
+        public Tracks(int trackIndex, String trackName, long color, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, boolean isGroup, TrackType trackType, float volume, float pan) {
             this.trackIndex = trackIndex;
             this.trackName = trackName;
             this.color = color;
@@ -97,7 +98,7 @@ public final class TrackListWindowMessage {
             return isGroup;
         }
 
-        public int getTrackType() {
+        public TrackType getTrackType() {
             return trackType;
         }
 
@@ -245,7 +246,7 @@ public final class TrackListWindowMessage {
             offset += Encoder.writeBool(buffer, offset, item.isMutedBySolo());
             offset += Encoder.writeBool(buffer, offset, item.isArm());
             offset += Encoder.writeBool(buffer, offset, item.isGroup());
-            offset += Encoder.writeUint8(buffer, offset, item.getTrackType());
+            offset += Encoder.writeUint8(buffer, offset, item.getTrackType().getValue());
             offset += Encoder.writeFloat32(buffer, offset, item.getVolume());
             offset += Encoder.writeFloat32(buffer, offset, item.getPan());
         }
@@ -314,7 +315,7 @@ public final class TrackListWindowMessage {
             offset += 1;
     boolean item_isGroup = Decoder.decodeBool(data, offset);
             offset += 1;
-    int item_trackType = Decoder.decodeUint8(data, offset);
+            TrackType item_trackType = TrackType.fromValue(Decoder.decodeUint8(data, offset));
             offset += 1;
     float item_volume = Decoder.decodeFloat32(data, offset);
             offset += 4;
@@ -369,7 +370,7 @@ public final class TrackListWindowMessage {
             sb.append("      isMutedBySolo: ").append(item.isMutedBySolo() ? "true" : "false").append("\n");
             sb.append("      isArm: ").append(item.isArm() ? "true" : "false").append("\n");
             sb.append("      isGroup: ").append(item.isGroup() ? "true" : "false").append("\n");
-            sb.append("      trackType: ").append(item.getTrackType()).append("\n");
+            sb.append("      trackType: ").append(item.getTrackType().ordinal()).append("\n");
             sb.append("      volume: ").append(formatFloat(item.getVolume())).append("\n");
             sb.append("      pan: ").append(formatFloat(item.getPan())).append("\n");
         }

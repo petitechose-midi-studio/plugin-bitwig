@@ -154,14 +154,14 @@ void TrackTitleItem::updateIndicatorOpacity(bool isMuted, bool isSoloed, bool hi
     }
 }
 
-const char *TrackTitleItem::getTrackTypeIcon(uint8_t trackType) {
+const char *TrackTitleItem::getTrackTypeIcon(TrackType trackType) {
     switch (trackType) {
-        case 0: return Icon::TRACK_AUDIO;
-        case 1: return Icon::TRACK_INSTRUMENT;
-        case 2: return Icon::TRACK_HYBRID;
-        case 3: return Icon::BROWSER_DIRECTORY;
-        case 4: return Icon::TRACK_RETURN;
-        case 5: return Icon::TRACK_MASTER;
+        case TrackType::AUDIO: return Icon::TRACK_AUDIO;
+        case TrackType::INSTRUMENT: return Icon::TRACK_INSTRUMENT;
+        case TrackType::HYBRID: return Icon::TRACK_HYBRID;
+        case TrackType::GROUP: return Icon::BROWSER_DIRECTORY;
+        case TrackType::EFFECT: return Icon::TRACK_RETURN;
+        case TrackType::MASTER: return Icon::TRACK_MASTER;
         default: return Icon::TRACK_AUDIO;
     }
 }

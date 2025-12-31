@@ -3,6 +3,7 @@ package protocol.struct;
 import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
+import protocol.ViewType;
 
 /**
  * ViewStateMessage - Auto-generated Protocol Message
@@ -32,7 +33,7 @@ public final class ViewStateMessage {
     // Fields
     // ============================================================================
 
-    private final int viewType;
+    private final ViewType viewType;
     private final boolean selectorActive;
 
     // ============================================================================
@@ -45,7 +46,7 @@ public final class ViewStateMessage {
      * @param viewType The viewType value
      * @param selectorActive The selectorActive value
      */
-    public ViewStateMessage(int viewType, boolean selectorActive) {
+    public ViewStateMessage(ViewType viewType, boolean selectorActive) {
         this.viewType = viewType;
         this.selectorActive = selectorActive;
     }
@@ -59,7 +60,7 @@ public final class ViewStateMessage {
      *
      * @return viewType
      */
-    public int getViewType() {
+    public ViewType getViewType() {
         return viewType;
     }
 
@@ -97,7 +98,7 @@ public final class ViewStateMessage {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, viewType);
+        offset += Encoder.writeUint8(buffer, offset, viewType.getValue());
         offset += Encoder.writeBool(buffer, offset, selectorActive);
 
         return offset - startOffset;
@@ -130,8 +131,9 @@ public final class ViewStateMessage {
         int nameLen = data[offset++] & 0xFF;
         offset += nameLen;
 
-        int viewType = Decoder.decodeUint8(data, offset);
+        ViewType viewType = ViewType.fromValue(Decoder.decodeUint8(data, offset));
         offset += 1;
+
         boolean selectorActive = Decoder.decodeBool(data, offset);
         offset += 1;
 
@@ -152,7 +154,7 @@ public final class ViewStateMessage {
         StringBuilder sb = new StringBuilder(256);
         sb.append("# ViewState\n");
         sb.append("viewState:\n");
-        sb.append("  viewType: ").append(getViewType()).append("\n");
+        sb.append("  viewType: ").append(getViewType().ordinal()).append("\n");
         sb.append("  selectorActive: ").append(getSelectorActive() ? "true" : "false").append("\n");
         return sb.toString();
     }

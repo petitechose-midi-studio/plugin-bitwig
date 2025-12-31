@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.DeviceType;
 
 /**
  * DeviceChangeHeaderMessage - Auto-generated Protocol Message
@@ -63,7 +64,7 @@ public final class DeviceChangeHeaderMessage {
 
     private final String deviceName;
     private final boolean isEnabled;
-    private final int deviceType;
+    private final DeviceType deviceType;
     private final PageInfo pageInfo;
     private final int[] childrenTypes;
 
@@ -80,7 +81,7 @@ public final class DeviceChangeHeaderMessage {
      * @param pageInfo The pageInfo value
      * @param childrenTypes The childrenTypes value
      */
-    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, int deviceType, PageInfo pageInfo, int[] childrenTypes) {
+    public DeviceChangeHeaderMessage(String deviceName, boolean isEnabled, DeviceType deviceType, PageInfo pageInfo, int[] childrenTypes) {
         this.deviceName = deviceName;
         this.isEnabled = isEnabled;
         this.deviceType = deviceType;
@@ -115,7 +116,7 @@ public final class DeviceChangeHeaderMessage {
      *
      * @return deviceType
      */
-    public int getDeviceType() {
+    public DeviceType getDeviceType() {
         return deviceType;
     }
 
@@ -164,7 +165,7 @@ public final class DeviceChangeHeaderMessage {
 
         offset += Encoder.writeString(buffer, offset, deviceName, ProtocolConstants.STRING_MAX_LENGTH);
         offset += Encoder.writeBool(buffer, offset, isEnabled);
-        offset += Encoder.writeUint8(buffer, offset, deviceType);
+        offset += Encoder.writeUint8(buffer, offset, deviceType.getValue());
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
         offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
         offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
@@ -209,8 +210,9 @@ public final class DeviceChangeHeaderMessage {
         offset += 1 + deviceName.length();
         boolean isEnabled = Decoder.decodeBool(data, offset);
         offset += 1;
-        int deviceType = Decoder.decodeUint8(data, offset);
+        DeviceType deviceType = DeviceType.fromValue(Decoder.decodeUint8(data, offset));
         offset += 1;
+
         int pageInfo_devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
         int pageInfo_devicePageCount = Decoder.decodeUint8(data, offset);
@@ -248,7 +250,7 @@ public final class DeviceChangeHeaderMessage {
         sb.append("deviceChangeHeader:\n");
         sb.append("  deviceName: \"").append(getDeviceName()).append("\"\n");
         sb.append("  isEnabled: ").append(isEnabled() ? "true" : "false").append("\n");
-        sb.append("  deviceType: ").append(getDeviceType()).append("\n");
+        sb.append("  deviceType: ").append(getDeviceType().ordinal()).append("\n");
         sb.append("  pageInfo:\n");
         sb.append("    devicePageIndex: ").append(getPageInfo().getDevicePageIndex()).append("\n");
         sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");

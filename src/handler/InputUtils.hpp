@@ -15,6 +15,7 @@
 #include <oc/util/Index.hpp>
 
 #include "config/App.hpp"
+#include "protocol/ParameterType.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -63,10 +64,10 @@ inline EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
  */
 inline void configureEncoderForParameter(oc::api::EncoderAPI& encoders,
                                          EncoderID encoderId,
-                                         uint8_t parameterType,
+                                         ParameterType parameterType,
                                          uint8_t discreteCount,
                                          float value) {
-    if (parameterType == static_cast<uint8_t>(bitwig::state::ParameterType::KNOB)) {
+    if (parameterType == ParameterType::KNOB) {
         encoders.setContinuous(encoderId);
     } else {
         encoders.setDiscreteSteps(encoderId, discreteCount);

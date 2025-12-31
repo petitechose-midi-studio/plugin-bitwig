@@ -147,6 +147,7 @@ public final class EnterDeviceChildMessage {
         offset += 1;
         int childType = Decoder.decodeUint8(data, offset);
         offset += 1;
+
         int childIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
 

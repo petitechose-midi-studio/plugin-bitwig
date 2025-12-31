@@ -55,7 +55,7 @@ void HandlerInputViewState::sendViewState() {
     OC_LOG_DEBUG("[ViewState] Sending: view={}, selectorActive={}",
                  static_cast<int>(currentView), selectorActive);
 
-    protocol_.viewState(static_cast<uint8_t>(currentView), selectorActive);
+    protocol_.viewState(currentView, selectorActive);
 }
 
 }  // namespace bitwig::handler

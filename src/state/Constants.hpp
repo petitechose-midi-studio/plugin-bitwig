@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+#include "protocol/ChildType.hpp"
+#include "protocol/DeviceType.hpp"
+#include "protocol/ParameterType.hpp"
+#include "protocol/TrackType.hpp"
 #include "ui/font/icon.hpp"
 
 namespace bitwig::state {
@@ -32,44 +36,14 @@ constexpr uint8_t PREFETCH_THRESHOLD = 8;    // Prefetch when cursor >= loadedUp
 constexpr const char* BACK_TO_PARENT_TEXT = Icon::UI_ARROW_LEFT;
 
 // =============================================================================
-// Device Types
+// Child Type Helpers
 // =============================================================================
 
-enum class DeviceType : uint8_t {
-    UNKNOWN = 0,
-    AUDIO = 1,
-    INSTRUMENT = 2,
-    NOTE = 3
-};
-
-// =============================================================================
-// Parameter Types
-// =============================================================================
-
-enum class ParameterType : uint8_t {
-    KNOB = 0,    // Continuous parameter (optimistic updates)
-    BUTTON = 1,  // On/Off parameter (wait for echo)
-    LIST = 2     // Discrete selection (wait for echo)
-};
-
-// =============================================================================
-// Child Types (for device navigation)
-// =============================================================================
-
-enum class ChildType : uint8_t {
-    NONE = 0,
-    SLOTS = 1,
-    LAYERS = 2,
-    DRUMS = 4
-};
-
-inline const char* getChildTypeName(ChildType type) {
-    switch (type) {
-        case ChildType::SLOTS: return "[S] Slots";
-        case ChildType::LAYERS: return "[L] Layers";
-        case ChildType::DRUMS: return "[D] Drum Pads";
-        default: return "";
-    }
+inline const char* getChildTypeName(uint8_t type) {
+    if (type == CHILD_TYPE_SLOTS) return "[S] Slots";
+    if (type == CHILD_TYPE_LAYERS) return "[L] Layers";
+    if (type == CHILD_TYPE_DRUMS) return "[D] Drum Pads";
+    return "";
 }
 
 // Converts array of child types to bitflags (SLOTS|LAYERS|DRUMS)
@@ -77,24 +51,10 @@ template <typename ChildTypeArray>
 inline uint8_t getChildTypeFlags(const ChildTypeArray& types) {
     uint8_t flags = 0;
     for (uint8_t type : types) {
-        if (type == static_cast<uint8_t>(ChildType::NONE)) break;
+        if (type == CHILD_TYPE_NONE) break;
         flags |= type;
     }
     return flags;
 }
-
-// =============================================================================
-// Track Types
-// =============================================================================
-
-enum class TrackType : uint8_t {
-    UNKNOWN = 0,
-    AUDIO = 1,
-    INSTRUMENT = 2,
-    HYBRID = 3,
-    GROUP = 4,
-    EFFECT = 5,
-    MASTER = 6
-};
 
 }  // namespace bitwig::state

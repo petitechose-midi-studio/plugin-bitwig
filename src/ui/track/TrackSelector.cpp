@@ -228,9 +228,9 @@ void TrackSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
         uint32_t color = index < static_cast<int>(props.trackColors.size())
                              ? props.trackColors[index]
                              : 0xFFFFFF;
-        uint8_t trackType = index < static_cast<int>(props.trackTypes.size())
-                                ? props.trackTypes[index]
-                                : 0;
+        TrackType trackType = index < static_cast<int>(props.trackTypes.size())
+                                  ? props.trackTypes[index]
+                                  : TrackType::AUDIO;
         bool isMuted = index < static_cast<int>(props.muteStates.size())
                            ? props.muteStates[index]
                            : false;
@@ -303,9 +303,9 @@ void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
         uint32_t color = logicalIndex < static_cast<int>(props.trackColors.size())
                              ? props.trackColors[logicalIndex]
                              : 0xFFFFFF;
-        uint8_t trackType = logicalIndex < static_cast<int>(props.trackTypes.size())
-                                ? props.trackTypes[logicalIndex]
-                                : 0;
+        TrackType trackType = logicalIndex < static_cast<int>(props.trackTypes.size())
+                                  ? props.trackTypes[logicalIndex]
+                                  : TrackType::AUDIO;
         bool isMuted = logicalIndex < static_cast<int>(props.muteStates.size())
                            ? props.muteStates[logicalIndex]
                            : false;

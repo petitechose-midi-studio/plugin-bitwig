@@ -233,7 +233,7 @@ public class DeviceController {
         // Controller view state changed - controls batch modulated values send
         protocol.onViewState = msg -> {
             if (deviceHost != null) {
-                deviceHost.setControllerViewState(msg.getViewType(), msg.getSelectorActive());
+                deviceHost.setControllerViewState(msg.getViewType().getValue(), msg.getSelectorActive());
             }
         };
 

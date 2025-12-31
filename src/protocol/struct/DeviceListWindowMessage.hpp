@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../DeviceType.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -34,7 +35,7 @@ struct Devices {
     uint8_t deviceIndex;
     std::string deviceName;
     bool isEnabled;
-    uint8_t deviceType;
+    DeviceType deviceType;
     std::array<uint8_t, 4> childrenTypes;
 };
 
@@ -92,7 +93,7 @@ struct DeviceListWindowMessage {
             encodeUint8(ptr, item.deviceIndex);
             encodeString(ptr, item.deviceName);
             encodeBool(ptr, item.isEnabled);
-            encodeUint8(ptr, item.deviceType);
+            encodeUint8(ptr, static_cast<uint8_t>(item.deviceType));
             encodeUint8(ptr, item.childrenTypes.size());
             for (const auto& type : item.childrenTypes) {
                 encodeUint8(ptr, type);
@@ -143,7 +144,9 @@ struct DeviceListWindowMessage {
             if (!decodeUint8(ptr, remaining, item.deviceIndex)) return std::nullopt;
             if (!decodeString(ptr, remaining, item.deviceName)) return std::nullopt;
             if (!decodeBool(ptr, remaining, item.isEnabled)) return std::nullopt;
-            if (!decodeUint8(ptr, remaining, item.deviceType)) return std::nullopt;
+            uint8_t deviceType_raw;
+            if (!decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
+            item.deviceType = static_cast<DeviceType>(deviceType_raw);
             uint8_t count_childrenTypes;
             if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
             for (uint8_t j = 0; j < count_childrenTypes && j < 4; ++j) {
@@ -180,7 +183,7 @@ struct DeviceListWindowMessage {
             ptr += snprintf(ptr, end - ptr, "    - deviceIndex: %lu\n", (unsigned long)devices[i].deviceIndex);
         ptr += snprintf(ptr, end - ptr, "      deviceName: \"%s\"\n", devices[i].deviceName.c_str());
         ptr += snprintf(ptr, end - ptr, "      isEnabled: %s\n", devices[i].isEnabled ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      deviceType: %lu\n", (unsigned long)devices[i].deviceType);
+        ptr += snprintf(ptr, end - ptr, "      deviceType: %d\n", static_cast<int>(devices[i].deviceType));
         ptr += snprintf(ptr, end - ptr, "      childrenTypes:");
         if (devices[i].childrenTypes.size() == 0) {
             ptr += snprintf(ptr, end - ptr, " []\n");

@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../TrackType.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -37,7 +38,7 @@ struct TrackChangeMessage {
     std::string trackName;
     uint32_t color;
     uint8_t trackIndex;
-    uint8_t trackType;
+    TrackType trackType;
     bool isActivated;
     bool isMute;
     bool isSolo;
@@ -79,7 +80,7 @@ struct TrackChangeMessage {
         encodeString(ptr, trackName);
         encodeUint32(ptr, color);
         encodeUint8(ptr, trackIndex);
-        encodeUint8(ptr, trackType);
+        encodeUint8(ptr, static_cast<uint8_t>(trackType));
         encodeBool(ptr, isActivated);
         encodeBool(ptr, isMute);
         encodeBool(ptr, isSolo);
@@ -122,8 +123,9 @@ struct TrackChangeMessage {
         if (!decodeUint32(ptr, remaining, color)) return std::nullopt;
         uint8_t trackIndex;
         if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
-        uint8_t trackType;
-        if (!decodeUint8(ptr, remaining, trackType)) return std::nullopt;
+        uint8_t trackType_raw;
+        if (!decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
+        TrackType trackType = static_cast<TrackType>(trackType_raw);
         bool isActivated;
         if (!decodeBool(ptr, remaining, isActivated)) return std::nullopt;
         bool isMute;
@@ -164,7 +166,7 @@ struct TrackChangeMessage {
         ptr += snprintf(ptr, end - ptr, "  trackName: \"%s\"\n", trackName.c_str());
         ptr += snprintf(ptr, end - ptr, "  color: %lu\n", (unsigned long)color);
         ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
-        ptr += snprintf(ptr, end - ptr, "  trackType: %lu\n", (unsigned long)trackType);
+        ptr += snprintf(ptr, end - ptr, "  trackType: %d\n", static_cast<int>(trackType));
         ptr += snprintf(ptr, end - ptr, "  isActivated: %s\n", isActivated ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "  isMute: %s\n", isMute ? "true" : "false");
         ptr += snprintf(ptr, end - ptr, "  isSolo: %s\n", isSolo ? "true" : "false");

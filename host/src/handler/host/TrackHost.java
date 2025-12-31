@@ -6,7 +6,7 @@ import protocol.struct.SendDestinationsListMessage;
 import protocol.struct.TrackListWindowMessage;
 import config.BitwigConfig;
 import util.ColorUtils;
-import util.TrackTypeUtils;
+import protocol.TrackType;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -423,7 +423,7 @@ public class TrackHost {
                     track.isMutedBySolo().get(),
                     track.arm().get(),
                     track.isGroup().get(),
-                    TrackTypeUtils.toInt(track.trackType().get()),
+                    TrackType.fromString(track.trackType().get()),
                     (float) track.volume().value().get(),
                     (float) track.pan().value().get()
                 ));
@@ -441,7 +441,7 @@ public class TrackHost {
         final String trackName = cursorTrack.name().get();
         final long trackColor = ColorUtils.toUint32Hex(cursorTrack.color().get());
         final int trackPosition = cursorTrack.position().get();
-        final int trackType = TrackTypeUtils.toInt(cursorTrack.trackType().get());
+        final TrackType trackType = TrackType.fromString(cursorTrack.trackType().get());
         final boolean isActivated = cursorTrack.isActivated().get();
         final boolean isMute = cursorTrack.mute().get();
         final boolean isSolo = cursorTrack.solo().get();

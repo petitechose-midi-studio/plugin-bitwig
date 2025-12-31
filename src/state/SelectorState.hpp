@@ -17,6 +17,8 @@
 #include <oc/state/SignalVector.hpp>
 
 #include "Constants.hpp"
+#include "protocol/DeviceType.hpp"
+#include "protocol/TrackType.hpp"
 
 namespace bitwig::state {
 
@@ -69,7 +71,7 @@ struct PageSelectorState {
 struct DeviceSelectorState {
     // Bulk-replaced lists (SignalVector) - accumulated cache for windowed loading
     SignalVector<std::string, MAX_DEVICES> names;
-    SignalVector<uint8_t, MAX_DEVICES> deviceTypes;
+    SignalVector<DeviceType, MAX_DEVICES> deviceTypes;
     SignalVector<bool, MAX_DEVICES> hasSlots;
     SignalVector<bool, MAX_DEVICES> hasLayers;
     SignalVector<bool, MAX_DEVICES> hasDrums;
@@ -129,7 +131,7 @@ struct DeviceSelectorState {
 struct TrackSelectorState {
     // Bulk-replaced lists (SignalVector) - accumulated cache for windowed loading
     SignalVector<std::string, MAX_TRACKS> names;
-    SignalVector<uint8_t, MAX_TRACKS> trackTypes;
+    SignalVector<TrackType, MAX_TRACKS> trackTypes;
     SignalVector<uint32_t, MAX_TRACKS> trackColors;
 
     // Per-element reactive state (updated individually by host)
@@ -170,12 +172,12 @@ struct TrackSelectorState {
 struct CurrentTrackState {
     SignalLabel name;
     Signal<uint32_t> color{0xFFFFFF};
-    Signal<TrackType> trackType{TrackType::UNKNOWN};
+    Signal<TrackType> trackType{TrackType::AUDIO};
 
     void reset() {
         name.set("");
         color.set(0xFFFFFF);
-        trackType.set(TrackType::UNKNOWN);
+        trackType.set(TrackType::AUDIO);
     }
 };
 

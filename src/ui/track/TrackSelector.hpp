@@ -12,6 +12,7 @@
 #include <oc/ui/lvgl/IComponent.hpp>
 #include <oc/ui/lvgl/widget/VirtualList.hpp>
 
+#include "protocol/TrackType.hpp"
 #include "ui/widget/BackButton.hpp"
 #include "ui/widget/HintBar.hpp"
 
@@ -26,7 +27,7 @@ struct TrackSelectorProps {
     std::vector<std::string> names;
     std::vector<bool> muteStates;
     std::vector<bool> soloStates;
-    std::vector<uint8_t> trackTypes;
+    std::vector<TrackType> trackTypes;
     std::vector<uint32_t> trackColors;
     int selectedIndex = 0;
     bool visible = false;

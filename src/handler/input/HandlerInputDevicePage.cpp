@@ -32,8 +32,7 @@ HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
 }
 
 void HandlerInputDevicePage::setupBindings() {
-    // === VIEW-LEVEL BINDINGS (scopeElement_) ===
-
+    // === VIEW-LEVEL BINDING ===
     // Open page selector (latch behavior for toggle)
     buttons_.button(ButtonID::LEFT_BOTTOM)
         .press()
@@ -41,13 +40,13 @@ void HandlerInputDevicePage::setupBindings() {
         .scope(scope(scopeElement_))
         .then([this]() { openSelector(); });
 
+    // === OVERLAY-LEVEL BINDINGS ===
+
     // Close and confirm on release (long press or second toggle press)
     buttons_.button(ButtonID::LEFT_BOTTOM)
         .release()
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayElement_))
         .then([this]() { closeSelector(); });
-
-    // === OVERLAY-LEVEL BINDINGS (overlayElement_) ===
 
     // Navigate pages (scoped to overlay - active while overlay visible)
     encoders_.encoder(EncoderID::NAV)

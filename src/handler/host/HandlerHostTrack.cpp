@@ -21,7 +21,7 @@ void HandlerHostTrack::setupProtocolCallbacks() {
     protocol_.onTrackChange = [this](const TrackChangeMessage& msg) {
         state_.currentTrack.name.set(msg.trackName.c_str());
         state_.currentTrack.color.set(msg.color);
-        state_.currentTrack.trackType.set(static_cast<state::TrackType>(msg.trackType));
+        state_.currentTrack.trackType.set(msg.trackType);
     };
 
     // Windowed track list (accumulates in cache)
@@ -66,7 +66,7 @@ void HandlerHostTrack::setupProtocolCallbacks() {
         // Add back button if nested and this is first window
         if (msg.isNested && startIdx == 0) {
             state_.trackSelector.names.setAt(0, BACK_TO_PARENT);
-            state_.trackSelector.trackTypes.setAt(0, 0);
+            state_.trackSelector.trackTypes.setAt(0, TrackType::AUDIO);
             state_.trackSelector.trackColors.setAt(0, 0xFFFFFF);
             state_.trackSelector.muteStates[0].set(false);
             state_.trackSelector.soloStates[0].set(false);

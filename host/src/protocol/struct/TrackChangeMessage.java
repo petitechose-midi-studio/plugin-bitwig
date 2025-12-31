@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.TrackType;
 
 /**
  * TrackChangeMessage - Auto-generated Protocol Message
@@ -36,7 +37,7 @@ public final class TrackChangeMessage {
     private final String trackName;
     private final long color;
     private final int trackIndex;
-    private final int trackType;
+    private final TrackType trackType;
     private final boolean isActivated;
     private final boolean isMute;
     private final boolean isSolo;
@@ -68,7 +69,7 @@ public final class TrackChangeMessage {
      * @param pan The pan value
      * @param panDisplay The panDisplay value
      */
-    public TrackChangeMessage(String trackName, long color, int trackIndex, int trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
+    public TrackChangeMessage(String trackName, long color, int trackIndex, TrackType trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
         this.trackName = trackName;
         this.color = color;
         this.trackIndex = trackIndex;
@@ -120,7 +121,7 @@ public final class TrackChangeMessage {
      *
      * @return trackType
      */
-    public int getTrackType() {
+    public TrackType getTrackType() {
         return trackType;
     }
 
@@ -233,7 +234,7 @@ public final class TrackChangeMessage {
         offset += Encoder.writeString(buffer, offset, trackName, ProtocolConstants.STRING_MAX_LENGTH);
         offset += Encoder.writeUint32(buffer, offset, color);
         offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeUint8(buffer, offset, trackType);
+        offset += Encoder.writeUint8(buffer, offset, trackType.getValue());
         offset += Encoder.writeBool(buffer, offset, isActivated);
         offset += Encoder.writeBool(buffer, offset, isMute);
         offset += Encoder.writeBool(buffer, offset, isSolo);
@@ -280,8 +281,9 @@ public final class TrackChangeMessage {
         offset += 4;
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
-        int trackType = Decoder.decodeUint8(data, offset);
+        TrackType trackType = TrackType.fromValue(Decoder.decodeUint8(data, offset));
         offset += 1;
+
         boolean isActivated = Decoder.decodeBool(data, offset);
         offset += 1;
         boolean isMute = Decoder.decodeBool(data, offset);
@@ -333,7 +335,7 @@ public final class TrackChangeMessage {
         sb.append("  trackName: \"").append(getTrackName()).append("\"\n");
         sb.append("  color: ").append(getColor()).append("\n");
         sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  trackType: ").append(getTrackType()).append("\n");
+        sb.append("  trackType: ").append(getTrackType().ordinal()).append("\n");
         sb.append("  isActivated: ").append(isActivated() ? "true" : "false").append("\n");
         sb.append("  isMute: ").append(isMute() ? "true" : "false").append("\n");
         sb.append("  isSolo: ").append(isSolo() ? "true" : "false").append("\n");

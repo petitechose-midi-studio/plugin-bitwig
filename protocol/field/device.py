@@ -1,6 +1,8 @@
-from protocol_codegen.core.field import PrimitiveField, CompositeField, Type
+from protocol_codegen.core.field import PrimitiveField, CompositeField, EnumField, Type
 from field.parameter import *  # Import generic parameter fields
 from field.color import color_rgb
+from enums.device import DeviceType
+from enums.navigation import ChildType, ViewType
 
 # ============================================================================
 # DEVICE REMOTE CONTROLS FIELDS
@@ -13,7 +15,7 @@ remote_control_index = PrimitiveField('remoteControlIndex', type_name=Type.UINT8
 # Device context fields
 device_state = PrimitiveField('isEnabled', type_name=Type.BOOL)
 device_name = PrimitiveField('deviceName', type_name=Type.STRING)
-device_type = PrimitiveField('deviceType', type_name=Type.UINT8)
+device_type = EnumField('deviceType', enum_def=DeviceType)
 device_track_name = PrimitiveField('deviceTrackName', type_name=Type.STRING)
 device_track_color = color_rgb  # Track color as uint32 RGB hex (0xRRGGBB)
 device_page_index = PrimitiveField('devicePageIndex', type_name=Type.UINT8)
@@ -26,10 +28,10 @@ device_page_name = PrimitiveField('devicePageName', type_name=Type.STRING)
 # RemoteControl = index (0-7) + parameter fields (generic)
 # Aligned with Bitwig API: RemoteControl extends Parameter
 #
-# parameterType interpretation (from parameter.py):
-# - 0: Knob (continuous or unrecognized discrete)
-# - 1: Button (discreteCount == 2 AND values are On/Off)
-# - 2: List (discreteCount > 2)
+# parameterType uses ParameterType enum (from enum/device.py):
+# - KNOB (0): Continuous parameter or unrecognized discrete
+# - BUTTON (1): discreteCount == 2 AND values are On/Off
+# - LIST (2): discreteCount > 2
 
 remote_control = [
     remote_control_index,               # Remote control slot index (0-7)
@@ -110,8 +112,8 @@ children_count = PrimitiveField('childrenCount', type_name=Type.UINT8)
 device_is_nested = PrimitiveField('isNested', type_name=Type.BOOL)
 parent_name = PrimitiveField('parentName', type_name=Type.STRING)
 
-# Child type enum: 1=Slot, 2=Layer, 3=DrumPad
-child_type = PrimitiveField('childType', type_name=Type.UINT8)
+# Child type enum (ChildType bitflags: SLOTS=1, LAYERS=2, DRUMS=4)
+child_type = EnumField('childType', enum_def=ChildType)
 
 # Array of available child types (max 4: S, L, D, + 1 reserved)
 # Example: [1, 2, 0, 0] = has Slots AND Layers
@@ -171,8 +173,8 @@ children_list = CompositeField('children', fields=child_info, array=16)
 # Used to inform host about controller's active view state
 # Host uses this to control batch sends (only send when RemoteControls visible)
 
-# View type enum: 0=REMOTE_CONTROLS, 1=MIX, 2=CLIP
-view_type = PrimitiveField('viewType', type_name=Type.UINT8)
+# View type enum (ViewType: REMOTE_CONTROLS=0, MIX=1, CLIP=2)
+view_type = EnumField('viewType', enum_def=ViewType)
 
 # Whether a selector/overlay is currently active (device selector, page selector, etc.)
 selector_active = PrimitiveField('selectorActive', type_name=Type.BOOL)

@@ -30,7 +30,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
                            msg.childrenTypes[2] | msg.childrenTypes[3]) != 0;
 
         state_.device.name.set(msg.deviceName.c_str());
-        state_.device.deviceType.set(static_cast<state::DeviceType>(msg.deviceType));
+        state_.device.deviceType.set(msg.deviceType);
         state_.device.enabled.set(msg.isEnabled);
         state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
         state_.device.hasChildren.set(hasChildren);
@@ -104,18 +104,15 @@ void HandlerHostDevice::setupProtocolCallbacks() {
             state_.deviceSelector.deviceStates[displayIdx].set(dev.isEnabled);
 
             uint8_t flags = getChildTypeFlags(dev.childrenTypes);
-            state_.deviceSelector.hasSlots.setAt(displayIdx,
-                (flags & static_cast<uint8_t>(ChildType::SLOTS)) != 0);
-            state_.deviceSelector.hasLayers.setAt(displayIdx,
-                (flags & static_cast<uint8_t>(ChildType::LAYERS)) != 0);
-            state_.deviceSelector.hasDrums.setAt(displayIdx,
-                (flags & static_cast<uint8_t>(ChildType::DRUMS)) != 0);
+            state_.deviceSelector.hasSlots.setAt(displayIdx, (flags & CHILD_TYPE_SLOTS) != 0);
+            state_.deviceSelector.hasLayers.setAt(displayIdx, (flags & CHILD_TYPE_LAYERS) != 0);
+            state_.deviceSelector.hasDrums.setAt(displayIdx, (flags & CHILD_TYPE_DRUMS) != 0);
         }
 
         // Add back button if nested and this is first window
         if (msg.isNested && startIdx == 0) {
             state_.deviceSelector.names.setAt(0, BACK_TO_PARENT);
-            state_.deviceSelector.deviceTypes.setAt(0, 0);
+            state_.deviceSelector.deviceTypes.setAt(0, DeviceType::UNKNOWN);
             state_.deviceSelector.deviceStates[0].set(false);
             state_.deviceSelector.hasSlots.setAt(0, false);
             state_.deviceSelector.hasLayers.setAt(0, false);
@@ -153,9 +150,7 @@ void HandlerHostDevice::setupProtocolCallbacks() {
             msg.deviceIndex < startIdx + LIST_WINDOW_SIZE) {
             uint8_t localIdx = msg.deviceIndex - startIdx;
             uint8_t flags = getChildTypeFlags(msg.devices[localIdx].childrenTypes);
-            bool hasChildren = (flags & (static_cast<uint8_t>(ChildType::SLOTS) |
-                                         static_cast<uint8_t>(ChildType::LAYERS) |
-                                         static_cast<uint8_t>(ChildType::DRUMS))) != 0;
+            bool hasChildren = (flags & (CHILD_TYPE_SLOTS | CHILD_TYPE_LAYERS | CHILD_TYPE_DRUMS)) != 0;
             state_.device.hasChildren.set(hasChildren);
         }
     };

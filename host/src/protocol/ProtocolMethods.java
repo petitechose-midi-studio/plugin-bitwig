@@ -15,6 +15,10 @@ package protocol;
 
 import java.util.function.Consumer;
 import protocol.struct.*;
+import protocol.DeviceType;
+import protocol.ParameterType;
+import protocol.TrackType;
+import protocol.ViewType;
 
 /**
  * Explicit protocol methods base class
@@ -78,7 +82,7 @@ public abstract class ProtocolMethods {
         send(new DeviceChangeMessage(deviceTrackName, deviceName, isEnabled, pageInfo, remoteControls));
     }
 
-    public void deviceChangeHeader(String deviceName, boolean isEnabled, int deviceType, DeviceChangeHeaderMessage.PageInfo pageInfo, int[] childrenTypes) {
+    public void deviceChangeHeader(String deviceName, boolean isEnabled, DeviceType deviceType, DeviceChangeHeaderMessage.PageInfo pageInfo, int[] childrenTypes) {
         send(new DeviceChangeHeaderMessage(deviceName, isEnabled, deviceType, pageInfo, childrenTypes));
     }
 
@@ -126,7 +130,7 @@ public abstract class ProtocolMethods {
         send(new DeviceRemoteControlOriginChangeMessage(remoteControlIndex, parameterOrigin));
     }
 
-    public void deviceRemoteControlUpdate(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
+    public void deviceRemoteControlUpdate(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, ParameterType parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
         send(new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue));
     }
 
@@ -134,7 +138,7 @@ public abstract class ProtocolMethods {
         send(new RemoteControlValueStateMessage(remoteControlIndex, parameterValue, displayValue));
     }
 
-    public void lastClickedUpdate(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex) {
+    public void lastClickedUpdate(String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, ParameterType parameterType, short discreteValueCount, int currentValueIndex) {
         send(new LastClickedUpdateMessage(parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex));
     }
 
@@ -158,7 +162,7 @@ public abstract class ProtocolMethods {
         send(new TrackArmStateMessage(trackIndex, isArm));
     }
 
-    public void trackChange(String trackName, long color, int trackIndex, int trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
+    public void trackChange(String trackName, long color, int trackIndex, TrackType trackType, boolean isActivated, boolean isMute, boolean isSolo, boolean isMutedBySolo, boolean isArm, float volume, String volumeDisplay, float pan, String panDisplay) {
         send(new TrackChangeMessage(trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay));
     }
 

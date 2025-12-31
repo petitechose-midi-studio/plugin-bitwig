@@ -220,8 +220,7 @@ void BitwigContext::createInputHandlers() {
 }
 
 void BitwigContext::createViews() {
-    using state::ViewType;
-
+    // ViewType is in global scope from protocol/ViewType.hpp
     viewContainer_ = std::make_unique<ViewContainer>(lv_screen_active());
     lv_obj_t* mainZone = viewContainer_->getMainZone();
 

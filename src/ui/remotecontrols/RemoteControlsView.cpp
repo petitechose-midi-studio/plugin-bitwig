@@ -126,7 +126,7 @@ void RemoteControlsView::setupBindings() {
 
         // Type change triggers widget creation/recreation (IMMEDIATE via bind)
         // Must execute before value/name signals to ensure correct widget type
-        bind(subs_).on(slot.type, [this, i](bitwig::state::ParameterType) {
+        bind(subs_).on(slot.type, [this, i](ParameterType) {
             ensureWidgetForType(i);
             markParameterDirty(i);
         });
@@ -195,7 +195,7 @@ void RemoteControlsView::updateDeviceInfo() {
     OC_LOG_DEBUG("[RemoteControlsView] >> updateDeviceInfo()");
     top_bar_component_->render({
         .deviceName = state_.device.name.get(),
-        .deviceType = static_cast<uint8_t>(state_.device.deviceType.get()),
+        .deviceType = state_.device.deviceType.get(),
         .deviceEnabled = state_.device.enabled.get(),
         .deviceHasChildren = state_.device.hasChildren.get(),
         .pageName = state_.device.pageName.get()
@@ -225,18 +225,18 @@ void RemoteControlsView::ensureWidgetForType(uint8_t index) {
     widgetTypes_[index] = type;  // Track the new type
 
     switch (type) {
-        case bitwig::state::ParameterType::BUTTON:
+        case ParameterType::BUTTON:
             widgets_[index] = std::make_unique<ParameterButtonWidget>(
                 body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index);
             break;
 
-        case bitwig::state::ParameterType::LIST:
+        case ParameterType::LIST:
             widgets_[index] = std::make_unique<ParameterListWidget>(
                 body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index,
                 slot.discreteCount.get());
             break;
 
-        case bitwig::state::ParameterType::KNOB:
+        case ParameterType::KNOB:
         default: {
             float origin = slot.origin.get();
             bool is_centered = (origin == 0.5f);
@@ -280,7 +280,7 @@ void RemoteControlsView::updateParameter(uint8_t index) {
     widgets_[index]->setHasAutomation(slot.hasAutomation.get());
 
     // Update origin, modulated value, and modulation state for knob widgets
-    if (type == bitwig::state::ParameterType::KNOB) {
+    if (type == ParameterType::KNOB) {
         auto* knob = static_cast<ParameterKnobWidget*>(widgets_[index].get());
         knob->setOrigin(slot.origin.get());
         knob->setIsModulated(slot.isModulated.get());  // Controls ribbon visibility
@@ -290,8 +290,7 @@ void RemoteControlsView::updateParameter(uint8_t index) {
 
     // Update discrete metadata for button/list widgets
     // Uses static_cast as all widgets inherit from BaseParameterWidget
-    if (type == bitwig::state::ParameterType::BUTTON ||
-        type == bitwig::state::ParameterType::LIST) {
+    if (type == ParameterType::BUTTON || type == ParameterType::LIST) {
         static_cast<BaseParameterWidget*>(widgets_[index].get())->setDiscreteMetadata(
             slot.discreteCount.get(), slot.discreteValues.toVector(), slot.currentValueIndex.get());
     }
@@ -352,7 +351,7 @@ void RemoteControlsView::updateDeviceSelector() {
         .childrenTypes = state_.deviceSelector.childrenTypes,
         .trackName = state_.currentTrack.name.get(),
         .trackColor = state_.currentTrack.color.get(),
-        .trackType = static_cast<uint8_t>(state_.currentTrack.trackType.get()),
+        .trackType = state_.currentTrack.trackType.get(),
         .selectedIndex = state_.deviceSelector.currentIndex.get(),
         .totalCount = state_.deviceSelector.totalCount.get(),
         .isNested = state_.deviceSelector.isNested.get(),

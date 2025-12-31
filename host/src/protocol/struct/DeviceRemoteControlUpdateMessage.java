@@ -4,6 +4,7 @@ import protocol.MessageID;
 import protocol.Encoder;
 import protocol.Decoder;
 import protocol.ProtocolConstants;
+import protocol.ParameterType;
 
 /**
  * DeviceRemoteControlUpdateMessage - Auto-generated Protocol Message
@@ -39,7 +40,7 @@ public final class DeviceRemoteControlUpdateMessage {
     private final String displayValue;
     private final float parameterOrigin;
     private final boolean parameterExists;
-    private final int parameterType;
+    private final ParameterType parameterType;
     private final short discreteValueCount;
     private final int currentValueIndex;
     private final boolean hasAutomation;
@@ -64,7 +65,7 @@ public final class DeviceRemoteControlUpdateMessage {
      * @param hasAutomation The hasAutomation value
      * @param modulatedValue The modulatedValue value
      */
-    public DeviceRemoteControlUpdateMessage(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, int parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
+    public DeviceRemoteControlUpdateMessage(int remoteControlIndex, String parameterName, float parameterValue, String displayValue, float parameterOrigin, boolean parameterExists, ParameterType parameterType, short discreteValueCount, int currentValueIndex, boolean hasAutomation, float modulatedValue) {
         this.remoteControlIndex = remoteControlIndex;
         this.parameterName = parameterName;
         this.parameterValue = parameterValue;
@@ -141,7 +142,7 @@ public final class DeviceRemoteControlUpdateMessage {
      *
      * @return parameterType
      */
-    public int getParameterType() {
+    public ParameterType getParameterType() {
         return parameterType;
     }
 
@@ -212,7 +213,7 @@ public final class DeviceRemoteControlUpdateMessage {
         offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
         offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
         offset += Encoder.writeBool(buffer, offset, parameterExists);
-        offset += Encoder.writeUint8(buffer, offset, parameterType);
+        offset += Encoder.writeUint8(buffer, offset, parameterType.getValue());
         offset += Encoder.writeInt16(buffer, offset, discreteValueCount);
         offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
         offset += Encoder.writeBool(buffer, offset, hasAutomation);
@@ -260,8 +261,9 @@ public final class DeviceRemoteControlUpdateMessage {
         offset += 4;
         boolean parameterExists = Decoder.decodeBool(data, offset);
         offset += 1;
-        int parameterType = Decoder.decodeUint8(data, offset);
+        ParameterType parameterType = ParameterType.fromValue(Decoder.decodeUint8(data, offset));
         offset += 1;
+
         short discreteValueCount = Decoder.decodeInt16(data, offset);
         offset += 2;
         int currentValueIndex = Decoder.decodeUint8(data, offset);
@@ -306,7 +308,7 @@ public final class DeviceRemoteControlUpdateMessage {
         sb.append("  displayValue: \"").append(getDisplayValue()).append("\"\n");
         sb.append("  parameterOrigin: ").append(formatFloat(getParameterOrigin())).append("\n");
         sb.append("  parameterExists: ").append(getParameterExists() ? "true" : "false").append("\n");
-        sb.append("  parameterType: ").append(getParameterType()).append("\n");
+        sb.append("  parameterType: ").append(getParameterType().ordinal()).append("\n");
         sb.append("  discreteValueCount: ").append(getDiscreteValueCount()).append("\n");
         sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
         sb.append("  hasAutomation: ").append(getHasAutomation() ? "true" : "false").append("\n");

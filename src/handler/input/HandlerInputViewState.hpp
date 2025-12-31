@@ -16,6 +16,7 @@
 #include <oc/state/Signal.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
+#include "protocol/ViewType.hpp"
 #include "state/BitwigState.hpp"
 
 namespace bitwig::handler {
@@ -42,7 +43,7 @@ private:
     BitwigProtocol& protocol_;
 
     // Track current state to avoid duplicate sends
-    state::ViewType lastViewType_ = state::ViewType::REMOTE_CONTROLS;
+    ViewType lastViewType_ = ViewType::REMOTE_CONTROLS;
     bool lastSelectorActive_ = false;
 
     // Subscriptions

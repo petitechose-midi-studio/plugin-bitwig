@@ -34,7 +34,7 @@ void HandlerHostLastClicked::handleLastClickedUpdate(const LastClickedUpdateMess
     lc.name.set(std::string(msg.parameterName.data()));
     lc.value.set(msg.parameterValue);
     lc.displayValue.set(std::string(msg.displayValue.data()));
-    lc.parameterType.set(static_cast<state::ParameterType>(msg.parameterType));
+    lc.parameterType.set(msg.parameterType);
     lc.discreteCount.set(msg.discreteValueCount);
     lc.exists.set(msg.parameterExists);
 

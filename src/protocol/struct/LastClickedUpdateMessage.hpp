@@ -18,6 +18,7 @@
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
 #include "../Logger.hpp"
+#include "../ParameterType.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -39,7 +40,7 @@ struct LastClickedUpdateMessage {
     std::string displayValue;
     float parameterOrigin;
     bool parameterExists;
-    uint8_t parameterType;
+    ParameterType parameterType;
     int16_t discreteValueCount;
     uint8_t currentValueIndex;
 
@@ -76,7 +77,7 @@ struct LastClickedUpdateMessage {
         encodeString(ptr, displayValue);
         encodeFloat32(ptr, parameterOrigin);
         encodeBool(ptr, parameterExists);
-        encodeUint8(ptr, parameterType);
+        encodeUint8(ptr, static_cast<uint8_t>(parameterType));
         encodeInt16(ptr, discreteValueCount);
         encodeUint8(ptr, currentValueIndex);
 
@@ -116,8 +117,9 @@ struct LastClickedUpdateMessage {
         if (!decodeFloat32(ptr, remaining, parameterOrigin)) return std::nullopt;
         bool parameterExists;
         if (!decodeBool(ptr, remaining, parameterExists)) return std::nullopt;
-        uint8_t parameterType;
-        if (!decodeUint8(ptr, remaining, parameterType)) return std::nullopt;
+        uint8_t parameterType_raw;
+        if (!decodeUint8(ptr, remaining, parameterType_raw)) return std::nullopt;
+        ParameterType parameterType = static_cast<ParameterType>(parameterType_raw);
         int16_t discreteValueCount;
         if (!decodeInt16(ptr, remaining, discreteValueCount)) return std::nullopt;
         uint8_t currentValueIndex;
@@ -154,7 +156,7 @@ struct LastClickedUpdateMessage {
             ptr += snprintf(ptr, end - ptr, "  parameterOrigin: %s\n", floatBuf_parameterOrigin);
         }
         ptr += snprintf(ptr, end - ptr, "  parameterExists: %s\n", parameterExists ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  parameterType: %lu\n", (unsigned long)parameterType);
+        ptr += snprintf(ptr, end - ptr, "  parameterType: %d\n", static_cast<int>(parameterType));
         ptr += snprintf(ptr, end - ptr, "  discreteValueCount: %ld\n", (long)discreteValueCount);
         ptr += snprintf(ptr, end - ptr, "  currentValueIndex: %lu\n", (unsigned long)currentValueIndex);
 

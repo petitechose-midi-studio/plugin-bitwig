@@ -24,7 +24,7 @@ void HandlerHostRemoteControl::setupProtocolCallbacks() {
 
         auto& slot = state_.parameters.slots[msg.remoteControlIndex];
 
-        slot.type.set(static_cast<state::ParameterType>(msg.parameterType));
+        slot.type.set(msg.parameterType);
         slot.discreteCount.set(msg.discreteValueCount);
         slot.currentValueIndex.set(msg.currentValueIndex);
         slot.origin.set(msg.parameterOrigin);

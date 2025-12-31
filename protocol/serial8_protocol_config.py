@@ -19,5 +19,6 @@ PROTOCOL_CONFIG = Serial8Config(
         array_max_items=32,      # Match SysEx config
         max_payload_size=10000,  # Match SysEx config
         max_message_size=16000,  # Match SysEx config
+        include_message_name=True,  # Include MESSAGE_NAME prefix for bridge logging
     ),
 )
