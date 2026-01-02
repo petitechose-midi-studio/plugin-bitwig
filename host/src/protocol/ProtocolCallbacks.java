@@ -8,7 +8,6 @@ import protocol.struct.*;
  * AUTO-GENERATED - DO NOT EDIT
  *
  * Base class providing typed callbacks for each message type.
- * Extends ProtocolMethods for explicit send API.
  * Protocol extends this and DecoderRegistry calls these callbacks.
  *
  * Inheritance: ProtocolMethods -> ProtocolCallbacks -> Protocol
