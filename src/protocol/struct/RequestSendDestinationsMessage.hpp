@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -57,7 +56,7 @@ struct RequestSendDestinationsMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
@@ -66,46 +65,19 @@ struct RequestSendDestinationsMessage {
     }
 
     /**
-     * Decode struct from MIDI-safe bytes (message name only, no fields)
-     *
-     * @param data Input buffer with encoded data
-     * @param len Length of input buffer
-     * @return Decoded struct, or std::nullopt if invalid/insufficient data
+     * Decode struct from MIDI-safe bytes (empty message with name prefix)
+     * @return Always returns empty struct after skipping name prefix
      */
     static std::optional<RequestSendDestinationsMessage> decode(const uint8_t* data, uint16_t len) {
         if (len < MIN_PAYLOAD_SIZE) return std::nullopt;
-
         const uint8_t* ptr = data;
         size_t remaining = len;
-
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
-
         return RequestSendDestinationsMessage{};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# RequestSendDestinations\nrequestSendDestinations:\n");
-
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

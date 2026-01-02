@@ -148,7 +148,7 @@ public final class TrackSendListMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 897;
 
@@ -162,25 +162,25 @@ public final class TrackSendListMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeUint8(buffer, offset, sendCount);
-        offset += Encoder.writeUint8(buffer, offset, sends.length);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeUint8(buffer, offset, sendCount);
+        offset += Encoder.encodeUint8(buffer, offset, sends.length);
 
         for (Sends item : sends) {
-            offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
-            offset += Encoder.writeString(buffer, offset, item.getSendName(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeUint32(buffer, offset, item.getColor());
-            offset += Encoder.writeFloat32(buffer, offset, item.getSendValue());
-            offset += Encoder.writeString(buffer, offset, item.getSendDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeBool(buffer, offset, item.getSendIsEnabled());
-            offset += Encoder.writeString(buffer, offset, item.getSendMode(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeBool(buffer, offset, item.getSendIsPreFader());
+            offset += Encoder.encodeUint8(buffer, offset, item.getSendIndex());
+            offset += Encoder.encodeString(buffer, offset, item.getSendName());
+            offset += Encoder.encodeUint32(buffer, offset, item.getColor());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getSendValue());
+            offset += Encoder.encodeString(buffer, offset, item.getSendDisplayValue());
+            offset += Encoder.encodeBool(buffer, offset, item.getSendIsEnabled());
+            offset += Encoder.encodeString(buffer, offset, item.getSendMode());
+            offset += Encoder.encodeBool(buffer, offset, item.getSendIsPreFader());
         }
 
 
@@ -194,7 +194,7 @@ public final class TrackSendListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 129;
+    private static final int MIN_PAYLOAD_SIZE = 17;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -210,9 +210,9 @@ public final class TrackSendListMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -246,45 +246,4 @@ public final class TrackSendListMessage {
         return new TrackSendListMessage(trackIndex, sendCount, sends);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackSendList\n");
-        sb.append("trackSendList:\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  sendCount: ").append(getSendCount()).append("\n");
-        sb.append("  sends:\n");
-        for (Sends item : getSends()) {
-            sb.append("    - sendIndex: ").append(item.getSendIndex()).append("\n");
-            sb.append("      sendName: \"").append(item.getSendName()).append("\"\n");
-            sb.append("      color: ").append(item.getColor()).append("\n");
-            sb.append("      sendValue: ").append(formatFloat(item.getSendValue())).append("\n");
-            sb.append("      sendDisplayValue: \"").append(item.getSendDisplayValue()).append("\"\n");
-            sb.append("      sendIsEnabled: ").append(item.getSendIsEnabled() ? "true" : "false").append("\n");
-            sb.append("      sendMode: \"").append(item.getSendMode()).append("\"\n");
-            sb.append("      sendIsPreFader: ").append(item.getSendIsPreFader() ? "true" : "false").append("\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

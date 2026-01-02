@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../ParameterType.hpp"
 #include <array>
 #include <cstdint>
@@ -94,32 +93,32 @@ struct DevicePageChangeMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, pageInfo.devicePageIndex);
-        encodeUint8(ptr, pageInfo.devicePageCount);
-        encodeString(ptr, pageInfo.devicePageName);
-        encodeUint8(ptr, remoteControls.size());
+        Encoder::encodeUint8(ptr, pageInfo.devicePageIndex);
+        Encoder::encodeUint8(ptr, pageInfo.devicePageCount);
+        Encoder::encodeString(ptr, pageInfo.devicePageName);
+        Encoder::encodeUint8(ptr, remoteControls.size());
         for (const auto& item : remoteControls) {
-            encodeUint8(ptr, item.remoteControlIndex);
-            encodeFloat32(ptr, item.parameterValue);
-            encodeString(ptr, item.parameterName);
-            encodeFloat32(ptr, item.parameterOrigin);
-            encodeBool(ptr, item.parameterExists);
-            encodeInt16(ptr, item.discreteValueCount);
-            encodeString(ptr, item.displayValue);
-            encodeUint8(ptr, static_cast<uint8_t>(item.parameterType));
-            encodeUint8(ptr, item.discreteValueNames.size());
+            Encoder::encodeUint8(ptr, item.remoteControlIndex);
+            Encoder::encodeFloat32(ptr, item.parameterValue);
+            Encoder::encodeString(ptr, item.parameterName);
+            Encoder::encodeFloat32(ptr, item.parameterOrigin);
+            Encoder::encodeBool(ptr, item.parameterExists);
+            Encoder::encodeInt16(ptr, item.discreteValueCount);
+            Encoder::encodeString(ptr, item.displayValue);
+            Encoder::encodeUint8(ptr, static_cast<uint8_t>(item.parameterType));
+            Encoder::encodeUint8(ptr, item.discreteValueNames.size());
             for (const auto& type : item.discreteValueNames) {
-                encodeString(ptr, type);
+                Encoder::encodeString(ptr, type);
             }
-            encodeUint8(ptr, item.currentValueIndex);
-            encodeBool(ptr, item.hasAutomation);
-            encodeFloat32(ptr, item.modulatedValue);
-            encodeBool(ptr, item.isModulated);
+            Encoder::encodeUint8(ptr, item.currentValueIndex);
+            Encoder::encodeBool(ptr, item.hasAutomation);
+            Encoder::encodeFloat32(ptr, item.modulatedValue);
+            Encoder::encodeBool(ptr, item.isModulated);
         }
 
         return ptr - buffer;
@@ -140,108 +139,47 @@ struct DevicePageChangeMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         PageInfo pageInfo_data;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
-        if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
         uint8_t count_remoteControls;
-        if (!decodeUint8(ptr, remaining, count_remoteControls)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_remoteControls)) return std::nullopt;
         std::array<RemoteControls, 8> remoteControls_data;
         for (uint8_t i = 0; i < count_remoteControls && i < 8; ++i) {
             RemoteControls item;
-            if (!decodeUint8(ptr, remaining, item.remoteControlIndex)) return std::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.parameterValue)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.parameterName)) return std::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.parameterOrigin)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.parameterExists)) return std::nullopt;
-            if (!decodeInt16(ptr, remaining, item.discreteValueCount)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.displayValue)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.remoteControlIndex)) return std::nullopt;
+            if (!Decoder::decodeFloat32(ptr, remaining, item.parameterValue)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.parameterName)) return std::nullopt;
+            if (!Decoder::decodeFloat32(ptr, remaining, item.parameterOrigin)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.parameterExists)) return std::nullopt;
+            if (!Decoder::decodeInt16(ptr, remaining, item.discreteValueCount)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.displayValue)) return std::nullopt;
             uint8_t parameterType_raw;
-            if (!decodeUint8(ptr, remaining, parameterType_raw)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, parameterType_raw)) return std::nullopt;
             item.parameterType = static_cast<ParameterType>(parameterType_raw);
             uint8_t count_discreteValueNames;
-            if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
             for (uint8_t j = 0; j < count_discreteValueNames && j < 32; ++j) {
                 std::string temp_discreteValueNames;
-                if (!decodeString(ptr, remaining, temp_discreteValueNames)) return std::nullopt;
+                if (!Decoder::decodeString(ptr, remaining, temp_discreteValueNames)) return std::nullopt;
                 item.discreteValueNames.push_back(temp_discreteValueNames);
             }
-            if (!decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.hasAutomation)) return std::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.modulatedValue)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isModulated)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.currentValueIndex)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.hasAutomation)) return std::nullopt;
+            if (!Decoder::decodeFloat32(ptr, remaining, item.modulatedValue)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isModulated)) return std::nullopt;
             remoteControls_data[i] = item;
         }
 
         return DevicePageChangeMessage{pageInfo_data, remoteControls_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DevicePageChange\ndevicePageChange:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  pageInfo:\n");
-        ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
-        ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);
-        ptr += snprintf(ptr, end - ptr, "    devicePageName: \"%s\"\n", pageInfo.devicePageName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  remoteControls:\n");
-        for (size_t i = 0; i < remoteControls.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - remoteControlIndex: %lu\n", (unsigned long)remoteControls[i].remoteControlIndex);
-        {
-            char floatBuf_remoteControls_i_parameterValue[16];
-            floatToString(floatBuf_remoteControls_i_parameterValue, sizeof(floatBuf_remoteControls_i_parameterValue), remoteControls[i].parameterValue);
-            ptr += snprintf(ptr, end - ptr, "      parameterValue: %s\n", floatBuf_remoteControls_i_parameterValue);
-        }
-        ptr += snprintf(ptr, end - ptr, "      parameterName: \"%s\"\n", remoteControls[i].parameterName.c_str());
-        {
-            char floatBuf_remoteControls_i_parameterOrigin[16];
-            floatToString(floatBuf_remoteControls_i_parameterOrigin, sizeof(floatBuf_remoteControls_i_parameterOrigin), remoteControls[i].parameterOrigin);
-            ptr += snprintf(ptr, end - ptr, "      parameterOrigin: %s\n", floatBuf_remoteControls_i_parameterOrigin);
-        }
-        ptr += snprintf(ptr, end - ptr, "      parameterExists: %s\n", remoteControls[i].parameterExists ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      discreteValueCount: %ld\n", (long)remoteControls[i].discreteValueCount);
-        ptr += snprintf(ptr, end - ptr, "      displayValue: \"%s\"\n", remoteControls[i].displayValue.c_str());
-        ptr += snprintf(ptr, end - ptr, "      parameterType: %d\n", static_cast<int>(remoteControls[i].parameterType));
-        ptr += snprintf(ptr, end - ptr, "      discreteValueNames:");
-        if (remoteControls[i].discreteValueNames.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t j = 0; j < remoteControls[i].discreteValueNames.size(); ++j) {
-                ptr += snprintf(ptr, end - ptr, "        - \"%s\"\n", remoteControls[i].discreteValueNames[j].c_str());
-            }
-        }
-        ptr += snprintf(ptr, end - ptr, "      currentValueIndex: %lu\n", (unsigned long)remoteControls[i].currentValueIndex);
-        ptr += snprintf(ptr, end - ptr, "      hasAutomation: %s\n", remoteControls[i].hasAutomation ? "true" : "false");
-        {
-            char floatBuf_remoteControls_i_modulatedValue[16];
-            floatToString(floatBuf_remoteControls_i_modulatedValue, sizeof(floatBuf_remoteControls_i_modulatedValue), remoteControls[i].modulatedValue);
-            ptr += snprintf(ptr, end - ptr, "      modulatedValue: %s\n", floatBuf_remoteControls_i_modulatedValue);
-        }
-        ptr += snprintf(ptr, end - ptr, "      isModulated: %s\n", remoteControls[i].isModulated ? "true" : "false");
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

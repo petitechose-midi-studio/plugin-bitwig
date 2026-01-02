@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -70,16 +69,16 @@ struct SendDestinationsListMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, sendCount);
-        encodeUint8(ptr, sendDestinations.size());
+        Encoder::encodeUint8(ptr, sendCount);
+        Encoder::encodeUint8(ptr, sendDestinations.size());
         for (const auto& item : sendDestinations) {
-            encodeUint8(ptr, item.sendIndex);
-            encodeString(ptr, item.sendDestinationName);
+            Encoder::encodeUint8(ptr, item.sendIndex);
+            Encoder::encodeString(ptr, item.sendDestinationName);
         }
 
         return ptr - buffer;
@@ -100,53 +99,26 @@ struct SendDestinationsListMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t sendCount;
-        if (!decodeUint8(ptr, remaining, sendCount)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, sendCount)) return std::nullopt;
         uint8_t count_sendDestinations;
-        if (!decodeUint8(ptr, remaining, count_sendDestinations)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_sendDestinations)) return std::nullopt;
         std::array<SendDestinations, 8> sendDestinations_data;
         for (uint8_t i = 0; i < count_sendDestinations && i < 8; ++i) {
             SendDestinations item;
-            if (!decodeUint8(ptr, remaining, item.sendIndex)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.sendDestinationName)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.sendIndex)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.sendDestinationName)) return std::nullopt;
             sendDestinations_data[i] = item;
         }
 
         return SendDestinationsListMessage{sendCount, sendDestinations_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# SendDestinationsList\nsendDestinationsList:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  sendCount: %lu\n", (unsigned long)sendCount);
-        ptr += snprintf(ptr, end - ptr, "  sendDestinations:\n");
-        for (size_t i = 0; i < sendDestinations.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - sendIndex: %lu\n", (unsigned long)sendDestinations[i].sendIndex);
-        ptr += snprintf(ptr, end - ptr, "      sendDestinationName: \"%s\"\n", sendDestinations[i].sendDestinationName.c_str());
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

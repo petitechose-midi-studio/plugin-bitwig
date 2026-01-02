@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -60,13 +59,13 @@ struct LastClickedValueStateMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeFloat32(ptr, parameterValue);
-        encodeString(ptr, displayValue);
+        Encoder::encodeFloat32(ptr, parameterValue);
+        Encoder::encodeString(ptr, displayValue);
 
         return ptr - buffer;
     }
@@ -86,46 +85,19 @@ struct LastClickedValueStateMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         float parameterValue;
-        if (!decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
+        if (!Decoder::decodeFloat32(ptr, remaining, parameterValue)) return std::nullopt;
         std::string displayValue;
-        if (!decodeString(ptr, remaining, displayValue)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, displayValue)) return std::nullopt;
 
         return LastClickedValueStateMessage{parameterValue, displayValue};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# LastClickedValueState\nlastClickedValueState:\n");
-
-        {
-            char floatBuf_parameterValue[16];
-            floatToString(floatBuf_parameterValue, sizeof(floatBuf_parameterValue), parameterValue);
-            ptr += snprintf(ptr, end - ptr, "  parameterValue: %s\n", floatBuf_parameterValue);
-        }
-        ptr += snprintf(ptr, end - ptr, "  displayValue: \"%s\"\n", displayValue.c_str());
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

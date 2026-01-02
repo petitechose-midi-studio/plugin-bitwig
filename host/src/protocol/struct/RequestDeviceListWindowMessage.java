@@ -65,7 +65,7 @@ public final class RequestDeviceListWindowMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 25;
 
@@ -79,13 +79,13 @@ public final class RequestDeviceListWindowMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, deviceStartIndex);
+        offset += Encoder.encodeUint8(buffer, offset, deviceStartIndex);
 
         return offset - startOffset;
     }
@@ -113,9 +113,9 @@ public final class RequestDeviceListWindowMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int deviceStartIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -123,21 +123,4 @@ public final class RequestDeviceListWindowMessage {
         return new RequestDeviceListWindowMessage(deviceStartIndex);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# RequestDeviceListWindow\n");
-        sb.append("requestDeviceListWindow:\n");
-        sb.append("  deviceStartIndex: ").append(getDeviceStartIndex()).append("\n");
-        return sb.toString();
-    }
 }  // class Message

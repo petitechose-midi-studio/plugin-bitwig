@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../TrackType.hpp"
 #include <cstdint>
 #include <cstring>
@@ -72,24 +71,24 @@ struct TrackChangeMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeString(ptr, trackName);
-        encodeUint32(ptr, color);
-        encodeUint8(ptr, trackIndex);
-        encodeUint8(ptr, static_cast<uint8_t>(trackType));
-        encodeBool(ptr, isActivated);
-        encodeBool(ptr, isMute);
-        encodeBool(ptr, isSolo);
-        encodeBool(ptr, isMutedBySolo);
-        encodeBool(ptr, isArm);
-        encodeFloat32(ptr, volume);
-        encodeString(ptr, volumeDisplay);
-        encodeFloat32(ptr, pan);
-        encodeString(ptr, panDisplay);
+        Encoder::encodeString(ptr, trackName);
+        Encoder::encodeUint32(ptr, color);
+        Encoder::encodeUint8(ptr, trackIndex);
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(trackType));
+        Encoder::encodeBool(ptr, isActivated);
+        Encoder::encodeBool(ptr, isMute);
+        Encoder::encodeBool(ptr, isSolo);
+        Encoder::encodeBool(ptr, isMutedBySolo);
+        Encoder::encodeBool(ptr, isArm);
+        Encoder::encodeFloat32(ptr, volume);
+        Encoder::encodeString(ptr, volumeDisplay);
+        Encoder::encodeFloat32(ptr, pan);
+        Encoder::encodeString(ptr, panDisplay);
 
         return ptr - buffer;
     }
@@ -109,84 +108,42 @@ struct TrackChangeMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         std::string trackName;
-        if (!decodeString(ptr, remaining, trackName)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, trackName)) return std::nullopt;
         uint32_t color;
-        if (!decodeUint32(ptr, remaining, color)) return std::nullopt;
+        if (!Decoder::decodeUint32(ptr, remaining, color)) return std::nullopt;
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         uint8_t trackType_raw;
-        if (!decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
         TrackType trackType = static_cast<TrackType>(trackType_raw);
         bool isActivated;
-        if (!decodeBool(ptr, remaining, isActivated)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isActivated)) return std::nullopt;
         bool isMute;
-        if (!decodeBool(ptr, remaining, isMute)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isMute)) return std::nullopt;
         bool isSolo;
-        if (!decodeBool(ptr, remaining, isSolo)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isSolo)) return std::nullopt;
         bool isMutedBySolo;
-        if (!decodeBool(ptr, remaining, isMutedBySolo)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isMutedBySolo)) return std::nullopt;
         bool isArm;
-        if (!decodeBool(ptr, remaining, isArm)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isArm)) return std::nullopt;
         float volume;
-        if (!decodeFloat32(ptr, remaining, volume)) return std::nullopt;
+        if (!Decoder::decodeFloat32(ptr, remaining, volume)) return std::nullopt;
         std::string volumeDisplay;
-        if (!decodeString(ptr, remaining, volumeDisplay)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, volumeDisplay)) return std::nullopt;
         float pan;
-        if (!decodeFloat32(ptr, remaining, pan)) return std::nullopt;
+        if (!Decoder::decodeFloat32(ptr, remaining, pan)) return std::nullopt;
         std::string panDisplay;
-        if (!decodeString(ptr, remaining, panDisplay)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, panDisplay)) return std::nullopt;
 
         return TrackChangeMessage{trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# TrackChange\ntrackChange:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  trackName: \"%s\"\n", trackName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  color: %lu\n", (unsigned long)color);
-        ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
-        ptr += snprintf(ptr, end - ptr, "  trackType: %d\n", static_cast<int>(trackType));
-        ptr += snprintf(ptr, end - ptr, "  isActivated: %s\n", isActivated ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  isMute: %s\n", isMute ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  isSolo: %s\n", isSolo ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  isMutedBySolo: %s\n", isMutedBySolo ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  isArm: %s\n", isArm ? "true" : "false");
-        {
-            char floatBuf_volume[16];
-            floatToString(floatBuf_volume, sizeof(floatBuf_volume), volume);
-            ptr += snprintf(ptr, end - ptr, "  volume: %s\n", floatBuf_volume);
-        }
-        ptr += snprintf(ptr, end - ptr, "  volumeDisplay: \"%s\"\n", volumeDisplay.c_str());
-        {
-            char floatBuf_pan[16];
-            floatToString(floatBuf_pan, sizeof(floatBuf_pan), pan);
-            ptr += snprintf(ptr, end - ptr, "  pan: %s\n", floatBuf_pan);
-        }
-        ptr += snprintf(ptr, end - ptr, "  panDisplay: \"%s\"\n", panDisplay.c_str());
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

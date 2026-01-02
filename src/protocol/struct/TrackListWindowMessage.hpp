@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../TrackType.hpp"
 #include <array>
 #include <cstdint>
@@ -85,30 +84,30 @@ struct TrackListWindowMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, trackCount);
-        encodeUint8(ptr, trackStartIndex);
-        encodeUint8(ptr, trackIndex);
-        encodeBool(ptr, isNested);
-        encodeString(ptr, parentGroupName);
-        encodeUint8(ptr, tracks.size());
+        Encoder::encodeUint8(ptr, trackCount);
+        Encoder::encodeUint8(ptr, trackStartIndex);
+        Encoder::encodeUint8(ptr, trackIndex);
+        Encoder::encodeBool(ptr, isNested);
+        Encoder::encodeString(ptr, parentGroupName);
+        Encoder::encodeUint8(ptr, tracks.size());
         for (const auto& item : tracks) {
-            encodeUint8(ptr, item.trackIndex);
-            encodeString(ptr, item.trackName);
-            encodeUint32(ptr, item.color);
-            encodeBool(ptr, item.isActivated);
-            encodeBool(ptr, item.isMute);
-            encodeBool(ptr, item.isSolo);
-            encodeBool(ptr, item.isMutedBySolo);
-            encodeBool(ptr, item.isArm);
-            encodeBool(ptr, item.isGroup);
-            encodeUint8(ptr, static_cast<uint8_t>(item.trackType));
-            encodeFloat32(ptr, item.volume);
-            encodeFloat32(ptr, item.pan);
+            Encoder::encodeUint8(ptr, item.trackIndex);
+            Encoder::encodeString(ptr, item.trackName);
+            Encoder::encodeUint32(ptr, item.color);
+            Encoder::encodeBool(ptr, item.isActivated);
+            Encoder::encodeBool(ptr, item.isMute);
+            Encoder::encodeBool(ptr, item.isSolo);
+            Encoder::encodeBool(ptr, item.isMutedBySolo);
+            Encoder::encodeBool(ptr, item.isArm);
+            Encoder::encodeBool(ptr, item.isGroup);
+            Encoder::encodeUint8(ptr, static_cast<uint8_t>(item.trackType));
+            Encoder::encodeFloat32(ptr, item.volume);
+            Encoder::encodeFloat32(ptr, item.pan);
         }
 
         return ptr - buffer;
@@ -129,95 +128,46 @@ struct TrackListWindowMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t trackCount;
-        if (!decodeUint8(ptr, remaining, trackCount)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackCount)) return std::nullopt;
         uint8_t trackStartIndex;
-        if (!decodeUint8(ptr, remaining, trackStartIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackStartIndex)) return std::nullopt;
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         bool isNested;
-        if (!decodeBool(ptr, remaining, isNested)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isNested)) return std::nullopt;
         std::string parentGroupName;
-        if (!decodeString(ptr, remaining, parentGroupName)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, parentGroupName)) return std::nullopt;
         uint8_t count_tracks;
-        if (!decodeUint8(ptr, remaining, count_tracks)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_tracks)) return std::nullopt;
         std::array<Tracks, 16> tracks_data;
         for (uint8_t i = 0; i < count_tracks && i < 16; ++i) {
             Tracks item;
-            if (!decodeUint8(ptr, remaining, item.trackIndex)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.trackName)) return std::nullopt;
-            if (!decodeUint32(ptr, remaining, item.color)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isActivated)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isMute)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isSolo)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isMutedBySolo)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isArm)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isGroup)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.trackIndex)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.trackName)) return std::nullopt;
+            if (!Decoder::decodeUint32(ptr, remaining, item.color)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isActivated)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isMute)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isSolo)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isMutedBySolo)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isArm)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isGroup)) return std::nullopt;
             uint8_t trackType_raw;
-            if (!decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, trackType_raw)) return std::nullopt;
             item.trackType = static_cast<TrackType>(trackType_raw);
-            if (!decodeFloat32(ptr, remaining, item.volume)) return std::nullopt;
-            if (!decodeFloat32(ptr, remaining, item.pan)) return std::nullopt;
+            if (!Decoder::decodeFloat32(ptr, remaining, item.volume)) return std::nullopt;
+            if (!Decoder::decodeFloat32(ptr, remaining, item.pan)) return std::nullopt;
             tracks_data[i] = item;
         }
 
         return TrackListWindowMessage{trackCount, trackStartIndex, trackIndex, isNested, parentGroupName, tracks_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# TrackListWindow\ntrackListWindow:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  trackCount: %lu\n", (unsigned long)trackCount);
-        ptr += snprintf(ptr, end - ptr, "  trackStartIndex: %lu\n", (unsigned long)trackStartIndex);
-        ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
-        ptr += snprintf(ptr, end - ptr, "  isNested: %s\n", isNested ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  parentGroupName: \"%s\"\n", parentGroupName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  tracks:\n");
-        for (size_t i = 0; i < tracks.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - trackIndex: %lu\n", (unsigned long)tracks[i].trackIndex);
-        ptr += snprintf(ptr, end - ptr, "      trackName: \"%s\"\n", tracks[i].trackName.c_str());
-        ptr += snprintf(ptr, end - ptr, "      color: %lu\n", (unsigned long)tracks[i].color);
-        ptr += snprintf(ptr, end - ptr, "      isActivated: %s\n", tracks[i].isActivated ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      isMute: %s\n", tracks[i].isMute ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      isSolo: %s\n", tracks[i].isSolo ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      isMutedBySolo: %s\n", tracks[i].isMutedBySolo ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      isArm: %s\n", tracks[i].isArm ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      isGroup: %s\n", tracks[i].isGroup ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      trackType: %d\n", static_cast<int>(tracks[i].trackType));
-        {
-            char floatBuf_tracks_i_volume[16];
-            floatToString(floatBuf_tracks_i_volume, sizeof(floatBuf_tracks_i_volume), tracks[i].volume);
-            ptr += snprintf(ptr, end - ptr, "      volume: %s\n", floatBuf_tracks_i_volume);
-        }
-        {
-            char floatBuf_tracks_i_pan[16];
-            floatToString(floatBuf_tracks_i_pan, sizeof(floatBuf_tracks_i_pan), tracks[i].pan);
-            ptr += snprintf(ptr, end - ptr, "      pan: %s\n", floatBuf_tracks_i_pan);
-        }
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

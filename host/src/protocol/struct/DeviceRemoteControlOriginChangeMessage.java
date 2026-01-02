@@ -77,7 +77,7 @@ public final class DeviceRemoteControlOriginChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 37;
 
@@ -91,14 +91,14 @@ public final class DeviceRemoteControlOriginChangeMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
-        offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
+        offset += Encoder.encodeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.encodeFloat32(buffer, offset, parameterOrigin);
 
         return offset - startOffset;
     }
@@ -126,9 +126,9 @@ public final class DeviceRemoteControlOriginChangeMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -138,34 +138,4 @@ public final class DeviceRemoteControlOriginChangeMessage {
         return new DeviceRemoteControlOriginChangeMessage(remoteControlIndex, parameterOrigin);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceRemoteControlOriginChange\n");
-        sb.append("deviceRemoteControlOriginChange:\n");
-        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
-        sb.append("  parameterOrigin: ").append(formatFloat(getParameterOrigin())).append("\n");
-        return sb.toString();
-    }
 }  // class Message

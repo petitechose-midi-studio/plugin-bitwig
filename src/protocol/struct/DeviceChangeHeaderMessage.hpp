@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../DeviceType.hpp"
 #include <array>
 #include <cstdint>
@@ -75,20 +74,20 @@ struct DeviceChangeHeaderMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeString(ptr, deviceName);
-        encodeBool(ptr, isEnabled);
-        encodeUint8(ptr, static_cast<uint8_t>(deviceType));
-        encodeUint8(ptr, pageInfo.devicePageIndex);
-        encodeUint8(ptr, pageInfo.devicePageCount);
-        encodeString(ptr, pageInfo.devicePageName);
-        encodeUint8(ptr, childrenTypes.size());
+        Encoder::encodeString(ptr, deviceName);
+        Encoder::encodeBool(ptr, isEnabled);
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(deviceType));
+        Encoder::encodeUint8(ptr, pageInfo.devicePageIndex);
+        Encoder::encodeUint8(ptr, pageInfo.devicePageCount);
+        Encoder::encodeString(ptr, pageInfo.devicePageName);
+        Encoder::encodeUint8(ptr, childrenTypes.size());
         for (const auto& item : childrenTypes) {
-            encodeUint8(ptr, item);
+            Encoder::encodeUint8(ptr, item);
         }
 
         return ptr - buffer;
@@ -109,69 +108,32 @@ struct DeviceChangeHeaderMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         std::string deviceName;
-        if (!decodeString(ptr, remaining, deviceName)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, deviceName)) return std::nullopt;
         bool isEnabled;
-        if (!decodeBool(ptr, remaining, isEnabled)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isEnabled)) return std::nullopt;
         uint8_t deviceType_raw;
-        if (!decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
         DeviceType deviceType = static_cast<DeviceType>(deviceType_raw);
         PageInfo pageInfo_data;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
-        if (!decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
-        if (!decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, pageInfo_data.devicePageIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, pageInfo_data.devicePageCount)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, pageInfo_data.devicePageName)) return std::nullopt;
         std::array<uint8_t, 4> childrenTypes_data;
         uint8_t count_childrenTypes;
-        if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
         for (uint8_t i = 0; i < count_childrenTypes && i < 4; ++i) {
-            if (!decodeUint8(ptr, remaining, childrenTypes_data[i])) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, childrenTypes_data[i])) return std::nullopt;
         }
 
         return DeviceChangeHeaderMessage{deviceName, isEnabled, deviceType, pageInfo_data, childrenTypes_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DeviceChangeHeader\ndeviceChangeHeader:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  deviceName: \"%s\"\n", deviceName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  isEnabled: %s\n", isEnabled ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  deviceType: %d\n", static_cast<int>(deviceType));
-        ptr += snprintf(ptr, end - ptr, "  pageInfo:\n");
-        ptr += snprintf(ptr, end - ptr, "    devicePageIndex: %lu\n", (unsigned long)pageInfo.devicePageIndex);
-        ptr += snprintf(ptr, end - ptr, "    devicePageCount: %lu\n", (unsigned long)pageInfo.devicePageCount);
-        ptr += snprintf(ptr, end - ptr, "    devicePageName: \"%s\"\n", pageInfo.devicePageName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  childrenTypes:");
-        if (childrenTypes.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t i = 0; i < childrenTypes.size(); ++i) {
-                ptr += snprintf(ptr, end - ptr, "    - %lu\n", (unsigned long)childrenTypes[i]);
-            }
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

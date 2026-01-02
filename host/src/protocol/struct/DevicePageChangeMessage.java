@@ -196,7 +196,7 @@ public final class DevicePageChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 9197;
 
@@ -210,34 +210,34 @@ public final class DevicePageChangeMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageIndex());
-        offset += Encoder.writeUint8(buffer, offset, pageInfo.getDevicePageCount());
-        offset += Encoder.writeString(buffer, offset, pageInfo.getDevicePageName(), ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, remoteControls.length);
+        offset += Encoder.encodeUint8(buffer, offset, pageInfo.getDevicePageIndex());
+        offset += Encoder.encodeUint8(buffer, offset, pageInfo.getDevicePageCount());
+        offset += Encoder.encodeString(buffer, offset, pageInfo.getDevicePageName());
+        offset += Encoder.encodeUint8(buffer, offset, remoteControls.length);
 
         for (RemoteControls item : remoteControls) {
-            offset += Encoder.writeUint8(buffer, offset, item.getRemoteControlIndex());
-            offset += Encoder.writeFloat32(buffer, offset, item.getParameterValue());
-            offset += Encoder.writeString(buffer, offset, item.getParameterName(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeFloat32(buffer, offset, item.getParameterOrigin());
-            offset += Encoder.writeBool(buffer, offset, item.getParameterExists());
-            offset += Encoder.writeInt16(buffer, offset, item.getDiscreteValueCount());
-            offset += Encoder.writeString(buffer, offset, item.getDisplayValue(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeUint8(buffer, offset, item.getParameterType().getValue());
-            offset += Encoder.writeUint8(buffer, offset, item.getDiscreteValueNames().length);
+            offset += Encoder.encodeUint8(buffer, offset, item.getRemoteControlIndex());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getParameterValue());
+            offset += Encoder.encodeString(buffer, offset, item.getParameterName());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getParameterOrigin());
+            offset += Encoder.encodeBool(buffer, offset, item.getParameterExists());
+            offset += Encoder.encodeInt16(buffer, offset, item.getDiscreteValueCount());
+            offset += Encoder.encodeString(buffer, offset, item.getDisplayValue());
+            offset += Encoder.encodeUint8(buffer, offset, item.getParameterType().getValue());
+            offset += Encoder.encodeUint8(buffer, offset, item.getDiscreteValueNames().length);
             for (String type : item.getDiscreteValueNames()) {
-                offset += Encoder.writeString(buffer, offset, type, ProtocolConstants.STRING_MAX_LENGTH);
+                offset += Encoder.encodeString(buffer, offset, type);
             }
-            offset += Encoder.writeUint8(buffer, offset, item.getCurrentValueIndex());
-            offset += Encoder.writeBool(buffer, offset, item.getHasAutomation());
-            offset += Encoder.writeFloat32(buffer, offset, item.getModulatedValue());
-            offset += Encoder.writeBool(buffer, offset, item.isModulated());
+            offset += Encoder.encodeUint8(buffer, offset, item.getCurrentValueIndex());
+            offset += Encoder.encodeBool(buffer, offset, item.getHasAutomation());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getModulatedValue());
+            offset += Encoder.encodeBool(buffer, offset, item.isModulated());
         }
 
 
@@ -251,7 +251,7 @@ public final class DevicePageChangeMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 205;
+    private static final int MIN_PAYLOAD_SIZE = 21;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -267,9 +267,9 @@ public final class DevicePageChangeMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int pageInfo_devicePageIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -323,51 +323,4 @@ public final class DevicePageChangeMessage {
         return new DevicePageChangeMessage(pageInfo, remoteControls);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DevicePageChange\n");
-        sb.append("devicePageChange:\n");
-        sb.append("  pageInfo:\n");
-        sb.append("    devicePageIndex: ").append(getPageInfo().getDevicePageIndex()).append("\n");
-        sb.append("    devicePageCount: ").append(getPageInfo().getDevicePageCount()).append("\n");
-        sb.append("    devicePageName: \"").append(getPageInfo().getDevicePageName()).append("\"\n");
-        sb.append("  remoteControls:\n");
-        for (RemoteControls item : getRemoteControls()) {
-            sb.append("    - remoteControlIndex: ").append(item.getRemoteControlIndex()).append("\n");
-            sb.append("      parameterValue: ").append(formatFloat(item.getParameterValue())).append("\n");
-            sb.append("      parameterName: \"").append(item.getParameterName()).append("\"\n");
-            sb.append("      parameterOrigin: ").append(formatFloat(item.getParameterOrigin())).append("\n");
-            sb.append("      parameterExists: ").append(item.getParameterExists() ? "true" : "false").append("\n");
-            sb.append("      discreteValueCount: ").append(item.getDiscreteValueCount()).append("\n");
-            sb.append("      displayValue: \"").append(item.getDisplayValue()).append("\"\n");
-            sb.append("      parameterType: ").append(item.getParameterType().ordinal()).append("\n");
-            sb.append("      currentValueIndex: ").append(item.getCurrentValueIndex()).append("\n");
-            sb.append("      hasAutomation: ").append(item.getHasAutomation() ? "true" : "false").append("\n");
-            sb.append("      modulatedValue: ").append(formatFloat(item.getModulatedValue())).append("\n");
-            sb.append("      isModulated: ").append(item.isModulated() ? "true" : "false").append("\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

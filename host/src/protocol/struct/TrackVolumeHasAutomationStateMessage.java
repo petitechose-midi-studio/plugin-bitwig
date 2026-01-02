@@ -77,7 +77,7 @@ public final class TrackVolumeHasAutomationStateMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 32;
 
@@ -91,14 +91,14 @@ public final class TrackVolumeHasAutomationStateMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeBool(buffer, offset, hasAutomation);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeBool(buffer, offset, hasAutomation);
 
         return offset - startOffset;
     }
@@ -126,9 +126,9 @@ public final class TrackVolumeHasAutomationStateMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -138,22 +138,4 @@ public final class TrackVolumeHasAutomationStateMessage {
         return new TrackVolumeHasAutomationStateMessage(trackIndex, hasAutomation);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackVolumeHasAutomationState\n");
-        sb.append("trackVolumeHasAutomationState:\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  hasAutomation: ").append(getHasAutomation() ? "true" : "false").append("\n");
-        return sb.toString();
-    }
 }  // class Message

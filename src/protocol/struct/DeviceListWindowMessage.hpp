@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../DeviceType.hpp"
 #include <array>
 #include <cstdint>
@@ -78,25 +77,25 @@ struct DeviceListWindowMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, deviceCount);
-        encodeUint8(ptr, deviceStartIndex);
-        encodeUint8(ptr, deviceIndex);
-        encodeBool(ptr, isNested);
-        encodeString(ptr, parentName);
-        encodeUint8(ptr, devices.size());
+        Encoder::encodeUint8(ptr, deviceCount);
+        Encoder::encodeUint8(ptr, deviceStartIndex);
+        Encoder::encodeUint8(ptr, deviceIndex);
+        Encoder::encodeBool(ptr, isNested);
+        Encoder::encodeString(ptr, parentName);
+        Encoder::encodeUint8(ptr, devices.size());
         for (const auto& item : devices) {
-            encodeUint8(ptr, item.deviceIndex);
-            encodeString(ptr, item.deviceName);
-            encodeBool(ptr, item.isEnabled);
-            encodeUint8(ptr, static_cast<uint8_t>(item.deviceType));
-            encodeUint8(ptr, item.childrenTypes.size());
+            Encoder::encodeUint8(ptr, item.deviceIndex);
+            Encoder::encodeString(ptr, item.deviceName);
+            Encoder::encodeBool(ptr, item.isEnabled);
+            Encoder::encodeUint8(ptr, static_cast<uint8_t>(item.deviceType));
+            Encoder::encodeUint8(ptr, item.childrenTypes.size());
             for (const auto& type : item.childrenTypes) {
-                encodeUint8(ptr, type);
+                Encoder::encodeUint8(ptr, type);
             }
         }
 
@@ -118,85 +117,43 @@ struct DeviceListWindowMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t deviceCount;
-        if (!decodeUint8(ptr, remaining, deviceCount)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, deviceCount)) return std::nullopt;
         uint8_t deviceStartIndex;
-        if (!decodeUint8(ptr, remaining, deviceStartIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, deviceStartIndex)) return std::nullopt;
         uint8_t deviceIndex;
-        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
         bool isNested;
-        if (!decodeBool(ptr, remaining, isNested)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isNested)) return std::nullopt;
         std::string parentName;
-        if (!decodeString(ptr, remaining, parentName)) return std::nullopt;
+        if (!Decoder::decodeString(ptr, remaining, parentName)) return std::nullopt;
         uint8_t count_devices;
-        if (!decodeUint8(ptr, remaining, count_devices)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_devices)) return std::nullopt;
         std::array<Devices, 16> devices_data;
         for (uint8_t i = 0; i < count_devices && i < 16; ++i) {
             Devices item;
-            if (!decodeUint8(ptr, remaining, item.deviceIndex)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.deviceName)) return std::nullopt;
-            if (!decodeBool(ptr, remaining, item.isEnabled)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.deviceIndex)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.deviceName)) return std::nullopt;
+            if (!Decoder::decodeBool(ptr, remaining, item.isEnabled)) return std::nullopt;
             uint8_t deviceType_raw;
-            if (!decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, deviceType_raw)) return std::nullopt;
             item.deviceType = static_cast<DeviceType>(deviceType_raw);
             uint8_t count_childrenTypes;
-            if (!decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, count_childrenTypes)) return std::nullopt;
             for (uint8_t j = 0; j < count_childrenTypes && j < 4; ++j) {
-                if (!decodeUint8(ptr, remaining, item.childrenTypes[j])) return std::nullopt;
+                if (!Decoder::decodeUint8(ptr, remaining, item.childrenTypes[j])) return std::nullopt;
             }
             devices_data[i] = item;
         }
 
         return DeviceListWindowMessage{deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DeviceListWindow\ndeviceListWindow:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  deviceCount: %lu\n", (unsigned long)deviceCount);
-        ptr += snprintf(ptr, end - ptr, "  deviceStartIndex: %lu\n", (unsigned long)deviceStartIndex);
-        ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
-        ptr += snprintf(ptr, end - ptr, "  isNested: %s\n", isNested ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "  parentName: \"%s\"\n", parentName.c_str());
-        ptr += snprintf(ptr, end - ptr, "  devices:\n");
-        for (size_t i = 0; i < devices.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - deviceIndex: %lu\n", (unsigned long)devices[i].deviceIndex);
-        ptr += snprintf(ptr, end - ptr, "      deviceName: \"%s\"\n", devices[i].deviceName.c_str());
-        ptr += snprintf(ptr, end - ptr, "      isEnabled: %s\n", devices[i].isEnabled ? "true" : "false");
-        ptr += snprintf(ptr, end - ptr, "      deviceType: %d\n", static_cast<int>(devices[i].deviceType));
-        ptr += snprintf(ptr, end - ptr, "      childrenTypes:");
-        if (devices[i].childrenTypes.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t j = 0; j < devices[i].childrenTypes.size(); ++j) {
-                ptr += snprintf(ptr, end - ptr, "        - %lu\n", (unsigned long)devices[i].childrenTypes[j]);
-            }
-        }
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

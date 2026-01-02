@@ -90,7 +90,7 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 1093;
 
@@ -104,20 +104,20 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
-        offset += Encoder.writeUint8(buffer, offset, discreteValueNames.length);
+        offset += Encoder.encodeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.encodeUint8(buffer, offset, discreteValueNames.length);
 
         for (String item : discreteValueNames) {
-            offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.encodeString(buffer, offset, item);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
+        offset += Encoder.encodeUint8(buffer, offset, currentValueIndex);
 
         return offset - startOffset;
     }
@@ -145,9 +145,9 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -166,31 +166,4 @@ public final class DeviceRemoteControlDiscreteValuesMessage {
         return new DeviceRemoteControlDiscreteValuesMessage(remoteControlIndex, discreteValueNames, currentValueIndex);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceRemoteControlDiscreteValues\n");
-        sb.append("deviceRemoteControlDiscreteValues:\n");
-        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
-        sb.append("  discreteValueNames:");
-        if (getDiscreteValueNames().length == 0) {
-            sb.append(" []\n");
-        } else {
-            sb.append("\n");
-            for (String item : getDiscreteValueNames()) {
-                sb.append("    - \"").append(item).append("\"\n");
-            }
-        }
-        sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
-        return sb.toString();
-    }
 }  // class Message
