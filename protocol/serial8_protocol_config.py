@@ -5,7 +5,11 @@ Plugin-specific configuration for Serial8 (8-bit binary) protocol.
 Used with oc-bridge for USB Serial communication.
 """
 
-from protocol_codegen.methods.serial8 import Serial8Config, Serial8Limits, Serial8Structure
+from protocol_codegen.generators.orchestrators.serial8 import (
+    Serial8Config,
+    Serial8Limits,
+    Serial8Structure,
+)
 
 
 # Bitwig-specific Serial8 configuration

@@ -4,7 +4,11 @@ Bitwig Plugin SysEx Configuration (Pure Python, Type-Safe)
 Plugin-specific overrides for SysEx protocol constants.
 """
 
-from protocol_codegen.methods.sysex import SysExConfig, SysExFraming, SysExLimits
+from protocol_codegen.generators.orchestrators.sysex import (
+    SysExConfig,
+    SysExFraming,
+    SysExLimits,
+)
 
 
 # Bitwig-specific configuration
