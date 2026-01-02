@@ -209,7 +209,7 @@ public final class TrackListWindowMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 902;
 
@@ -223,32 +223,32 @@ public final class TrackListWindowMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackCount);
-        offset += Encoder.writeUint8(buffer, offset, trackStartIndex);
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeBool(buffer, offset, isNested);
-        offset += Encoder.writeString(buffer, offset, parentGroupName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, tracks.length);
+        offset += Encoder.encodeUint8(buffer, offset, trackCount);
+        offset += Encoder.encodeUint8(buffer, offset, trackStartIndex);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeBool(buffer, offset, isNested);
+        offset += Encoder.encodeString(buffer, offset, parentGroupName);
+        offset += Encoder.encodeUint8(buffer, offset, tracks.length);
 
         for (Tracks item : tracks) {
-            offset += Encoder.writeUint8(buffer, offset, item.getTrackIndex());
-            offset += Encoder.writeString(buffer, offset, item.getTrackName(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeUint32(buffer, offset, item.getColor());
-            offset += Encoder.writeBool(buffer, offset, item.isActivated());
-            offset += Encoder.writeBool(buffer, offset, item.isMute());
-            offset += Encoder.writeBool(buffer, offset, item.isSolo());
-            offset += Encoder.writeBool(buffer, offset, item.isMutedBySolo());
-            offset += Encoder.writeBool(buffer, offset, item.isArm());
-            offset += Encoder.writeBool(buffer, offset, item.isGroup());
-            offset += Encoder.writeUint8(buffer, offset, item.getTrackType().getValue());
-            offset += Encoder.writeFloat32(buffer, offset, item.getVolume());
-            offset += Encoder.writeFloat32(buffer, offset, item.getPan());
+            offset += Encoder.encodeUint8(buffer, offset, item.getTrackIndex());
+            offset += Encoder.encodeString(buffer, offset, item.getTrackName());
+            offset += Encoder.encodeUint32(buffer, offset, item.getColor());
+            offset += Encoder.encodeBool(buffer, offset, item.isActivated());
+            offset += Encoder.encodeBool(buffer, offset, item.isMute());
+            offset += Encoder.encodeBool(buffer, offset, item.isSolo());
+            offset += Encoder.encodeBool(buffer, offset, item.isMutedBySolo());
+            offset += Encoder.encodeBool(buffer, offset, item.isArm());
+            offset += Encoder.encodeBool(buffer, offset, item.isGroup());
+            offset += Encoder.encodeUint8(buffer, offset, item.getTrackType().getValue());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getVolume());
+            offset += Encoder.encodeFloat32(buffer, offset, item.getPan());
         }
 
 
@@ -262,7 +262,7 @@ public final class TrackListWindowMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 358;
+    private static final int MIN_PAYLOAD_SIZE = 22;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -278,9 +278,9 @@ public final class TrackListWindowMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackCount = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -328,52 +328,4 @@ public final class TrackListWindowMessage {
         return new TrackListWindowMessage(trackCount, trackStartIndex, trackIndex, isNested, parentGroupName, tracks);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackListWindow\n");
-        sb.append("trackListWindow:\n");
-        sb.append("  trackCount: ").append(getTrackCount()).append("\n");
-        sb.append("  trackStartIndex: ").append(getTrackStartIndex()).append("\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  isNested: ").append(isNested() ? "true" : "false").append("\n");
-        sb.append("  parentGroupName: \"").append(getParentGroupName()).append("\"\n");
-        sb.append("  tracks:\n");
-        for (Tracks item : getTracks()) {
-            sb.append("    - trackIndex: ").append(item.getTrackIndex()).append("\n");
-            sb.append("      trackName: \"").append(item.getTrackName()).append("\"\n");
-            sb.append("      color: ").append(item.getColor()).append("\n");
-            sb.append("      isActivated: ").append(item.isActivated() ? "true" : "false").append("\n");
-            sb.append("      isMute: ").append(item.isMute() ? "true" : "false").append("\n");
-            sb.append("      isSolo: ").append(item.isSolo() ? "true" : "false").append("\n");
-            sb.append("      isMutedBySolo: ").append(item.isMutedBySolo() ? "true" : "false").append("\n");
-            sb.append("      isArm: ").append(item.isArm() ? "true" : "false").append("\n");
-            sb.append("      isGroup: ").append(item.isGroup() ? "true" : "false").append("\n");
-            sb.append("      trackType: ").append(item.getTrackType().ordinal()).append("\n");
-            sb.append("      volume: ").append(formatFloat(item.getVolume())).append("\n");
-            sb.append("      pan: ").append(formatFloat(item.getPan())).append("\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

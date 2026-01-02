@@ -211,7 +211,7 @@ public final class TrackChangeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 130;
 
@@ -225,25 +225,25 @@ public final class TrackChangeMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeString(buffer, offset, trackName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint32(buffer, offset, color);
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeUint8(buffer, offset, trackType.getValue());
-        offset += Encoder.writeBool(buffer, offset, isActivated);
-        offset += Encoder.writeBool(buffer, offset, isMute);
-        offset += Encoder.writeBool(buffer, offset, isSolo);
-        offset += Encoder.writeBool(buffer, offset, isMutedBySolo);
-        offset += Encoder.writeBool(buffer, offset, isArm);
-        offset += Encoder.writeFloat32(buffer, offset, volume);
-        offset += Encoder.writeString(buffer, offset, volumeDisplay, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeFloat32(buffer, offset, pan);
-        offset += Encoder.writeString(buffer, offset, panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.encodeString(buffer, offset, trackName);
+        offset += Encoder.encodeUint32(buffer, offset, color);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeUint8(buffer, offset, trackType.getValue());
+        offset += Encoder.encodeBool(buffer, offset, isActivated);
+        offset += Encoder.encodeBool(buffer, offset, isMute);
+        offset += Encoder.encodeBool(buffer, offset, isSolo);
+        offset += Encoder.encodeBool(buffer, offset, isMutedBySolo);
+        offset += Encoder.encodeBool(buffer, offset, isArm);
+        offset += Encoder.encodeFloat32(buffer, offset, volume);
+        offset += Encoder.encodeString(buffer, offset, volumeDisplay);
+        offset += Encoder.encodeFloat32(buffer, offset, pan);
+        offset += Encoder.encodeString(buffer, offset, panDisplay);
 
         return offset - startOffset;
     }
@@ -271,9 +271,9 @@ public final class TrackChangeMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         String trackName = Decoder.decodeString(data, offset, ProtocolConstants.STRING_MAX_LENGTH);
         offset += 1 + trackName.length();
@@ -306,45 +306,4 @@ public final class TrackChangeMessage {
         return new TrackChangeMessage(trackName, color, trackIndex, trackType, isActivated, isMute, isSolo, isMutedBySolo, isArm, volume, volumeDisplay, pan, panDisplay);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackChange\n");
-        sb.append("trackChange:\n");
-        sb.append("  trackName: \"").append(getTrackName()).append("\"\n");
-        sb.append("  color: ").append(getColor()).append("\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  trackType: ").append(getTrackType().ordinal()).append("\n");
-        sb.append("  isActivated: ").append(isActivated() ? "true" : "false").append("\n");
-        sb.append("  isMute: ").append(isMute() ? "true" : "false").append("\n");
-        sb.append("  isSolo: ").append(isSolo() ? "true" : "false").append("\n");
-        sb.append("  isMutedBySolo: ").append(isMutedBySolo() ? "true" : "false").append("\n");
-        sb.append("  isArm: ").append(isArm() ? "true" : "false").append("\n");
-        sb.append("  volume: ").append(formatFloat(getVolume())).append("\n");
-        sb.append("  volumeDisplay: \"").append(getVolumeDisplay()).append("\"\n");
-        sb.append("  pan: ").append(formatFloat(getPan())).append("\n");
-        sb.append("  panDisplay: \"").append(getPanDisplay()).append("\"\n");
-        return sb.toString();
-    }
 }  // class Message

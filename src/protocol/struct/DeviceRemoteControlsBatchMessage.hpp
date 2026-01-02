@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -66,26 +65,26 @@ struct DeviceRemoteControlsBatchMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, sequenceNumber);
-        encodeUint8(ptr, dirtyMask);
-        encodeUint8(ptr, echoMask);
-        encodeUint8(ptr, hasAutomationMask);
-        encodeUint8(ptr, values.size());
+        Encoder::encodeUint8(ptr, sequenceNumber);
+        Encoder::encodeUint8(ptr, dirtyMask);
+        Encoder::encodeUint8(ptr, echoMask);
+        Encoder::encodeUint8(ptr, hasAutomationMask);
+        Encoder::encodeUint8(ptr, values.size());
         for (const auto& item : values) {
-            encodeNorm8(ptr, item);
+            Encoder::encodeNorm8(ptr, item);
         }
-        encodeUint8(ptr, modulatedValues.size());
+        Encoder::encodeUint8(ptr, modulatedValues.size());
         for (const auto& item : modulatedValues) {
-            encodeNorm8(ptr, item);
+            Encoder::encodeNorm8(ptr, item);
         }
-        encodeUint8(ptr, displayValues.size());
+        Encoder::encodeUint8(ptr, displayValues.size());
         for (const auto& item : displayValues) {
-            encodeString(ptr, item);
+            Encoder::encodeString(ptr, item);
         }
 
         return ptr - buffer;
@@ -106,101 +105,41 @@ struct DeviceRemoteControlsBatchMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t sequenceNumber;
-        if (!decodeUint8(ptr, remaining, sequenceNumber)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, sequenceNumber)) return std::nullopt;
         uint8_t dirtyMask;
-        if (!decodeUint8(ptr, remaining, dirtyMask)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, dirtyMask)) return std::nullopt;
         uint8_t echoMask;
-        if (!decodeUint8(ptr, remaining, echoMask)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, echoMask)) return std::nullopt;
         uint8_t hasAutomationMask;
-        if (!decodeUint8(ptr, remaining, hasAutomationMask)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, hasAutomationMask)) return std::nullopt;
         std::array<float, 8> values_data;
         uint8_t count_values;
-        if (!decodeUint8(ptr, remaining, count_values)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_values)) return std::nullopt;
         for (uint8_t i = 0; i < count_values && i < 8; ++i) {
-            if (!decodeNorm8(ptr, remaining, values_data[i])) return std::nullopt;
+            if (!Decoder::decodeNorm8(ptr, remaining, values_data[i])) return std::nullopt;
         }
         std::array<float, 8> modulatedValues_data;
         uint8_t count_modulatedValues;
-        if (!decodeUint8(ptr, remaining, count_modulatedValues)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_modulatedValues)) return std::nullopt;
         for (uint8_t i = 0; i < count_modulatedValues && i < 8; ++i) {
-            if (!decodeNorm8(ptr, remaining, modulatedValues_data[i])) return std::nullopt;
+            if (!Decoder::decodeNorm8(ptr, remaining, modulatedValues_data[i])) return std::nullopt;
         }
         std::array<std::string, 8> displayValues_data;
         uint8_t count_displayValues;
-        if (!decodeUint8(ptr, remaining, count_displayValues)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_displayValues)) return std::nullopt;
         for (uint8_t i = 0; i < count_displayValues && i < 8; ++i) {
-            if (!decodeString(ptr, remaining, displayValues_data[i])) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, displayValues_data[i])) return std::nullopt;
         }
 
         return DeviceRemoteControlsBatchMessage{sequenceNumber, dirtyMask, echoMask, hasAutomationMask, values_data, modulatedValues_data, displayValues_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlsBatch\ndeviceRemoteControlsBatch:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  sequenceNumber: %lu\n", (unsigned long)sequenceNumber);
-        ptr += snprintf(ptr, end - ptr, "  dirtyMask: %lu\n", (unsigned long)dirtyMask);
-        ptr += snprintf(ptr, end - ptr, "  echoMask: %lu\n", (unsigned long)echoMask);
-        ptr += snprintf(ptr, end - ptr, "  hasAutomationMask: %lu\n", (unsigned long)hasAutomationMask);
-        ptr += snprintf(ptr, end - ptr, "  values:");
-        if (values.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            {
-                char floatBuf_values[16];
-                for (size_t i = 0; i < values.size(); ++i) {
-                    floatToString(floatBuf_values, sizeof(floatBuf_values), values[i]);
-                    ptr += snprintf(ptr, end - ptr, "    - %s\n", floatBuf_values);
-                }
-            }
-        }
-        ptr += snprintf(ptr, end - ptr, "  modulatedValues:");
-        if (modulatedValues.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            {
-                char floatBuf_modulatedValues[16];
-                for (size_t i = 0; i < modulatedValues.size(); ++i) {
-                    floatToString(floatBuf_modulatedValues, sizeof(floatBuf_modulatedValues), modulatedValues[i]);
-                    ptr += snprintf(ptr, end - ptr, "    - %s\n", floatBuf_modulatedValues);
-                }
-            }
-        }
-        ptr += snprintf(ptr, end - ptr, "  displayValues:");
-        if (displayValues.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t i = 0; i < displayValues.size(); ++i) {
-                ptr += snprintf(ptr, end - ptr, "    - \"%s\"\n", displayValues[i].c_str());
-            }
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

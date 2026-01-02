@@ -90,7 +90,7 @@ public final class TrackPanStateMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 52;
 
@@ -104,15 +104,15 @@ public final class TrackPanStateMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeFloat32(buffer, offset, pan);
-        offset += Encoder.writeString(buffer, offset, panDisplay, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeFloat32(buffer, offset, pan);
+        offset += Encoder.encodeString(buffer, offset, panDisplay);
 
         return offset - startOffset;
     }
@@ -140,9 +140,9 @@ public final class TrackPanStateMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -154,35 +154,4 @@ public final class TrackPanStateMessage {
         return new TrackPanStateMessage(trackIndex, pan, panDisplay);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackPanState\n");
-        sb.append("trackPanState:\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  pan: ").append(formatFloat(getPan())).append("\n");
-        sb.append("  panDisplay: \"").append(getPanDisplay()).append("\"\n");
-        return sb.toString();
-    }
 }  // class Message

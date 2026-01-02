@@ -130,7 +130,7 @@ public final class DeviceChildrenMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 579;
 
@@ -144,21 +144,21 @@ public final class DeviceChildrenMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
-        offset += Encoder.writeUint8(buffer, offset, childType);
-        offset += Encoder.writeUint8(buffer, offset, childrenCount);
-        offset += Encoder.writeUint8(buffer, offset, children.length);
+        offset += Encoder.encodeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.encodeUint8(buffer, offset, childType);
+        offset += Encoder.encodeUint8(buffer, offset, childrenCount);
+        offset += Encoder.encodeUint8(buffer, offset, children.length);
 
         for (Children item : children) {
-            offset += Encoder.writeUint8(buffer, offset, item.getChildIndex());
-            offset += Encoder.writeString(buffer, offset, item.getChildName(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeUint8(buffer, offset, item.getItemType());
+            offset += Encoder.encodeUint8(buffer, offset, item.getChildIndex());
+            offset += Encoder.encodeString(buffer, offset, item.getChildName());
+            offset += Encoder.encodeUint8(buffer, offset, item.getItemType());
         }
 
 
@@ -172,7 +172,7 @@ public final class DeviceChildrenMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 67;
+    private static final int MIN_PAYLOAD_SIZE = 19;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -188,9 +188,9 @@ public final class DeviceChildrenMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int deviceIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -217,29 +217,4 @@ public final class DeviceChildrenMessage {
         return new DeviceChildrenMessage(deviceIndex, childType, childrenCount, children);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceChildren\n");
-        sb.append("deviceChildren:\n");
-        sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
-        sb.append("  childType: ").append(getChildType()).append("\n");
-        sb.append("  childrenCount: ").append(getChildrenCount()).append("\n");
-        sb.append("  children:\n");
-        for (Children item : getChildren()) {
-            sb.append("    - childIndex: ").append(item.getChildIndex()).append("\n");
-            sb.append("      childName: \"").append(item.getChildName()).append("\"\n");
-            sb.append("      itemType: ").append(item.getItemType()).append("\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

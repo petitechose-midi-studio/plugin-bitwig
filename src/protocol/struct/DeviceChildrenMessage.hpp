@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../ChildType.hpp"
 #include <array>
 #include <cstdint>
@@ -74,19 +73,19 @@ struct DeviceChildrenMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, deviceIndex);
-        encodeUint8(ptr, static_cast<uint8_t>(childType));
-        encodeUint8(ptr, childrenCount);
-        encodeUint8(ptr, children.size());
+        Encoder::encodeUint8(ptr, deviceIndex);
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(childType));
+        Encoder::encodeUint8(ptr, childrenCount);
+        Encoder::encodeUint8(ptr, children.size());
         for (const auto& item : children) {
-            encodeUint8(ptr, item.childIndex);
-            encodeString(ptr, item.childName);
-            encodeUint8(ptr, item.itemType);
+            Encoder::encodeUint8(ptr, item.childIndex);
+            Encoder::encodeString(ptr, item.childName);
+            Encoder::encodeUint8(ptr, item.itemType);
         }
 
         return ptr - buffer;
@@ -107,62 +106,32 @@ struct DeviceChildrenMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t deviceIndex;
-        if (!decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
         uint8_t childType_raw;
-        if (!decodeUint8(ptr, remaining, childType_raw)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, childType_raw)) return std::nullopt;
         uint8_t childType = static_cast<uint8_t>(childType_raw);
         uint8_t childrenCount;
-        if (!decodeUint8(ptr, remaining, childrenCount)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, childrenCount)) return std::nullopt;
         uint8_t count_children;
-        if (!decodeUint8(ptr, remaining, count_children)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_children)) return std::nullopt;
         std::array<Children, 16> children_data;
         for (uint8_t i = 0; i < count_children && i < 16; ++i) {
             Children item;
-            if (!decodeUint8(ptr, remaining, item.childIndex)) return std::nullopt;
-            if (!decodeString(ptr, remaining, item.childName)) return std::nullopt;
-            if (!decodeUint8(ptr, remaining, item.itemType)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.childIndex)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, item.childName)) return std::nullopt;
+            if (!Decoder::decodeUint8(ptr, remaining, item.itemType)) return std::nullopt;
             children_data[i] = item;
         }
 
         return DeviceChildrenMessage{deviceIndex, childType, childrenCount, children_data};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DeviceChildren\ndeviceChildren:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  deviceIndex: %lu\n", (unsigned long)deviceIndex);
-        ptr += snprintf(ptr, end - ptr, "  childType: %d\n", static_cast<int>(childType));
-        ptr += snprintf(ptr, end - ptr, "  childrenCount: %lu\n", (unsigned long)childrenCount);
-        ptr += snprintf(ptr, end - ptr, "  children:\n");
-        for (size_t i = 0; i < children.size(); ++i) {
-            ptr += snprintf(ptr, end - ptr, "    - childIndex: %lu\n", (unsigned long)children[i].childIndex);
-        ptr += snprintf(ptr, end - ptr, "      childName: \"%s\"\n", children[i].childName.c_str());
-        ptr += snprintf(ptr, end - ptr, "      itemType: %lu\n", (unsigned long)children[i].itemType);
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

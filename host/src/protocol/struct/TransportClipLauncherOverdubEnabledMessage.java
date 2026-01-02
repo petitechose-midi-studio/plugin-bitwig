@@ -65,7 +65,7 @@ public final class TransportClipLauncherOverdubEnabledMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 37;
 
@@ -79,13 +79,13 @@ public final class TransportClipLauncherOverdubEnabledMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeBool(buffer, offset, isClipLauncherOverdubEnabled);
+        offset += Encoder.encodeBool(buffer, offset, isClipLauncherOverdubEnabled);
 
         return offset - startOffset;
     }
@@ -113,9 +113,9 @@ public final class TransportClipLauncherOverdubEnabledMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         boolean isClipLauncherOverdubEnabled = Decoder.decodeBool(data, offset);
         offset += 1;
@@ -123,21 +123,4 @@ public final class TransportClipLauncherOverdubEnabledMessage {
         return new TransportClipLauncherOverdubEnabledMessage(isClipLauncherOverdubEnabled);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TransportClipLauncherOverdubEnabled\n");
-        sb.append("transportClipLauncherOverdubEnabled:\n");
-        sb.append("  isClipLauncherOverdubEnabled: ").append(isClipLauncherOverdubEnabled() ? "true" : "false").append("\n");
-        return sb.toString();
-    }
 }  // class Message

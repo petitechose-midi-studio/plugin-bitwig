@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -60,14 +59,14 @@ struct TrackSendValueMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, trackIndex);
-        encodeUint8(ptr, sendIndex);
-        encodeFloat32(ptr, sendValue);
+        Encoder::encodeUint8(ptr, trackIndex);
+        Encoder::encodeUint8(ptr, sendIndex);
+        Encoder::encodeFloat32(ptr, sendValue);
 
         return ptr - buffer;
     }
@@ -87,49 +86,21 @@ struct TrackSendValueMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t trackIndex;
-        if (!decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, trackIndex)) return std::nullopt;
         uint8_t sendIndex;
-        if (!decodeUint8(ptr, remaining, sendIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, sendIndex)) return std::nullopt;
         float sendValue;
-        if (!decodeFloat32(ptr, remaining, sendValue)) return std::nullopt;
+        if (!Decoder::decodeFloat32(ptr, remaining, sendValue)) return std::nullopt;
 
         return TrackSendValueMessage{trackIndex, sendIndex, sendValue};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# TrackSendValue\ntrackSendValue:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  trackIndex: %lu\n", (unsigned long)trackIndex);
-        ptr += snprintf(ptr, end - ptr, "  sendIndex: %lu\n", (unsigned long)sendIndex);
-        {
-            char floatBuf_sendValue[16];
-            floatToString(floatBuf_sendValue, sizeof(floatBuf_sendValue), sendValue);
-            ptr += snprintf(ptr, end - ptr, "  sendValue: %s\n", floatBuf_sendValue);
-        }
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

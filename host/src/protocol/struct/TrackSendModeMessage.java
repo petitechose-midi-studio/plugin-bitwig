@@ -90,7 +90,7 @@ public final class TrackSendModeMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 49;
 
@@ -104,15 +104,15 @@ public final class TrackSendModeMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackIndex);
-        offset += Encoder.writeUint8(buffer, offset, sendIndex);
-        offset += Encoder.writeString(buffer, offset, sendMode, ProtocolConstants.STRING_MAX_LENGTH);
+        offset += Encoder.encodeUint8(buffer, offset, trackIndex);
+        offset += Encoder.encodeUint8(buffer, offset, sendIndex);
+        offset += Encoder.encodeString(buffer, offset, sendMode);
 
         return offset - startOffset;
     }
@@ -140,9 +140,9 @@ public final class TrackSendModeMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -154,23 +154,4 @@ public final class TrackSendModeMessage {
         return new TrackSendModeMessage(trackIndex, sendIndex, sendMode);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TrackSendMode\n");
-        sb.append("trackSendMode:\n");
-        sb.append("  trackIndex: ").append(getTrackIndex()).append("\n");
-        sb.append("  sendIndex: ").append(getSendIndex()).append("\n");
-        sb.append("  sendMode: \"").append(getSendMode()).append("\"\n");
-        return sb.toString();
-    }
 }  // class Message

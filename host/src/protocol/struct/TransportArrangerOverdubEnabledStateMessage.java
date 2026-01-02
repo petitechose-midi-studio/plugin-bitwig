@@ -65,7 +65,7 @@ public final class TransportArrangerOverdubEnabledStateMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 38;
 
@@ -79,13 +79,13 @@ public final class TransportArrangerOverdubEnabledStateMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeBool(buffer, offset, isArrangerOverdubEnabled);
+        offset += Encoder.encodeBool(buffer, offset, isArrangerOverdubEnabled);
 
         return offset - startOffset;
     }
@@ -113,9 +113,9 @@ public final class TransportArrangerOverdubEnabledStateMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         boolean isArrangerOverdubEnabled = Decoder.decodeBool(data, offset);
         offset += 1;
@@ -123,21 +123,4 @@ public final class TransportArrangerOverdubEnabledStateMessage {
         return new TransportArrangerOverdubEnabledStateMessage(isArrangerOverdubEnabled);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# TransportArrangerOverdubEnabledState\n");
-        sb.append("transportArrangerOverdubEnabledState:\n");
-        sb.append("  isArrangerOverdubEnabled: ").append(isArrangerOverdubEnabled() ? "true" : "false").append("\n");
-        return sb.toString();
-    }
 }  // class Message

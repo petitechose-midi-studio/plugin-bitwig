@@ -89,7 +89,7 @@ public final class EnterDeviceChildMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 20;
 
@@ -103,15 +103,15 @@ public final class EnterDeviceChildMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
-        offset += Encoder.writeUint8(buffer, offset, childType);
-        offset += Encoder.writeUint8(buffer, offset, childIndex);
+        offset += Encoder.encodeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.encodeUint8(buffer, offset, childType);
+        offset += Encoder.encodeUint8(buffer, offset, childIndex);
 
         return offset - startOffset;
     }
@@ -139,9 +139,9 @@ public final class EnterDeviceChildMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int deviceIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -154,23 +154,4 @@ public final class EnterDeviceChildMessage {
         return new EnterDeviceChildMessage(deviceIndex, childType, childIndex);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# EnterDeviceChild\n");
-        sb.append("enterDeviceChild:\n");
-        sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
-        sb.append("  childType: ").append(getChildType()).append("\n");
-        sb.append("  childIndex: ").append(getChildIndex()).append("\n");
-        return sb.toString();
-    }
 }  // class Message

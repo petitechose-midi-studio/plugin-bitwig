@@ -1,6 +1,7 @@
 package protocol.struct;
 
 import protocol.MessageID;
+import protocol.Decoder;
 
 /**
  * ExitToParentMessage - Auto-generated Protocol Message
@@ -51,7 +52,7 @@ public final class ExitToParentMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 13;
 
@@ -65,7 +66,7 @@ public final class ExitToParentMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
@@ -79,12 +80,12 @@ public final class ExitToParentMessage {
     // ============================================================================
 
     /**
-     * Minimum payload size in bytes (message name only)
+     * Minimum payload size in bytes (name prefix only)
      */
     private static final int MIN_PAYLOAD_SIZE = 13;
 
     /**
-     * Decode message from MIDI-safe bytes (message name only, no fields)
+     * Decode message from bytes (no fields, with name prefix)
      * @param data Input buffer
      * @return New ExitToParentMessage instance
      * @throws IllegalArgumentException if data is invalid or insufficient
@@ -93,30 +94,11 @@ public final class ExitToParentMessage {
         if (data.length < MIN_PAYLOAD_SIZE) {
             throw new IllegalArgumentException("Insufficient data for ExitToParentMessage decode");
         }
-
+        // Skip MESSAGE_NAME prefix
         int offset = 0;
-
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
-
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
         return new ExitToParentMessage();
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# ExitToParent\n");
-        sb.append("exitToParent:\n");
-        return sb.toString();
-    }
 }  // class Message

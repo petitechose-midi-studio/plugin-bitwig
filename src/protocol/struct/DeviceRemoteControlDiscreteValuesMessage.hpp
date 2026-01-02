@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -62,17 +61,17 @@ struct DeviceRemoteControlDiscreteValuesMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, remoteControlIndex);
-        encodeUint8(ptr, discreteValueNames.size());
+        Encoder::encodeUint8(ptr, remoteControlIndex);
+        Encoder::encodeUint8(ptr, discreteValueNames.size());
         for (const auto& item : discreteValueNames) {
-            encodeString(ptr, item);
+            Encoder::encodeString(ptr, item);
         }
-        encodeUint8(ptr, currentValueIndex);
+        Encoder::encodeUint8(ptr, currentValueIndex);
 
         return ptr - buffer;
     }
@@ -92,59 +91,27 @@ struct DeviceRemoteControlDiscreteValuesMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t remoteControlIndex;
-        if (!decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, remoteControlIndex)) return std::nullopt;
         std::vector<std::string> discreteValueNames_data;
         uint8_t count_discreteValueNames;
-        if (!decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, count_discreteValueNames)) return std::nullopt;
         for (uint8_t i = 0; i < count_discreteValueNames && i < 32; ++i) {
             std::string temp_item;
-            if (!decodeString(ptr, remaining, temp_item)) return std::nullopt;
+            if (!Decoder::decodeString(ptr, remaining, temp_item)) return std::nullopt;
             discreteValueNames_data.push_back(temp_item);
         }
         uint8_t currentValueIndex;
-        if (!decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, currentValueIndex)) return std::nullopt;
 
         return DeviceRemoteControlDiscreteValuesMessage{remoteControlIndex, discreteValueNames_data, currentValueIndex};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# DeviceRemoteControlDiscreteValues\ndeviceRemoteControlDiscreteValues:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  remoteControlIndex: %lu\n", (unsigned long)remoteControlIndex);
-        ptr += snprintf(ptr, end - ptr, "  discreteValueNames:");
-        if (discreteValueNames.size() == 0) {
-            ptr += snprintf(ptr, end - ptr, " []\n");
-        } else {
-            ptr += snprintf(ptr, end - ptr, "\n");
-            for (size_t i = 0; i < discreteValueNames.size(); ++i) {
-                ptr += snprintf(ptr, end - ptr, "    - \"%s\"\n", discreteValueNames[i].c_str());
-            }
-        }
-        ptr += snprintf(ptr, end - ptr, "  currentValueIndex: %lu\n", (unsigned long)currentValueIndex);
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

@@ -65,7 +65,7 @@ public final class RequestTrackListWindowMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 24;
 
@@ -79,13 +79,13 @@ public final class RequestTrackListWindowMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, trackStartIndex);
+        offset += Encoder.encodeUint8(buffer, offset, trackStartIndex);
 
         return offset - startOffset;
     }
@@ -113,9 +113,9 @@ public final class RequestTrackListWindowMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int trackStartIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -123,21 +123,4 @@ public final class RequestTrackListWindowMessage {
         return new RequestTrackListWindowMessage(trackStartIndex);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# RequestTrackListWindow\n");
-        sb.append("requestTrackListWindow:\n");
-        sb.append("  trackStartIndex: ").append(getTrackStartIndex()).append("\n");
-        return sb.toString();
-    }
 }  // class Message

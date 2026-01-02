@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include "../ViewType.hpp"
 #include <cstdint>
 #include <cstring>
@@ -60,13 +59,13 @@ struct ViewStateMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeUint8(ptr, static_cast<uint8_t>(viewType));
-        encodeBool(ptr, selectorActive);
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(viewType));
+        Encoder::encodeBool(ptr, selectorActive);
 
         return ptr - buffer;
     }
@@ -86,43 +85,20 @@ struct ViewStateMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         uint8_t viewType_raw;
-        if (!decodeUint8(ptr, remaining, viewType_raw)) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, viewType_raw)) return std::nullopt;
         ViewType viewType = static_cast<ViewType>(viewType_raw);
         bool selectorActive;
-        if (!decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, selectorActive)) return std::nullopt;
 
         return ViewStateMessage{viewType, selectorActive};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# ViewState\nviewState:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  viewType: %d\n", static_cast<int>(viewType));
-        ptr += snprintf(ptr, end - ptr, "  selectorActive: %s\n", selectorActive ? "true" : "false");
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

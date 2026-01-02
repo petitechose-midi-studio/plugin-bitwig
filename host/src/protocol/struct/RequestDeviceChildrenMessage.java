@@ -77,7 +77,7 @@ public final class RequestDeviceChildrenMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 24;
 
@@ -91,14 +91,14 @@ public final class RequestDeviceChildrenMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
-        offset += Encoder.writeUint8(buffer, offset, childType);
+        offset += Encoder.encodeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.encodeUint8(buffer, offset, childType);
 
         return offset - startOffset;
     }
@@ -126,9 +126,9 @@ public final class RequestDeviceChildrenMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int deviceIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -139,22 +139,4 @@ public final class RequestDeviceChildrenMessage {
         return new RequestDeviceChildrenMessage(deviceIndex, childType);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# RequestDeviceChildren\n");
-        sb.append("requestDeviceChildren:\n");
-        sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
-        sb.append("  childType: ").append(getChildType()).append("\n");
-        return sb.toString();
-    }
 }  // class Message

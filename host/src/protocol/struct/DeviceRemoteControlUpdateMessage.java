@@ -187,7 +187,7 @@ public final class DeviceRemoteControlUpdateMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 111;
 
@@ -201,23 +201,23 @@ public final class DeviceRemoteControlUpdateMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, remoteControlIndex);
-        offset += Encoder.writeString(buffer, offset, parameterName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeFloat32(buffer, offset, parameterValue);
-        offset += Encoder.writeString(buffer, offset, displayValue, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeFloat32(buffer, offset, parameterOrigin);
-        offset += Encoder.writeBool(buffer, offset, parameterExists);
-        offset += Encoder.writeUint8(buffer, offset, parameterType.getValue());
-        offset += Encoder.writeInt16(buffer, offset, discreteValueCount);
-        offset += Encoder.writeUint8(buffer, offset, currentValueIndex);
-        offset += Encoder.writeBool(buffer, offset, hasAutomation);
-        offset += Encoder.writeFloat32(buffer, offset, modulatedValue);
+        offset += Encoder.encodeUint8(buffer, offset, remoteControlIndex);
+        offset += Encoder.encodeString(buffer, offset, parameterName);
+        offset += Encoder.encodeFloat32(buffer, offset, parameterValue);
+        offset += Encoder.encodeString(buffer, offset, displayValue);
+        offset += Encoder.encodeFloat32(buffer, offset, parameterOrigin);
+        offset += Encoder.encodeBool(buffer, offset, parameterExists);
+        offset += Encoder.encodeUint8(buffer, offset, parameterType.getValue());
+        offset += Encoder.encodeInt16(buffer, offset, discreteValueCount);
+        offset += Encoder.encodeUint8(buffer, offset, currentValueIndex);
+        offset += Encoder.encodeBool(buffer, offset, hasAutomation);
+        offset += Encoder.encodeFloat32(buffer, offset, modulatedValue);
 
         return offset - startOffset;
     }
@@ -245,9 +245,9 @@ public final class DeviceRemoteControlUpdateMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int remoteControlIndex = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -276,43 +276,4 @@ public final class DeviceRemoteControlUpdateMessage {
         return new DeviceRemoteControlUpdateMessage(remoteControlIndex, parameterName, parameterValue, displayValue, parameterOrigin, parameterExists, parameterType, discreteValueCount, currentValueIndex, hasAutomation, modulatedValue);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceRemoteControlUpdate\n");
-        sb.append("deviceRemoteControlUpdate:\n");
-        sb.append("  remoteControlIndex: ").append(getRemoteControlIndex()).append("\n");
-        sb.append("  parameterName: \"").append(getParameterName()).append("\"\n");
-        sb.append("  parameterValue: ").append(formatFloat(getParameterValue())).append("\n");
-        sb.append("  displayValue: \"").append(getDisplayValue()).append("\"\n");
-        sb.append("  parameterOrigin: ").append(formatFloat(getParameterOrigin())).append("\n");
-        sb.append("  parameterExists: ").append(getParameterExists() ? "true" : "false").append("\n");
-        sb.append("  parameterType: ").append(getParameterType().ordinal()).append("\n");
-        sb.append("  discreteValueCount: ").append(getDiscreteValueCount()).append("\n");
-        sb.append("  currentValueIndex: ").append(getCurrentValueIndex()).append("\n");
-        sb.append("  hasAutomation: ").append(getHasAutomation() ? "true" : "false").append("\n");
-        sb.append("  modulatedValue: ").append(formatFloat(getModulatedValue())).append("\n");
-        return sb.toString();
-    }
 }  // class Message

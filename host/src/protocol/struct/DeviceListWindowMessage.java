@@ -167,7 +167,7 @@ public final class DeviceListWindowMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 711;
 
@@ -181,27 +181,27 @@ public final class DeviceListWindowMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, deviceCount);
-        offset += Encoder.writeUint8(buffer, offset, deviceStartIndex);
-        offset += Encoder.writeUint8(buffer, offset, deviceIndex);
-        offset += Encoder.writeBool(buffer, offset, isNested);
-        offset += Encoder.writeString(buffer, offset, parentName, ProtocolConstants.STRING_MAX_LENGTH);
-        offset += Encoder.writeUint8(buffer, offset, devices.length);
+        offset += Encoder.encodeUint8(buffer, offset, deviceCount);
+        offset += Encoder.encodeUint8(buffer, offset, deviceStartIndex);
+        offset += Encoder.encodeUint8(buffer, offset, deviceIndex);
+        offset += Encoder.encodeBool(buffer, offset, isNested);
+        offset += Encoder.encodeString(buffer, offset, parentName);
+        offset += Encoder.encodeUint8(buffer, offset, devices.length);
 
         for (Devices item : devices) {
-            offset += Encoder.writeUint8(buffer, offset, item.getDeviceIndex());
-            offset += Encoder.writeString(buffer, offset, item.getDeviceName(), ProtocolConstants.STRING_MAX_LENGTH);
-            offset += Encoder.writeBool(buffer, offset, item.isEnabled());
-            offset += Encoder.writeUint8(buffer, offset, item.getDeviceType().getValue());
-            offset += Encoder.writeUint8(buffer, offset, item.getChildrenTypes().length);
+            offset += Encoder.encodeUint8(buffer, offset, item.getDeviceIndex());
+            offset += Encoder.encodeString(buffer, offset, item.getDeviceName());
+            offset += Encoder.encodeBool(buffer, offset, item.isEnabled());
+            offset += Encoder.encodeUint8(buffer, offset, item.getDeviceType().getValue());
+            offset += Encoder.encodeUint8(buffer, offset, item.getChildrenTypes().length);
             for (int type : item.getChildrenTypes()) {
-                offset += Encoder.writeUint8(buffer, offset, type);
+                offset += Encoder.encodeUint8(buffer, offset, type);
             }
         }
 
@@ -216,7 +216,7 @@ public final class DeviceListWindowMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 103;
+    private static final int MIN_PAYLOAD_SIZE = 23;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -232,9 +232,9 @@ public final class DeviceListWindowMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int deviceCount = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -274,32 +274,4 @@ public final class DeviceListWindowMessage {
         return new DeviceListWindowMessage(deviceCount, deviceStartIndex, deviceIndex, isNested, parentName, devices);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceListWindow\n");
-        sb.append("deviceListWindow:\n");
-        sb.append("  deviceCount: ").append(getDeviceCount()).append("\n");
-        sb.append("  deviceStartIndex: ").append(getDeviceStartIndex()).append("\n");
-        sb.append("  deviceIndex: ").append(getDeviceIndex()).append("\n");
-        sb.append("  isNested: ").append(isNested() ? "true" : "false").append("\n");
-        sb.append("  parentName: \"").append(getParentName()).append("\"\n");
-        sb.append("  devices:\n");
-        for (Devices item : getDevices()) {
-            sb.append("    - deviceIndex: ").append(item.getDeviceIndex()).append("\n");
-            sb.append("      deviceName: \"").append(item.getDeviceName()).append("\"\n");
-            sb.append("      isEnabled: ").append(item.isEnabled() ? "true" : "false").append("\n");
-            sb.append("      deviceType: ").append(item.getDeviceType().ordinal()).append("\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

@@ -1,269 +1,133 @@
 package protocol;
 
 /**
- * Decoder - 8-bit Binary Decoder (Serial8 Protocol)
+ * Decoder.java
  *
  * AUTO-GENERATED - DO NOT EDIT
- * Generated from: builtin_types.yaml
- *
- * This class provides static decode methods for all builtin primitive
- * types. Decodes 8-bit binary bytes to native types.
- *
- * Supported types: bool, uint8, uint16, uint32, int8, int16, int32, float32, norm8, norm16, string
- *
- * Decoding Strategy:
- * - Direct byte reads (no 7-bit constraint)
- * - Little-endian for multi-byte integers
- * - IEEE 754 for floats
- * - 8-bit length prefix for strings/arrays
- *
- * Performance:
- * - Static methods for zero overhead
- * - Direct byte array manipulation
- * - More efficient than 7-bit decoding
- *
- * Companion file: Encoder.java
  */
+
+// Serial8 Decoder - 8-bit binary
+
+
 public final class Decoder {
-
-    // Private constructor prevents instantiation (utility class)
-    private Decoder() {
-        throw new AssertionError("Utility class cannot be instantiated");
-    }
-
-    // ============================================================================
-    // DECODE METHODS (8-bit binary bytes -> Type)
-    // ============================================================================
-    // Returns decoded value or throws IllegalArgumentException on error
-
 
     /**
      * Decode bool (1 byte)
-     * Boolean value (true/false)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value
-     * @throws IllegalArgumentException if insufficient data
+     * Boolean value (true/false) (1 byte)
      */
-    public static boolean decodeBool(byte[] data, int offset) {
-        if (data.length - offset < 1) {
-            throw new IllegalArgumentException("Insufficient data for bool decode");
-        }
-        return data[offset] != 0x00;
+    public static boolean decodeBool(byte[] buffer, int offset) {
+        return buffer[offset] != 0;
     }
 
-
     /**
-     * Decode float32 (4 bytes, IEEE 754 little-endian)
-     * 32-bit IEEE 754 floating point
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value
-     * @throws IllegalArgumentException if insufficient data
+     * Decode float32 (4 bytes)
+     * 32-bit IEEE 754 floating point (4 bytes, IEEE 754 little-endian)
      */
-    public static float decodeFloat32(byte[] data, int offset) {
-        if (data.length - offset < 4) {
-            throw new IllegalArgumentException("Insufficient data for float32 decode");
-        }
-
-        int bits = (data[offset] & 0xFF)
-                 | ((data[offset + 1] & 0xFF) << 8)
-                 | ((data[offset + 2] & 0xFF) << 16)
-                 | ((data[offset + 3] & 0xFF) << 24);
-
+    public static float decodeFloat32(byte[] buffer, int offset) {
+        int bits = (buffer[offset + 0] & 0xFF)
+            | ((buffer[offset + 1] & 0xFF) << 8)
+            | ((buffer[offset + 2] & 0xFF) << 16)
+            | ((buffer[offset + 3] & 0xFF) << 24);
         return Float.intBitsToFloat(bits);
     }
 
-
     /**
-     * Decode int16 (2 bytes, little-endian)
-     * 16-bit signed integer (-32768 to 32767)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value
-     * @throws IllegalArgumentException if insufficient data
+     * Decode int16 (2 bytes)
+     * 16-bit signed integer (-32768 to 32767) (2 bytes, little-endian)
      */
-    public static short decodeInt16(byte[] data, int offset) {
-        if (data.length - offset < 2) {
-            throw new IllegalArgumentException("Insufficient data for int16 decode");
-        }
-
-        int bits = (data[offset] & 0xFF)
-                 | ((data[offset + 1] & 0xFF) << 8);
-
-        return (short) bits;
+    public static short decodeInt16(byte[] buffer, int offset) {
+        short result = (short)((buffer[offset + 0] & 0xFF) | ((buffer[offset + 1] & 0xFF) << 8));
+        return (short) result;
     }
 
-
     /**
-     * Decode int32 (4 bytes, little-endian)
-     * 32-bit signed integer (-2147483648 to 2147483647)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value
-     * @throws IllegalArgumentException if insufficient data
+     * Decode int32 (4 bytes)
+     * 32-bit signed integer (-2147483648 to 2147483647) (4 bytes, little-endian)
      */
-    public static int decodeInt32(byte[] data, int offset) {
-        if (data.length - offset < 4) {
-            throw new IllegalArgumentException("Insufficient data for int32 decode");
-        }
-
-        return (data[offset] & 0xFF)
-             | ((data[offset + 1] & 0xFF) << 8)
-             | ((data[offset + 2] & 0xFF) << 16)
-             | ((data[offset + 3] & 0xFF) << 24);
+    public static int decodeInt32(byte[] buffer, int offset) {
+        int result = (buffer[offset + 0] & 0xFF)
+            | ((buffer[offset + 1] & 0xFF) << 8)
+            | ((buffer[offset + 2] & 0xFF) << 16)
+            | ((buffer[offset + 3] & 0xFF) << 24);
+        return (int) result;
     }
 
-
     /**
-     * Decode int8 (1 byte, direct)
-     * 8-bit signed integer (-128 to 127)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value
-     * @throws IllegalArgumentException if insufficient data
+     * Decode int8 (1 byte)
+     * 8-bit signed integer (-128 to 127) (1 byte, direct)
      */
-    public static byte decodeInt8(byte[] data, int offset) {
-        if (data.length - offset < 1) {
-            throw new IllegalArgumentException("Insufficient data for int8 decode");
-        }
-        return data[offset];
+    public static byte decodeInt8(byte[] buffer, int offset) {
+        byte result = (byte)(buffer[offset + 0] & 0xFF);
+        return result;
     }
 
-
     /**
-     * Decode norm16 (2 bytes -> float 0.0-1.0)
-     * Normalized float (0.0-1.0) stored as uint16 for efficiency
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded normalized float value (0.0-1.0)
-     * @throws IllegalArgumentException if insufficient data
+     * Decode norm16 (2 bytes)
+     * Normalized float (0.0-1.0) stored as uint16 for efficiency (2 bytes, little-endian (0-65535))
      */
-    public static float decodeNorm16(byte[] data, int offset) {
-        if (data.length - offset < 2) {
-            throw new IllegalArgumentException("Insufficient data for norm16 decode");
-        }
-
-        int val = (data[offset] & 0xFF)
-                | ((data[offset + 1] & 0xFF) << 8);
-
-        return val / 65535.0f;
+    public static float decodeNorm16(byte[] buffer, int offset) {
+        int raw = (buffer[offset + 0] & 0xFF)
+            | ((buffer[offset + 1] & 0xFF) << 8);
+        return (float) raw / 65535.0f;
     }
 
-
     /**
-     * Decode norm8 (1 byte -> float 0.0-1.0)
-     * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded normalized float value (0.0-1.0)
-     * @throws IllegalArgumentException if insufficient data
+     * Decode norm8 (1 byte)
+     * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth (1 byte, full 8-bit range (0-255))
      */
-    public static float decodeNorm8(byte[] data, int offset) {
-        if (data.length - offset < 1) {
-            throw new IllegalArgumentException("Insufficient data for norm8 decode");
-        }
-
-        int val = data[offset] & 0xFF;
-        return val / 255.0f;
+    public static float decodeNorm8(byte[] buffer, int offset) {
+        int raw = buffer[offset] & 0xFF;
+        return (float) raw / 255.0f;
     }
-
 
     /**
      * Decode string (variable length)
-     * Variable-length UTF-8 string (prefixed with uint8 length)
+     * Variable-length UTF-8 string (prefixed with uint8 length) (1 byte length prefix + data (max 255 chars))
      *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @param maxLength Maximum allowed string length
+     * Format: [length] [char0] [char1] ... [charN-1]
+     * Max length: 255 chars
+     * @param buffer Input buffer
+     * @param offset Offset in buffer
+     * @param maxLength Maximum string length (for validation)
      * @return Decoded string
-     * @throws IllegalArgumentException if insufficient data or string too long
      */
-    public static String decodeString(byte[] data, int offset, int maxLength) {
-        if (data.length - offset < 1) {
-            throw new IllegalArgumentException("Insufficient data for string decode");
+    public static String decodeString(byte[] buffer, int offset, int maxLength) {
+        int len = Math.min(buffer[offset] & 0xFF, maxLength);
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++) {
+            sb.append((char) (buffer[offset + 1 + i] & 0xFF));
         }
-
-        int len = data[offset] & 0xFF;
-        offset++;
-
-        if (data.length - offset < len) {
-            throw new IllegalArgumentException("Insufficient data for string content");
-        }
-
-        if (len > maxLength) {
-            throw new IllegalArgumentException(
-                "String length " + len + " exceeds maximum " + maxLength);
-        }
-
-        return new String(data, offset, len);
+        return sb.toString();
     }
-
 
     /**
-     * Decode uint16 (2 bytes, little-endian)
-     * 16-bit unsigned integer (0-65535)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value (unsigned, returned as int)
-     * @throws IllegalArgumentException if insufficient data
+     * Decode uint16 (2 bytes)
+     * 16-bit unsigned integer (0-65535) (2 bytes, little-endian)
      */
-    public static int decodeUint16(byte[] data, int offset) {
-        if (data.length - offset < 2) {
-            throw new IllegalArgumentException("Insufficient data for uint16 decode");
-        }
-
-        return (data[offset] & 0xFF)
-                | ((data[offset + 1] & 0xFF) << 8);
+    public static int decodeUint16(byte[] buffer, int offset) {
+        int result = (buffer[offset + 0] & 0xFF)
+            | ((buffer[offset + 1] & 0xFF) << 8);
+        return result;
     }
-
 
     /**
-     * Decode uint32 (4 bytes, little-endian)
-     * 32-bit unsigned integer (0-4294967295)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value (unsigned, returned as long)
-     * @throws IllegalArgumentException if insufficient data
+     * Decode uint32 (4 bytes)
+     * 32-bit unsigned integer (0-4294967295) (4 bytes, little-endian)
      */
-    public static long decodeUint32(byte[] data, int offset) {
-        if (data.length - offset < 4) {
-            throw new IllegalArgumentException("Insufficient data for uint32 decode");
-        }
-
-        long val = (data[offset] & 0xFFL)
-                 | ((data[offset + 1] & 0xFFL) << 8)
-                 | ((data[offset + 2] & 0xFFL) << 16)
-                 | ((data[offset + 3] & 0xFFL) << 24);
-
-        return (int) val;
+    public static long decodeUint32(byte[] buffer, int offset) {
+        long result = (buffer[offset + 0] & 0xFF)
+            | ((buffer[offset + 1] & 0xFF) << 8)
+            | ((buffer[offset + 2] & 0xFF) << 16)
+            | ((buffer[offset + 3] & 0xFF) << 24);
+        return result;
     }
-
 
     /**
-     * Decode uint8 (1 byte, direct)
-     * 8-bit unsigned integer (0-255)
-     *
-     * @param data Byte array containing encoded data
-     * @param offset Start offset in array
-     * @return Decoded value (unsigned, returned as int)
-     * @throws IllegalArgumentException if insufficient data
+     * Decode uint8 (1 byte)
+     * 8-bit unsigned integer (0-255) (1 byte, direct)
      */
-    public static int decodeUint8(byte[] data, int offset) {
-        if (data.length - offset < 1) {
-            throw new IllegalArgumentException("Insufficient data for uint8 decode");
-        }
-        return (data[offset] & 0xFF);
+    public static int decodeUint8(byte[] buffer, int offset) {
+        int result = (buffer[offset + 0] & 0xFF);
+        return result;
     }
-
-
-}  // class Decoder
+}

@@ -100,7 +100,7 @@ public final class SendDestinationsListMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 295;
 
@@ -114,18 +114,18 @@ public final class SendDestinationsListMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, sendCount);
-        offset += Encoder.writeUint8(buffer, offset, sendDestinations.length);
+        offset += Encoder.encodeUint8(buffer, offset, sendCount);
+        offset += Encoder.encodeUint8(buffer, offset, sendDestinations.length);
 
         for (SendDestinations item : sendDestinations) {
-            offset += Encoder.writeUint8(buffer, offset, item.getSendIndex());
-            offset += Encoder.writeString(buffer, offset, item.getSendDestinationName(), ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.encodeUint8(buffer, offset, item.getSendIndex());
+            offset += Encoder.encodeString(buffer, offset, item.getSendDestinationName());
         }
 
 
@@ -139,7 +139,7 @@ public final class SendDestinationsListMessage {
     /**
      * Minimum payload size in bytes (with empty strings)
      */
-    private static final int MIN_PAYLOAD_SIZE = 39;
+    private static final int MIN_PAYLOAD_SIZE = 23;
 
     /**
      * Decode message from MIDI-safe bytes
@@ -155,9 +155,9 @@ public final class SendDestinationsListMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int sendCount = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -177,26 +177,4 @@ public final class SendDestinationsListMessage {
         return new SendDestinationsListMessage(sendCount, sendDestinations);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# SendDestinationsList\n");
-        sb.append("sendDestinationsList:\n");
-        sb.append("  sendCount: ").append(getSendCount()).append("\n");
-        sb.append("  sendDestinations:\n");
-        for (SendDestinations item : getSendDestinations()) {
-            sb.append("    - sendIndex: ").append(item.getSendIndex()).append("\n");
-            sb.append("      sendDestinationName: \"").append(item.getSendDestinationName()).append("\"\n");
-        }
-        return sb.toString();
-    }
 }  // class Message

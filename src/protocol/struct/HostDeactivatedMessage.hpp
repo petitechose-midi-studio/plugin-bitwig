@@ -17,7 +17,6 @@
 #include "../Decoder.hpp"
 #include "../MessageID.hpp"
 #include "../ProtocolConstants.hpp"
-#include "../Logger.hpp"
 #include <cstdint>
 #include <cstring>
 #include <optional>
@@ -58,12 +57,12 @@ struct HostDeactivatedMessage {
         uint8_t* ptr = buffer;
 
         // Encode message name (length-prefixed string for bridge logging)
-        encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
+        Encoder::encodeUint8(ptr, static_cast<uint8_t>(strlen(MESSAGE_NAME)));
         for (size_t i = 0; i < strlen(MESSAGE_NAME); ++i) {
             *ptr++ = static_cast<uint8_t>(MESSAGE_NAME[i]);
         }
 
-        encodeBool(ptr, isHostActive);
+        Encoder::encodeBool(ptr, isHostActive);
 
         return ptr - buffer;
     }
@@ -83,39 +82,17 @@ struct HostDeactivatedMessage {
         const uint8_t* ptr = data;
         size_t remaining = len;
 
-        // Skip message name prefix (length + name bytes)
+        // Skip MESSAGE_NAME prefix
         uint8_t nameLen;
-        if (!decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
-        if (remaining < nameLen) return std::nullopt;
+        if (!Decoder::decodeUint8(ptr, remaining, nameLen)) return std::nullopt;
         ptr += nameLen;
         remaining -= nameLen;
 
         // Decode fields
         bool isHostActive;
-        if (!decodeBool(ptr, remaining, isHostActive)) return std::nullopt;
+        if (!Decoder::decodeBool(ptr, remaining, isHostActive)) return std::nullopt;
 
         return HostDeactivatedMessage{isHostActive};
-    }
-
-
-    /**
-     * Convert message to YAML format for logging
-     *
-     * WARNING: Uses shared g_logBuffer - log immediately!
-     * Multiple calls will overwrite previous results.
-     *
-     * @return YAML string representation
-     */
-    const char* toString() const {
-        char* ptr = g_logBuffer;
-        const char* end = g_logBuffer + LOG_BUFFER_SIZE - 1;
-
-        ptr += snprintf(ptr, end - ptr, "# HostDeactivated\nhostDeactivated:\n");
-
-        ptr += snprintf(ptr, end - ptr, "  isHostActive: %s\n", isHostActive ? "true" : "false");
-
-        *ptr = '\0';
-        return g_logBuffer;
     }
 
 };

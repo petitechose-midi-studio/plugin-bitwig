@@ -138,7 +138,7 @@ public final class DeviceRemoteControlsBatchMessage {
     // ============================================================================
 
     /**
-     * Maximum payload size in bytes (8-bit encoded)
+     * Maximum payload size in bytes (8-bit binary)
      */
     public static final int MAX_PAYLOAD_SIZE = 313;
 
@@ -152,32 +152,32 @@ public final class DeviceRemoteControlsBatchMessage {
     public int encode(byte[] buffer, int startOffset) {
         int offset = startOffset;
 
-        // Encode message name (length-prefixed string for bridge logging)
+        // Encode MESSAGE_NAME prefix
         buffer[offset++] = (byte) MESSAGE_NAME.length();
         for (int i = 0; i < MESSAGE_NAME.length(); i++) {
             buffer[offset++] = (byte) MESSAGE_NAME.charAt(i);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, sequenceNumber);
-        offset += Encoder.writeUint8(buffer, offset, dirtyMask);
-        offset += Encoder.writeUint8(buffer, offset, echoMask);
-        offset += Encoder.writeUint8(buffer, offset, hasAutomationMask);
-        offset += Encoder.writeUint8(buffer, offset, values.length);
+        offset += Encoder.encodeUint8(buffer, offset, sequenceNumber);
+        offset += Encoder.encodeUint8(buffer, offset, dirtyMask);
+        offset += Encoder.encodeUint8(buffer, offset, echoMask);
+        offset += Encoder.encodeUint8(buffer, offset, hasAutomationMask);
+        offset += Encoder.encodeUint8(buffer, offset, values.length);
 
         for (float item : values) {
-            offset += Encoder.writeNorm8(buffer, offset, item);
+            offset += Encoder.encodeNorm8(buffer, offset, item);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, modulatedValues.length);
+        offset += Encoder.encodeUint8(buffer, offset, modulatedValues.length);
 
         for (float item : modulatedValues) {
-            offset += Encoder.writeNorm8(buffer, offset, item);
+            offset += Encoder.encodeNorm8(buffer, offset, item);
         }
 
-        offset += Encoder.writeUint8(buffer, offset, displayValues.length);
+        offset += Encoder.encodeUint8(buffer, offset, displayValues.length);
 
         for (String item : displayValues) {
-            offset += Encoder.writeString(buffer, offset, item, ProtocolConstants.STRING_MAX_LENGTH);
+            offset += Encoder.encodeString(buffer, offset, item);
         }
 
 
@@ -207,9 +207,9 @@ public final class DeviceRemoteControlsBatchMessage {
 
         int offset = 0;
 
-        // Skip message name prefix (length + name bytes)
-        int nameLen = data[offset++] & 0xFF;
-        offset += nameLen;
+        // Skip MESSAGE_NAME prefix
+        int nameLen = Decoder.decodeUint8(data, offset);
+        offset += 1 + nameLen;
 
         int sequenceNumber = Decoder.decodeUint8(data, offset);
         offset += 1;
@@ -250,63 +250,4 @@ public final class DeviceRemoteControlsBatchMessage {
         return new DeviceRemoteControlsBatchMessage(sequenceNumber, dirtyMask, echoMask, hasAutomationMask, values, modulatedValues, displayValues);
     }
 
-    // ============================================================================
-    // Logging
-    // ============================================================================
-    
-    /**
-     * Format float with 4 decimal places, handling edge cases.
-     * 
-     * @param value Float value to format
-     * @return Formatted string (e.g., "3.1416", "NaN", "Inf")
-     */
-    private static String formatFloat(float value) {
-        if (Float.isNaN(value)) return "NaN";
-        if (Float.isInfinite(value)) return value > 0 ? "Inf" : "-Inf";
-        return String.format("%.4f", value);
-    }
-    
-    /**
-     * Convert message to YAML format for logging.
-     * 
-     * @return YAML string representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("# DeviceRemoteControlsBatch\n");
-        sb.append("deviceRemoteControlsBatch:\n");
-        sb.append("  sequenceNumber: ").append(getSequenceNumber()).append("\n");
-        sb.append("  dirtyMask: ").append(getDirtyMask()).append("\n");
-        sb.append("  echoMask: ").append(getEchoMask()).append("\n");
-        sb.append("  hasAutomationMask: ").append(getHasAutomationMask()).append("\n");
-        sb.append("  values:");
-        if (getValues().length == 0) {
-            sb.append(" []\n");
-        } else {
-            sb.append("\n");
-            for (float item : getValues()) {
-                sb.append("    - ").append(formatFloat(item)).append("\n");
-            }
-        }
-        sb.append("  modulatedValues:");
-        if (getModulatedValues().length == 0) {
-            sb.append(" []\n");
-        } else {
-            sb.append("\n");
-            for (float item : getModulatedValues()) {
-                sb.append("    - ").append(formatFloat(item)).append("\n");
-            }
-        }
-        sb.append("  displayValues:");
-        if (getDisplayValues().length == 0) {
-            sb.append(" []\n");
-        } else {
-            sb.append("\n");
-            for (String item : getDisplayValues()) {
-                sb.append("    - \"").append(item).append("\"\n");
-            }
-        }
-        return sb.toString();
-    }
 }  // class Message
