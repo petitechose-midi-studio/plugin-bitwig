@@ -76,6 +76,9 @@ constexpr int16_t TOP_BAR_HEIGHT = 20;
 constexpr int16_t TRANSPORT_BAR_HEIGHT = 20;
 constexpr int16_t HINT_BAR_HEIGHT = 20;
 
+// Parameter Labels
+constexpr int16_t PARAMETER_LABEL_OFFSET = -8;
+
 // Parameter grid (4x2 layout in body)
 constexpr int16_t PARAMETER_GRID_COLS = 4;
 constexpr int16_t PARAMETER_GRID_ROWS = 2;
@@ -89,6 +92,7 @@ constexpr int16_t LEVEL_BAR_WIDTH = 60;
 constexpr int16_t COLOR_BAR_WIDTH = 4;
 constexpr int16_t INDICATOR_SIZE = 12;
 constexpr int16_t AUTOMATION_INDICATOR_SIZE = 8;  // Automation LED size (smaller)
+constexpr int16_t AUTOMATION_INDICATOR_OFFSET = PARAMETER_LABEL_OFFSET;
 
 // Padding scale (4px base unit)
 constexpr int16_t PAD_XS = 2;

@@ -20,17 +20,18 @@ ParameterKnobWidget::~ParameterKnobWidget() {
 void ParameterKnobWidget::createUI(lv_coord_t width, lv_coord_t height, bool centered) {
     createContainerWithGrid(width, height);
 
-    // Knob widget - self-sizing, centered horizontally, aligned to bottom (closer to label)
+    // Knob widget - stretch horizontally, CONTENT row sizes to knob height
     knob_ = std::make_unique<oc::ui::lvgl::KnobWidget>(container_);
-    knob_->centered(centered)
+    knob_->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
+        .centered(centered)
         .bgColor(Color::KNOB_BACKGROUND)
         .trackColor(Color::KNOB_VALUE_RIBBON)
         .valueColor(Color::KNOB_VALUE_INDICATOR)
         .ribbonThickness(0.3)
         .flashColor(Color::DATA_ACTIVE);
     lv_obj_set_grid_cell(knob_->getElement(),
-        LV_GRID_ALIGN_CENTER, 0, 1,  // Horizontal: center
-        LV_GRID_ALIGN_END, 0, 1);    // Vertical: bottom of FR(1) space
+        LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: stretch to get width
+        LV_GRID_ALIGN_START, 0, 1);   // Vertical: start in CONTENT row
 
     // Automation indicator - overlay inside knob widget
     automationIndicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
@@ -39,7 +40,7 @@ void ParameterKnobWidget::createUI(lv_coord_t width, lv_coord_t height, bool cen
     automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_FLOATING);
     lv_obj_set_align(automationIndicator_->getElement(), LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_y(automationIndicator_->getElement(), -Layout::PAD_MD);  // 6px inside bottom
+    lv_obj_set_y(automationIndicator_->getElement(), Layout::AUTOMATION_INDICATOR_OFFSET);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
 
     createNameLabel();
