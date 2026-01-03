@@ -118,27 +118,30 @@ constexpr int16_t HINT_BAR_EDGE_PAD = 24;   // Padding from screen edges for hin
 }  // namespace Layout
 
 // =============================================================================
-// Opacity constants - Semantic opacity levels
+// Opacity - Aliases to BaseTheme + Bitwig-specific
 // =============================================================================
 namespace Opacity {
 
-constexpr uint8_t FULL = 255;        // LV_OPA_COVER - fully visible
-constexpr uint8_t OVERLAY_BG = 230;  // ~90% - modal overlay backgrounds
-constexpr uint8_t SUBTLE = 178;      // ~70% - secondary icons, hints
-constexpr uint8_t DIMMED = 127;      // ~50% - disabled elements
+// From BaseTheme
+constexpr uint8_t FULL = BaseTheme::Opacity::OPA_FULL;
+constexpr uint8_t OVERLAY_BG = BaseTheme::Opacity::OPA_90;
+constexpr uint8_t SUBTLE = BaseTheme::Opacity::OPA_70;
+constexpr uint8_t DIMMED = BaseTheme::Opacity::OPA_50;
+constexpr uint8_t SCROLLBAR = BaseTheme::Opacity::OPA_30;
+constexpr uint8_t HIDDEN = BaseTheme::Opacity::OPA_TRANSP;
+
+// Bitwig-specific
 constexpr uint8_t FADED = 102;       // ~40% - inactive but visible
-constexpr uint8_t SCROLLBAR = 77;    // ~30% - scrollbar track
 constexpr uint8_t HINT = 51;         // ~20% - very subtle background hints
-constexpr uint8_t HIDDEN = 0;        // LV_OPA_TRANSP - invisible
 
 }  // namespace Opacity
 
 // =============================================================================
-// Animation timing constants
+// Animation - Aliases to BaseTheme
 // =============================================================================
 namespace Animation {
 
-constexpr uint32_t FADE_MS = 300;  // Standard fade duration
+constexpr uint32_t FADE_MS = BaseTheme::Animation::NORMAL_MS;
 
 }  // namespace Animation
 
