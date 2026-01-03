@@ -20,15 +20,16 @@ ParameterButtonWidget::~ParameterButtonWidget() {
 void ParameterButtonWidget::createUI(lv_coord_t width, lv_coord_t height) {
     createContainerWithGrid(width, height);
 
-    // Button widget - self-sizing, centered in grid cell
+    // Button widget - stretch horizontally, CONTENT row sizes to button height
     button_ = std::make_unique<oc::ui::lvgl::ButtonWidget>(container_);
-    button_->offColor(Color::KNOB_BACKGROUND)
+    button_
+        ->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
+        .offColor(Color::KNOB_BACKGROUND)
         .onColor(Color::DATA_ACTIVE)
         .textOffColor(Color::TEXT_PRIMARY)
         .textOnColor(Color::TEXT_DARK);
-    lv_obj_set_grid_cell(button_->getElement(),
-        LV_GRID_ALIGN_CENTER, 0, 1,   // Horizontal: center
-        LV_GRID_ALIGN_CENTER, 0, 1);  // Vertical: center in FR(1) space
+    lv_obj_set_grid_cell(button_->getElement(), LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: stretch
+                         LV_GRID_ALIGN_START, 0, 1);  // Vertical: start in CONTENT row
 
     // Automation indicator - overlay inside button widget
     automationIndicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
@@ -37,7 +38,7 @@ void ParameterButtonWidget::createUI(lv_coord_t width, lv_coord_t height) {
     automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_FLOATING);
     lv_obj_set_align(automationIndicator_->getElement(), LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_y(automationIndicator_->getElement(), -Layout::PAD_MD);  // 6px inside bottom
+    lv_obj_set_y(automationIndicator_->getElement(), Layout::AUTOMATION_INDICATOR_OFFSET);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
 
     createNameLabel();

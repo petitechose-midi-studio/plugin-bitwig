@@ -24,22 +24,23 @@ ParameterListWidget::~ParameterListWidget() {
 void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     createContainerWithGrid(width, height);
 
-    // Enum widget - stretched to fill grid cell
+    // Enum widget - stretch horizontally, CONTENT row sizes to widget height
     enum_widget_ = std::make_unique<oc::ui::lvgl::EnumWidget>(container_);
-    enum_widget_->lineColor(Color::DATA_INACTIVE).flashColor(Color::DATA_ACTIVE);
-    lv_obj_set_grid_cell(enum_widget_->getElement(),
-        LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
-        LV_GRID_ALIGN_STRETCH, 0, 1); // Vertical: fill FR(1) space
+    enum_widget_
+        ->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
+        .lineColor(Color::DATA_INACTIVE)
+        .flashColor(Color::DATA_ACTIVE);
+    lv_obj_set_grid_cell(enum_widget_->getElement(), LV_GRID_ALIGN_STRETCH, 0,
+                         1,                           // Horizontal: full width
+                         LV_GRID_ALIGN_START, 0, 1);  // Vertical: start in CONTENT row
 
-    // Value label inside enum widget's inner area using framework Label
+    // Value label inside enum widget's inner area (flex column: line + label)
     value_label_ = std::make_unique<oc::ui::lvgl::Label>(enum_widget_->inner());
     value_label_->alignment(LV_TEXT_ALIGN_CENTER)
                 .color(Color::TEXT_PRIMARY)
                 .font(bitwig_fonts.param_label)
                 .ownsLvglObjects(false);
-
-    lv_obj_set_size(value_label_->getElement(), LV_PCT(100), LV_SIZE_CONTENT);
-    lv_obj_center(value_label_->getElement());
+    // Flex handles vertical stacking and centering
 
     // Automation indicator - overlay inside enum widget
     automationIndicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
@@ -48,7 +49,7 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_FLOATING);
     lv_obj_set_align(automationIndicator_->getElement(), LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_y(automationIndicator_->getElement(), -Layout::PAD_MD);  // 6px inside bottom
+    lv_obj_set_y(automationIndicator_->getElement(), Layout::AUTOMATION_INDICATOR_OFFSET);
     lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
 
     createNameLabel();

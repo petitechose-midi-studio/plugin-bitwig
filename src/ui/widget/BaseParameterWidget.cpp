@@ -25,9 +25,10 @@ void BaseParameterWidget::createContainerWithGrid(lv_coord_t width, lv_coord_t h
     lv_obj_set_size(container_, width, height);
     style::apply(container_).transparent().noScroll();
 
-    // Grid: 1 column, 2 rows (FR(1) for widget, CONTENT for label)
+    // Grid: 1 column, 2 rows (CONTENT for widget, CONTENT for label)
+    // Widget uses SquareSizePolicy to set its height = width automatically
     static const int32_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
-    static const int32_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST};
+    static const int32_t row_dsc[] = {LV_GRID_CONTENT, LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST};
     lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
     lv_obj_set_layout(container_, LV_LAYOUT_GRID);
 }
@@ -39,6 +40,10 @@ void BaseParameterWidget::createNameLabel() {
                .color(Color::TEXT_PRIMARY)
                .font(bitwig_fonts.param_label)
                .ownsLvglObjects(false);
+
+    // Offset text slightly upward, ensure no top clipping
+    lv_obj_set_style_pad_top(name_label_->getElement(), 0, 0);
+    lv_obj_set_style_translate_y(name_label_->getElement(), Layout::PARAMETER_LABEL_OFFSET, 0);
 
     lv_obj_set_grid_cell(name_label_->getElement(),
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
