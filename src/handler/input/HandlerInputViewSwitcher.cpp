@@ -62,7 +62,7 @@ void HandlerInputViewSwitcher::setupBindings() {
 void HandlerInputViewSwitcher::openSelector() {
     OC_LOG_DEBUG("[ViewSwitcher] openSelector");
 
-    // Show overlay (OverlayManager handles exclusive visibility)
+    // Show overlay (ExclusiveVisibilityStack handles exclusive visibility)
     if (!state_.viewSelector.visible.get()) {
         state_.overlays.show(OverlayType::VIEW_SELECTOR, false);
     }

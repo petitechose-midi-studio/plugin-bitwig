@@ -6,7 +6,7 @@
  *
  * InputHandler pattern:
  * - Watches ViewManager.currentView() signal
- * - Watches overlay visibility (OverlayManager)
+ * - Watches overlay visibility (ExclusiveVisibilityStack)
  * - Sends ViewStateChangeMessage when either changes
  *
  * The host uses this to control modulated values batch:

@@ -68,7 +68,7 @@ void HandlerInputDevicePage::setupBindings() {
 }
 
 void HandlerInputDevicePage::openSelector() {
-    // Show overlay (OverlayManager handles exclusive visibility)
+    // Show overlay (ExclusiveVisibilityStack handles exclusive visibility)
     // Page names are preloaded by HandlerHostDevice on device change
     if (!state_.pageSelector.visible.get()) {
         state_.overlays.show(OverlayType::PAGE_SELECTOR, false);

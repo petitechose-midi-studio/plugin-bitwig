@@ -35,7 +35,7 @@
  * ```
  */
 
-#include <oc/state/OverlayManager.hpp>
+#include <oc/state/ExclusiveVisibilityStack.hpp>
 
 #include "Constants.hpp"
 #include "DeviceInfoState.hpp"
@@ -90,9 +90,9 @@ struct BitwigState {
     CurrentTrackState currentTrack;
 
     // =========================================================================
-    // Overlay Manager (centralized visibility control)
+    // Overlay visibility (centralized visibility control)
     // =========================================================================
-    oc::state::OverlayManager<OverlayType> overlays;
+    oc::state::ExclusiveVisibilityStack<OverlayType> overlays;
 
     // =========================================================================
     // View Manager (handles view switching)
@@ -105,10 +105,10 @@ struct BitwigState {
 
     BitwigState() {
         // Register overlays for centralized management
-        overlays.registerOverlay(OverlayType::PAGE_SELECTOR, pageSelector.visible);
-        overlays.registerOverlay(OverlayType::DEVICE_SELECTOR, deviceSelector.visible);
-        overlays.registerOverlay(OverlayType::TRACK_SELECTOR, trackSelector.visible);
-        overlays.registerOverlay(OverlayType::VIEW_SELECTOR, viewSelector.visible);
+        overlays.registerItem(OverlayType::PAGE_SELECTOR, pageSelector.visible);
+        overlays.registerItem(OverlayType::DEVICE_SELECTOR, deviceSelector.visible);
+        overlays.registerItem(OverlayType::TRACK_SELECTOR, trackSelector.visible);
+        overlays.registerItem(OverlayType::VIEW_SELECTOR, viewSelector.visible);
     }
 
     // Non-copyable, non-movable

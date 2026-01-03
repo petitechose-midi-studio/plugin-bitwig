@@ -42,7 +42,7 @@ void HandlerInputViewState::setupSubscriptions() {
 
 void HandlerInputViewState::sendViewState() {
     ViewType currentView = state_.views.current();
-    bool selectorActive = state_.overlays.hasVisibleOverlay();
+    bool selectorActive = state_.overlays.hasVisible();
 
     // Avoid duplicate sends
     if (currentView == lastViewType_ && selectorActive == lastSelectorActive_) {

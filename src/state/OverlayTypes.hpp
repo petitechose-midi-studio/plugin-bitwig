@@ -10,7 +10,7 @@
 namespace bitwig::state {
 
 /**
- * @brief Overlay types managed by OverlayManager
+ * @brief Overlay types managed by ExclusiveVisibilityStack
  */
 enum class OverlayType : uint8_t {
     NONE = 0,
