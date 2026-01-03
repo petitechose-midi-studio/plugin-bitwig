@@ -35,11 +35,13 @@
  * ```
  */
 
+#include <oc/state/OverlayManager.hpp>
+
 #include "Constants.hpp"
 #include "DeviceInfoState.hpp"
 #include "HostState.hpp"
 #include "LastClickedState.hpp"
-#include "OverlayManager.hpp"
+#include "OverlayTypes.hpp"
 #include "ParameterState.hpp"
 #include "SelectorState.hpp"
 #include "TransportState.hpp"
@@ -90,7 +92,7 @@ struct BitwigState {
     // =========================================================================
     // Overlay Manager (centralized visibility control)
     // =========================================================================
-    OverlayManager overlays;
+    oc::state::OverlayManager<OverlayType> overlays;
 
     // =========================================================================
     // View Manager (handles view switching)
