@@ -135,7 +135,7 @@ void BitwigContext::createOverlayController() {
     using state::OverlayType;
     using ButtonID = Config::ButtonID;
 
-    // Create controller wrapping the state's OverlayManager
+    // Create controller wrapping the state's ExclusiveVisibilityStack
     overlayController_ = std::make_unique<state::OverlayController>(state_.overlays, buttons());
 
     // Get scope IDs from overlay elements
