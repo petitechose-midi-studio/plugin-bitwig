@@ -1,7 +1,8 @@
 #include "BitwigContext.hpp"
 
 #include <oc/log/Log.hpp>
-#include <ui/font/FontLoader.hpp>  // Core's font system
+#include <oc/ui/lvgl/FontLoader.hpp>
+#include <ui/font/CoreFonts.hpp>
 
 #include "config/App.hpp"
 #include "protocol/MessageStructure.hpp"
@@ -15,7 +16,7 @@ namespace bitwig {
 
 void BitwigContext::loadResources() {
     OC_LOG_INFO("BitwigContext::loadResources()");
-    bitwigFontsRegister();  // Queue icon fonts for loading
+    // Fonts are now loaded in initialize() via FontLoader API
 }
 
 // Destructor must be in .cpp where handler types are complete
@@ -29,10 +30,10 @@ bool BitwigContext::initialize() {
     OC_LOG_INFO("BitwigContext initializing...");
 
     // Load fonts: core text fonts + plugin icon fonts
-    fontsRegisterCore();
-    fontsLoadEssential();
-    loadPluginFonts();
-    bitwigFontsLink();
+    oc::ui::lvgl::font::load(CORE_FONT_ENTRIES, CORE_FONT_COUNT);
+    oc::ui::lvgl::font::load(BITWIG_FONT_ENTRIES, BITWIG_FONT_COUNT);
+    linkCoreFontAliases();
+    linkBitwigFontAliases();
 
     createProtocol();
     createHostHandlers();
