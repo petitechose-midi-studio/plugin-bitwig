@@ -14,10 +14,10 @@ namespace bitwig::handler {
 using namespace oc::ui::lvgl;
 using ButtonID = Config::ButtonID;
 using EncoderID = Config::EncoderID;
-using OverlayType = state::OverlayType;
+using OverlayType = ui::OverlayType;
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
-                                                       ::state::OverlayController<bitwig::state::OverlayType>& overlays,
+                                                       ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                                        BitwigProtocol& protocol,
                                                        oc::api::EncoderAPI& encoders,
                                                        oc::api::ButtonAPI& buttons,

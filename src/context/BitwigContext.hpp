@@ -54,7 +54,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include <state/OverlayController.hpp>
+#include <ui/OverlayController.hpp>
 
 // Include all handlers (required for unique_ptr with make_unique in templates)
 #include "handler/host/HandlerHostDevice.hpp"
@@ -133,8 +133,8 @@ public:
     BitwigProtocol& protocol() { return *protocol_; }
     const BitwigProtocol& protocol() const { return *protocol_; }
 
-    ::state::OverlayController<bitwig::state::OverlayType>& overlays() { return *overlayController_; }
-    const ::state::OverlayController<bitwig::state::OverlayType>& overlays() const { return *overlayController_; }
+    ::ui::OverlayController<bitwig::ui::OverlayType>& overlays() { return *overlayController_; }
+    const ::ui::OverlayController<bitwig::ui::OverlayType>& overlays() const { return *overlayController_; }
 
 private:
     void createProtocol();
@@ -149,7 +149,7 @@ private:
 
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
-    std::unique_ptr<::state::OverlayController<bitwig::state::OverlayType>> overlayController_;
+    std::unique_ptr<::ui::OverlayController<bitwig::ui::OverlayType>> overlayController_;
 
     // Host Handlers (protocol → state)
     std::unique_ptr<handler::HandlerHostPlugin> hostPlugin_;
@@ -172,7 +172,7 @@ private:
     std::unique_ptr<handler::HandlerInputViewState> inputViewState_;
 
     // UI Container
-    std::unique_ptr<ui::ViewContainer> viewContainer_;
+    std::unique_ptr<::ui::ViewContainer> viewContainer_;
 
     // Views (managed by ViewManager)
     std::unique_ptr<RemoteControlsView> remoteControlsView_;

@@ -20,7 +20,7 @@
 #include <oc/state/Signal.hpp>
 
 #include "state/BitwigState.hpp"
-#include <state/OverlayController.hpp>
+#include <ui/OverlayController.hpp>
 
 namespace bitwig::handler {
 
@@ -34,7 +34,7 @@ namespace bitwig::handler {
 class HandlerInputViewSwitcher {
 public:
     HandlerInputViewSwitcher(state::BitwigState& state,
-                             ::state::OverlayController<bitwig::state::OverlayType>& overlays,
+                             ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                              oc::api::EncoderAPI& encoders,
                              oc::api::ButtonAPI& buttons,
                              lv_obj_t* scopeElement,
@@ -56,7 +56,7 @@ private:
     void cancel();
 
     state::BitwigState& state_;
-    ::state::OverlayController<bitwig::state::OverlayType>& overlays_;
+    ::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
     lv_obj_t* scopeElement_;

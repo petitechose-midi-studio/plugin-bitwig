@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace bitwig::state {
+namespace bitwig::ui {
 
 /**
  * @brief Overlay types managed by ExclusiveVisibilityStack
@@ -21,4 +21,4 @@ enum class OverlayType : uint8_t {
     COUNT  // Must be last
 };
 
-}  // namespace bitwig::state
+}  // namespace bitwig::ui
