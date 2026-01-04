@@ -78,7 +78,7 @@
 #include "ui/remotecontrols/RemoteControlsView.hpp"
 #include "ui/transportbar/TransportBar.hpp"
 #include "ui/view/ViewSelector.hpp"
-#include "ui/ViewContainer.hpp"
+#include <ui/ViewContainer.hpp>
 
 namespace bitwig {
 
@@ -172,7 +172,7 @@ private:
     std::unique_ptr<handler::HandlerInputViewState> inputViewState_;
 
     // UI Container
-    std::unique_ptr<ViewContainer> viewContainer_;
+    std::unique_ptr<ui::ViewContainer> viewContainer_;
 
     // Views (managed by ViewManager)
     std::unique_ptr<RemoteControlsView> remoteControlsView_;

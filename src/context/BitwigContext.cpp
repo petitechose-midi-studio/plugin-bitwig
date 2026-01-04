@@ -222,7 +222,7 @@ void BitwigContext::createInputHandlers() {
 
 void BitwigContext::createViews() {
     // ViewType is in global scope from protocol/ViewType.hpp
-    viewContainer_ = std::make_unique<ViewContainer>(lv_screen_active());
+    viewContainer_ = std::make_unique<ui::ViewContainer>(lv_screen_active());
     lv_obj_t* mainZone = viewContainer_->getMainZone();
 
     // Create all views (they start hidden)
@@ -258,8 +258,6 @@ void BitwigContext::createViews() {
         [renderViewSelector](bool) { renderViewSelector(); }));
     viewSelectorSubs_.push_back(state_.viewSelector.selectedIndex.subscribe(
         [renderViewSelector](int) { renderViewSelector(); }));
-
-    lv_obj_clear_flag(viewContainer_->getContainer(), LV_OBJ_FLAG_HIDDEN);
 }
 
 }  // namespace bitwig
