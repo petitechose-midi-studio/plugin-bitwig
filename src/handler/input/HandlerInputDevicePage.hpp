@@ -24,7 +24,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include "state/OverlayController.hpp"
+#include <state/OverlayController.hpp>
 
 namespace bitwig::handler {
 
@@ -38,7 +38,7 @@ namespace bitwig::handler {
 class HandlerInputDevicePage {
 public:
     HandlerInputDevicePage(state::BitwigState& state,
-                           state::OverlayController& overlays,
+                           ::state::OverlayController<bitwig::state::OverlayType>& overlays,
                            BitwigProtocol& protocol,
                            oc::api::EncoderAPI& encoders,
                            oc::api::ButtonAPI& buttons,
@@ -61,7 +61,7 @@ private:
     void cancel();
 
     state::BitwigState& state_;
-    state::OverlayController& overlays_;
+    ::state::OverlayController<bitwig::state::OverlayType>& overlays_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
