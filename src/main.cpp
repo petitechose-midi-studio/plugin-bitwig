@@ -14,6 +14,7 @@
 #include "config/App.hpp"
 #include "config/Buffer.hpp"
 #include "config/Hardware.hpp"
+#include "context/BitwigBootContext.hpp"
 #include "context/BitwigContext.hpp"
 
 // =============================================================================
@@ -31,7 +32,8 @@ static uint32_t getFreeRAM() {
 // =============================================================================
 
 enum class BitwigContextID : uint8_t {
-    BITWIG = 0,
+    BOOT = 0,
+    BITWIG = 1,
 };
 
 // =============================================================================
@@ -81,6 +83,8 @@ static void initApp() {
               .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
               .inputConfig(Config::Input::CONFIG);
 
+    // Boot context first (starts automatically as ID 0)
+    app->registerContext<bitwig::BitwigBootContext>(BitwigContextID::BOOT, "Boot");
     app->registerContext<bitwig::BitwigContext>(BitwigContextID::BITWIG, "Bitwig");
     app->begin();
 }
