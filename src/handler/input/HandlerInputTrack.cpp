@@ -11,10 +11,10 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using state::OverlayType;
+using ui::OverlayType;
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
-                                     ::state::OverlayController<bitwig::state::OverlayType>& overlays,
+                                     ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                      BitwigProtocol& protocol,
                                      oc::api::EncoderAPI& encoders,
                                      oc::api::ButtonAPI& buttons,

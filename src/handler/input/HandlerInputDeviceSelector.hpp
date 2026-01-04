@@ -24,7 +24,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include <state/OverlayController.hpp>
+#include <ui/OverlayController.hpp>
 
 namespace bitwig::handler {
 
@@ -40,7 +40,7 @@ namespace bitwig::handler {
 class HandlerInputDeviceSelector {
 public:
     HandlerInputDeviceSelector(state::BitwigState& state,
-                               ::state::OverlayController<bitwig::state::OverlayType>& overlays,
+                               ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                BitwigProtocol& protocol,
                                oc::api::EncoderAPI& encoders,
                                oc::api::ButtonAPI& buttons,
@@ -71,7 +71,7 @@ private:
     bool isShowingChildren() const;
 
     state::BitwigState& state_;
-    ::state::OverlayController<bitwig::state::OverlayType>& overlays_;
+    ::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;

@@ -11,11 +11,11 @@ namespace bitwig::handler {
 using namespace oc::ui::lvgl;
 using ButtonID = Config::ButtonID;
 using EncoderID = Config::EncoderID;
-using OverlayType = state::OverlayType;
+using OverlayType = ui::OverlayType;
 // ViewType is in global scope from protocol/ViewType.hpp
 
 HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
-                                                   ::state::OverlayController<bitwig::state::OverlayType>& overlays,
+                                                   ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                                    oc::api::EncoderAPI& encoders,
                                                    oc::api::ButtonAPI& buttons,
                                                    lv_obj_t* scopeElement,
