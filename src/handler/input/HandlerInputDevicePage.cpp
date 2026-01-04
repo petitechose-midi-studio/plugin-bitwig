@@ -15,7 +15,7 @@ using EncoderID = Config::EncoderID;
 using OverlayType = state::OverlayType;
 
 HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
-                                               state::OverlayController& overlays,
+                                               ::state::OverlayController<bitwig::state::OverlayType>& overlays,
                                                BitwigProtocol& protocol,
                                                oc::api::EncoderAPI& encoders,
                                                oc::api::ButtonAPI& buttons,
