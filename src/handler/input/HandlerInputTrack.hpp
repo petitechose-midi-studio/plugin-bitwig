@@ -34,7 +34,7 @@ namespace bitwig::handler {
 class HandlerInputTrack {
 public:
     HandlerInputTrack(state::BitwigState& state,
-                      ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                      ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                       BitwigProtocol& protocol,
                       oc::api::EncoderAPI& encoders,
                       oc::api::ButtonAPI& buttons,
@@ -60,7 +60,7 @@ private:
     int getAdjustedTrackIndex(int selectorIndex) const;
 
     state::BitwigState& state_;
-    ::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
+    ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
