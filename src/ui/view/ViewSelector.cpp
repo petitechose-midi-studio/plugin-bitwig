@@ -2,7 +2,7 @@
 
 #include <oc/log/Log.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 ViewSelector::ViewSelector(lv_obj_t* parent) : BaseSelector(parent) {
     setTitle("Select View");

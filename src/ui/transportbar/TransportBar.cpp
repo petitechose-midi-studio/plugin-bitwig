@@ -20,7 +20,7 @@ const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
 const lv_color_t COLOR_AUTOMATION_OVERRIDE = lv_color_hex(Color::AUTOMATION_OVERRIDE);
 }  // namespace
 
-namespace bitwig {
+namespace bitwig::ui {
 
 TransportBar::TransportBar(lv_obj_t* parent, bitwig::state::TransportState& state)
     : state_(state), parent_(parent) {

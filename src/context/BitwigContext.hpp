@@ -175,15 +175,15 @@ private:
     std::unique_ptr<::ui::ViewContainer> viewContainer_;
 
     // Views (managed by ViewManager)
-    std::unique_ptr<RemoteControlsView> remoteControlsView_;
-    std::unique_ptr<MixView> mixView_;
-    std::unique_ptr<ClipView> clipView_;
+    std::unique_ptr<ui::RemoteControlsView> remoteControlsView_;
+    std::unique_ptr<ui::MixView> mixView_;
+    std::unique_ptr<ui::ClipView> clipView_;
 
     // Persistent UI (always visible)
-    std::unique_ptr<TransportBar> transportBar_;
+    std::unique_ptr<ui::TransportBar> transportBar_;
 
     // Global overlays
-    std::unique_ptr<ViewSelector> viewSelector_;
+    std::unique_ptr<ui::ViewSelector> viewSelector_;
     std::vector<oc::state::Subscription> viewSelectorSubs_;
 };
 

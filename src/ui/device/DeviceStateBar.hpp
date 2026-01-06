@@ -12,7 +12,7 @@
 #include "protocol/DeviceType.hpp"
 #include "ui/widget/TitleItem.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct DeviceStateBarProps {
     const char *deviceName = "";

@@ -11,7 +11,7 @@
 
 #include "state/TransportState.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using oc::state::Subscription;
 using oc::ui::lvgl::IComponent;

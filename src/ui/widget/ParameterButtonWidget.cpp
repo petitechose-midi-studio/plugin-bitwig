@@ -4,7 +4,7 @@
 
 using namespace bitwig::theme;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 ParameterButtonWidget::ParameterButtonWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                              uint8_t index)

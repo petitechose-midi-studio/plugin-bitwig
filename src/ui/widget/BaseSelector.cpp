@@ -1,6 +1,6 @@
 #include "BaseSelector.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 BaseSelector::BaseSelector(lv_obj_t* parent) : parent_(parent), overlay_(parent) {}
 

@@ -30,7 +30,7 @@
 #include "ui/track/TrackSelector.hpp"
 #include "ui/widget/IParameterWidget.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using oc::ui::lvgl::IView;
 

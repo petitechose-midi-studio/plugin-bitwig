@@ -7,7 +7,7 @@
 
 LV_IMG_DECLARE(Bitwig_Logo);
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;

@@ -5,7 +5,7 @@
 
 #include "ui/widget/BaseSelector.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct ViewSelectorProps {
     std::vector<std::string> names;

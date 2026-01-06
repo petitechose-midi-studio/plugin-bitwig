@@ -9,7 +9,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t barHeight)
     : bar_height_(barHeight), has_mute_solo_(withMuteSolo) {

@@ -10,7 +10,7 @@
 #include <oc/ui/lvgl/theme/BaseTheme.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Pure UI widget for modal list overlay with selection

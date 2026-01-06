@@ -8,7 +8,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 ParameterListWidget::ParameterListWidget(lv_obj_t* parent, lv_coord_t width, lv_coord_t height,
                                          uint8_t index, int16_t discreteCount)

@@ -3,7 +3,7 @@
 #include <lvgl.h>
 #include <oc/ui/lvgl/IListItem.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Back navigation button for list selectors

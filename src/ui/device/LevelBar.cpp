@@ -6,7 +6,7 @@
 
 using namespace bitwig::theme;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
     : width_(width), height_(height) {

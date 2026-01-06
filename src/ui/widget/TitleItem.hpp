@@ -9,7 +9,7 @@
 
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct TitleItemProps {
     const char* text = "";

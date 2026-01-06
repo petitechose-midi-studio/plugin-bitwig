@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/IComponent.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Interface for list selector components

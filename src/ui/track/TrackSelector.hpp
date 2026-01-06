@@ -16,7 +16,7 @@
 #include "ui/widget/BackButton.hpp"
 #include "ui/widget/HintBar.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 // Import VirtualList types from shared component
 using oc::ui::lvgl::widget::VirtualList;

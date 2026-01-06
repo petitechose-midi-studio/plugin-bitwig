@@ -8,7 +8,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 BaseParameterWidget::BaseParameterWidget(lv_obj_t* parent, uint8_t index)
     : parent_(parent ? parent : lv_screen_active()), index_(index) {}
