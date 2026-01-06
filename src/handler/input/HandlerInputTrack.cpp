@@ -14,7 +14,7 @@ using namespace oc::ui::lvgl;
 using ui::OverlayType;
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
-                                     ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                                     core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                      BitwigProtocol& protocol,
                                      oc::api::EncoderAPI& encoders,
                                      oc::api::ButtonAPI& buttons,
