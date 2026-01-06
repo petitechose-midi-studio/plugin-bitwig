@@ -96,4 +96,4 @@ bool HintBar::isVisible() const {
     return container_ && !lv_obj_has_flag(container_, LV_OBJ_FLAG_HIDDEN);
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

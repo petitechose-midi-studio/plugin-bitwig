@@ -23,4 +23,4 @@ public:
     int getViewCount() const { return getItemCount(); }
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

@@ -62,4 +62,4 @@ private:
     bool highlighted_ = false;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

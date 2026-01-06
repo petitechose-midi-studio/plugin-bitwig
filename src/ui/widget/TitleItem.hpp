@@ -56,4 +56,4 @@ private:
     lv_obj_t* indicator_ = nullptr;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

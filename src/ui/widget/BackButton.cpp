@@ -55,4 +55,4 @@ bool BackButton::isVisible() const {
     return visible_;
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

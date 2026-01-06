@@ -234,4 +234,4 @@ void RemoteControlsPageSelector::applyHighlightStyle(PageSlotWidgets& widgets, b
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

@@ -66,4 +66,4 @@ void BaseParameterWidget::setVisible(bool visible) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

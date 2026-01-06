@@ -29,4 +29,4 @@ void ViewSelector::render(const ViewSelectorProps& props) {
     overlay().setSelectedIndex(props.selectedIndex);
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

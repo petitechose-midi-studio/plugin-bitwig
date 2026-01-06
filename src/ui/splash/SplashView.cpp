@@ -108,4 +108,4 @@ void SplashView::fadeAnimDeletedCallback(lv_anim_t *anim) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

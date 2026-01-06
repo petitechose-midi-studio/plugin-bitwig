@@ -479,4 +479,4 @@ void RemoteControlsView::onUpdateTimer(lv_timer_t* timer) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

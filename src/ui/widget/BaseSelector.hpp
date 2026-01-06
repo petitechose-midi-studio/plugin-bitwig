@@ -38,4 +38,4 @@ protected:
     ListOverlay overlay_;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

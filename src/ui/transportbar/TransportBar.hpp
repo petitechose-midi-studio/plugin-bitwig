@@ -76,4 +76,4 @@ private:
     void setAutomationOverride(bool active);
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

@@ -88,4 +88,4 @@ void ParameterKnobWidget::setHasAutomation(bool hasAutomation) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

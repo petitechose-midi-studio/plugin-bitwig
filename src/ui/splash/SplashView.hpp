@@ -39,4 +39,4 @@ private:
     static void fadeAnimDeletedCallback(lv_anim_t *anim);
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

@@ -21,4 +21,4 @@ public:
     virtual int getItemCount() const = 0;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

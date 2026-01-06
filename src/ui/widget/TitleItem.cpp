@@ -104,4 +104,4 @@ lv_coord_t TitleItem::getContentWidth() const {
     return lv_obj_get_width(container_);
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

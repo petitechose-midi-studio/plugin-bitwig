@@ -87,4 +87,4 @@ private:
     bool visible_ = false;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

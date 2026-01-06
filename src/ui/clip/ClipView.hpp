@@ -88,4 +88,4 @@ private:
     std::unique_ptr<oc::ui::lvgl::Label> label_;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

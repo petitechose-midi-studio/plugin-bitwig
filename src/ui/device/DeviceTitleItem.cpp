@@ -148,4 +148,4 @@ void DeviceTitleItem::setHighlighted(bool highlighted) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

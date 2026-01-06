@@ -124,4 +124,4 @@ private:
     void ensureWidgetForType(uint8_t index);
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

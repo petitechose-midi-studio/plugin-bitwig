@@ -166,4 +166,4 @@ const char *TrackTitleItem::getTrackTypeIcon(TrackType trackType) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui
