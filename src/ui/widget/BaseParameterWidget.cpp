@@ -14,6 +14,7 @@ BaseParameterWidget::BaseParameterWidget(lv_obj_t* parent, uint8_t index)
     : parent_(parent ? parent : lv_screen_active()), index_(index) {}
 
 BaseParameterWidget::~BaseParameterWidget() {
+    automationIndicator_.reset();  // Before container delete
     if (container_) {
         lv_obj_delete(container_);
         container_ = nullptr;
@@ -62,6 +63,30 @@ void BaseParameterWidget::setVisible(bool visible) {
             lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_obj_add_flag(container_, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+}
+
+void BaseParameterWidget::createAutomationIndicator(lv_obj_t* parent) {
+    automationIndicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
+        parent, Layout::AUTOMATION_INDICATOR_SIZE);
+    automationIndicator_->color(oc::ui::lvgl::StateIndicator::State::ACTIVE, Color::AUTOMATION_INDICATOR);
+    automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
+    lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_FLOATING);
+    lv_obj_set_align(automationIndicator_->getElement(), LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_y(automationIndicator_->getElement(), Layout::AUTOMATION_INDICATOR_OFFSET);
+    lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+}
+
+void BaseParameterWidget::setHasAutomation(bool hasAutomation) {
+    hasAutomation_ = hasAutomation;
+    if (automationIndicator_) {
+        if (hasAutomation) {
+            lv_obj_clear_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+            automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::ACTIVE);
+        } else {
+            lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+            automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
         }
     }
 }

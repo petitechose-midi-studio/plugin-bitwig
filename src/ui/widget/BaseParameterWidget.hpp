@@ -7,6 +7,7 @@
 #include <lvgl.h>
 
 #include <oc/ui/lvgl/widget/Label.hpp>
+#include <oc/ui/lvgl/widget/StateIndicator.hpp>
 
 #include "IParameterWidget.hpp"
 
@@ -37,6 +38,9 @@ public:
     void setName(const std::string& name) override;
     void setVisible(bool visible) override;
     lv_obj_t* getElement() const override { return container_; }
+
+    // Automation indicator support
+    void setHasAutomation(bool hasAutomation) override;
 
     /**
      * @brief Set discrete metadata for button/list widgets
@@ -71,10 +75,19 @@ protected:
      */
     void createNameLabel();
 
+    /**
+     * @brief Create automation indicator as overlay inside the given parent widget
+     *
+     * @param parent The widget element to overlay (knob, button, or enum widget)
+     */
+    void createAutomationIndicator(lv_obj_t* parent);
+
     lv_obj_t* parent_ = nullptr;
     lv_obj_t* container_ = nullptr;
     std::unique_ptr<oc::ui::lvgl::Label> name_label_;
+    std::unique_ptr<oc::ui::lvgl::StateIndicator> automationIndicator_;
     uint8_t index_ = 0;
+    bool hasAutomation_ = false;
 };
 
 }  // namespace bitwig::ui
