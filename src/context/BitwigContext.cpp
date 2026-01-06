@@ -136,7 +136,7 @@ void BitwigContext::createOverlayController() {
     using ButtonID = Config::ButtonID;
 
     // Create controller wrapping the state's ExclusiveVisibilityStack
-    overlayController_ = std::make_unique<::ui::OverlayController<bitwig::ui::OverlayType>>(state_.overlays, buttons());
+    overlayController_ = std::make_unique<::core::ui::OverlayController<bitwig::ui::OverlayType>>(state_.overlays, buttons());
 
     // Get scope IDs from overlay elements
     lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
@@ -222,7 +222,7 @@ void BitwigContext::createInputHandlers() {
 
 void BitwigContext::createViews() {
     // ViewType is in global scope from protocol/ViewType.hpp
-    viewContainer_ = std::make_unique<::ui::ViewContainer>(lv_screen_active());
+    viewContainer_ = std::make_unique<::core::ui::ViewContainer>(lv_screen_active());
     lv_obj_t* mainZone = viewContainer_->getMainZone();
 
     // Create all views (they start hidden)

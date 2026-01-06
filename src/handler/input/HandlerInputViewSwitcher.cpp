@@ -15,7 +15,7 @@ using OverlayType = ui::OverlayType;
 // ViewType is in global scope from protocol/ViewType.hpp
 
 HandlerInputViewSwitcher::HandlerInputViewSwitcher(state::BitwigState& state,
-                                                   ::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                                                   ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                                    oc::api::EncoderAPI& encoders,
                                                    oc::api::ButtonAPI& buttons,
                                                    lv_obj_t* scopeElement,
