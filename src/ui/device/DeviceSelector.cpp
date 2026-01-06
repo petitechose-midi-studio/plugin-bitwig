@@ -13,7 +13,7 @@ using namespace bitwig::theme;
 using namespace oc::ui::lvgl;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 namespace {
 constexpr int VISIBLE_SLOTS = 5;

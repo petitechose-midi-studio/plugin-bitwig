@@ -4,7 +4,7 @@
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Interface for parameter widgets (polymorphism)

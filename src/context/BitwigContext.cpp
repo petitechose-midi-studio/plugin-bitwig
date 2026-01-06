@@ -226,9 +226,9 @@ void BitwigContext::createViews() {
     lv_obj_t* mainZone = viewContainer_->getMainZone();
 
     // Create all views (they start hidden)
-    remoteControlsView_ = std::make_unique<RemoteControlsView>(mainZone, state_);
-    mixView_ = std::make_unique<MixView>(mainZone);
-    clipView_ = std::make_unique<ClipView>(mainZone);
+    remoteControlsView_ = std::make_unique<ui::RemoteControlsView>(mainZone, state_);
+    mixView_ = std::make_unique<ui::MixView>(mainZone);
+    clipView_ = std::make_unique<ui::ClipView>(mainZone);
 
     // Register views with ViewManager
     state_.views.registerView(ViewType::REMOTE_CONTROLS, remoteControlsView_.get());
@@ -239,10 +239,10 @@ void BitwigContext::createViews() {
     state_.views.initialize();
 
     // Persistent UI (always visible)
-    transportBar_ = std::make_unique<TransportBar>(viewContainer_->getBottomZone(), state_.transport);
+    transportBar_ = std::make_unique<ui::TransportBar>(viewContainer_->getBottomZone(), state_.transport);
 
     // Global overlay: ViewSelector (parent = mainZone so it covers views but not TransportBar)
-    viewSelector_ = std::make_unique<ViewSelector>(mainZone);
+    viewSelector_ = std::make_unique<ui::ViewSelector>(mainZone);
 
     // Setup bindings for ViewSelector rendering
     auto renderViewSelector = [this]() {

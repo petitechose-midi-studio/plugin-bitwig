@@ -10,7 +10,7 @@
 
 #include "IParameterWidget.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Base class for parameter widgets with common grid layout and name label

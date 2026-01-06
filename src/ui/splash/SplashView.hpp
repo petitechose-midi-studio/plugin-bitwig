@@ -8,7 +8,7 @@
 #include <oc/ui/lvgl/IView.hpp>
 #include <oc/ui/lvgl/widget/Label.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using oc::ui::lvgl::IView;
 

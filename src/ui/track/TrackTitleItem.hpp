@@ -12,7 +12,7 @@
 
 #include "protocol/TrackType.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct TrackTitleItemProps {
     const char *name = "";

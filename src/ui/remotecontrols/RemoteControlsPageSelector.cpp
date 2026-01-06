@@ -7,7 +7,7 @@
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using namespace oc::ui::lvgl;
 using namespace theme;

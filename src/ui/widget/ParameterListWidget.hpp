@@ -10,7 +10,7 @@
 
 #include "BaseParameterWidget.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Parameter widget with EnumWidget + name label + value display

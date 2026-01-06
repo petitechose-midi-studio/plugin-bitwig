@@ -15,7 +15,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 // =============================================================================
 // Construction / Destruction

@@ -4,7 +4,7 @@
 
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 namespace style = oc::ui::lvgl::style;
 using namespace bitwig::theme;

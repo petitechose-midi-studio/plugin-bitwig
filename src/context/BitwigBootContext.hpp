@@ -25,7 +25,7 @@ public:
         // Load essential fonts for splash
         oc::ui::lvgl::font::loadEssential(CORE_FONT_ENTRIES, CORE_FONT_COUNT);
 
-        splash_ = std::make_unique<SplashView>(lv_screen_active());
+        splash_ = std::make_unique<ui::SplashView>(lv_screen_active());
         splash_->onActivate();
         splash_->setText("Connecting to Bitwig...");
 
@@ -61,7 +61,7 @@ private:
 
     uint32_t startMs_ = 0;
     bool fading_ = false;
-    std::unique_ptr<SplashView> splash_;
+    std::unique_ptr<ui::SplashView> splash_;
 };
 
 }  // namespace bitwig

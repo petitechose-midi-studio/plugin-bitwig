@@ -8,7 +8,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 DeviceStateBar::DeviceStateBar(lv_obj_t *parent) {
     if (!parent) return;

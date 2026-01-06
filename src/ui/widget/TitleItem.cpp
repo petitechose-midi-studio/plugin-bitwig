@@ -2,7 +2,7 @@
 
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
-namespace bitwig {
+namespace bitwig::ui {
 
 namespace style = oc::ui::lvgl::style;
 

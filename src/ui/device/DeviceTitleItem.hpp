@@ -10,7 +10,7 @@
 
 #include "protocol/DeviceType.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct DeviceTitleItemProps {
     const char *name = "";

@@ -8,7 +8,7 @@
 
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 struct LevelBarProps {
     float value = 0.0f;

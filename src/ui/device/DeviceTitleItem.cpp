@@ -10,7 +10,7 @@
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
-namespace bitwig {
+namespace bitwig::ui {
 
 DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     : icon_size_(iconSize) {

@@ -7,7 +7,7 @@
 
 #include "BaseParameterWidget.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Parameter widget with ButtonWidget + name label (color indicator only, no text)

@@ -20,7 +20,7 @@
 
 #include "ui/theme/BitwigTheme.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 using oc::ui::lvgl::IView;
 namespace style = oc::ui::lvgl::style;

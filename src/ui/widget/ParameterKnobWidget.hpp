@@ -7,7 +7,7 @@
 
 #include "BaseParameterWidget.hpp"
 
-namespace bitwig {
+namespace bitwig::ui {
 
 /**
  * @brief Parameter widget with KnobWidget + name label (no value text display)
