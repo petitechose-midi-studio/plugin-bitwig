@@ -312,4 +312,4 @@ void ListOverlay::cleanup() {
     visible_ = false;
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

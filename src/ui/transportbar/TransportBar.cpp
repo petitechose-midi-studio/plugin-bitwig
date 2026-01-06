@@ -186,4 +186,4 @@ void TransportBar::createTempoDisplay() {
     bpm_label_->setText("120.00");
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

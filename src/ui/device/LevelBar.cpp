@@ -43,4 +43,4 @@ void LevelBar::render(const LevelBarProps &props) {
     lv_obj_set_style_bg_opa(bar_, props.opacity, LV_PART_INDICATOR);
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

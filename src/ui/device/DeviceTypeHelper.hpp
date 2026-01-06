@@ -38,4 +38,4 @@ inline Info get(DeviceType deviceType) {
 }
 
 }  // namespace DeviceTypeHelper
-}  // namespace bitwig
+}  // namespace bitwig::ui

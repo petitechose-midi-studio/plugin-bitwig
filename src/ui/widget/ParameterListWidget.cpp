@@ -101,4 +101,4 @@ void ParameterListWidget::setHasAutomation(bool hasAutomation) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

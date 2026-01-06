@@ -40,4 +40,4 @@ private:
     lv_coord_t size_ = DEFAULT_SIZE;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

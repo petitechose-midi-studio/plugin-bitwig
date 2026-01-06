@@ -11,6 +11,7 @@
 #include <lvgl.h>
 
 #include <oc/context/IContext.hpp>
+#include <oc/context/Requirements.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
@@ -21,6 +22,8 @@ namespace bitwig {
 
 class BitwigBootContext : public oc::context::IContext {
 public:
+    static constexpr oc::context::Requirements REQUIRES{};
+
     bool initialize() override {
         // Load essential fonts for splash
         oc::ui::lvgl::font::loadEssential(CORE_FONT_ENTRIES, CORE_FONT_COUNT);

@@ -77,4 +77,4 @@ protected:
     uint8_t index_ = 0;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

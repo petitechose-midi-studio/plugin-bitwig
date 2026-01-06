@@ -94,4 +94,4 @@ private:
     bool ui_created_ = false;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

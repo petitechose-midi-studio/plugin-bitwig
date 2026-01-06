@@ -30,4 +30,4 @@ public:
     virtual void setHasAutomation(bool /*hasAutomation*/) {}
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

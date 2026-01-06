@@ -42,4 +42,4 @@ private:
     lv_coord_t height_ = 12;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

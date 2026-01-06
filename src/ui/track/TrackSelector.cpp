@@ -326,4 +326,4 @@ void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

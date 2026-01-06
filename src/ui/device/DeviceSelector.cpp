@@ -549,4 +549,4 @@ bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index)
     return hasSlots || hasLayers || hasDrums;
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

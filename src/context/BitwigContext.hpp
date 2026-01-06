@@ -49,6 +49,7 @@
 #include <lvgl.h>
 
 #include <oc/context/IContext.hpp>
+#include <oc/context/Requirements.hpp>
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
@@ -90,6 +91,12 @@ namespace bitwig {
  */
 class BitwigContext : public oc::context::IContext {
 public:
+    static constexpr oc::context::Requirements REQUIRES{
+        .button = true,
+        .encoder = true,
+        .midi = true
+    };
+
     // Static resource loading (called by ContextManager during registration)
     static void loadResources();
 

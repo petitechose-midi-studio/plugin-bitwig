@@ -71,4 +71,4 @@ lv_obj_t *DeviceStateBar::createCellWrapper(lv_obj_t *parent, lv_flex_align_t hA
     return cell;
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

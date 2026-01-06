@@ -22,4 +22,4 @@ bool BaseSelector::isVisible() const { return overlay_.isVisible(); }
 
 lv_obj_t* BaseSelector::getElement() const { return overlay_.getElement(); }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

@@ -68,4 +68,4 @@ void ParameterButtonWidget::setHasAutomation(bool hasAutomation) {
     }
 }
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

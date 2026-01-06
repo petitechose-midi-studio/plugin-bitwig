@@ -52,4 +52,4 @@ private:
     std::unique_ptr<TitleItem> page_item_;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui

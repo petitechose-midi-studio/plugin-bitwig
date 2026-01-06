@@ -36,4 +36,4 @@ private:
     bool hasAutomation_ = false;
 };
 
-}  // namespace bitwig
+}  // namespace bitwig::ui
