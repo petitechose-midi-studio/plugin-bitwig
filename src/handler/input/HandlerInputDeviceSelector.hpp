@@ -40,7 +40,7 @@ namespace bitwig::handler {
 class HandlerInputDeviceSelector {
 public:
     HandlerInputDeviceSelector(state::BitwigState& state,
-                               ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                               core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
                                BitwigProtocol& protocol,
                                oc::api::EncoderAPI& encoders,
                                oc::api::ButtonAPI& buttons,
@@ -71,7 +71,7 @@ private:
     bool isShowingChildren() const;
 
     state::BitwigState& state_;
-    ::core::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
+    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
     BitwigProtocol& protocol_;
     oc::api::EncoderAPI& encoders_;
     oc::api::ButtonAPI& buttons_;
