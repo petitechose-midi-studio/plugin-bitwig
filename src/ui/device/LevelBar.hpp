@@ -13,7 +13,7 @@ namespace bitwig::ui {
 struct LevelBarProps {
     float value = 0.0f;
     uint32_t color = 0xFFFFFF;
-    lv_opa_t opacity = theme::Opacity::DIMMED;
+    lv_opa_t opacity = theme::opacity::DIMMED;
 };
 
 /**

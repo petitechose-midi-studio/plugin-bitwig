@@ -40,7 +40,7 @@ RemoteControlsView::RemoteControlsView(lv_obj_t* zone, bitwig::state::BitwigStat
 
     // Create timer for debounced parameter updates (synced with LVGL display refresh)
     constexpr uint32_t refrPeriodMs = 1000 / Config::Timing::LVGL_HZ;
-    updateTimer_ = lv_timer_create(onUpdateTimer, refrPeriodMs, this);
+    update_timer_ = lv_timer_create(onUpdateTimer, refrPeriodMs, this);
 
     setupBindings();
     initialized_ = true;
@@ -48,9 +48,9 @@ RemoteControlsView::RemoteControlsView(lv_obj_t* zone, bitwig::state::BitwigStat
 
 RemoteControlsView::~RemoteControlsView() {
     // Delete update timer
-    if (updateTimer_) {
-        lv_timer_delete(updateTimer_);
-        updateTimer_ = nullptr;
+    if (update_timer_) {
+        lv_timer_delete(update_timer_);
+        update_timer_ = nullptr;
     }
 
     // Subscriptions auto-unsubscribe via RAII
@@ -227,12 +227,12 @@ void RemoteControlsView::ensureWidgetForType(uint8_t index) {
     switch (type) {
         case ParameterType::BUTTON:
             widgets_[index] = std::make_unique<ParameterButtonWidget>(
-                body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index);
+                body_container_, layout::WIDGET_WIDTH, layout::WIDGET_HEIGHT, index);
             break;
 
         case ParameterType::LIST:
             widgets_[index] = std::make_unique<ParameterListWidget>(
-                body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index,
+                body_container_, layout::WIDGET_WIDTH, layout::WIDGET_HEIGHT, index,
                 slot.discreteCount.get());
             break;
 
@@ -241,7 +241,7 @@ void RemoteControlsView::ensureWidgetForType(uint8_t index) {
             float origin = slot.origin.get();
             bool is_centered = (origin == 0.5f);
             auto knob = std::make_unique<ParameterKnobWidget>(
-                body_container_, Layout::WIDGET_WIDTH, Layout::WIDGET_HEIGHT, index, is_centered);
+                body_container_, layout::WIDGET_WIDTH, layout::WIDGET_HEIGHT, index, is_centered);
             knob->setOrigin(origin);
             widgets_[index] = std::move(knob);
             break;
@@ -250,8 +250,8 @@ void RemoteControlsView::ensureWidgetForType(uint8_t index) {
 
     // Position in grid
     if (widgets_[index]) {
-        int col = index % Layout::PARAMETER_GRID_COLS;
-        int row = index / Layout::PARAMETER_GRID_COLS;
+        int col = index % layout::PARAMETER_GRID_COLS;
+        int row = index / layout::PARAMETER_GRID_COLS;
         lv_obj_set_grid_cell(widgets_[index]->getElement(), LV_GRID_ALIGN_CENTER, col, 1,
                              LV_GRID_ALIGN_CENTER, row, 1);
     }
@@ -391,7 +391,7 @@ void RemoteControlsView::updateTrackSelector() {
 
 void RemoteControlsView::createUI() {
     top_bar_container_ = lv_obj_create(zone_);
-    lv_obj_set_size(top_bar_container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
+    lv_obj_set_size(top_bar_container_, LV_PCT(100), layout::TOP_BAR_HEIGHT);
     style::apply(top_bar_container_).transparent().noScroll();
     lv_obj_set_style_radius(top_bar_container_, 0, LV_STATE_DEFAULT);
 

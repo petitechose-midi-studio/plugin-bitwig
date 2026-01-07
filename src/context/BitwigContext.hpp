@@ -17,22 +17,22 @@
  *     ├── BitwigState (reactive state - single source of truth)
  *     ├── BitwigProtocol (SysEx transport)
  *     ├── HostHandlers (protocol → state)
- *     │   ├── HandlerHostPlugin
- *     │   ├── HandlerHostTransport
- *     │   ├── HandlerHostDevice
- *     │   ├── HandlerHostTrack
- *     │   ├── HandlerHostPage
- *     │   ├── HandlerHostRemoteControl
- *     │   ├── HandlerHostLastClicked
- *     │   └── HandlerHostMidi
+ *     │   ├── PluginHostHandler
+ *     │   ├── TransportHostHandler
+ *     │   ├── DeviceHostHandler
+ *     │   ├── TrackHostHandler
+ *     │   ├── PageHostHandler
+ *     │   ├── RemoteControlHostHandler
+ *     │   ├── LastClickedHostHandler
+ *     │   └── MidiHostHandler
  *     ├── InputHandlers (input → state + protocol)
- *     │   ├── HandlerInputTransport
- *     │   ├── HandlerInputViewSwitcher (LEFT_TOP → cycle views)
- *     │   ├── HandlerInputRemoteControl
- *     │   ├── HandlerInputDevicePage
- *     │   ├── HandlerInputDeviceSelector
- *     │   ├── HandlerInputTrack
- *     │   └── HandlerInputLastClicked
+ *     │   ├── TransportInputHandler
+ *     │   ├── ViewSwitcherInputHandler (LEFT_TOP → cycle views)
+ *     │   ├── RemoteControlInputHandler
+ *     │   ├── DevicePageInputHandler
+ *     │   ├── DeviceSelectorInputHandler
+ *     │   ├── TrackInputHandler
+ *     │   └── LastClickedInputHandler
  *     └── Views (managed by ViewManager)
  *         ├── RemoteControlsView (device parameters)
  *         ├── MixView (volume, pan, sends) - placeholder
@@ -58,22 +58,22 @@
 #include <ui/OverlayController.hpp>
 
 // Include all handlers (required for unique_ptr with make_unique in templates)
-#include "handler/host/HandlerHostDevice.hpp"
-#include "handler/host/HandlerHostLastClicked.hpp"
-#include "handler/host/HandlerHostRemoteControl.hpp"
-#include "handler/host/HandlerHostMidi.hpp"
-#include "handler/host/HandlerHostPage.hpp"
-#include "handler/host/HandlerHostPlugin.hpp"
-#include "handler/host/HandlerHostTrack.hpp"
-#include "handler/host/HandlerHostTransport.hpp"
-#include "handler/input/HandlerInputDevicePage.hpp"
-#include "handler/input/HandlerInputDeviceSelector.hpp"
-#include "handler/input/HandlerInputLastClicked.hpp"
-#include "handler/input/HandlerInputRemoteControl.hpp"
-#include "handler/input/HandlerInputTrack.hpp"
-#include "handler/input/HandlerInputTransport.hpp"
-#include "handler/input/HandlerInputViewState.hpp"
-#include "handler/input/HandlerInputViewSwitcher.hpp"
+#include "handler/host/DeviceHostHandler.hpp"
+#include "handler/host/LastClickedHostHandler.hpp"
+#include "handler/host/RemoteControlHostHandler.hpp"
+#include "handler/host/MidiHostHandler.hpp"
+#include "handler/host/PageHostHandler.hpp"
+#include "handler/host/PluginHostHandler.hpp"
+#include "handler/host/TrackHostHandler.hpp"
+#include "handler/host/TransportHostHandler.hpp"
+#include "handler/input/DevicePageInputHandler.hpp"
+#include "handler/input/DeviceSelectorInputHandler.hpp"
+#include "handler/input/LastClickedInputHandler.hpp"
+#include "handler/input/RemoteControlInputHandler.hpp"
+#include "handler/input/TrackInputHandler.hpp"
+#include "handler/input/TransportInputHandler.hpp"
+#include "handler/input/ViewStateInputHandler.hpp"
+#include "handler/input/ViewSwitcherInputHandler.hpp"
 #include "ui/clip/ClipView.hpp"
 #include "ui/mix/MixView.hpp"
 #include "ui/remotecontrols/RemoteControlsView.hpp"
@@ -140,8 +140,8 @@ public:
     BitwigProtocol& protocol() { return *protocol_; }
     const BitwigProtocol& protocol() const { return *protocol_; }
 
-    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() { return *overlayController_; }
-    const core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() const { return *overlayController_; }
+    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() { return *overlay_controller_; }
+    const core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() const { return *overlay_controller_; }
 
 private:
     void createProtocol();
@@ -156,42 +156,42 @@ private:
 
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
-    std::unique_ptr<core::ui::OverlayController<bitwig::ui::OverlayType>> overlayController_;
+    std::unique_ptr<core::ui::OverlayController<bitwig::ui::OverlayType>> overlay_controller_;
 
     // Host Handlers (protocol → state)
-    std::unique_ptr<handler::HandlerHostPlugin> hostPlugin_;
-    std::unique_ptr<handler::HandlerHostTransport> hostTransport_;
-    std::unique_ptr<handler::HandlerHostDevice> hostDevice_;
-    std::unique_ptr<handler::HandlerHostTrack> hostTrack_;
-    std::unique_ptr<handler::HandlerHostPage> hostPage_;
-    std::unique_ptr<handler::HandlerHostRemoteControl> hostRemoteControl_;
-    std::unique_ptr<handler::HandlerHostLastClicked> hostLastClicked_;
-    std::unique_ptr<handler::HandlerHostMidi> hostMidi_;
+    std::unique_ptr<handler::PluginHostHandler> host_plugin_;
+    std::unique_ptr<handler::TransportHostHandler> host_transport_;
+    std::unique_ptr<handler::DeviceHostHandler> host_device_;
+    std::unique_ptr<handler::TrackHostHandler> host_track_;
+    std::unique_ptr<handler::PageHostHandler> host_page_;
+    std::unique_ptr<handler::RemoteControlHostHandler> host_remote_control_;
+    std::unique_ptr<handler::LastClickedHostHandler> host_last_clicked_;
+    std::unique_ptr<handler::MidiHostHandler> host_midi_;
 
     // Input Handlers (input → state + protocol)
-    std::unique_ptr<handler::HandlerInputTransport> inputTransport_;
-    std::unique_ptr<handler::HandlerInputViewSwitcher> inputViewSwitcher_;
-    std::unique_ptr<handler::HandlerInputRemoteControl> inputRemoteControl_;
-    std::unique_ptr<handler::HandlerInputDevicePage> inputDevicePage_;
-    std::unique_ptr<handler::HandlerInputDeviceSelector> inputDeviceSelector_;
-    std::unique_ptr<handler::HandlerInputTrack> inputTrack_;
-    std::unique_ptr<handler::HandlerInputLastClicked> inputLastClicked_;
-    std::unique_ptr<handler::HandlerInputViewState> inputViewState_;
+    std::unique_ptr<handler::TransportInputHandler> input_transport_;
+    std::unique_ptr<handler::ViewSwitcherInputHandler> input_view_switcher_;
+    std::unique_ptr<handler::RemoteControlInputHandler> input_remote_control_;
+    std::unique_ptr<handler::DevicePageInputHandler> input_device_page_;
+    std::unique_ptr<handler::DeviceSelectorInputHandler> input_device_selector_;
+    std::unique_ptr<handler::TrackInputHandler> input_track_;
+    std::unique_ptr<handler::LastClickedInputHandler> input_last_clicked_;
+    std::unique_ptr<handler::ViewStateInputHandler> input_view_state_;
 
     // UI Container
-    std::unique_ptr<core::ui::ViewContainer> viewContainer_;
+    std::unique_ptr<core::ui::ViewContainer> view_container_;
 
     // Views (managed by ViewManager)
-    std::unique_ptr<ui::RemoteControlsView> remoteControlsView_;
-    std::unique_ptr<ui::MixView> mixView_;
-    std::unique_ptr<ui::ClipView> clipView_;
+    std::unique_ptr<ui::RemoteControlsView> remote_controls_view_;
+    std::unique_ptr<ui::MixView> mix_view_;
+    std::unique_ptr<ui::ClipView> clip_view_;
 
     // Persistent UI (always visible)
-    std::unique_ptr<ui::TransportBar> transportBar_;
+    std::unique_ptr<ui::TransportBar> transport_bar_;
 
     // Global overlays
-    std::unique_ptr<ui::ViewSelector> viewSelector_;
-    std::vector<oc::state::Subscription> viewSelectorSubs_;
+    std::unique_ptr<ui::ViewSelector> view_selector_;
+    std::vector<oc::state::Subscription> view_selector_subs_;
 };
 
 }  // namespace bitwig

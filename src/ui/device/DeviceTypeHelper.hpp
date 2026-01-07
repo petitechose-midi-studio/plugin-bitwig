@@ -27,11 +27,11 @@ struct Info {
 inline Info get(DeviceType deviceType) {
     switch (deviceType) {
         case DeviceType::AUDIO_EFFECT:
-            return {Icon::DEVICE_AUDIO, bitwig::theme::Color::DEVICE_TYPE_AUDIO, true};
+            return {Icon::DEVICE_AUDIO, bitwig::theme::color::DEVICE_TYPE_AUDIO, true};
         case DeviceType::INSTRUMENT:
-            return {Icon::DEVICE_INSTRUMENT, bitwig::theme::Color::DEVICE_TYPE_INSTRUMENT, true};
+            return {Icon::DEVICE_INSTRUMENT, bitwig::theme::color::DEVICE_TYPE_INSTRUMENT, true};
         case DeviceType::NOTE_EFFECT:
-            return {Icon::DEVICE_NOTE, bitwig::theme::Color::DEVICE_TYPE_NOTE, true};
+            return {Icon::DEVICE_NOTE, bitwig::theme::color::DEVICE_TYPE_NOTE, true};
         default:  // UNKNOWN
             return {nullptr, 0, false};
     }

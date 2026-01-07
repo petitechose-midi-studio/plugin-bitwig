@@ -74,7 +74,7 @@ private:
         // Center label placeholder using framework Label
         label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
         label_->alignment(LV_TEXT_ALIGN_CENTER)
-              .color(theme::Color::TEXT_LIGHT)
+              .color(theme::color::TEXT_LIGHT)
               .ownsLvglObjects(false);
         label_->setText("Mix View\nComing Soon");
         lv_obj_center(label_->getElement());

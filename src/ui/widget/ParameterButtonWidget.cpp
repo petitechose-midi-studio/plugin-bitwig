@@ -23,10 +23,10 @@ void ParameterButtonWidget::createUI(lv_coord_t width, lv_coord_t height) {
     button_ = std::make_unique<oc::ui::lvgl::ButtonWidget>(container_);
     button_
         ->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
-        .offColor(Color::KNOB_BACKGROUND)
-        .onColor(Color::DATA_ACTIVE)
-        .textOffColor(Color::TEXT_PRIMARY)
-        .textOnColor(Color::TEXT_DARK);
+        .offColor(color::KNOB_BACKGROUND)
+        .onColor(color::DATA_ACTIVE)
+        .textOffColor(color::TEXT_PRIMARY)
+        .textOnColor(color::TEXT_DARK);
     lv_obj_set_grid_cell(button_->getElement(), LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: stretch
                          LV_GRID_ALIGN_START, 0, 1);  // Vertical: start in CONTENT row
 

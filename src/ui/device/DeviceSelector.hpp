@@ -125,7 +125,7 @@ private:
 
     // Virtual list
     std::unique_ptr<VirtualList> list_;
-    std::vector<DeviceSlotWidgets> slotWidgets_;
+    std::vector<DeviceSlotWidgets> slot_widgets_;
 
     // Header
     lv_obj_t *header_ = nullptr;
@@ -140,12 +140,12 @@ private:
     std::unique_ptr<oc::ui::lvgl::Label> page_label_;
 
     // State
-    DeviceSelectorProps currentProps_;
+    DeviceSelectorProps current_props_;
     bool visible_ = false;
-    bool showingChildren_ = false;
+    bool showing_children_ = false;
 
     // Empty state
-    std::unique_ptr<oc::ui::lvgl::Label> emptyLabel_;
+    std::unique_ptr<oc::ui::lvgl::Label> empty_label_;
 };
 
 }  // namespace bitwig::ui

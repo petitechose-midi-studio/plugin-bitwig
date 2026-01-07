@@ -58,39 +58,39 @@ void BitwigContext::cleanup() {
     // Destroy in reverse order of creation
 
     // Input Handlers (they hold bindings that may reference state)
-    inputViewState_.reset();
-    inputLastClicked_.reset();
-    inputTrack_.reset();
-    inputDeviceSelector_.reset();
-    inputDevicePage_.reset();
-    inputRemoteControl_.reset();
-    inputViewSwitcher_.reset();
-    inputTransport_.reset();
+    input_view_state_.reset();
+    input_last_clicked_.reset();
+    input_track_.reset();
+    input_device_selector_.reset();
+    input_device_page_.reset();
+    input_remote_control_.reset();
+    input_view_switcher_.reset();
+    input_transport_.reset();
 
     // Global overlays (subscriptions first, then widget)
-    viewSelectorSubs_.clear();
-    viewSelector_.reset();
+    view_selector_subs_.clear();
+    view_selector_.reset();
 
     // Overlay controller
-    overlayController_.reset();
+    overlay_controller_.reset();
 
     // Views (reset ViewManager first to deactivate, then destroy)
     state_.views.reset();
-    transportBar_.reset();
-    clipView_.reset();
-    mixView_.reset();
-    remoteControlsView_.reset();
-    viewContainer_.reset();
+    transport_bar_.reset();
+    clip_view_.reset();
+    mix_view_.reset();
+    remote_controls_view_.reset();
+    view_container_.reset();
 
     // Host Handlers
-    hostMidi_.reset();
-    hostLastClicked_.reset();
-    hostRemoteControl_.reset();
-    hostPage_.reset();
-    hostTrack_.reset();
-    hostDevice_.reset();
-    hostTransport_.reset();
-    hostPlugin_.reset();
+    host_midi_.reset();
+    host_last_clicked_.reset();
+    host_remote_control_.reset();
+    host_page_.reset();
+    host_track_.reset();
+    host_device_.reset();
+    host_transport_.reset();
+    host_plugin_.reset();
 
     // Protocol
     protocol_.reset();
@@ -123,14 +123,14 @@ void BitwigContext::createProtocol() {
 
 void BitwigContext::createHostHandlers() {
     // Order matters: plugin handler requests host status first
-    hostPlugin_ = std::make_unique<handler::HandlerHostPlugin>(state_, *protocol_);
-    hostTransport_ = std::make_unique<handler::HandlerHostTransport>(state_, *protocol_);
-    hostDevice_ = std::make_unique<handler::HandlerHostDevice>(state_, *protocol_);
-    hostTrack_ = std::make_unique<handler::HandlerHostTrack>(state_, *protocol_);
-    hostPage_ = std::make_unique<handler::HandlerHostPage>(state_, *protocol_, encoders());
-    hostRemoteControl_ = std::make_unique<handler::HandlerHostRemoteControl>(state_, *protocol_, encoders());
-    hostLastClicked_ = std::make_unique<handler::HandlerHostLastClicked>(state_, *protocol_, encoders());
-    hostMidi_ = std::make_unique<handler::HandlerHostMidi>(state_, midi());
+    host_plugin_ = std::make_unique<handler::PluginHostHandler>(state_, *protocol_);
+    host_transport_ = std::make_unique<handler::TransportHostHandler>(state_, *protocol_);
+    host_device_ = std::make_unique<handler::DeviceHostHandler>(state_, *protocol_);
+    host_track_ = std::make_unique<handler::TrackHostHandler>(state_, *protocol_);
+    host_page_ = std::make_unique<handler::PageHostHandler>(state_, *protocol_, encoders());
+    host_remote_control_ = std::make_unique<handler::RemoteControlHostHandler>(state_, *protocol_, encoders());
+    host_last_clicked_ = std::make_unique<handler::LastClickedHostHandler>(state_, *protocol_, encoders());
+    host_midi_ = std::make_unique<handler::MidiHostHandler>(state_, midi());
 }
 
 void BitwigContext::createOverlayController() {
@@ -138,18 +138,18 @@ void BitwigContext::createOverlayController() {
     using ButtonID = Config::ButtonID;
 
     // Create controller wrapping the state's ExclusiveVisibilityStack
-    overlayController_ = std::make_unique<core::ui::OverlayController<bitwig::ui::OverlayType>>(state_.overlays, buttons());
+    overlay_controller_ = std::make_unique<core::ui::OverlayController<bitwig::ui::OverlayType>>(state_.overlays, buttons());
 
     // Get scope IDs from overlay elements
-    lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
-    lv_obj_t* trackSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getTrackSelectorElement() : nullptr;
-    lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
-    lv_obj_t* viewSelectorOverlay = viewSelector_ ? viewSelector_->getElement() : nullptr;
+    lv_obj_t* deviceSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getDeviceSelectorElement() : nullptr;
+    lv_obj_t* trackSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getTrackSelectorElement() : nullptr;
+    lv_obj_t* pageSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getPageSelectorElement() : nullptr;
+    lv_obj_t* viewSelectorOverlay = view_selector_ ? view_selector_->getElement() : nullptr;
 
     // Register cleanup info for each overlay
     // Note: static_cast needed to convert Config::ButtonID enum to oc::hal::ButtonID
     if (pageSelectorOverlay) {
-        overlayController_->registerCleanup(
+        overlay_controller_->registerCleanup(
             OverlayType::PAGE_SELECTOR,
             reinterpret_cast<oc::core::ScopeID>(pageSelectorOverlay),
             static_cast<oc::hal::ButtonID>(ButtonID::LEFT_BOTTOM)
@@ -157,7 +157,7 @@ void BitwigContext::createOverlayController() {
     }
 
     if (deviceSelectorOverlay) {
-        overlayController_->registerCleanup(
+        overlay_controller_->registerCleanup(
             OverlayType::DEVICE_SELECTOR,
             reinterpret_cast<oc::core::ScopeID>(deviceSelectorOverlay),
             static_cast<oc::hal::ButtonID>(ButtonID::LEFT_CENTER)
@@ -165,7 +165,7 @@ void BitwigContext::createOverlayController() {
     }
 
     if (trackSelectorOverlay) {
-        overlayController_->registerCleanup(
+        overlay_controller_->registerCleanup(
             OverlayType::TRACK_SELECTOR,
             reinterpret_cast<oc::core::ScopeID>(trackSelectorOverlay),
             static_cast<oc::hal::ButtonID>(ButtonID::BOTTOM_LEFT)
@@ -173,7 +173,7 @@ void BitwigContext::createOverlayController() {
     }
 
     if (viewSelectorOverlay) {
-        overlayController_->registerCleanup(
+        overlay_controller_->registerCleanup(
             OverlayType::VIEW_SELECTOR,
             reinterpret_cast<oc::core::ScopeID>(viewSelectorOverlay),
             static_cast<oc::hal::ButtonID>(ButtonID::LEFT_TOP)
@@ -181,7 +181,7 @@ void BitwigContext::createOverlayController() {
     }
 
     // Connect authority resolver to InputBinding for automatic scope filtering
-    buttons().setAuthorityResolver(&overlayController_->authority());
+    buttons().setAuthorityResolver(&overlay_controller_->authority());
 
     OC_LOG_INFO("OverlayController created with {} overlays registered", 4);
 }
@@ -190,88 +190,88 @@ void BitwigContext::createInputHandlers() {
     using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
 
     // Scope hierarchy: overlay > view > global
-    lv_obj_t* mainZone = viewContainer_->getMainZone();
-    lv_obj_t* scopeElement = remoteControlsView_ ? remoteControlsView_->getElement() : lv_screen_active();
-    lv_obj_t* deviceSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getDeviceSelectorElement() : nullptr;
-    lv_obj_t* trackSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getTrackSelectorElement() : nullptr;
-    lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
-    lv_obj_t* viewSelectorOverlay = viewSelector_ ? viewSelector_->getElement() : nullptr;
+    lv_obj_t* mainZone = view_container_->getMainZone();
+    lv_obj_t* scopeElement = remote_controls_view_ ? remote_controls_view_->getElement() : lv_screen_active();
+    lv_obj_t* deviceSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getDeviceSelectorElement() : nullptr;
+    lv_obj_t* trackSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getTrackSelectorElement() : nullptr;
+    lv_obj_t* pageSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getPageSelectorElement() : nullptr;
+    lv_obj_t* viewSelectorOverlay = view_selector_ ? view_selector_->getElement() : nullptr;
 
     // Create InputAPI facade for handlers that use both encoders and buttons
     core::api::InputAPI input{encoders(), buttons()};
 
     // Global scope (lowest priority)
-    inputTransport_ = std::make_unique<handler::HandlerInputTransport>(
+    input_transport_ = std::make_unique<handler::TransportInputHandler>(
         state_, *protocol_, input);
 
     // ViewSwitcher: scope = mainZone (parent of all views), overlay = ViewSelector
-    OverlayCtx viewSwitcherCtx{*overlayController_, mainZone, viewSelectorOverlay};
-    inputViewSwitcher_ = std::make_unique<handler::HandlerInputViewSwitcher>(
+    OverlayCtx viewSwitcherCtx{*overlay_controller_, mainZone, viewSelectorOverlay};
+    input_view_switcher_ = std::make_unique<handler::ViewSwitcherInputHandler>(
         state_, viewSwitcherCtx, input);
 
     // View + overlay scopes
-    OverlayCtx deviceSelectorCtx{*overlayController_, scopeElement, deviceSelectorOverlay};
-    inputDeviceSelector_ = std::make_unique<handler::HandlerInputDeviceSelector>(
+    OverlayCtx deviceSelectorCtx{*overlay_controller_, scopeElement, deviceSelectorOverlay};
+    input_device_selector_ = std::make_unique<handler::DeviceSelectorInputHandler>(
         state_, deviceSelectorCtx, *protocol_, input);
 
-    inputRemoteControl_ = std::make_unique<handler::HandlerInputRemoteControl>(
+    input_remote_control_ = std::make_unique<handler::RemoteControlInputHandler>(
         state_, *protocol_, input, scopeElement);
 
     // Track selector: no scopeElement, only overlayElement
-    OverlayCtx trackSelectorCtx{*overlayController_, nullptr, trackSelectorOverlay};
-    inputTrack_ = std::make_unique<handler::HandlerInputTrack>(
+    OverlayCtx trackSelectorCtx{*overlay_controller_, nullptr, trackSelectorOverlay};
+    input_track_ = std::make_unique<handler::TrackInputHandler>(
         state_, trackSelectorCtx, *protocol_, input);
 
-    OverlayCtx pageSelectorCtx{*overlayController_, scopeElement, pageSelectorOverlay};
-    inputDevicePage_ = std::make_unique<handler::HandlerInputDevicePage>(
+    OverlayCtx pageSelectorCtx{*overlay_controller_, scopeElement, pageSelectorOverlay};
+    input_device_page_ = std::make_unique<handler::DevicePageInputHandler>(
         state_, pageSelectorCtx, *protocol_, input);
 
     // LastClicked: OPT encoder for adjusting last clicked parameter
-    inputLastClicked_ = std::make_unique<handler::HandlerInputLastClicked>(
+    input_last_clicked_ = std::make_unique<handler::LastClickedInputHandler>(
         state_, *protocol_, encoders(), scopeElement);
 
     // ViewState: notifies host about active view and selector state
-    inputViewState_ = std::make_unique<handler::HandlerInputViewState>(
+    input_view_state_ = std::make_unique<handler::ViewStateInputHandler>(
         state_, *protocol_);
 }
 
 void BitwigContext::createViews() {
     // ViewType is in global scope from protocol/ViewType.hpp
-    viewContainer_ = std::make_unique<core::ui::ViewContainer>(lv_screen_active());
-    lv_obj_t* mainZone = viewContainer_->getMainZone();
+    view_container_ = std::make_unique<core::ui::ViewContainer>(lv_screen_active());
+    lv_obj_t* mainZone = view_container_->getMainZone();
 
     // Create all views (they start hidden)
-    remoteControlsView_ = std::make_unique<ui::RemoteControlsView>(mainZone, state_);
-    mixView_ = std::make_unique<ui::MixView>(mainZone);
-    clipView_ = std::make_unique<ui::ClipView>(mainZone);
+    remote_controls_view_ = std::make_unique<ui::RemoteControlsView>(mainZone, state_);
+    mix_view_ = std::make_unique<ui::MixView>(mainZone);
+    clip_view_ = std::make_unique<ui::ClipView>(mainZone);
 
     // Register views with ViewManager
-    state_.views.registerView(ViewType::REMOTE_CONTROLS, remoteControlsView_.get());
-    state_.views.registerView(ViewType::MIX, mixView_.get());
-    state_.views.registerView(ViewType::CLIP, clipView_.get());
+    state_.views.registerView(ViewType::REMOTE_CONTROLS, remote_controls_view_.get());
+    state_.views.registerView(ViewType::MIX, mix_view_.get());
+    state_.views.registerView(ViewType::CLIP, clip_view_.get());
 
     // Initialize ViewManager (activates first registered view)
     state_.views.initialize();
 
     // Persistent UI (always visible)
-    transportBar_ = std::make_unique<ui::TransportBar>(viewContainer_->getBottomZone(), state_.transport);
+    transport_bar_ = std::make_unique<ui::TransportBar>(view_container_->getBottomZone(), state_.transport);
 
     // Global overlay: ViewSelector (parent = mainZone so it covers views but not TransportBar)
-    viewSelector_ = std::make_unique<ui::ViewSelector>(mainZone);
+    view_selector_ = std::make_unique<ui::ViewSelector>(mainZone);
 
     // Setup bindings for ViewSelector rendering
     auto renderViewSelector = [this]() {
         static const std::vector<std::string> VIEW_NAMES = {"Remote Controls", "Mix", "Clip"};
-        viewSelector_->render({
+        view_selector_->render({
             VIEW_NAMES,
             state_.viewSelector.selectedIndex.get(),
             state_.viewSelector.visible.get()
         });
     };
 
-    viewSelectorSubs_.push_back(state_.viewSelector.visible.subscribe(
+    view_selector_subs_.push_back(state_.viewSelector.visible.subscribe(
         [renderViewSelector](bool) { renderViewSelector(); }));
-    viewSelectorSubs_.push_back(state_.viewSelector.selectedIndex.subscribe(
+    view_selector_subs_.push_back(state_.viewSelector.selectedIndex.subscribe(
         [renderViewSelector](int) { renderViewSelector(); }));
 }
 

@@ -85,9 +85,9 @@ protected:
     lv_obj_t* parent_ = nullptr;
     lv_obj_t* container_ = nullptr;
     std::unique_ptr<oc::ui::lvgl::Label> name_label_;
-    std::unique_ptr<oc::ui::lvgl::StateIndicator> automationIndicator_;
+    std::unique_ptr<oc::ui::lvgl::StateIndicator> automation_indicator_;
     uint8_t index_ = 0;
-    bool hasAutomation_ = false;
+    bool has_automation_ = false;
 };
 
 }  // namespace bitwig::ui

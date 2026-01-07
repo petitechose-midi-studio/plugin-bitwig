@@ -18,8 +18,8 @@ struct TitleItemProps {
     const lv_font_t* textFont = nullptr;
     uint32_t iconColor = 0xFFFFFF;
     uint32_t textColor = 0xFFFFFF;
-    lv_opa_t textOpacity = theme::Opacity::FULL;
-    lv_opa_t iconOpacity = theme::Opacity::FULL;
+    lv_opa_t textOpacity = theme::opacity::FULL;
+    lv_opa_t iconOpacity = theme::opacity::FULL;
     bool showIndicator = false;
     const char* indicator = nullptr;
     uint32_t indicatorColor = 0x888888;

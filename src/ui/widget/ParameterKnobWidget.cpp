@@ -23,11 +23,11 @@ void ParameterKnobWidget::createUI(lv_coord_t width, lv_coord_t height, bool cen
     knob_ = std::make_unique<oc::ui::lvgl::KnobWidget>(container_);
     knob_->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
         .centered(centered)
-        .bgColor(Color::KNOB_BACKGROUND)
-        .trackColor(Color::KNOB_VALUE_RIBBON)
-        .valueColor(Color::KNOB_VALUE_INDICATOR)
+        .bgColor(color::KNOB_BACKGROUND)
+        .trackColor(color::KNOB_VALUE_RIBBON)
+        .valueColor(color::KNOB_VALUE_INDICATOR)
         .ribbonThickness(0.3)
-        .flashColor(Color::DATA_ACTIVE);
+        .flashColor(color::DATA_ACTIVE);
     lv_obj_set_grid_cell(knob_->getElement(),
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: stretch to get width
         LV_GRID_ALIGN_START, 0, 1);   // Vertical: start in CONTENT row

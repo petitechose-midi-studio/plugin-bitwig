@@ -19,8 +19,8 @@ LevelBar::LevelBar(lv_obj_t *parent, lv_coord_t width, lv_coord_t height)
     lv_bar_set_range(bar_, 0, 100);
 
     // Background style (dark)
-    lv_obj_set_style_bg_color(bar_, lv_color_hex(Color::KNOB_BACKGROUND), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(bar_, Opacity::FULL, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(bar_, lv_color_hex(color::KNOB_BACKGROUND), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(bar_, opacity::FULL, LV_PART_MAIN);
     lv_obj_set_style_radius(bar_, 0, LV_PART_MAIN);
 
     // Indicator style

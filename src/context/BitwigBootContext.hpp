@@ -32,12 +32,12 @@ public:
         splash_->onActivate();
         splash_->setText("Connecting to Bitwig...");
 
-        startMs_ = millis();
+        start_ms_ = millis();
         return true;
     }
 
     void update() override {
-        uint32_t elapsed = millis() - startMs_;
+        uint32_t elapsed = millis() - start_ms_;
 
         // Start fade before end
         if (!fading_ && elapsed >= FADE_START_MS) {
@@ -62,7 +62,7 @@ private:
     static constexpr uint32_t FADE_MS = 200;
     static constexpr uint32_t FADE_START_MS = DURATION_MS - FADE_MS;
 
-    uint32_t startMs_ = 0;
+    uint32_t start_ms_ = 0;
     bool fading_ = false;
     std::unique_ptr<ui::SplashView> splash_;
 };

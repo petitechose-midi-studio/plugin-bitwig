@@ -47,7 +47,7 @@ public:
 
     void render(const RemoteControlsPageSelectorProps& props);
 
-    int getPageCount() const { return currentProps_.totalCount; }
+    int getPageCount() const { return current_props_.totalCount; }
 
     // IComponent
     void show() override;
@@ -80,10 +80,10 @@ private:
 
     // Virtual list
     std::unique_ptr<VirtualList> list_;
-    std::vector<PageSlotWidgets> slotWidgets_;
+    std::vector<PageSlotWidgets> slot_widgets_;
 
     // State
-    RemoteControlsPageSelectorProps currentProps_;
+    RemoteControlsPageSelectorProps current_props_;
     bool visible_ = false;
 };
 

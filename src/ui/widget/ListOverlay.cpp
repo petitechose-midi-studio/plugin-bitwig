@@ -127,7 +127,7 @@ void ListOverlay::removeLabel(size_t index) {
 void ListOverlay::createOverlay() {
     overlay_ = lv_obj_create(parent_);
     lv_obj_add_flag(overlay_, LV_OBJ_FLAG_FLOATING);
-    style::apply(overlay_).fullSize().bgColor(BaseTheme::Color::BACKGROUND, Opacity::OVERLAY_BG).noScroll();
+    style::apply(overlay_).fullSize().bgColor(base_theme::color::BACKGROUND, opacity::OVERLAY_BG).noScroll();
     lv_obj_align(overlay_, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_border_width(overlay_, 0, LV_STATE_DEFAULT);
 
@@ -137,7 +137,7 @@ void ListOverlay::createOverlay() {
 
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_row(container_, BaseTheme::Layout::ROW_GAP_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(container_, base_theme::layout::ROW_GAP_MD, LV_STATE_DEFAULT);
 
     createTitleLabel();
     createList();
@@ -148,14 +148,14 @@ void ListOverlay::createTitleLabel() {
     // Use framework Label widget with auto-scroll for overflow text
     title_label_ = std::make_unique<Label>(container_);
     title_label_->alignment(LV_TEXT_ALIGN_CENTER)
-                 .color(BaseTheme::Color::TEXT_PRIMARY)
+                 .color(base_theme::color::TEXT_PRIMARY)
                  .ownsLvglObjects(false);
 
     lv_obj_t* elem = title_label_->getElement();
-    lv_obj_set_width(elem, lv_pct(100) - BaseTheme::Layout::MARGIN_LG);
-    lv_obj_set_style_margin_left(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_right(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_top(elem, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_width(elem, lv_pct(100) - base_theme::layout::MARGIN_LG);
+    lv_obj_set_style_margin_left(elem, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_right(elem, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_top(elem, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
 
     if (fonts.tempo_label) {
         title_label_->font(fonts.tempo_label);
@@ -172,23 +172,23 @@ void ListOverlay::createList() {
     list_ = lv_list_create(container_);
     lv_obj_set_size(list_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_flex_grow(list_, 1);
-    lv_obj_set_style_bg_opa(list_, Opacity::HIDDEN, LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(list_, opacity::HIDDEN, LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(list_, 0, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_all(list_, BaseTheme::Layout::LIST_PAD, LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(list_, BaseTheme::Layout::LIST_ITEM_GAP, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_left(list_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
-    lv_obj_set_style_margin_right(list_, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(list_, base_theme::layout::LIST_PAD, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(list_, base_theme::layout::LIST_ITEM_GAP, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_left(list_, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_margin_right(list_, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
 
-    lv_obj_set_style_width(list_, BaseTheme::Layout::SCROLLBAR_WIDTH, LV_PART_SCROLLBAR);
-    lv_obj_set_style_bg_color(list_, lv_color_hex(BaseTheme::Color::INACTIVE_LIGHTER), LV_PART_SCROLLBAR);
-    lv_obj_set_style_bg_opa(list_, Opacity::SCROLLBAR, LV_PART_SCROLLBAR);
+    lv_obj_set_style_width(list_, base_theme::layout::SCROLLBAR_WIDTH, LV_PART_SCROLLBAR);
+    lv_obj_set_style_bg_color(list_, lv_color_hex(base_theme::color::INACTIVE_LIGHTER), LV_PART_SCROLLBAR);
+    lv_obj_set_style_bg_opa(list_, opacity::SCROLLBAR, LV_PART_SCROLLBAR);
 
     lv_obj_add_event_cb(
         list_,
         [](lv_event_t* e) {
             if (lv_event_get_code(e) == LV_EVENT_SCROLL_BEGIN) {
                 lv_anim_t* anim = lv_event_get_scroll_anim(e);
-                if (anim) { anim->duration = BaseTheme::Animation::SCROLL_ANIM_MS; }
+                if (anim) { anim->duration = base_theme::animation::SCROLL_ANIM_MS; }
             }
         },
         LV_EVENT_SCROLL_BEGIN, nullptr);
@@ -206,14 +206,14 @@ void ListOverlay::populateList() {
         lv_obj_set_width(btn, LV_PCT(100));
         lv_obj_set_height(btn, LV_SIZE_CONTENT);
 
-        lv_obj_set_style_bg_opa(btn, Opacity::HIDDEN, LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(btn, Opacity::HIDDEN, LV_STATE_CHECKED);
+        lv_obj_set_style_bg_opa(btn, opacity::HIDDEN, LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(btn, opacity::HIDDEN, LV_STATE_CHECKED);
 
-        lv_obj_set_style_pad_left(btn, BaseTheme::Layout::PAD_BUTTON_H, LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(btn, BaseTheme::Layout::MARGIN_LG, LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(btn, BaseTheme::Layout::PAD_BUTTON_V, LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(btn, BaseTheme::Layout::PAD_BUTTON_V, LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(btn, BaseTheme::Layout::MARGIN_MD, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(btn, base_theme::layout::PAD_BUTTON_H, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(btn, base_theme::layout::MARGIN_LG, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(btn, base_theme::layout::PAD_BUTTON_V, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(btn, base_theme::layout::PAD_BUTTON_V, LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_column(btn, base_theme::layout::MARGIN_MD, LV_STATE_DEFAULT);
 
         lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, LV_STATE_DEFAULT);
         lv_obj_set_style_border_width(btn, 0, LV_STATE_DEFAULT);
@@ -226,7 +226,7 @@ void ListOverlay::populateList() {
         auto label = std::make_unique<Label>(btn);
         label->flexGrow(true)
               .alignment(LV_TEXT_ALIGN_LEFT)
-              .color(BaseTheme::Color::INACTIVE_LIGHTER)
+              .color(base_theme::color::INACTIVE_LIGHTER)
               .ownsLvglObjects(false);
 
         if (fonts.list_item_label) {
@@ -234,7 +234,7 @@ void ListOverlay::populateList() {
         }
 
         // Apply styles for focused state on the inner label element
-        lv_obj_set_style_text_color(label->getLabel(), lv_color_hex(BaseTheme::Color::TEXT_PRIMARY), LV_STATE_FOCUSED);
+        lv_obj_set_style_text_color(label->getLabel(), lv_color_hex(base_theme::color::TEXT_PRIMARY), LV_STATE_FOCUSED);
 
         label->setText(item);
 

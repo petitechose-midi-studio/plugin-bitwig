@@ -21,7 +21,7 @@ void SplashView::onActivate() {
 
     if (container_) {
         lv_obj_clear_flag(container_, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_set_style_opa(container_, Opacity::FULL,
+        lv_obj_set_style_opa(container_, opacity::FULL,
                              LV_STATE_DEFAULT);  // Reset opacity after fadeOut
     }
 }
@@ -37,7 +37,7 @@ void SplashView::setText(const char *message) {
 
 void SplashView::createUI() {
     container_ = lv_obj_create(zone_);
-    style::apply(container_).fullSize().pad(0).bgColor(Color::BACKGROUND_BASE);
+    style::apply(container_).fullSize().pad(0).bgColor(color::BACKGROUND_BASE);
     lv_obj_set_style_radius(container_, 0, LV_STATE_DEFAULT);
 
     lv_obj_add_flag(container_, LV_OBJ_FLAG_FLOATING);
@@ -49,12 +49,12 @@ void SplashView::createUI() {
 
     logo_ = lv_image_create(container_);
     lv_image_set_src(logo_, &Bitwig_Logo);
-    lv_obj_set_style_img_opa(logo_, Opacity::FULL, LV_STATE_DEFAULT);
+    lv_obj_set_style_img_opa(logo_, opacity::FULL, LV_STATE_DEFAULT);
 
     // Use framework Label widget with auto-scroll for overflow text
     label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
     label_->alignment(LV_TEXT_ALIGN_CENTER)
-           .color(Color::TEXT_PRIMARY)
+           .color(color::TEXT_PRIMARY)
            .ownsLvglObjects(false);
 
     if (bitwig_fonts.device_label) {
@@ -87,7 +87,7 @@ void SplashView::fadeOut(uint32_t durationMs, std::function<void()> onComplete) 
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, container_);
     lv_anim_set_exec_cb(&anim, fadeAnimCallback);
-    lv_anim_set_values(&anim, Opacity::FULL, Opacity::HIDDEN);
+    lv_anim_set_values(&anim, opacity::FULL, opacity::HIDDEN);
     lv_anim_set_duration(&anim, durationMs);
     lv_anim_set_path_cb(&anim, lv_anim_path_linear);
     lv_anim_set_user_data(&anim, this);
