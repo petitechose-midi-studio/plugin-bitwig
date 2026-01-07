@@ -17,8 +17,7 @@
 
 #include <lvgl.h>
 
-#include <oc/api/ButtonAPI.hpp>
-#include <oc/api/EncoderAPI.hpp>
+#include <api/InputAPI.hpp>
 
 #include "config/App.hpp"
 #include "protocol/BitwigProtocol.hpp"
@@ -33,8 +32,7 @@ class HandlerInputRemoteControl {
 public:
     HandlerInputRemoteControl(state::BitwigState& state,
                               BitwigProtocol& protocol,
-                              oc::api::EncoderAPI& encoders,
-                              oc::api::ButtonAPI& buttons,
+                              core::api::InputAPI input,
                               lv_obj_t* scopeElement);
 
     ~HandlerInputRemoteControl() = default;
@@ -51,8 +49,7 @@ private:
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
-    oc::api::ButtonAPI& buttons_;
+    core::api::InputAPI input_;
     lv_obj_t* scopeElement_;
 };
 

@@ -15,55 +15,49 @@ using EncoderID = Config::EncoderID;
 using OverlayType = ui::OverlayType;
 
 HandlerInputDevicePage::HandlerInputDevicePage(state::BitwigState& state,
-                                               core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                                               OverlayCtx overlayCtx,
                                                BitwigProtocol& protocol,
-                                               oc::api::EncoderAPI& encoders,
-                                               oc::api::ButtonAPI& buttons,
-                                               lv_obj_t* scopeElement,
-                                               lv_obj_t* overlayElement)
+                                               core::api::InputAPI input)
     : state_(state)
-    , overlays_(overlays)
+    , overlayCtx_(overlayCtx)
     , protocol_(protocol)
-    , encoders_(encoders)
-    , buttons_(buttons)
-    , scopeElement_(scopeElement)
-    , overlayElement_(overlayElement) {
+    , input_(input) {
     setupBindings();
 }
 
 void HandlerInputDevicePage::setupBindings() {
     // === VIEW-LEVEL BINDING ===
     // Open page selector (latch behavior for toggle)
-    buttons_.button(ButtonID::LEFT_BOTTOM)
+    input_.buttons.button(ButtonID::LEFT_BOTTOM)
         .press()
         .latch()
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayCtx_.scopeElement))
         .then([this]() { openSelector(); });
 
     // === OVERLAY-LEVEL BINDINGS ===
 
     // Close and confirm on release (long press or second toggle press)
-    buttons_.button(ButtonID::LEFT_BOTTOM)
+    input_.buttons.button(ButtonID::LEFT_BOTTOM)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { closeSelector(); });
 
     // Navigate pages (scoped to overlay - active while overlay visible)
-    encoders_.encoder(EncoderID::NAV)
+    input_.encoders.encoder(EncoderID::NAV)
         .turn()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this](float delta) { navigate(delta); });
 
     // Confirm selection on NAV button (without closing)
-    buttons_.button(ButtonID::NAV)
+    input_.buttons.button(ButtonID::NAV)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { confirmSelection(); });
 
     // Cancel on LEFT_TOP (close without confirming)
-    buttons_.button(ButtonID::LEFT_TOP)
+    input_.buttons.button(ButtonID::LEFT_TOP)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { cancel(); });
 }
 
@@ -75,7 +69,7 @@ void HandlerInputDevicePage::openSelector() {
     }
 
     // Set encoder to relative mode for navigation
-    encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 }
 
 void HandlerInputDevicePage::navigate(float delta) {
@@ -116,20 +110,20 @@ void HandlerInputDevicePage::closeSelector() {
     }
 
     // OverlayController handles latch cleanup synchronously before hiding
-    overlays_.hide();
+    overlayCtx_.controller.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(
-        !buttons_.isLatched(ButtonID::LEFT_BOTTOM),
+        !input_.buttons.isLatched(ButtonID::LEFT_BOTTOM),
         "PageSelector latch should be cleared after hide()"
     );
 }
 
 void HandlerInputDevicePage::cancel() {
     // OverlayController handles latch cleanup synchronously before hiding
-    overlays_.hide();
+    overlayCtx_.controller.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(
-        !buttons_.isLatched(ButtonID::LEFT_BOTTOM),
+        !input_.buttons.isLatched(ButtonID::LEFT_BOTTOM),
         "PageSelector latch should be cleared after hide()"
     );
 }

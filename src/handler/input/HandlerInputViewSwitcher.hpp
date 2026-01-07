@@ -15,12 +15,11 @@
 
 #include <lvgl.h>
 
-#include <oc/api/ButtonAPI.hpp>
-#include <oc/api/EncoderAPI.hpp>
+#include <api/InputAPI.hpp>
 #include <oc/state/Signal.hpp>
+#include <ui/OverlayBindingContext.hpp>
 
 #include "state/BitwigState.hpp"
-#include <ui/OverlayController.hpp>
 
 namespace bitwig::handler {
 
@@ -33,12 +32,11 @@ namespace bitwig::handler {
  */
 class HandlerInputViewSwitcher {
 public:
+    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+
     HandlerInputViewSwitcher(state::BitwigState& state,
-                             core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
-                             oc::api::EncoderAPI& encoders,
-                             oc::api::ButtonAPI& buttons,
-                             lv_obj_t* scopeElement,
-                             lv_obj_t* overlayElement);
+                             OverlayCtx overlayCtx,
+                             core::api::InputAPI input);
 
     ~HandlerInputViewSwitcher() = default;
 
@@ -56,11 +54,8 @@ private:
     void cancel();
 
     state::BitwigState& state_;
-    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
-    oc::api::EncoderAPI& encoders_;
-    oc::api::ButtonAPI& buttons_;
-    lv_obj_t* scopeElement_;
-    lv_obj_t* overlayElement_;
+    OverlayCtx overlayCtx_;
+    core::api::InputAPI input_;
 
     // Static view names
     static constexpr const char* VIEW_NAMES[] = {"Remote Controls", "Mix", "Clip"};

@@ -10,32 +10,30 @@ using EncoderID = Config::EncoderID;
 
 HandlerInputTransport::HandlerInputTransport(state::BitwigState& state,
                                              BitwigProtocol& protocol,
-                                             oc::api::EncoderAPI& encoders,
-                                             oc::api::ButtonAPI& buttons)
+                                             core::api::InputAPI& input)
     : state_(state)
     , protocol_(protocol)
-    , encoders_(encoders)
-    , buttons_(buttons) {
+    , input_(input) {
     setupBindings();
 }
 
 void HandlerInputTransport::setupBindings() {
     // Global bindings (no scope) - lowest priority
-    encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
-    buttons_.button(ButtonID::BOTTOM_LEFT)
+    input_.buttons.button(ButtonID::BOTTOM_LEFT)
         .release()
         .then([this]() { togglePlay(); });
 
-    buttons_.button(ButtonID::BOTTOM_CENTER)
+    input_.buttons.button(ButtonID::BOTTOM_CENTER)
         .release()
         .then([this]() { stop(); });
 
-    buttons_.button(ButtonID::BOTTOM_RIGHT)
+    input_.buttons.button(ButtonID::BOTTOM_RIGHT)
         .release()
         .then([this]() { toggleRecord(); });
 
-    encoders_.encoder(EncoderID::NAV)
+    input_.encoders.encoder(EncoderID::NAV)
         .turn()
         .then([this](float delta) { adjustTempo(delta); });
 }

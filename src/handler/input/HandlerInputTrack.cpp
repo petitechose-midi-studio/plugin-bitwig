@@ -14,64 +14,60 @@ using namespace oc::ui::lvgl;
 using ui::OverlayType;
 
 HandlerInputTrack::HandlerInputTrack(state::BitwigState& state,
-                                     core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                                     OverlayCtx overlayCtx,
                                      BitwigProtocol& protocol,
-                                     oc::api::EncoderAPI& encoders,
-                                     oc::api::ButtonAPI& buttons,
-                                     lv_obj_t* overlayElement)
+                                     core::api::InputAPI input)
     : state_(state)
-    , overlays_(overlays)
+    , overlayCtx_(overlayCtx)
     , protocol_(protocol)
-    , encoders_(encoders)
-    , buttons_(buttons)
-    , overlayElement_(overlayElement) {
+    , input_(input) {
     setupBindings();
 }
 
 void HandlerInputTrack::setupBindings() {
     // Close without confirming
-    buttons_.button(ButtonID::LEFT_TOP)
+    input_.buttons.button(ButtonID::LEFT_TOP)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { close(); });
 
     // Confirm selection and close
-    buttons_.button(ButtonID::LEFT_CENTER)
+    input_.buttons.button(ButtonID::LEFT_CENTER)
         .press()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() {
             select();
             close();
         });
 
     // Navigate tracks
-    encoders_.encoder(EncoderID::NAV)
+    input_.encoders.encoder(EncoderID::NAV)
         .turn()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this](float delta) { navigate(delta); });
 
     // Enter track group
-    buttons_.button(ButtonID::NAV)
+    input_.buttons.button(ButtonID::NAV)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { selectAndDive(); });
 
     // Mute
-    buttons_.button(ButtonID::BOTTOM_CENTER)
+    input_.buttons.button(ButtonID::BOTTOM_CENTER)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { toggleMute(); });
 
     // Solo
-    buttons_.button(ButtonID::BOTTOM_RIGHT)
+    input_.buttons.button(ButtonID::BOTTOM_RIGHT)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { toggleSolo(); });
 
     // Confirm and close (same button that opened TrackSelector from DeviceSelector)
-    buttons_.button(ButtonID::BOTTOM_LEFT)
+    input_.buttons.button(ButtonID::BOTTOM_LEFT)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() {
             select();
             close();
@@ -129,7 +125,7 @@ void HandlerInputTrack::close() {
     if (!ts.visible.get()) return;
 
     // OverlayController handles latch cleanup and restores device selector from stack
-    overlays_.hide();
+    overlayCtx_.controller.hide();
 
     // Request fresh device list - don't clear cache to avoid flash
     // Old data remains visible until new data arrives

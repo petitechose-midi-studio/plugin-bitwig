@@ -12,13 +12,11 @@ using namespace bitwig::state;
 
 HandlerInputRemoteControl::HandlerInputRemoteControl(state::BitwigState& state,
                                                      BitwigProtocol& protocol,
-                                                     oc::api::EncoderAPI& encoders,
-                                                     oc::api::ButtonAPI& buttons,
+                                                     core::api::InputAPI input,
                                                      lv_obj_t* scopeElement)
     : state_(state)
     , protocol_(protocol)
-    , encoders_(encoders)
-    , buttons_(buttons)
+    , input_(input)
     , scopeElement_(scopeElement) {
     setupBindings();
 }
@@ -26,26 +24,26 @@ HandlerInputRemoteControl::HandlerInputRemoteControl(state::BitwigState& state,
 void HandlerInputRemoteControl::setupBindings() {
     for (uint8_t i = 0; i < PARAMETER_COUNT; i++) {
         // Encoder turn -> value change
-        encoders_.encoder(MACRO_ENCODERS[i])
+        input_.encoders.encoder(MACRO_ENCODERS[i])
             .turn()
             .scope(scope(scopeElement_))
             .then([this, i](float v) { handleValueChange(i, v); });
 
         // Button press -> touch start
-        buttons_.button(MACRO_BUTTONS[i])
+        input_.buttons.button(MACRO_BUTTONS[i])
             .press()
             .scope(scope(scopeElement_))
             .then([this, i]() { sendTouch(i, true); });
 
         // Button release -> touch end
-        buttons_.button(MACRO_BUTTONS[i])
+        input_.buttons.button(MACRO_BUTTONS[i])
             .release()
             .scope(scope(scopeElement_))
             .then([this, i]() { sendTouch(i, false); });
     }
 
     // NAV button double tap -> restore automation for all parameters
-    buttons_.button(Config::ButtonID::NAV)
+    input_.buttons.button(Config::ButtonID::NAV)
         .doubleTap()
         .scope(scope(scopeElement_))
         .then([this]() { handleGlobalRestore(); });

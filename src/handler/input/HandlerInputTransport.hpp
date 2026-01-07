@@ -19,8 +19,7 @@
 
 #include <lvgl.h>
 
-#include <oc/api/ButtonAPI.hpp>
-#include <oc/api/EncoderAPI.hpp>
+#include <api/InputAPI.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -42,13 +41,11 @@ public:
      *
      * @param state BitwigState for optimistic updates
      * @param protocol BitwigProtocol for sending commands
-     * @param encoders EncoderAPI for encoder bindings
-     * @param buttons ButtonAPI for button bindings
+     * @param input InputAPI for encoder and button bindings
      */
     HandlerInputTransport(state::BitwigState& state,
                           BitwigProtocol& protocol,
-                          oc::api::EncoderAPI& encoders,
-                          oc::api::ButtonAPI& buttons);
+                          core::api::InputAPI& input);
 
     ~HandlerInputTransport() = default;
 
@@ -66,8 +63,7 @@ private:
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
-    oc::api::ButtonAPI& buttons_;
+    core::api::InputAPI input_;
 };
 
 }  // namespace bitwig::handler

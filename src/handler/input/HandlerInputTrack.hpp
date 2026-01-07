@@ -15,12 +15,11 @@
 
 #include <lvgl.h>
 
-#include <oc/api/ButtonAPI.hpp>
-#include <oc/api/EncoderAPI.hpp>
+#include <api/InputAPI.hpp>
+#include <ui/OverlayBindingContext.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include <ui/OverlayController.hpp>
 
 namespace bitwig::handler {
 
@@ -33,12 +32,12 @@ namespace bitwig::handler {
  */
 class HandlerInputTrack {
 public:
+    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+
     HandlerInputTrack(state::BitwigState& state,
-                      core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                      OverlayCtx overlayCtx,
                       BitwigProtocol& protocol,
-                      oc::api::EncoderAPI& encoders,
-                      oc::api::ButtonAPI& buttons,
-                      lv_obj_t* overlayElement);
+                      core::api::InputAPI input);
 
     ~HandlerInputTrack() = default;
 
@@ -60,11 +59,9 @@ private:
     int getAdjustedTrackIndex(int selectorIndex) const;
 
     state::BitwigState& state_;
-    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays_;
+    OverlayCtx overlayCtx_;
     BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
-    oc::api::ButtonAPI& buttons_;
-    lv_obj_t* overlayElement_;
+    core::api::InputAPI input_;
 };
 
 }  // namespace bitwig::handler
