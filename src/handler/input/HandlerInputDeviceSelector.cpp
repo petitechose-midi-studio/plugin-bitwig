@@ -17,19 +17,13 @@ using EncoderID = Config::EncoderID;
 using OverlayType = ui::OverlayType;
 
 HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state,
-                                                       core::ui::OverlayController<bitwig::ui::OverlayType>& overlays,
+                                                       OverlayCtx overlayCtx,
                                                        BitwigProtocol& protocol,
-                                                       oc::api::EncoderAPI& encoders,
-                                                       oc::api::ButtonAPI& buttons,
-                                                       lv_obj_t* scopeElement,
-                                                       lv_obj_t* overlayElement)
+                                                       core::api::InputAPI input)
     : state_(state)
-    , overlays_(overlays)
+    , overlayCtx_(overlayCtx)
     , protocol_(protocol)
-    , encoders_(encoders)
-    , buttons_(buttons)
-    , scopeElement_(scopeElement)
-    , overlayElement_(overlayElement) {
+    , input_(input) {
     setupBindings();
 
     // Auto-reset local state when overlay hidden externally
@@ -46,54 +40,54 @@ HandlerInputDeviceSelector::HandlerInputDeviceSelector(state::BitwigState& state
 void HandlerInputDeviceSelector::setupBindings() {
     // === VIEW-LEVEL BINDING ===
     // Open binding on view scope (works when overlay not yet visible)
-    buttons_.button(ButtonID::LEFT_CENTER)
+    input_.buttons.button(ButtonID::LEFT_CENTER)
         .press()
         .latch()
-        .scope(scope(scopeElement_))
+        .scope(scope(overlayCtx_.scopeElement))
         .then([this]() { requestDeviceList(); });
 
     // === OVERLAY-LEVEL BINDINGS ===
 
     // Confirm and close on release
-    buttons_.button(ButtonID::LEFT_CENTER)
+    input_.buttons.button(ButtonID::LEFT_CENTER)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() {
             select();
             close();
         });
 
     // Cancel on LEFT_TOP
-    buttons_.button(ButtonID::LEFT_TOP)
+    input_.buttons.button(ButtonID::LEFT_TOP)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { close(); });
 
     // Navigate devices
-    encoders_.encoder(EncoderID::NAV)
+    input_.encoders.encoder(EncoderID::NAV)
         .turn()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this](float delta) { navigate(delta); });
 
     // Enter device children
-    buttons_.button(ButtonID::NAV)
+    input_.buttons.button(ButtonID::NAV)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { selectAndDive(); });
 
     // Toggle device state
-    buttons_.button(ButtonID::BOTTOM_CENTER)
+    input_.buttons.button(ButtonID::BOTTOM_CENTER)
         .release()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { toggleState(); });
 
     // Open TrackSelector with latch behavior (same as LEFT_CENTER for DeviceSelector)
     // Short press: opens and latches, release does nothing
     // Long press or second short press: release confirms and closes
-    buttons_.button(ButtonID::BOTTOM_LEFT)
+    input_.buttons.button(ButtonID::BOTTOM_LEFT)
         .press()
         .latch()
-        .scope(scope(overlayElement_))
+        .scope(scope(overlayCtx_.overlayElement))
         .then([this]() { requestTrackList(); });
 }
 
@@ -105,7 +99,7 @@ void HandlerInputDeviceSelector::requestDeviceList() {
         state_.overlays.show(OverlayType::DEVICE_SELECTOR, false);
     }
 
-    encoders_.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
 
     if (!requested_) {
         // Reset cache for fresh load
@@ -271,11 +265,11 @@ void HandlerInputDeviceSelector::requestTrackList() {
 
 void HandlerInputDeviceSelector::close() {
     // OverlayController handles latch cleanup synchronously before hiding
-    overlays_.hideAll();
+    overlayCtx_.controller.hideAll();
 
     // Verify cleanup happened (debug builds only)
     OC_ASSERT_OVERLAY_LIFECYCLE(
-        !buttons_.isLatched(ButtonID::LEFT_CENTER),
+        !input_.buttons.isLatched(ButtonID::LEFT_CENTER),
         "DeviceSelector latch should be cleared after hideAll()"
     );
 }

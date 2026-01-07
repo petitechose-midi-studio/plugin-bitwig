@@ -1,6 +1,8 @@
 #include "BitwigContext.hpp"
 
+#include <api/InputAPI.hpp>
 #include <oc/log/Log.hpp>
+#include <ui/OverlayBindingContext.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
 #include <ui/font/CoreFonts.hpp>
 
@@ -185,6 +187,8 @@ void BitwigContext::createOverlayController() {
 }
 
 void BitwigContext::createInputHandlers() {
+    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+
     // Scope hierarchy: overlay > view > global
     lv_obj_t* mainZone = viewContainer_->getMainZone();
     lv_obj_t* scopeElement = remoteControlsView_ ? remoteControlsView_->getElement() : lv_screen_active();
@@ -193,23 +197,34 @@ void BitwigContext::createInputHandlers() {
     lv_obj_t* pageSelectorOverlay = remoteControlsView_ ? remoteControlsView_->getPageSelectorElement() : nullptr;
     lv_obj_t* viewSelectorOverlay = viewSelector_ ? viewSelector_->getElement() : nullptr;
 
+    // Create InputAPI facade for handlers that use both encoders and buttons
+    core::api::InputAPI input{encoders(), buttons()};
+
     // Global scope (lowest priority)
     inputTransport_ = std::make_unique<handler::HandlerInputTransport>(
-        state_, *protocol_, encoders(), buttons());
+        state_, *protocol_, input);
 
     // ViewSwitcher: scope = mainZone (parent of all views), overlay = ViewSelector
+    OverlayCtx viewSwitcherCtx{*overlayController_, mainZone, viewSelectorOverlay};
     inputViewSwitcher_ = std::make_unique<handler::HandlerInputViewSwitcher>(
-        state_, *overlayController_, encoders(), buttons(), mainZone, viewSelectorOverlay);
+        state_, viewSwitcherCtx, input);
 
     // View + overlay scopes
+    OverlayCtx deviceSelectorCtx{*overlayController_, scopeElement, deviceSelectorOverlay};
     inputDeviceSelector_ = std::make_unique<handler::HandlerInputDeviceSelector>(
-        state_, *overlayController_, *protocol_, encoders(), buttons(), scopeElement, deviceSelectorOverlay);
+        state_, deviceSelectorCtx, *protocol_, input);
+
     inputRemoteControl_ = std::make_unique<handler::HandlerInputRemoteControl>(
-        state_, *protocol_, encoders(), buttons(), scopeElement);
+        state_, *protocol_, input, scopeElement);
+
+    // Track selector: no scopeElement, only overlayElement
+    OverlayCtx trackSelectorCtx{*overlayController_, nullptr, trackSelectorOverlay};
     inputTrack_ = std::make_unique<handler::HandlerInputTrack>(
-        state_, *overlayController_, *protocol_, encoders(), buttons(), trackSelectorOverlay);
+        state_, trackSelectorCtx, *protocol_, input);
+
+    OverlayCtx pageSelectorCtx{*overlayController_, scopeElement, pageSelectorOverlay};
     inputDevicePage_ = std::make_unique<handler::HandlerInputDevicePage>(
-        state_, *overlayController_, *protocol_, encoders(), buttons(), scopeElement, pageSelectorOverlay);
+        state_, pageSelectorCtx, *protocol_, input);
 
     // LastClicked: OPT encoder for adjusting last clicked parameter
     inputLastClicked_ = std::make_unique<handler::HandlerInputLastClicked>(
