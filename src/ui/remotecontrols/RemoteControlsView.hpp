@@ -95,7 +95,7 @@ private:
     // Dirty Flag System (debounces UI updates)
     // =========================================================================
     std::array<bool, bitwig::state::PARAMETER_COUNT> paramDirty_{};
-    lv_timer_t* updateTimer_{nullptr};  // Timer to process dirty flags
+    lv_timer_t* update_timer_{nullptr};  // Timer to process dirty flags
 
     void markParameterDirty(uint8_t index);
     void processDirtyParameters();

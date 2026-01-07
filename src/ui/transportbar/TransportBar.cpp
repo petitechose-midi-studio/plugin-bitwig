@@ -12,12 +12,12 @@ using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 namespace {
-const lv_color_t COLOR_INACTIVE = lv_color_hex(Color::DATA_INACTIVE);
-const lv_color_t COLOR_ACTIVE = lv_color_hex(Color::DATA_ACTIVE);
-const lv_color_t COLOR_PLAY = lv_color_hex(Color::MACRO_5);
-const lv_color_t COLOR_RECORD = lv_color_hex(Color::MACRO_1);
-const lv_color_t COLOR_MIDI = lv_color_hex(Color::KNOB_VALUE_RIBBON);
-const lv_color_t COLOR_AUTOMATION_OVERRIDE = lv_color_hex(Color::AUTOMATION_OVERRIDE);
+const lv_color_t COLOR_INACTIVE = lv_color_hex(color::DATA_INACTIVE);
+const lv_color_t COLOR_ACTIVE = lv_color_hex(color::DATA_ACTIVE);
+const lv_color_t COLOR_PLAY = lv_color_hex(color::MACRO_5);
+const lv_color_t COLOR_RECORD = lv_color_hex(color::MACRO_1);
+const lv_color_t COLOR_MIDI = lv_color_hex(color::KNOB_VALUE_RIBBON);
+const lv_color_t COLOR_AUTOMATION_OVERRIDE = lv_color_hex(color::AUTOMATION_OVERRIDE);
 }  // namespace
 
 namespace bitwig::ui {
@@ -117,8 +117,8 @@ bool TransportBar::isVisible() const {
 
 void TransportBar::createContainer(lv_obj_t* parent) {
     container_ = lv_obj_create(parent);
-    lv_obj_set_size(container_, LV_PCT(100), Layout::TRANSPORT_BAR_HEIGHT);
-    style::apply(container_).bgColor(Color::BACKGROUND_FILL);
+    lv_obj_set_size(container_, LV_PCT(100), layout::TRANSPORT_BAR_HEIGHT);
+    style::apply(container_).bgColor(color::BACKGROUND_FILL);
     lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
     lv_obj_set_style_pad_all(container_, 0, LV_STATE_DEFAULT);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
@@ -135,27 +135,27 @@ void TransportBar::createTransportControls() {
     // Left cell: MIDI indicators
     lv_obj_t* midi_container = lv_obj_create(container_);
     lv_obj_set_grid_cell(midi_container, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    style::apply(midi_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_START, Layout::GAP_SM);
+    style::apply(midi_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_START, layout::GAP_SM);
 
-    midi_in_indicator_ = std::make_unique<StateIndicator>(midi_container, Layout::INDICATOR_SIZE);
+    midi_in_indicator_ = std::make_unique<StateIndicator>(midi_container, layout::INDICATOR_SIZE);
     midi_in_indicator_->color(StateIndicator::State::OFF, lv_color_to_u32(COLOR_MIDI))
-        .opacity(StateIndicator::State::OFF, Opacity::FULL)
+        .opacity(StateIndicator::State::OFF, opacity::FULL)
         .color(StateIndicator::State::ACTIVE, lv_color_to_u32(COLOR_ACTIVE))
-        .opacity(StateIndicator::State::ACTIVE, Opacity::FULL);
+        .opacity(StateIndicator::State::ACTIVE, opacity::FULL);
     midi_in_indicator_->setState(StateIndicator::State::OFF);
 
-    midi_out_indicator_ = std::make_unique<StateIndicator>(midi_container, Layout::INDICATOR_SIZE);
+    midi_out_indicator_ = std::make_unique<StateIndicator>(midi_container, layout::INDICATOR_SIZE);
     midi_out_indicator_->color(StateIndicator::State::OFF, lv_color_to_u32(COLOR_MIDI))
-        .opacity(StateIndicator::State::OFF, Opacity::FULL)
+        .opacity(StateIndicator::State::OFF, opacity::FULL)
         .color(StateIndicator::State::ACTIVE, lv_color_to_u32(COLOR_ACTIVE))
-        .opacity(StateIndicator::State::ACTIVE, Opacity::FULL);
+        .opacity(StateIndicator::State::ACTIVE, opacity::FULL);
     midi_out_indicator_->setState(StateIndicator::State::OFF);
 
     // Center cell: Transport icons
     lv_obj_t* transport_container = lv_obj_create(container_);
     lv_obj_set_grid_cell(transport_container, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_STRETCH, 0,
                          1);
-    style::apply(transport_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_CENTER, Layout::GAP_SM);
+    style::apply(transport_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_CENTER, layout::GAP_SM);
 
     play_icon_ = lv_label_create(transport_container);
     Icon::set(play_icon_, Icon::TRANSPORT_PLAY, Icon::Size::L);
@@ -179,7 +179,7 @@ void TransportBar::createTempoDisplay() {
     bpm_label_->alignment(LV_TEXT_ALIGN_RIGHT)
               .gridCell(2, 1, 0, 1)
               .autoScroll(false)  // Désactiver auto-scroll pour debug
-              .color(Color::TEXT_LIGHT)
+              .color(color::TEXT_LIGHT)
               .font(bitwig_fonts.page_label)
               .ownsLvglObjects(false);
 

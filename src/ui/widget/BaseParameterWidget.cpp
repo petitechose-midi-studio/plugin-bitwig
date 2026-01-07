@@ -14,7 +14,7 @@ BaseParameterWidget::BaseParameterWidget(lv_obj_t* parent, uint8_t index)
     : parent_(parent ? parent : lv_screen_active()), index_(index) {}
 
 BaseParameterWidget::~BaseParameterWidget() {
-    automationIndicator_.reset();  // Before container delete
+    automation_indicator_.reset();  // Before container delete
     if (container_) {
         lv_obj_delete(container_);
         container_ = nullptr;
@@ -38,13 +38,13 @@ void BaseParameterWidget::createNameLabel() {
     // Use framework Label widget with auto-scroll for overflow text
     name_label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
     name_label_->alignment(LV_TEXT_ALIGN_CENTER)
-               .color(Color::TEXT_PRIMARY)
+               .color(color::TEXT_PRIMARY)
                .font(bitwig_fonts.param_label)
                .ownsLvglObjects(false);
 
     // Offset text slightly upward, ensure no top clipping
     lv_obj_set_style_pad_top(name_label_->getElement(), 0, 0);
-    lv_obj_set_style_translate_y(name_label_->getElement(), Layout::PARAMETER_LABEL_OFFSET, 0);
+    lv_obj_set_style_translate_y(name_label_->getElement(), layout::PARAMETER_LABEL_OFFSET, 0);
 
     lv_obj_set_grid_cell(name_label_->getElement(),
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: full width
@@ -68,25 +68,25 @@ void BaseParameterWidget::setVisible(bool visible) {
 }
 
 void BaseParameterWidget::createAutomationIndicator(lv_obj_t* parent) {
-    automationIndicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
-        parent, Layout::AUTOMATION_INDICATOR_SIZE);
-    automationIndicator_->color(oc::ui::lvgl::StateIndicator::State::ACTIVE, Color::AUTOMATION_INDICATOR);
-    automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
-    lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_FLOATING);
-    lv_obj_set_align(automationIndicator_->getElement(), LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_y(automationIndicator_->getElement(), Layout::AUTOMATION_INDICATOR_OFFSET);
-    lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+    automation_indicator_ = std::make_unique<oc::ui::lvgl::StateIndicator>(
+        parent, layout::AUTOMATION_INDICATOR_SIZE);
+    automation_indicator_->color(oc::ui::lvgl::StateIndicator::State::ACTIVE, color::AUTOMATION_INDICATOR);
+    automation_indicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
+    lv_obj_add_flag(automation_indicator_->getElement(), LV_OBJ_FLAG_FLOATING);
+    lv_obj_set_align(automation_indicator_->getElement(), LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_y(automation_indicator_->getElement(), layout::AUTOMATION_INDICATOR_OFFSET);
+    lv_obj_add_flag(automation_indicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
 }
 
 void BaseParameterWidget::setHasAutomation(bool hasAutomation) {
-    hasAutomation_ = hasAutomation;
-    if (automationIndicator_) {
+    has_automation_ = hasAutomation;
+    if (automation_indicator_) {
         if (hasAutomation) {
-            lv_obj_clear_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
-            automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::ACTIVE);
+            lv_obj_clear_flag(automation_indicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+            automation_indicator_->setState(oc::ui::lvgl::StateIndicator::State::ACTIVE);
         } else {
-            lv_obj_add_flag(automationIndicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
-            automationIndicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
+            lv_obj_add_flag(automation_indicator_->getElement(), LV_OBJ_FLAG_HIDDEN);
+            automation_indicator_->setState(oc::ui::lvgl::StateIndicator::State::OFF);
         }
     }
 }

@@ -81,8 +81,8 @@ private:
 
     // Virtual list
     std::unique_ptr<VirtualList> list_;
-    std::vector<std::unique_ptr<TrackTitleItem>> slotItems_;
-    std::vector<std::unique_ptr<BackButton>> backButtons_;  // Back navigation buttons (one per slot)
+    std::vector<std::unique_ptr<TrackTitleItem>> slot_items_;
+    std::vector<std::unique_ptr<BackButton>> back_buttons_;  // Back navigation buttons (one per slot)
 
     // Footer
     std::unique_ptr<HintBar> footer_;
@@ -90,7 +90,7 @@ private:
     lv_obj_t *footer_solo_ = nullptr;
 
     // State
-    TrackSelectorProps currentProps_;
+    TrackSelectorProps current_props_;
     bool visible_ = false;
 };
 

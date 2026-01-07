@@ -16,9 +16,9 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent) {
     container_ = lv_obj_create(parent);
     if (!container_) return;
 
-    lv_obj_set_size(container_, LV_PCT(100), Layout::TOP_BAR_HEIGHT);
+    lv_obj_set_size(container_, LV_PCT(100), layout::TOP_BAR_HEIGHT);
     lv_obj_set_pos(container_, 0, 0);
-    style::apply(container_).bgColor(Color::BACKGROUND_FILL).padH(Layout::PAD_SM).padV(0);
+    style::apply(container_).bgColor(color::BACKGROUND_FILL).padH(layout::PAD_SM).padV(0);
     lv_obj_set_style_border_width(container_, 0, LV_STATE_DEFAULT);
     lv_obj_set_scrollbar_mode(container_, LV_SCROLLBAR_MODE_OFF);
 
@@ -27,7 +27,7 @@ DeviceStateBar::DeviceStateBar(lv_obj_t *parent) {
     static const lv_coord_t row_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
     lv_obj_set_layout(container_, LV_LAYOUT_GRID);
     lv_obj_set_grid_dsc_array(container_, col_dsc, row_dsc);
-    lv_obj_set_style_pad_column(container_, Layout::GAP_MD, LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(container_, layout::GAP_MD, LV_STATE_DEFAULT);
 
     device_cell_ = createCellWrapper(container_, LV_FLEX_ALIGN_START);
     lv_obj_set_grid_cell(device_cell_, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
@@ -57,7 +57,7 @@ void DeviceStateBar::render(const DeviceStateBarProps &props) {
     if (page_item_) {
         TitleItemProps pageProps;
         pageProps.text = (props.pageName && props.pageName[0]) ? props.pageName : "Page";
-        pageProps.textColor = Color::TEXT_LIGHT;
+        pageProps.textColor = color::TEXT_LIGHT;
         pageProps.textFont = bitwig_fonts.page_label;
         page_item_->render(pageProps);
     }
@@ -66,7 +66,7 @@ void DeviceStateBar::render(const DeviceStateBarProps &props) {
 lv_obj_t *DeviceStateBar::createCellWrapper(lv_obj_t *parent, lv_flex_align_t hAlign) {
     lv_obj_t *cell = lv_obj_create(parent);
     lv_obj_set_size(cell, LV_PCT(100), LV_PCT(100));
-    style::apply(cell).transparent().noScroll().flexRow(hAlign, Layout::GAP_MD);
+    style::apply(cell).transparent().noScroll().flexRow(hAlign, layout::GAP_MD);
     lv_obj_remove_flag(cell, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
     return cell;
 }

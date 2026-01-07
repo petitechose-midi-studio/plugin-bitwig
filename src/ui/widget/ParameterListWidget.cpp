@@ -27,8 +27,8 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     enum_widget_ = std::make_unique<oc::ui::lvgl::EnumWidget>(container_);
     enum_widget_
         ->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
-        .lineColor(Color::DATA_INACTIVE)
-        .flashColor(Color::DATA_ACTIVE);
+        .lineColor(color::DATA_INACTIVE)
+        .flashColor(color::DATA_ACTIVE);
     lv_obj_set_grid_cell(enum_widget_->getElement(), LV_GRID_ALIGN_STRETCH, 0,
                          1,                           // Horizontal: full width
                          LV_GRID_ALIGN_START, 0, 1);  // Vertical: start in CONTENT row
@@ -36,7 +36,7 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     // Value label inside enum widget's inner area (flex column: line + label)
     value_label_ = std::make_unique<oc::ui::lvgl::Label>(enum_widget_->inner());
     value_label_->alignment(LV_TEXT_ALIGN_CENTER)
-                .color(Color::TEXT_PRIMARY)
+                .color(color::TEXT_PRIMARY)
                 .font(bitwig_fonts.param_label)
                 .ownsLvglObjects(false);
     // Flex handles vertical stacking and centering

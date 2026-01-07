@@ -42,7 +42,7 @@ DeviceTitleItem::DeviceTitleItem(lv_obj_t *parent, IconSize iconSize)
     // Use framework Label widget with auto-scroll for overflow text
     label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
     label_->alignment(LV_TEXT_ALIGN_LEFT)
-           .color(Color::TEXT_LIGHT)
+           .color(color::TEXT_LIGHT)
            .font(bitwig_fonts.device_label)
            .ownsLvglObjects(false);
 }
@@ -59,7 +59,7 @@ DeviceTitleItem::~DeviceTitleItem() {
 void DeviceTitleItem::render(const DeviceTitleItemProps &props) {
     if (label_) {
         label_->setText(props.name ? props.name : "");
-        lv_obj_set_style_text_opa(label_->getLabel(), props.enabled ? Opacity::FULL : Opacity::DIMMED,
+        lv_obj_set_style_text_opa(label_->getLabel(), props.enabled ? opacity::FULL : opacity::DIMMED,
                                   LV_STATE_DEFAULT);
     }
 
@@ -90,7 +90,7 @@ void DeviceTitleItem::updateStateIcon(bool enabled) {
     Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
     Icon::set(state_icon_, icon_str, size);
 
-    uint32_t color = enabled ? Color::DEVICE_STATE_ENABLED : Color::DEVICE_STATE_DISABLED;
+    uint32_t color = enabled ? color::DEVICE_STATE_ENABLED : color::DEVICE_STATE_DISABLED;
     style::apply(state_icon_).textColor(color);
 }
 
@@ -100,8 +100,8 @@ void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
     Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
     Icon::set(folder_icon_, Icon::BROWSER_DIRECTORY, size);
 
-    style::apply(folder_icon_).textColor(Color::INACTIVE_LIGHTER);
-    lv_obj_set_style_text_opa(folder_icon_, Opacity::SUBTLE, LV_STATE_DEFAULT);
+    style::apply(folder_icon_).textColor(color::INACTIVE_LIGHTER);
+    lv_obj_set_style_text_opa(folder_icon_, opacity::SUBTLE, LV_STATE_DEFAULT);
 
     if (hasChildren) lv_obj_clear_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN);
@@ -114,14 +114,14 @@ lv_coord_t DeviceTitleItem::getContentWidth() const {
         width += lv_obj_get_width(type_icon_);
 
     if (state_icon_) {
-        if (width > 0) width += Layout::GAP_SM;
+        if (width > 0) width += layout::GAP_SM;
         width += lv_obj_get_width(state_icon_);
     }
 
     if (folder_icon_ && !lv_obj_has_flag(folder_icon_, LV_OBJ_FLAG_HIDDEN))
-        width += Layout::GAP_MD + lv_obj_get_width(folder_icon_);
+        width += layout::GAP_MD + lv_obj_get_width(folder_icon_);
 
-    if (label_) width += Layout::GAP_MD + lv_obj_get_width(label_->getElement());
+    if (label_) width += layout::GAP_MD + lv_obj_get_width(label_->getElement());
 
     return width;
 }
@@ -143,7 +143,7 @@ void DeviceTitleItem::hide() {
 void DeviceTitleItem::setHighlighted(bool highlighted) {
     highlighted_ = highlighted;
     if (label_) {
-        uint32_t labelColor = highlighted ? Color::TEXT_PRIMARY : Color::TEXT_LIGHT;
+        uint32_t labelColor = highlighted ? color::TEXT_PRIMARY : color::TEXT_LIGHT;
         label_->color(labelColor);
     }
 }

@@ -9,33 +9,33 @@ namespace bitwig::theme {
 // Import base theme for convenience
 using namespace oc::ui::lvgl;
 
-namespace Color {
+namespace color {
 
 constexpr uint32_t BACKGROUND_BASE = 0x000000;
 
-constexpr uint32_t MACRO_1 = BaseTheme::Color::MACRO_1_RED;
-constexpr uint32_t MACRO_2 = BaseTheme::Color::MACRO_2_ORANGE;
-constexpr uint32_t MACRO_3 = BaseTheme::Color::MACRO_3_YELLOW;
-constexpr uint32_t MACRO_4 = BaseTheme::Color::MACRO_4_GREEN;
-constexpr uint32_t MACRO_5 = BaseTheme::Color::MACRO_5_CYAN;
-constexpr uint32_t MACRO_6 = BaseTheme::Color::MACRO_6_BLUE;
-constexpr uint32_t MACRO_7 = BaseTheme::Color::MACRO_7_PURPLE;
-constexpr uint32_t MACRO_8 = BaseTheme::Color::MACRO_8_PINK;
+constexpr uint32_t MACRO_1 = base_theme::color::MACRO_1_RED;
+constexpr uint32_t MACRO_2 = base_theme::color::MACRO_2_ORANGE;
+constexpr uint32_t MACRO_3 = base_theme::color::MACRO_3_YELLOW;
+constexpr uint32_t MACRO_4 = base_theme::color::MACRO_4_GREEN;
+constexpr uint32_t MACRO_5 = base_theme::color::MACRO_5_CYAN;
+constexpr uint32_t MACRO_6 = base_theme::color::MACRO_6_BLUE;
+constexpr uint32_t MACRO_7 = base_theme::color::MACRO_7_PURPLE;
+constexpr uint32_t MACRO_8 = base_theme::color::MACRO_8_PINK;
 
-constexpr uint32_t BACKGROUND_FILL = BaseTheme::Color::BACKGROUND;
-constexpr uint32_t DATA_INACTIVE = BaseTheme::Color::INACTIVE;
-constexpr uint32_t DATA_ACTIVE = BaseTheme::Color::ACTIVE;
-constexpr uint32_t TEXT_LIGHT = BaseTheme::Color::TEXT_SECONDARY;
-constexpr uint32_t TEXT_DARK = BaseTheme::Color::TEXT_PRIMARY_INVERTED;
+constexpr uint32_t BACKGROUND_FILL = base_theme::color::BACKGROUND;
+constexpr uint32_t DATA_INACTIVE = base_theme::color::INACTIVE;
+constexpr uint32_t DATA_ACTIVE = base_theme::color::ACTIVE;
+constexpr uint32_t TEXT_LIGHT = base_theme::color::TEXT_SECONDARY;
+constexpr uint32_t TEXT_DARK = base_theme::color::TEXT_PRIMARY_INVERTED;
 
 // Re-export base theme colors for convenience
-constexpr uint32_t TEXT_PRIMARY = BaseTheme::Color::TEXT_PRIMARY;
-constexpr uint32_t INACTIVE_LIGHTER = BaseTheme::Color::INACTIVE_LIGHTER;
-constexpr uint32_t KNOB_BACKGROUND = BaseTheme::Color::KNOB_BACKGROUND;
+constexpr uint32_t TEXT_PRIMARY = base_theme::color::TEXT_PRIMARY;
+constexpr uint32_t INACTIVE_LIGHTER = base_theme::color::INACTIVE_LIGHTER;
+constexpr uint32_t KNOB_BACKGROUND = base_theme::color::KNOB_BACKGROUND;
 
-constexpr uint32_t DEVICE_KNOB_INACTIVE = BaseTheme::Color::KNOB_BACKGROUND;
-constexpr uint32_t KNOB_VALUE_RIBBON = BaseTheme::Color::KNOB_TRACK;
-constexpr uint32_t KNOB_VALUE_INDICATOR = BaseTheme::Color::KNOB_VALUE;
+constexpr uint32_t DEVICE_KNOB_INACTIVE = base_theme::color::KNOB_BACKGROUND;
+constexpr uint32_t KNOB_VALUE_RIBBON = base_theme::color::KNOB_TRACK;
+constexpr uint32_t KNOB_VALUE_INDICATOR = base_theme::color::KNOB_VALUE;
 constexpr uint32_t MACRO_TEXT = TEXT_LIGHT;
 
 constexpr uint32_t STATUS_WARNING = 0x00AA00;
@@ -48,7 +48,7 @@ constexpr uint32_t DEVICE_DRUM_PAD = 0xD97634;  // Orange for drum pads
 constexpr uint32_t DEVICE_STATE_ENABLED =
     0x5FDB80;  // Green-cyan (more saturated, less blue than MACRO_5)
 constexpr uint32_t DEVICE_STATE_DISABLED =
-    BaseTheme::Color::STATUS_INACTIVE;  // Gray (disabled device)
+    base_theme::color::STATUS_INACTIVE;  // Gray (disabled device)
 
 // Device type colors (Bitwig palette)
 constexpr uint32_t DEVICE_TYPE_AUDIO = 0xDD5B33;       // Orange-red for audio effects
@@ -64,12 +64,12 @@ constexpr uint32_t AUTOMATION_OVERRIDE = 0x6FE569;   // Green - automation overr
 constexpr uint32_t AUTOMATION_VALUE = 0x992222;      // Dark red - knob value arc when following
 constexpr uint32_t AUTOMATION_TRACK = 0xFF4444;      // Bright red - knob track arc when following
 
-}  // namespace Color
+}  // namespace color
 
 // =============================================================================
 // Layout constants - Screen: 320x240
 // =============================================================================
-namespace Layout {
+namespace layout {
 
 // Bar heights
 constexpr int16_t TOP_BAR_HEIGHT = 20;
@@ -115,34 +115,34 @@ constexpr int16_t OVERLAY_HEADER_HEIGHT = 20;  // Fixed height for overlay heade
 // HintBar edge padding
 constexpr int16_t HINT_BAR_EDGE_PAD = 24;   // Padding from screen edges for hint cells
 
-}  // namespace Layout
+}  // namespace layout
 
 // =============================================================================
 // Opacity - Aliases to BaseTheme + Bitwig-specific
 // =============================================================================
-namespace Opacity {
+namespace opacity {
 
 // From BaseTheme
-constexpr uint8_t FULL = BaseTheme::Opacity::OPA_FULL;
-constexpr uint8_t OVERLAY_BG = BaseTheme::Opacity::OPA_90;
-constexpr uint8_t SUBTLE = BaseTheme::Opacity::OPA_70;
-constexpr uint8_t DIMMED = BaseTheme::Opacity::OPA_50;
-constexpr uint8_t SCROLLBAR = BaseTheme::Opacity::OPA_30;
-constexpr uint8_t HIDDEN = BaseTheme::Opacity::OPA_TRANSP;
+constexpr uint8_t FULL = base_theme::opacity::OPA_FULL;
+constexpr uint8_t OVERLAY_BG = base_theme::opacity::OPA_90;
+constexpr uint8_t SUBTLE = base_theme::opacity::OPA_70;
+constexpr uint8_t DIMMED = base_theme::opacity::OPA_50;
+constexpr uint8_t SCROLLBAR = base_theme::opacity::OPA_30;
+constexpr uint8_t HIDDEN = base_theme::opacity::OPA_TRANSP;
 
 // Bitwig-specific
 constexpr uint8_t FADED = 102;       // ~40% - inactive but visible
 constexpr uint8_t HINT = 51;         // ~20% - very subtle background hints
 
-}  // namespace Opacity
+}  // namespace opacity
 
 // =============================================================================
 // Animation - Aliases to BaseTheme
 // =============================================================================
-namespace Animation {
+namespace animation {
 
-constexpr uint32_t FADE_MS = BaseTheme::Animation::NORMAL_MS;
+constexpr uint32_t FADE_MS = base_theme::animation::NORMAL_MS;
 
-}  // namespace Animation
+}  // namespace animation
 
 }  // namespace bitwig::theme

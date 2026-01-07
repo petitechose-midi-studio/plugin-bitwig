@@ -20,7 +20,7 @@ BackButton::BackButton(lv_obj_t* parent) {
         lv_obj_set_style_text_font(label_, bitwig_fonts.icons_14, LV_STATE_DEFAULT);
     }
 
-    style::apply(label_).textColor(Color::TEXT_LIGHT);
+    style::apply(label_).textColor(color::TEXT_LIGHT);
 
     // Hidden by default
     lv_obj_add_flag(label_, LV_OBJ_FLAG_HIDDEN);
@@ -36,7 +36,7 @@ BackButton::~BackButton() {
 
 void BackButton::setHighlighted(bool highlighted) {
     if (!label_) return;
-    style::apply(label_).textColor(highlighted ? Color::TEXT_PRIMARY : Color::TEXT_LIGHT);
+    style::apply(label_).textColor(highlighted ? color::TEXT_PRIMARY : color::TEXT_LIGHT);
 }
 
 void BackButton::show() {
