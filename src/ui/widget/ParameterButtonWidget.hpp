@@ -1,5 +1,20 @@
 #pragma once
 
+/**
+ * @file ParameterButtonWidget.hpp
+ * @brief Toggle button widget for binary Bitwig device parameters
+ *
+ * Displays a simple on/off button with color indicator:
+ * - Active state shown via button fill color
+ * - Parameter name label below
+ * - No text display (color-only feedback)
+ *
+ * Used for ParameterType::BUTTON in RemoteControlsView.
+ *
+ * @see BaseParameterWidget for shared layout infrastructure
+ * @see ParameterKnobWidget for continuous parameters
+ */
+
 #include <memory>
 
 #include <oc/ui/lvgl/widget/ButtonWidget.hpp>

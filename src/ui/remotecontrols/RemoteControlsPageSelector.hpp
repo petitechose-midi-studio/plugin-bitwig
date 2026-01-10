@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file RemoteControlsPageSelector.hpp
+ * @brief Parameter page selector with virtualized scrolling
+ *
+ * Modal overlay for selecting the current parameter page on a device:
+ * - List of page names (e.g., "Oscillator", "Filter", "Envelope")
+ * - Page index display
+ * - Keyboard/encoder navigation
+ *
+ * Uses VirtualList for O(1) rendering regardless of page count.
+ * Controlled via DevicePageInputHandler for navigation bindings.
+ *
+ * @see DevicePageInputHandler for input bindings
+ * @see RemoteControlsView for parent view context
+ */
+
 #include <memory>
 #include <string>
 #include <vector>

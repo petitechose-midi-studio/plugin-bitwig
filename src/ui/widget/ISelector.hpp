@@ -1,5 +1,19 @@
 #pragma once
 
+/**
+ * @file ISelector.hpp
+ * @brief Interface for modal list selector overlays
+ *
+ * Defines the contract for selectors that display a scrollable list
+ * of items with keyboard/encoder navigation. Used for:
+ * - Page selection (RemoteControlsPageSelector)
+ * - Device selection (DeviceSelector)
+ * - Track selection (TrackSelector)
+ *
+ * @see BaseSelector for the default implementation
+ * @see ListOverlay for the underlying UI component
+ */
+
 #include <string>
 
 #include <oc/ui/lvgl/IComponent.hpp>

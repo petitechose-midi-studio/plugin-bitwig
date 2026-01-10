@@ -1,5 +1,22 @@
 #pragma once
 
+/**
+ * @file DeviceSelector.hpp
+ * @brief Hierarchical device browser with virtualized scrolling
+ *
+ * Modal overlay for navigating the Bitwig device chain:
+ * - Top-level device list on current track
+ * - Nested navigation into device children (chains, layers, drum pads)
+ * - Track header showing current track context
+ * - Device type icons and enabled/disabled state indicators
+ *
+ * Uses VirtualList for O(1) rendering regardless of device count.
+ * Controlled via DeviceSelectorInputHandler for encoder navigation.
+ *
+ * @see DeviceSelectorInputHandler for input bindings
+ * @see TrackSelector for track-level navigation
+ */
+
 #include <cstdint>
 #include <memory>
 #include <string>

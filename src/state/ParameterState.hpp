@@ -67,7 +67,7 @@ struct ParameterSlot {
         loading.set(false);
         metadataSet.set(false);
     }
-};;
+};
 
 /**
  * @brief State for all 8 device parameters

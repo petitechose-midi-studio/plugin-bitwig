@@ -1,5 +1,22 @@
 #pragma once
 
+/**
+ * @file TransportBar.hpp
+ * @brief Persistent transport status bar with reactive state bindings
+ *
+ * Displays real-time transport information:
+ * - Play/Stop/Record state icons
+ * - Tempo (BPM) display
+ * - MIDI In/Out activity indicators
+ * - Automation override indicator
+ *
+ * Subscribes to TransportState signals for automatic UI updates.
+ * Always visible at the bottom of the screen regardless of active view.
+ *
+ * @see TransportState for the reactive state container
+ * @see TransportInputHandler for button bindings
+ */
+
 #include <memory>
 #include <vector>
 

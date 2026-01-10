@@ -1,6 +1,18 @@
 #pragma once
 
-#include "DeviceTitleItem.hpp"
+/**
+ * @file DeviceStateBar.hpp
+ * @brief Top bar showing current device and parameter page context
+ *
+ * Displays contextual information in RemoteControlsView header:
+ * - Left: Device name with type icon and enabled state
+ * - Right: Current parameter page name
+ *
+ * Stateless - receives all data via render(DeviceStateBarProps).
+ *
+ * @see RemoteControlsView for usage context
+ * @see DeviceTitleItem for device display component
+ */
 
 #include <cstdint>
 #include <memory>
@@ -9,6 +21,7 @@
 
 #include <oc/ui/lvgl/IWidget.hpp>
 
+#include "DeviceTitleItem.hpp"
 #include "protocol/DeviceType.hpp"
 #include "ui/widget/TitleItem.hpp"
 

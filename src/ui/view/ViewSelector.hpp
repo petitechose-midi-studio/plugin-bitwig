@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file ViewSelector.hpp
+ * @brief Main view switcher overlay
+ *
+ * Modal selector for switching between top-level views:
+ * - Remote Controls (device parameters)
+ * - Mix (volume, pan, sends) - placeholder
+ * - Clip (clip launcher) - placeholder
+ *
+ * Uses BaseSelector/ListOverlay for simple string list display.
+ * Controlled via ViewSwitcherInputHandler.
+ *
+ * @see ViewSwitcherInputHandler for input bindings
+ * @see BitwigContext for view management
+ */
+
 #include <string>
 #include <vector>
 

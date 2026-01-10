@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file DeviceTitleItem.hpp
+ * @brief List item widget for device entries in DeviceSelector
+ *
+ * Displays a single device row with:
+ * - Type icon (Audio FX, Instrument, Note FX)
+ * - State icon (enabled/disabled indicator)
+ * - Device name label
+ * - Folder icon (for devices with children: chains, layers, drums)
+ *
+ * Implements IListItem for VirtualList slot recycling.
+ *
+ * @see DeviceSelector for the parent list component
+ * @see DeviceStateBar for device display in the top bar
+ */
+
 #include <cstdint>
 #include <memory>
 
