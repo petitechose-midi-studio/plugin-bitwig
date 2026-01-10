@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file ListOverlay.hpp
+ * @brief Generic modal overlay with scrollable list selection
+ *
+ * Pure UI component displaying a centered modal with:
+ * - Title header
+ * - Scrollable list of string items
+ * - Visual selection highlighting
+ *
+ * Stateless and callback-free - data is pushed via setters.
+ * Used as the underlying widget for BaseSelector and RemoteControlsPageSelector.
+ *
+ * @see BaseSelector for the ISelector wrapper
+ * @see DeviceSelector for a more complex virtualized variant
+ */
+
 #include <memory>
 #include <string>
 #include <vector>

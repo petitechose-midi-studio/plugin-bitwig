@@ -1,6 +1,21 @@
 #pragma once
 
-#include "ui/device/LevelBar.hpp"
+/**
+ * @file TrackTitleItem.hpp
+ * @brief List item widget for track entries in TrackSelector
+ *
+ * Displays a single track row with:
+ * - Color bar (track color from Bitwig)
+ * - Type icon (Audio, Instrument, Group, Master, etc.)
+ * - Track name label
+ * - Mute/Solo indicators (M/S badges)
+ * - Optional level meter
+ *
+ * Implements IListItem for VirtualList slot recycling.
+ *
+ * @see TrackSelector for the parent list component
+ * @see DeviceTitleItem for similar device item pattern
+ */
 
 #include <cstdint>
 #include <memory>
@@ -11,6 +26,7 @@
 #include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "protocol/TrackType.hpp"
+#include "ui/device/LevelBar.hpp"
 
 namespace bitwig::ui {
 

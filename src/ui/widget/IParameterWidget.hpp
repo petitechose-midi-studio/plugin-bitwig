@@ -1,5 +1,17 @@
 #pragma once
 
+/**
+ * @file IParameterWidget.hpp
+ * @brief Polymorphic interface for Bitwig device parameter widgets
+ *
+ * Allows RemoteControlsView to manage different widget types uniformly
+ * through a common interface. Widget type is selected at runtime based
+ * on ParameterType from the host.
+ *
+ * @see BaseParameterWidget for the abstract implementation
+ * @see ParameterKnobWidget, ParameterButtonWidget, ParameterListWidget
+ */
+
 #include <string>
 
 #include <oc/ui/lvgl/IWidget.hpp>

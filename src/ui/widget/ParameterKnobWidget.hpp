@@ -1,5 +1,20 @@
 #pragma once
 
+/**
+ * @file ParameterKnobWidget.hpp
+ * @brief Knob widget for continuous Bitwig device parameters
+ *
+ * Displays a rotary knob with:
+ * - Value arc with configurable origin (for bipolar parameters like pan)
+ * - Modulation overlay showing LFO/automation offset
+ * - Parameter name label below
+ *
+ * Used for ParameterType::KNOB in RemoteControlsView.
+ *
+ * @see BaseParameterWidget for shared layout infrastructure
+ * @see ParameterListWidget for discrete parameter display
+ */
+
 #include <memory>
 
 #include <oc/ui/lvgl/widget/KnobWidget.hpp>

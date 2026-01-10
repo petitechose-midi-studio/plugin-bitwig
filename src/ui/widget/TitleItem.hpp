@@ -1,5 +1,18 @@
 #pragma once
 
+/**
+ * @file TitleItem.hpp
+ * @brief Generic title widget with optional icon and indicator
+ *
+ * Flexible title display component: [icon?] [label] [indicator?]
+ * Used for headers, page names, and other labeled elements.
+ *
+ * Stateless - receives all data via render(TitleItemProps).
+ *
+ * @see DeviceStateBar for usage as page name display
+ * @see DeviceTitleItem for specialized device variant
+ */
+
 #include <memory>
 
 #include <lvgl.h>

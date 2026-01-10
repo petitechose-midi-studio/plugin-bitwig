@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file ParameterListWidget.hpp
+ * @brief Discrete value selector widget for enumerated Bitwig parameters
+ *
+ * Displays a segmented enum selector with:
+ * - Visual segments for each discrete value
+ * - Current value text display above the selector
+ * - Parameter name label below
+ *
+ * Used for ParameterType::LIST in RemoteControlsView (e.g., filter types,
+ * oscillator modes, or any parameter with named discrete values).
+ *
+ * @see BaseParameterWidget for shared layout infrastructure
+ * @see ParameterKnobWidget for continuous parameters
+ */
+
 #include <memory>
 #include <string>
 #include <vector>

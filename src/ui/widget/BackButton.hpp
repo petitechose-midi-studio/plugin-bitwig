@@ -1,5 +1,18 @@
 #pragma once
 
+/**
+ * @file BackButton.hpp
+ * @brief Navigation back button for hierarchical list selectors
+ *
+ * Displays a left arrow icon as the first item in nested lists.
+ * Used when navigating into device children or track groups.
+ *
+ * Implements IListItem for consistent VirtualList slot handling.
+ *
+ * @see DeviceSelector for device hierarchy navigation
+ * @see TrackSelector for track group navigation
+ */
+
 #include <lvgl.h>
 #include <oc/ui/lvgl/IListItem.hpp>
 

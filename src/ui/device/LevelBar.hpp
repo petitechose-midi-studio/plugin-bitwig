@@ -1,5 +1,17 @@
 #pragma once
 
+/**
+ * @file LevelBar.hpp
+ * @brief Horizontal level/progress bar for value visualization
+ *
+ * Displays a colored horizontal bar representing a normalized value (0.0-1.0).
+ * Used in TrackTitleItem to show track volume levels.
+ *
+ * Stateless - receives all data via render(LevelBarProps).
+ *
+ * @see TrackTitleItem for usage in track list items
+ */
+
 #include <cstdint>
 
 #include <lvgl.h>

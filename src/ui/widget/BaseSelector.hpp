@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file BaseSelector.hpp
+ * @brief Base implementation for modal list selector overlays
+ *
+ * Provides common functionality for all selector types:
+ * - ListOverlay management (show/hide, title, selection)
+ * - ISelector interface implementation
+ * - Protected access to overlay for subclass customization
+ *
+ * Subclasses (RemoteControlsPageSelector) add domain-specific
+ * item rendering and data binding.
+ *
+ * @see ISelector for the interface contract
+ * @see ListOverlay for the underlying UI component
+ */
+
 #include "ISelector.hpp"
 #include "ListOverlay.hpp"
 

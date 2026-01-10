@@ -1,5 +1,23 @@
 #pragma once
 
+/**
+ * @file BaseParameterWidget.hpp
+ * @brief Abstract base class for Bitwig parameter widgets
+ *
+ * Provides shared infrastructure for all parameter widget types:
+ * - 2-row grid layout (widget + name label)
+ * - Automation indicator overlay
+ * - Common setName/setVisible implementations
+ *
+ * Concrete implementations:
+ * - ParameterKnobWidget: continuous/bipolar knobs
+ * - ParameterButtonWidget: toggle buttons
+ * - ParameterListWidget: discrete value selectors
+ *
+ * @see IParameterWidget for the polymorphic interface
+ * @see RemoteControlsView for widget instantiation based on ParameterType
+ */
+
 #include <memory>
 #include <string>
 #include <vector>

@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file HintBar.hpp
+ * @brief 3-cell layout container for footer hints and shortcuts
+ *
+ * Positions hint elements (icons, labels) in a horizontal bar:
+ * - Cell 0: Left-aligned element
+ * - Cell 1: Center-aligned element
+ * - Cell 2: Right-aligned element
+ *
+ * Used in selector footers to show available actions (mute/solo, enable/disable).
+ * Pure layout - does not create content, only positions provided elements.
+ *
+ * @see DeviceSelector for footer usage with device actions
+ * @see TrackSelector for footer usage with mute/solo hints
+ */
+
 #include <lvgl.h>
 
 #include <oc/ui/lvgl/IComponent.hpp>

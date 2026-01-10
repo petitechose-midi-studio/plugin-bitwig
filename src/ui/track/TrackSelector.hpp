@@ -1,5 +1,21 @@
 #pragma once
 
+/**
+ * @file TrackSelector.hpp
+ * @brief Track browser with mute/solo indicators and virtualized scrolling
+ *
+ * Modal overlay for selecting the current track:
+ * - Track list with type icons and color indicators
+ * - Mute (M) and Solo (S) state badges per track
+ * - Group navigation with back button
+ *
+ * Uses VirtualList for O(1) rendering regardless of track count.
+ * Controlled via TrackInputHandler for encoder navigation.
+ *
+ * @see TrackInputHandler for input bindings
+ * @see DeviceSelector for device-level navigation
+ */
+
 #include "TrackTitleItem.hpp"
 
 #include <cstdint>
