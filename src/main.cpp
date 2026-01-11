@@ -2,18 +2,18 @@
  * @file main.cpp
  * @brief MIDI Studio - Bitwig Plugin
  *
- * Uses oc::teensy::AppBuilder for Teensy 4.1 setup.
+ * Uses oc::hal::teensy::AppBuilder for Teensy 4.1 setup.
  * Registers BitwigContext as the main (and only) context.
  */
 
 #include <optional>
 
 #include <Arduino.h>
-#include <oc/teensy/Teensy.hpp>
+#include <oc/hal/teensy/Teensy.hpp>
 
-#include "config/App.hpp"
-#include "config/Buffer.hpp"
-#include "config/Hardware.hpp"
+#include <config/App.hpp>
+#include <config/platform-teensy/Buffer.hpp>
+#include <config/platform-teensy/Hardware.hpp>
 #include "context/BitwigBootContext.hpp"
 #include "context/BitwigContext.hpp"
 
@@ -40,9 +40,9 @@ enum class BitwigContextID : uint8_t {
 // Static Objects
 // =============================================================================
 
-static std::optional<oc::teensy::Ili9341> display;
+static std::optional<oc::hal::teensy::Ili9341> display;
 static std::optional<oc::ui::lvgl::Bridge> lvgl;
-static std::optional<oc::teensy::CD74HC4067> mux;
+static std::optional<oc::hal::teensy::CD74HC4067> mux;
 static std::optional<oc::app::OpenControlApp> app;
 
 // =============================================================================
@@ -58,25 +58,25 @@ static void checkOrHalt(const oc::core::Result<void>& result, const char* compon
 }
 
 static void initDisplay() {
-    display = oc::teensy::Ili9341(
+    display = oc::hal::teensy::Ili9341(
         Hardware::Display::CONFIG,
         {.framebuffer = Buffer::framebuffer, .diff1 = Buffer::diff1, .diff2 = Buffer::diff2});
     checkOrHalt(display->init(), "Display");
 }
 
 static void initLVGL() {
-    lvgl = oc::ui::lvgl::Bridge(*display, Buffer::lvgl, oc::teensy::defaultTimeProvider,
+    lvgl = oc::ui::lvgl::Bridge(*display, Buffer::lvgl, oc::hal::teensy::defaultTimeProvider,
                                  Hardware::LVGL::CONFIG);
     checkOrHalt(lvgl->init(), "LVGL");
 }
 
 static void initMux() {
-    mux = oc::teensy::CD74HC4067(Hardware::Mux::CONFIG, oc::teensy::gpio());
+    mux = oc::hal::teensy::CD74HC4067(Hardware::Mux::CONFIG, oc::hal::teensy::gpio());
     checkOrHalt(mux->init(), "MUX");
 }
 
 static void initApp() {
-    app = oc::teensy::AppBuilder()
+    app = oc::hal::teensy::AppBuilder()
               .midi()
               .serial()
               .encoders(Hardware::Encoder::ENCODERS)
@@ -95,7 +95,7 @@ static void initApp() {
 
 void setup() {
     // NOTE: Logging enabled temporarily for debug - may interfere with protocol
-    oc::teensy::initLogging();
+    oc::hal::teensy::initLogging();
 
     OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
 

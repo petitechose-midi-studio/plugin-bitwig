@@ -6,7 +6,7 @@
 #include <oc/ui/lvgl/FontLoader.hpp>
 #include <ui/font/CoreFonts.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
 
@@ -40,7 +40,7 @@ bool BitwigContext::initialize() {
     createProtocol();
     createHostHandlers();
     createViews();
-    createOverlayController();
+    createOverlayManager();
     createInputHandlers();
 
     OC_LOG_INFO("BitwigContext initialized");
@@ -133,12 +133,12 @@ void BitwigContext::createHostHandlers() {
     host_midi_ = std::make_unique<handler::MidiHostHandler>(state_, midi());
 }
 
-void BitwigContext::createOverlayController() {
+void BitwigContext::createOverlayManager() {
     using ui::OverlayType;
     using ButtonID = Config::ButtonID;
 
-    // Create controller wrapping the state's ExclusiveVisibilityStack
-    overlay_controller_ = std::make_unique<core::ui::OverlayController<bitwig::ui::OverlayType>>(state_.overlays, buttons());
+    // Create manager wrapping the state's ExclusiveVisibilityStack
+    overlay_controller_ = std::make_unique<core::state::OverlayManager<bitwig::ui::OverlayType>>(state_.overlays, buttons());
 
     // Get scope IDs from overlay elements
     lv_obj_t* deviceSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getDeviceSelectorElement() : nullptr;
@@ -183,7 +183,7 @@ void BitwigContext::createOverlayController() {
     // Connect authority resolver to InputBinding for automatic scope filtering
     buttons().setAuthorityResolver(&overlay_controller_->authority());
 
-    OC_LOG_INFO("OverlayController created with {} overlays registered", 4);
+    OC_LOG_INFO("OverlayManager created with {} overlays registered", 4);
 }
 
 void BitwigContext::createInputHandlers() {

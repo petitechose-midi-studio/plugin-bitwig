@@ -1,6 +1,6 @@
 #include "TransportInputHandler.hpp"
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {

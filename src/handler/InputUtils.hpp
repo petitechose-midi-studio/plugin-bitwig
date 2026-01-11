@@ -14,7 +14,7 @@
 #include <oc/api/EncoderAPI.hpp>
 #include <oc/util/Index.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "protocol/ParameterType.hpp"
 #include "state/Constants.hpp"
 

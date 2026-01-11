@@ -4,7 +4,7 @@
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "state/Constants.hpp"
@@ -27,7 +27,7 @@ DeviceSelectorInputHandler::DeviceSelectorInputHandler(state::BitwigState& state
     setupBindings();
 
     // Auto-reset local state when overlay hidden externally
-    // Note: Latch clearing is handled by OverlayController
+    // Note: Latch clearing is handled by OverlayManager
     visible_sub_ = state_.deviceSelector.visible.subscribe([this](bool visible) {
         if (!visible) {
             requested_ = false;
@@ -264,7 +264,7 @@ void DeviceSelectorInputHandler::requestTrackList() {
 }
 
 void DeviceSelectorInputHandler::close() {
-    // OverlayController handles latch cleanup synchronously before hiding
+    // OverlayManager handles latch cleanup synchronously before hiding
     overlay_ctx_.controller.hideAll();
 
     // Verify cleanup happened (debug builds only)
