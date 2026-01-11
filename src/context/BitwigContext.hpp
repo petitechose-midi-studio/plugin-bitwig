@@ -55,7 +55,7 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include <ui/OverlayController.hpp>
+#include <state/OverlayManager.hpp>
 
 // Include all handlers (required for unique_ptr with make_unique in templates)
 #include "handler/host/DeviceHostHandler.hpp"
@@ -140,15 +140,15 @@ public:
     BitwigProtocol& protocol() { return *protocol_; }
     const BitwigProtocol& protocol() const { return *protocol_; }
 
-    core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() { return *overlay_controller_; }
-    const core::ui::OverlayController<bitwig::ui::OverlayType>& overlays() const { return *overlay_controller_; }
+    core::state::OverlayManager<bitwig::ui::OverlayType>& overlays() { return *overlay_controller_; }
+    const core::state::OverlayManager<bitwig::ui::OverlayType>& overlays() const { return *overlay_controller_; }
 
 private:
     void createProtocol();
     void createHostHandlers();
     void createInputHandlers();
     void createViews();
-    void createOverlayController();
+    void createOverlayManager();
 
     // =========================================================================
     // Members
@@ -156,7 +156,7 @@ private:
 
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
-    std::unique_ptr<core::ui::OverlayController<bitwig::ui::OverlayType>> overlay_controller_;
+    std::unique_ptr<core::state::OverlayManager<bitwig::ui::OverlayType>> overlay_controller_;
 
     // Host Handlers (protocol → state)
     std::unique_ptr<handler::PluginHostHandler> host_plugin_;

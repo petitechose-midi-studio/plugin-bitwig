@@ -19,7 +19,7 @@
 
 #include <api/InputAPI.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 

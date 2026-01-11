@@ -3,7 +3,7 @@
 #include <oc/debug/InvariantAssert.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "handler/InputUtils.hpp"
 #include "state/Constants.hpp"
 
@@ -109,7 +109,7 @@ void DevicePageInputHandler::closeSelector() {
         protocol_.devicePageSelect(static_cast<uint8_t>(index));
     }
 
-    // OverlayController handles latch cleanup synchronously before hiding
+    // OverlayManager handles latch cleanup synchronously before hiding
     overlay_ctx_.controller.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(
@@ -119,7 +119,7 @@ void DevicePageInputHandler::closeSelector() {
 }
 
 void DevicePageInputHandler::cancel() {
-    // OverlayController handles latch cleanup synchronously before hiding
+    // OverlayManager handles latch cleanup synchronously before hiding
     overlay_ctx_.controller.hide();
 
     OC_ASSERT_OVERLAY_LIFECYCLE(

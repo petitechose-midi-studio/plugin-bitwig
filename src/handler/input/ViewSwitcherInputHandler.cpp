@@ -3,7 +3,7 @@
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "handler/InputUtils.hpp"
 
 namespace bitwig::handler {
@@ -71,13 +71,13 @@ void ViewSwitcherInputHandler::openSelector() {
 void ViewSwitcherInputHandler::navigate(float delta) {
     int currentIndex = state_.viewSelector.selectedIndex.get();
     int newIndex = currentIndex + static_cast<int>(delta);
-    newIndex = wrapIndex(newIndex, static_cast<int>(state::VIEW_TYPE_COUNT));
+    newIndex = wrapIndex(newIndex, static_cast<int>(ViewType::COUNT));
     state_.viewSelector.selectedIndex.set(newIndex);
 }
 
 void ViewSwitcherInputHandler::confirmSelection() {
     int index = state_.viewSelector.selectedIndex.get();
-    if (index >= 0 && index < static_cast<int>(state::VIEW_TYPE_COUNT)) {
+    if (index >= 0 && index < static_cast<int>(ViewType::COUNT)) {
         state_.views.switchTo(static_cast<ViewType>(index));
         OC_LOG_INFO("[ViewSwitcher] Confirmed view: {}", VIEW_NAMES[index]);
     }
@@ -87,17 +87,17 @@ void ViewSwitcherInputHandler::closeSelector() {
     int index = state_.viewSelector.selectedIndex.get();
 
     // Confirm selection on close
-    if (index >= 0 && index < static_cast<int>(state::VIEW_TYPE_COUNT)) {
+    if (index >= 0 && index < static_cast<int>(ViewType::COUNT)) {
         state_.views.switchTo(static_cast<ViewType>(index));
         OC_LOG_INFO("[ViewSwitcher] Switched to: {}", VIEW_NAMES[index]);
     }
 
-    // OverlayController handles latch cleanup synchronously before hiding
+    // OverlayManager handles latch cleanup synchronously before hiding
     overlay_ctx_.controller.hide();
 }
 
 void ViewSwitcherInputHandler::cancel() {
-    // OverlayController handles latch cleanup synchronously before hiding
+    // OverlayManager handles latch cleanup synchronously before hiding
     overlay_ctx_.controller.hide();
     OC_LOG_DEBUG("[ViewSwitcher] Cancelled");
 }

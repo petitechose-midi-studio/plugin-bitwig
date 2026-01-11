@@ -1,6 +1,6 @@
 #include "LastClickedHostHandler.hpp"
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "handler/InputUtils.hpp"
 #include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"

@@ -124,7 +124,7 @@ void TrackInputHandler::close() {
 
     if (!ts.visible.get()) return;
 
-    // OverlayController handles latch cleanup and restores device selector from stack
+    // OverlayManager handles latch cleanup and restores device selector from stack
     overlay_ctx_.controller.hide();
 
     // Request fresh device list - don't clear cache to avoid flash

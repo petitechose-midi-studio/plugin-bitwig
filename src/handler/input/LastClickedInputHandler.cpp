@@ -2,7 +2,7 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 
 namespace bitwig::handler {
 

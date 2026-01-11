@@ -5,7 +5,7 @@
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
-#include "config/App.hpp"
+#include <config/App.hpp>
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/widget/BaseParameterWidget.hpp"
 #include "ui/widget/ParameterButtonWidget.hpp"

@@ -16,6 +16,7 @@ enum class DeviceType : uint8_t {
     AUDIO_EFFECT = 1,
     INSTRUMENT = 2,
     NOTE_EFFECT = 3,
+    COUNT = 4,  // Sentinel - must be last
 };
 
 // Conversion helpers
@@ -25,4 +26,15 @@ inline DeviceType toDeviceType(uint8_t value) {
 
 inline uint8_t fromDeviceType(DeviceType value) {
     return static_cast<uint8_t>(value);
+}
+
+// Name helper
+inline const char* deviceTypeName(DeviceType value) {
+    switch (value) {
+        case DeviceType::UNKNOWN: return "Unknown";
+        case DeviceType::AUDIO_EFFECT: return "Audio Effect";
+        case DeviceType::INSTRUMENT: return "Instrument";
+        case DeviceType::NOTE_EFFECT: return "Note Effect";
+        default: return "Unknown";
+    }
 }
