@@ -94,7 +94,8 @@ public:
     static constexpr oc::context::Requirements REQUIRES{
         .button = true,
         .encoder = true,
-        .midi = true
+        .midi = true,
+        .frames = true
     };
 
     // Static resource loading (called by ContextManager during registration)

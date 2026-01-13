@@ -78,7 +78,7 @@ static void initMux() {
 static void initApp() {
     app = oc::hal::teensy::AppBuilder()
               .midi()
-              .serial()
+              .frames()
               .encoders(Hardware::Encoder::ENCODERS)
               .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
               .inputConfig(Config::Input::CONFIG);
