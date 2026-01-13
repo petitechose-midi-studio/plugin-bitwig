@@ -118,7 +118,7 @@ void BitwigContext::onDisconnected() {
 // =============================================================================
 
 void BitwigContext::createProtocol() {
-    protocol_ = std::make_unique<BitwigProtocol>(serial());
+    protocol_ = std::make_unique<BitwigProtocol>(frames());
 }
 
 void BitwigContext::createHostHandlers() {
