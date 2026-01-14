@@ -2,8 +2,6 @@
 
 #include <config/App.hpp>
 #include "handler/InputUtils.hpp"
-#include "protocol/MessageStructure.hpp"
-#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 
@@ -31,9 +29,9 @@ void LastClickedHostHandler::setupProtocolCallbacks() {
 void LastClickedHostHandler::handleLastClickedUpdate(const LastClickedUpdateMessage& msg) {
     auto& lc = state_.lastClicked;
 
-    lc.name.set(std::string(msg.parameterName.data()));
+    lc.name.set(msg.parameterName);
     lc.value.set(msg.parameterValue);
-    lc.displayValue.set(std::string(msg.displayValue.data()));
+    lc.displayValue.set(msg.displayValue);
     lc.parameterType.set(msg.parameterType);
     lc.discreteCount.set(msg.discreteValueCount);
     lc.exists.set(msg.parameterExists);
@@ -50,7 +48,7 @@ void LastClickedHostHandler::handleLastClickedValueState(const LastClickedValueS
     auto& lc = state_.lastClicked;
 
     lc.value.set(msg.parameterValue);
-    lc.displayValue.set(std::string(msg.displayValue.data()));
+    lc.displayValue.set(msg.displayValue);
 
     encoders_.setPosition(EncoderID::OPT, msg.parameterValue);
 }

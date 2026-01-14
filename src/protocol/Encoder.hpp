@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <cmath>
 
 namespace Protocol {
 
@@ -20,7 +21,7 @@ struct Encoder {
  * Encode bool (1 byte)
  * Boolean value (true/false) (0x00 or 0x01)
  */
-static inline void encodeBool(uint8_t*& buf, bool val) {
+static void encodeBool(uint8_t*& buf, bool val) {
     *buf++ = val ? 0x01 : 0x00;
 }
 
@@ -28,7 +29,7 @@ static inline void encodeBool(uint8_t*& buf, bool val) {
  * Encode float32 (4 bytes)
  * 32-bit IEEE 754 floating point (4 bytes, IEEE 754 little-endian)
  */
-static inline void encodeFloat32(uint8_t*& buf, float val) {
+static void encodeFloat32(uint8_t*& buf, float val) {
     uint32_t bits;
     memcpy(&bits, &val, sizeof(float));
     *buf++ = bits & 0xFF;
@@ -41,7 +42,7 @@ static inline void encodeFloat32(uint8_t*& buf, float val) {
  * Encode int16 (2 bytes)
  * 16-bit signed integer (-32768 to 32767) (2 bytes, little-endian)
  */
-static inline void encodeInt16(uint8_t*& buf, int16_t value) {
+static void encodeInt16(uint8_t*& buf, int16_t value) {
     uint16_t val = static_cast<uint16_t>(value);
     *buf++ = val & 0xFF;
     *buf++ = (val >> 8) & 0xFF;
@@ -51,7 +52,7 @@ static inline void encodeInt16(uint8_t*& buf, int16_t value) {
  * Encode int32 (4 bytes)
  * 32-bit signed integer (-2147483648 to 2147483647) (4 bytes, little-endian)
  */
-static inline void encodeInt32(uint8_t*& buf, int32_t value) {
+static void encodeInt32(uint8_t*& buf, int32_t value) {
     uint32_t val = static_cast<uint32_t>(value);
     *buf++ = val & 0xFF;
     *buf++ = (val >> 8) & 0xFF;
@@ -63,7 +64,7 @@ static inline void encodeInt32(uint8_t*& buf, int32_t value) {
  * Encode int8 (1 byte)
  * 8-bit signed integer (-128 to 127) (1 byte, direct)
  */
-static inline void encodeInt8(uint8_t*& buf, int8_t val) {
+static void encodeInt8(uint8_t*& buf, int8_t val) {
     *buf++ = val & 0xFF;
 }
 
@@ -71,10 +72,10 @@ static inline void encodeInt8(uint8_t*& buf, int8_t val) {
  * Encode norm16 (2 bytes)
  * Normalized float (0.0-1.0) stored as uint16 for efficiency (2 bytes, little-endian (0-65535))
  */
-static inline void encodeNorm16(uint8_t*& buf, float val) {
+static void encodeNorm16(uint8_t*& buf, float val) {
     if (val < 0.0f) val = 0.0f;
     if (val > 1.0f) val = 1.0f;
-    uint16_t norm = static_cast<uint16_t>(val * 65535.0f + 0.5f);
+    uint16_t norm = static_cast<uint16_t>(std::lroundf(val * 65535.0f));
     *buf++ = norm & 0xFF;
     *buf++ = (norm >> 8) & 0xFF;
 }
@@ -83,10 +84,10 @@ static inline void encodeNorm16(uint8_t*& buf, float val) {
  * Encode norm8 (1 byte)
  * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth (1 byte, full 8-bit range (0-255))
  */
-static inline void encodeNorm8(uint8_t*& buf, float val) {
+static void encodeNorm8(uint8_t*& buf, float val) {
     if (val < 0.0f) val = 0.0f;
     if (val > 1.0f) val = 1.0f;
-    uint8_t norm = static_cast<uint8_t>(val * 255.0f + 0.5f);
+    uint8_t norm = static_cast<uint8_t>(std::lroundf(val * 255.0f));
     *buf++ = norm & 0xFF;
 }
 
@@ -97,7 +98,7 @@ static inline void encodeNorm8(uint8_t*& buf, float val) {
  * Format: [length] [char0] [char1] ... [charN-1]
  * Max length: 255 chars
  */
-static inline void encodeString(uint8_t*& buf, const std::string& str) {
+static void encodeString(uint8_t*& buf, const std::string& str) {
     uint8_t len = static_cast<uint8_t>(str.length()) & 0xFF;
     *buf++ = len;
 
@@ -110,7 +111,7 @@ static inline void encodeString(uint8_t*& buf, const std::string& str) {
  * Encode uint16 (2 bytes)
  * 16-bit unsigned integer (0-65535) (2 bytes, little-endian)
  */
-static inline void encodeUint16(uint8_t*& buf, uint16_t val) {
+static void encodeUint16(uint8_t*& buf, uint16_t val) {
     *buf++ = val & 0xFF;
     *buf++ = (val >> 8) & 0xFF;
 }
@@ -119,7 +120,7 @@ static inline void encodeUint16(uint8_t*& buf, uint16_t val) {
  * Encode uint32 (4 bytes)
  * 32-bit unsigned integer (0-4294967295) (4 bytes, little-endian)
  */
-static inline void encodeUint32(uint8_t*& buf, uint32_t val) {
+static void encodeUint32(uint8_t*& buf, uint32_t val) {
     *buf++ = val & 0xFF;
     *buf++ = (val >> 8) & 0xFF;
     *buf++ = (val >> 16) & 0xFF;
@@ -130,7 +131,7 @@ static inline void encodeUint32(uint8_t*& buf, uint32_t val) {
  * Encode uint8 (1 byte)
  * 8-bit unsigned integer (0-255) (1 byte, direct)
  */
-static inline void encodeUint8(uint8_t*& buf, uint8_t val) {
+static void encodeUint8(uint8_t*& buf, uint8_t val) {
     *buf++ = val & 0xFF;
 }
 };

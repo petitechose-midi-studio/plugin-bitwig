@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/MessageStructure.hpp"
 
 namespace bitwig::handler {
 

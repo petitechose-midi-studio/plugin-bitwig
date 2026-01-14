@@ -26,7 +26,6 @@
 #include "state/BitwigState.hpp"
 #include "ui/device/DeviceSelector.hpp"
 #include "ui/device/DeviceStateBar.hpp"
-#include "ui/theme/BitwigTheme.hpp"
 #include "ui/track/TrackSelector.hpp"
 #include "ui/widget/IParameterWidget.hpp"
 

@@ -14,13 +14,13 @@
 #include "ProtocolCallbacks.hpp"
 #include "DecoderRegistry.hpp"
 #include "MessageStructure.hpp"
-#include <oc/hal/ISerialTransport.hpp>
+#include <oc/hal/IFrameTransport.hpp>
 
 namespace Protocol {
 
 class Protocol : public ProtocolCallbacks {
 public:
-    explicit Protocol(oc::hal::ISerialTransport& transport)
+    explicit Protocol(oc::hal::IFrameTransport& transport)
         : transport_(transport) {
         transport_.setOnReceive([this](const uint8_t* data, size_t len) {
             dispatch(data, len);
@@ -35,7 +35,7 @@ public:
     Protocol(Protocol&&) = delete;
     Protocol& operator=(Protocol&&) = delete;
 
-#include "ProtocolMethods.inl"
+#include "ProtocolMethods.ipp"
     template <typename T>
     void send(const T& message) {
         constexpr MessageID messageId = T::MESSAGE_ID;
@@ -73,7 +73,7 @@ public:
     }
 
 private:
-    oc::hal::ISerialTransport& transport_;
+    oc::hal::IFrameTransport& transport_;
 };
 
 }  // namespace Protocol

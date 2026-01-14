@@ -1,0 +1,19 @@
+CompileFlags:
+  CompilationDatabase: .
+
+Diagnostics:
+  Suppress:
+    - ovl_diff_return_type
+  UnusedIncludes: Strict
+
+---
+# .ipp files are inline implementation includes (meant to be #included in other files)
+# They cannot be compiled standalone - suppress all diagnostics
+If:
+  PathMatch: ".*\\.ipp"
+CompileFlags:
+  Add:
+    - "-ferror-limit=0"
+Diagnostics:
+  Suppress:
+    - "*"

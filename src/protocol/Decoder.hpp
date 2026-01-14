@@ -21,7 +21,7 @@ struct Decoder {
  * Decode bool (1 byte)
  * Boolean value (true/false) (1 byte)
  */
-static inline bool decodeBool(
+static bool decodeBool(
     const uint8_t*& buf, size_t& remaining, bool& out) {
     if (remaining < 1) return false;
     
@@ -34,7 +34,7 @@ static inline bool decodeBool(
  * Decode float32 (4 bytes)
  * 32-bit IEEE 754 floating point (4 bytes, IEEE 754 little-endian)
  */
-static inline bool decodeFloat32(
+static bool decodeFloat32(
     const uint8_t*& buf, size_t& remaining, float& out) {
     if (remaining < 4) return false;
     
@@ -52,7 +52,7 @@ static inline bool decodeFloat32(
  * Decode int16 (2 bytes)
  * 16-bit signed integer (-32768 to 32767) (2 bytes, little-endian)
  */
-static inline bool decodeInt16(
+static bool decodeInt16(
     const uint8_t*& buf, size_t& remaining, int16_t& out) {
     if (remaining < 2) return false;
     
@@ -68,7 +68,7 @@ static inline bool decodeInt16(
  * Decode int32 (4 bytes)
  * 32-bit signed integer (-2147483648 to 2147483647) (4 bytes, little-endian)
  */
-static inline bool decodeInt32(
+static bool decodeInt32(
     const uint8_t*& buf, size_t& remaining, int32_t& out) {
     if (remaining < 4) return false;
     
@@ -86,7 +86,7 @@ static inline bool decodeInt32(
  * Decode int8 (1 byte)
  * 8-bit signed integer (-128 to 127) (1 byte, direct)
  */
-static inline bool decodeInt8(
+static bool decodeInt8(
     const uint8_t*& buf, size_t& remaining, int8_t& out) {
     if (remaining < 1) return false;
     
@@ -100,7 +100,7 @@ static inline bool decodeInt8(
  * Decode norm16 (2 bytes)
  * Normalized float (0.0-1.0) stored as uint16 for efficiency (2 bytes, little-endian (0-65535))
  */
-static inline bool decodeNorm16(
+static bool decodeNorm16(
     const uint8_t*& buf, size_t& remaining, float& out) {
     if (remaining < 2) return false;
     
@@ -116,7 +116,7 @@ static inline bool decodeNorm16(
  * Decode norm8 (1 byte)
  * Normalized float (0.0-1.0) stored as 7-bit uint8 for minimal bandwidth (1 byte, full 8-bit range (0-255))
  */
-static inline bool decodeNorm8(
+static bool decodeNorm8(
     const uint8_t*& buf, size_t& remaining, float& out) {
     if (remaining < 1) return false;
     
@@ -133,7 +133,7 @@ static inline bool decodeNorm8(
  * Format: [length] [char0] [char1] ... [charN-1]
  * Max length: 255 chars
  */
-static inline bool decodeString(
+static bool decodeString(
     const uint8_t*& buf, size_t& remaining, std::string& out) {
 
     if (remaining < 1) return false;
@@ -156,7 +156,7 @@ static inline bool decodeString(
  * Decode uint16 (2 bytes)
  * 16-bit unsigned integer (0-65535) (2 bytes, little-endian)
  */
-static inline bool decodeUint16(
+static bool decodeUint16(
     const uint8_t*& buf, size_t& remaining, uint16_t& out) {
     if (remaining < 2) return false;
     
@@ -171,7 +171,7 @@ static inline bool decodeUint16(
  * Decode uint32 (4 bytes)
  * 32-bit unsigned integer (0-4294967295) (4 bytes, little-endian)
  */
-static inline bool decodeUint32(
+static bool decodeUint32(
     const uint8_t*& buf, size_t& remaining, uint32_t& out) {
     if (remaining < 4) return false;
     
@@ -188,7 +188,7 @@ static inline bool decodeUint32(
  * Decode uint8 (1 byte)
  * 8-bit unsigned integer (0-255) (1 byte, direct)
  */
-static inline bool decodeUint8(
+static bool decodeUint8(
     const uint8_t*& buf, size_t& remaining, uint8_t& out) {
     if (remaining < 1) return false;
     

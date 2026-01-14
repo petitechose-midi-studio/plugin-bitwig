@@ -1,7 +1,5 @@
 #include "TransportHostHandler.hpp"
 
-#include "protocol/MessageStructure.hpp"
-
 namespace bitwig::handler {
 
 using namespace Protocol;

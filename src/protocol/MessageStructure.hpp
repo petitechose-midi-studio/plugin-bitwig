@@ -15,7 +15,7 @@
 
 #pragma once
 
-// Include all message structs
+// IWYU pragma: begin_exports
 #include "struct/DeviceChangeMessage.hpp"
 #include "struct/DeviceChangeHeaderMessage.hpp"
 #include "struct/DeviceChildrenMessage.hpp"
@@ -108,3 +108,4 @@
 #include "struct/TransportStopMessage.hpp"
 #include "struct/TransportTempoMessage.hpp"
 #include "struct/TransportTempoStateMessage.hpp"
+// IWYU pragma: end_exports

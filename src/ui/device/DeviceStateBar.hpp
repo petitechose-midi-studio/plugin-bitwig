@@ -14,7 +14,6 @@
  * @see DeviceTitleItem for device display component
  */
 
-#include <cstdint>
 #include <memory>
 
 #include <lvgl.h>

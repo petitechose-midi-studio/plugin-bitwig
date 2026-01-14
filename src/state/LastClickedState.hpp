@@ -8,7 +8,7 @@
 #include <oc/state/Signal.hpp>
 #include <oc/state/SignalString.hpp>
 
-#include "Constants.hpp"
+#include "protocol/ParameterType.hpp"
 
 namespace bitwig::state {
 

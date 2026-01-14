@@ -37,7 +37,6 @@
 
 #include <oc/state/ExclusiveVisibilityStack.hpp>
 
-#include "Constants.hpp"
 #include "DeviceInfoState.hpp"
 #include "HostState.hpp"
 #include "LastClickedState.hpp"

@@ -1,9 +1,6 @@
 #include "TrackHostHandler.hpp"
 
-#include <vector>
-
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {

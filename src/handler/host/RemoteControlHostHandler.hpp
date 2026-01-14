@@ -20,7 +20,6 @@
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include "state/Constants.hpp"
 
 namespace bitwig::handler {
 

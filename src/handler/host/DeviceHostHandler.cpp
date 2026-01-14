@@ -6,7 +6,6 @@
 #include <oc/log/Log.hpp>
 
 #include "handler/NestedIndexUtils.hpp"
-#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -163,7 +162,7 @@ void DeviceHostHandler::setupProtocolCallbacks() {
         types.push_back(0);
 
         for (uint8_t i = 0; i < msg.childrenCount; i++) {
-            names.push_back(std::string(msg.children[i].childName.data()));
+            names.emplace_back(msg.children[i].childName);
             types.push_back(msg.children[i].itemType);
         }
 

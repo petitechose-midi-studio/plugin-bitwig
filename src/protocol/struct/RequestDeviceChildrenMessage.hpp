@@ -94,9 +94,8 @@ struct RequestDeviceChildrenMessage {
         // Decode fields
         uint8_t deviceIndex;
         if (!Decoder::decodeUint8(ptr, remaining, deviceIndex)) return std::nullopt;
-        uint8_t childType_raw;
-        if (!Decoder::decodeUint8(ptr, remaining, childType_raw)) return std::nullopt;
-        uint8_t childType = static_cast<uint8_t>(childType_raw);
+        uint8_t childType;
+        if (!Decoder::decodeUint8(ptr, remaining, childType)) return std::nullopt;
 
         return RequestDeviceChildrenMessage{deviceIndex, childType};
     }
