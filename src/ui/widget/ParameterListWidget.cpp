@@ -6,7 +6,6 @@
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
-namespace style = oc::ui::lvgl::style;
 
 namespace bitwig::ui {
 

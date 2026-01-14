@@ -462,6 +462,7 @@ void DeviceSelector::populateSlotForChild(DeviceSlotWidgets &widgets, int index)
             case 0: iconSymbol = Icon::UI_SLIDER; break;
             case 1: iconSymbol = Icon::BROWSER_LAYER; break;
             case 2: iconSymbol = Icon::DEVICE_DRUM_PAD; break;
+            default: break;  // Unknown type - no icon
         }
         if (iconSymbol) {
             Icon::set(widgets.typeIcon, iconSymbol);

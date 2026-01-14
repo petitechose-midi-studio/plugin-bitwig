@@ -40,7 +40,7 @@ using oc::state::SignalVector;
  */
 struct PageSelectorState {
     SignalVector<std::string, MAX_PAGES> names;  // Accumulated cache
-    Signal<int8_t> selectedIndex{0};
+    Signal<int> selectedIndex{0};
     Signal<bool> visible{false};
 
     // Windowed loading state
@@ -83,8 +83,8 @@ struct DeviceSelectorState {
     SignalVector<std::string, MAX_CHILDREN> childrenNames;
     SignalVector<uint8_t, MAX_CHILDREN> childrenTypes;
 
-    Signal<int8_t> currentIndex{0};
-    Signal<int8_t> activeDeviceIndex{0};
+    Signal<int> currentIndex{0};
+    Signal<int> activeDeviceIndex{0};
     Signal<bool> isNested{false};
     Signal<bool> showingChildren{false};
     Signal<bool> showFooter{false};
@@ -138,8 +138,8 @@ struct TrackSelectorState {
     std::array<Signal<bool>, MAX_TRACKS> muteStates{};
     std::array<Signal<bool>, MAX_TRACKS> soloStates{};
 
-    Signal<int8_t> currentIndex{0};
-    Signal<int8_t> activeTrackIndex{0};
+    Signal<int> currentIndex{0};
+    Signal<int> activeTrackIndex{0};
     Signal<bool> isNested{false};
     Signal<bool> visible{false};
 

@@ -1,5 +1,5 @@
 /**
- * ProtocolMethods.inl - Explicit Protocol API (inline include)
+ * ProtocolMethods.ipp - Explicit Protocol API (inline include)
  *
  * AUTO-GENERATED - DO NOT EDIT
  *
@@ -12,7 +12,7 @@
  *       template<typename T> void send(const T& msg) { ... }
  *
  *       // Explicit API methods (generated)
- *       #include "ProtocolMethods.inl"
+ *       #include "ProtocolMethods.ipp"
  *   };
  *
  * Then use: protocol.transportPlay(true) instead of protocol.send(TransportPlayMessage{true})

@@ -2,8 +2,6 @@
 
 #include <oc/log/Log.hpp>
 
-#include "protocol/MessageStructure.hpp"
-
 namespace bitwig::handler {
 
 using namespace Protocol;

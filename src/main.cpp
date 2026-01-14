@@ -24,7 +24,7 @@ extern "C" char* sbrk(int incr);
 
 static uint32_t getFreeRAM() {
     char top;
-    return &top - reinterpret_cast<char*>(sbrk(0));
+    return &top - sbrk(0);
 }
 
 // =============================================================================
@@ -112,14 +112,11 @@ constexpr uint32_t LVGL_PERIOD_US = 1'000'000 / Config::Timing::LVGL_HZ;
 void loop() {
     static uint32_t lastMicros = 0;
     static uint32_t lvglAccumulator = 0;
-    static uint32_t loopCount = 0;
     static uint32_t initialFreeRAM = 0;
 
     const uint32_t now = micros();
     if (now - lastMicros < APP_PERIOD_US) return;
     lastMicros = now;
-
-    loopCount++;
 
     // Initialize on first loop (RAM monitoring disabled with logging)
     if (initialFreeRAM == 0) {

@@ -70,7 +70,7 @@ public:
     // =========================================================================
     // Explicit API methods (generated) - e.g. transportPlay(bool), deviceSelect(uint8_t)
     // =========================================================================
-#include "ProtocolMethods.inl"
+#include "ProtocolMethods.ipp"
 
 private:
     oc::hal::IFrameTransport& transport_;

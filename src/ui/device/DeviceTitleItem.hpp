@@ -43,7 +43,7 @@ struct DeviceTitleItemProps {
  */
 class DeviceTitleItem : public oc::ui::lvgl::IListItem {
 public:
-    enum class IconSize { SMALL = 12, MEDIUM = 14 };
+    enum class IconSize : uint8_t { SMALL = 12, MEDIUM = 14 };
 
     explicit DeviceTitleItem(lv_obj_t *parent, IconSize iconSize = IconSize::MEDIUM);
     ~DeviceTitleItem() override;

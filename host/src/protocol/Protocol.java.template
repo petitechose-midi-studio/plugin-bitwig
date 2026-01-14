@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 public class Protocol extends ProtocolCallbacks {
     // TODO: Implement constructor with your transport
-    // public Protocol(ISerialTransport transport) { ... }
+    // public Protocol(IFrameTransport transport) { ... }
     public <T> void send(T message) {
         if (message == null) return;
 
@@ -59,7 +59,7 @@ public class Protocol extends ProtocolCallbacks {
     }
 
     // TODO: Add your transport member
-    // private ISerialTransport transport;
+    // private IFrameTransport transport;
 }  // class
 
 // ============================================================================

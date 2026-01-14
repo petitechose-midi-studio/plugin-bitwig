@@ -11,7 +11,6 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using ui::OverlayType;
 
 TrackInputHandler::TrackInputHandler(state::BitwigState& state,
                                      OverlayCtx overlayCtx,

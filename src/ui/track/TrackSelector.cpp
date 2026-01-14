@@ -191,7 +191,7 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
 // VirtualList Callbacks
 // ══════════════════════════════════════════════════════════════════
 
-void TrackSelector::bindSlot(VirtualSlot &slot, int index, bool isSelected) {
+void TrackSelector::bindSlot(VirtualSlot& /*slot*/, int index, bool isSelected) {
     int slotIndex = index - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 

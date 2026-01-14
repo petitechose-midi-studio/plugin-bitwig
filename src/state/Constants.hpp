@@ -2,10 +2,13 @@
 
 #include <cstdint>
 
+// IWYU pragma: begin_exports
 #include "protocol/ChildType.hpp"
 #include "protocol/DeviceType.hpp"
 #include "protocol/ParameterType.hpp"
 #include "protocol/TrackType.hpp"
+// IWYU pragma: end_exports
+
 #include "ui/font/icon.hpp"
 
 namespace bitwig::state {

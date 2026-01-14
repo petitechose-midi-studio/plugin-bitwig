@@ -22,7 +22,7 @@
 
 namespace bitwig::ui {
 
-enum class HintBarPosition { LEFT, BOTTOM, RIGHT };
+enum class HintBarPosition : uint8_t { LEFT, BOTTOM, RIGHT };
 
 /**
  * @brief Container with 3 cells for positioning hint elements

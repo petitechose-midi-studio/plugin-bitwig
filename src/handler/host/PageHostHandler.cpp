@@ -1,10 +1,8 @@
 #include "PageHostHandler.hpp"
 
 #include <array>
-#include <vector>
 
 #include "handler/InputUtils.hpp"
-#include "protocol/MessageStructure.hpp"
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -49,9 +47,9 @@ void PageHostHandler::setupProtocolCallbacks() {
 
         // Accumulate names at absolute indices
         uint8_t startIdx = msg.pageStartIndex;
-        for (uint8_t i = 0; i < msg.pageNames.size(); i++) {
+        for (size_t i = 0; i < msg.pageNames.size(); i++) {
             if (msg.pageNames[i].empty()) break;  // End of valid data
-            uint8_t absoluteIdx = startIdx + i;
+            auto absoluteIdx = static_cast<uint8_t>(startIdx + i);
             if (absoluteIdx < MAX_PAGES) {
                 state_.pageSelector.names.setAt(absoluteIdx, msg.pageNames[i]);
             }

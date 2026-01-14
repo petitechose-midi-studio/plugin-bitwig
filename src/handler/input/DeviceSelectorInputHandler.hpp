@@ -14,8 +14,6 @@
  * - BOTTOM_LEFT: open track selector (stacked)
  */
 
-#include <array>
-
 #include <lvgl.h>
 
 #include <api/InputAPI.hpp>
