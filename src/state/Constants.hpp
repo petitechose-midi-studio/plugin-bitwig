@@ -9,9 +9,11 @@
 #include "protocol/TrackType.hpp"
 // IWYU pragma: end_exports
 
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 
 namespace bitwig::state {
+
+namespace icons = bitwig::icons;
 
 // =============================================================================
 // Capacity Constants
@@ -36,7 +38,7 @@ constexpr uint8_t PREFETCH_THRESHOLD = 8;    // Prefetch when cursor >= loadedUp
 // UI Text Constants
 // =============================================================================
 
-constexpr const char* BACK_TO_PARENT_TEXT = Icon::UI_ARROW_LEFT;
+constexpr const char* BACK_TO_PARENT_TEXT = icons::UI_ARROW_LEFT;
 
 // =============================================================================
 // Child Type Helpers

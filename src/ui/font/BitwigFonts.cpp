@@ -1,5 +1,6 @@
 #include "BitwigFonts.hpp"
 
+#include <config/PlatformCompat.hpp>
 #include <ui/font/CoreFonts.hpp>
 
 #include "data/bitwig_icons_12.c.inc"

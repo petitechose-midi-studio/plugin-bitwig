@@ -11,20 +11,5 @@
         "--query-driver=${userHome}/.platformio/packages/toolchain-gccarmnoneeabi-teensy/bin/arm-none-eabi-*",
         "--background-index"
     ],
-
-    "taskexplorer.exclude": [
-        "**/.*/**"
-    ],
-    "taskexplorer.enabledTasks": {
-        "python": false,
-        "batch": false,
-        "eslint": false,
-        "npm": false,
-        "powershell": false,
-        "tsc": false,
-        "workspace": false
-    },
-    "taskexplorer.taskButtons.clickAction": "Execute",
-    "taskexplorer.usage.enabled": false,
-    "workbench.editor.enablePreview": false
+    "cmake.sourceDirectory": "C:/Users/miu-lab/petitechose-audio/midi-studio/plugin-bitwig/sdl"
 }

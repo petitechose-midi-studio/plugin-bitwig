@@ -3,7 +3,7 @@
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 namespace bitwig::ui {
@@ -11,10 +11,11 @@ namespace bitwig::ui {
 using namespace oc::ui::lvgl;
 using namespace theme;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 BackButton::BackButton(lv_obj_t* parent) {
     label_ = lv_label_create(parent);
-    lv_label_set_text(label_, Icon::UI_ARROW_LEFT);
+    lv_label_set_text(label_, icons::UI_ARROW_LEFT);
 
     if (bitwig_fonts.icons_14) {
         lv_obj_set_style_text_font(label_, bitwig_fonts.icons_14, LV_STATE_DEFAULT);

@@ -5,11 +5,12 @@
 #include <oc/ui/lvgl/widget/Label.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 namespace {
 const lv_color_t COLOR_INACTIVE = lv_color_hex(color::DATA_INACTIVE);
@@ -158,19 +159,19 @@ void TransportBar::createTransportControls() {
     style::apply(transport_container).transparent().noScroll().flexRow(LV_FLEX_ALIGN_CENTER, layout::GAP_SM);
 
     play_icon_ = lv_label_create(transport_container);
-    Icon::set(play_icon_, Icon::TRANSPORT_PLAY, Icon::Size::L);
+    icons::set(play_icon_, icons::TRANSPORT_PLAY, icons::Size::L);
     lv_obj_set_style_text_color(play_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     stop_icon_ = lv_label_create(transport_container);
-    Icon::set(stop_icon_, Icon::TRANSPORT_STOP, Icon::Size::L);
+    icons::set(stop_icon_, icons::TRANSPORT_STOP, icons::Size::L);
     lv_obj_set_style_text_color(stop_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     record_icon_ = lv_label_create(transport_container);
-    Icon::set(record_icon_, Icon::TRANSPORT_RECORD, Icon::Size::L);
+    icons::set(record_icon_, icons::TRANSPORT_RECORD, icons::Size::L);
     lv_obj_set_style_text_color(record_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 
     automation_override_icon_ = lv_label_create(transport_container);
-    Icon::set(automation_override_icon_, Icon::TRANSPORT_AUTOMATION_ABORT, Icon::Size::L);
+    icons::set(automation_override_icon_, icons::TRANSPORT_AUTOMATION_ABORT, icons::Size::L);
     lv_obj_set_style_text_color(automation_override_icon_, COLOR_INACTIVE, LV_STATE_DEFAULT);
 }
 

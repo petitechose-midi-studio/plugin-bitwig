@@ -3,10 +3,12 @@
 #include <cstdint>
 
 #include "protocol/DeviceType.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 namespace bitwig::ui {
+
+namespace icons = bitwig::icons;
 
 /**
  * @brief Helper for device type icons and colors
@@ -27,11 +29,11 @@ struct Info {
 inline Info get(DeviceType deviceType) {
     switch (deviceType) {
         case DeviceType::AUDIO_EFFECT:
-            return {Icon::DEVICE_AUDIO, bitwig::theme::color::DEVICE_TYPE_AUDIO, true};
+            return {icons::DEVICE_AUDIO, bitwig::theme::color::DEVICE_TYPE_AUDIO, true};
         case DeviceType::INSTRUMENT:
-            return {Icon::DEVICE_INSTRUMENT, bitwig::theme::color::DEVICE_TYPE_INSTRUMENT, true};
+            return {icons::DEVICE_INSTRUMENT, bitwig::theme::color::DEVICE_TYPE_INSTRUMENT, true};
         case DeviceType::NOTE_EFFECT:
-            return {Icon::DEVICE_NOTE, bitwig::theme::color::DEVICE_TYPE_NOTE, true};
+            return {icons::DEVICE_NOTE, bitwig::theme::color::DEVICE_TYPE_NOTE, true};
         default:  // UNKNOWN
             return {nullptr, 0, false};
     }

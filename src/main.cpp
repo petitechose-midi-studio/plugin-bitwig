@@ -14,8 +14,7 @@
 #include <config/App.hpp>
 #include <config/platform-teensy/Buffer.hpp>
 #include <config/platform-teensy/Hardware.hpp>
-#include "context/BitwigBootContext.hpp"
-#include "context/BitwigContext.hpp"
+#include "app/AppLogic.hpp"
 
 // =============================================================================
 // Debug: Memory monitoring for crash diagnosis
@@ -27,14 +26,7 @@ static uint32_t getFreeRAM() {
     return &top - sbrk(0);
 }
 
-// =============================================================================
-// Context ID for Bitwig
-// =============================================================================
 
-enum class BitwigContextID : uint8_t {
-    BOOT = 0,
-    BITWIG = 1,
-};
 
 // =============================================================================
 // Static Objects
@@ -83,9 +75,7 @@ static void initApp() {
               .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
               .inputConfig(Config::Input::CONFIG);
 
-    // Boot context first (starts automatically as ID 0)
-    app->registerContext<bitwig::BitwigBootContext>(BitwigContextID::BOOT, "Boot");
-    app->registerContext<bitwig::BitwigContext>(BitwigContextID::BITWIG, "Bitwig");
+    bitwig::app::registerContexts(*app);
     app->begin();
 }
 
