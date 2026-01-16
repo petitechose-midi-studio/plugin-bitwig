@@ -4,6 +4,7 @@
 #include <oc/log/Log.hpp>
 #include <ui/OverlayBindingContext.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
+#include <oc/ui/lvgl/Screen.hpp>
 #include <ui/font/CoreFonts.hpp>
 
 #include <config/App.hpp>
@@ -237,7 +238,7 @@ void BitwigContext::createInputHandlers() {
 
 void BitwigContext::createViews() {
     // ViewType is in global scope from protocol/ViewType.hpp
-    view_container_ = std::make_unique<core::ui::ViewContainer>(lv_screen_active());
+    view_container_ = std::make_unique<core::ui::ViewContainer>(oc::ui::lvgl::Screen::root());
     lv_obj_t* mainZone = view_container_->getMainZone();
 
     // Create all views (they start hidden)

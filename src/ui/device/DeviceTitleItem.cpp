@@ -4,11 +4,12 @@
 
 #include "ui/device/DeviceTypeHelper.hpp"
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 namespace bitwig::ui {
 
@@ -77,8 +78,8 @@ void DeviceTitleItem::updateTypeIcon(DeviceType deviceType) {
         return;
     }
 
-    Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
-    Icon::set(type_icon_, info.icon, size);
+    icons::Size size = (icon_size_ == IconSize::SMALL) ? icons::Size::S : icons::Size::M;
+    icons::set(type_icon_, info.icon, size);
     style::apply(type_icon_).textColor(info.color);
     lv_obj_clear_flag(type_icon_, LV_OBJ_FLAG_HIDDEN);
 }
@@ -86,9 +87,9 @@ void DeviceTitleItem::updateTypeIcon(DeviceType deviceType) {
 void DeviceTitleItem::updateStateIcon(bool enabled) {
     if (!state_icon_) return;
 
-    const char *icon_str = enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF;
-    Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
-    Icon::set(state_icon_, icon_str, size);
+    const char *icon_str = enabled ? icons::DEVICE_ON : icons::DEVICE_OFF;
+    icons::Size size = (icon_size_ == IconSize::SMALL) ? icons::Size::S : icons::Size::M;
+    icons::set(state_icon_, icon_str, size);
 
     uint32_t color = enabled ? color::DEVICE_STATE_ENABLED : color::DEVICE_STATE_DISABLED;
     style::apply(state_icon_).textColor(color);
@@ -97,8 +98,8 @@ void DeviceTitleItem::updateStateIcon(bool enabled) {
 void DeviceTitleItem::updateFolderIcon(bool hasChildren) {
     if (!folder_icon_) return;
 
-    Icon::Size size = (icon_size_ == IconSize::SMALL) ? Icon::Size::S : Icon::Size::M;
-    Icon::set(folder_icon_, Icon::BROWSER_DIRECTORY, size);
+    icons::Size size = (icon_size_ == IconSize::SMALL) ? icons::Size::S : icons::Size::M;
+    icons::set(folder_icon_, icons::BROWSER_DIRECTORY, size);
 
     style::apply(folder_icon_).textColor(color::INACTIVE_LIGHTER);
     lv_obj_set_style_text_opa(folder_icon_, opacity::SUBTLE, LV_STATE_DEFAULT);

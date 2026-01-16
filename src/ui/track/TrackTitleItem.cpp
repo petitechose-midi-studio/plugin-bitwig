@@ -3,11 +3,12 @@
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 namespace bitwig::ui {
 
@@ -58,14 +59,14 @@ TrackTitleItem::TrackTitleItem(lv_obj_t *parent, bool withMuteSolo, lv_coord_t b
 
         mute_icon_ = lv_label_create(container_);
         if (mute_icon_) {
-            Icon::set(mute_icon_, Icon::CHANNEL_MUTE);
+            icons::set(mute_icon_, icons::CHANNEL_MUTE);
             style::apply(mute_icon_).textColor(color::TRACK_MUTE);
             lv_obj_set_style_text_opa(mute_icon_, opacity::HINT, LV_STATE_DEFAULT);
         }
 
         solo_icon_ = lv_label_create(container_);
         if (solo_icon_) {
-            Icon::set(solo_icon_, Icon::CHANNEL_SOLO);
+            icons::set(solo_icon_, icons::CHANNEL_SOLO);
             style::apply(solo_icon_).textColor(color::TRACK_SOLO);
             lv_obj_set_style_text_opa(solo_icon_, opacity::HINT, LV_STATE_DEFAULT);
         }
@@ -98,7 +99,7 @@ void TrackTitleItem::render(const TrackTitleItemProps &props) {
     }
 
     if (type_icon_) {
-        Icon::set(type_icon_, getTrackTypeIcon(props.trackType), Icon::Size::M);
+        icons::set(type_icon_, getTrackTypeIcon(props.trackType), icons::Size::M);
         lv_obj_set_style_text_opa(
             type_icon_, props.hideIndicators ? opacity::HIDDEN : opacity::SUBTLE, LV_STATE_DEFAULT);
     }
@@ -156,13 +157,13 @@ void TrackTitleItem::updateIndicatorOpacity(bool isMuted, bool isSoloed, bool hi
 
 const char *TrackTitleItem::getTrackTypeIcon(TrackType trackType) {
     switch (trackType) {
-        case TrackType::AUDIO: return Icon::TRACK_AUDIO;
-        case TrackType::INSTRUMENT: return Icon::TRACK_INSTRUMENT;
-        case TrackType::HYBRID: return Icon::TRACK_HYBRID;
-        case TrackType::GROUP: return Icon::BROWSER_DIRECTORY;
-        case TrackType::EFFECT: return Icon::TRACK_RETURN;
-        case TrackType::MASTER: return Icon::TRACK_MASTER;
-        default: return Icon::TRACK_AUDIO;
+        case TrackType::AUDIO: return icons::TRACK_AUDIO;
+        case TrackType::INSTRUMENT: return icons::TRACK_INSTRUMENT;
+        case TrackType::HYBRID: return icons::TRACK_HYBRID;
+        case TrackType::GROUP: return icons::BROWSER_DIRECTORY;
+        case TrackType::EFFECT: return icons::TRACK_RETURN;
+        case TrackType::MASTER: return icons::TRACK_MASTER;
+        default: return icons::TRACK_AUDIO;
     }
 }
 

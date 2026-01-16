@@ -6,12 +6,13 @@
 
 #include "ui/device/DeviceTypeHelper.hpp"
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
 using namespace oc::ui::lvgl;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 namespace bitwig::ui {
 
@@ -93,7 +94,7 @@ void DeviceSelector::updateDeviceState(int displayIndex, bool enabled) {
     list_->invalidateIndex(displayIndex);
 
     if (footer_state_ && displayIndex == current_props_.selectedIndex) {
-        Icon::set(footer_state_, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
+        icons::set(footer_state_, enabled ? icons::DEVICE_ON : icons::DEVICE_OFF, icons::Size::L);
         style::apply(footer_state_).textColor(enabled ? color::DEVICE_STATE_ENABLED
                                                        : color::DEVICE_STATE_DISABLED);
     }
@@ -270,12 +271,12 @@ void DeviceSelector::createFooter() {
     footer_->setSize(layout::HINT_BAR_HEIGHT);
 
     footer_track_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_track_, Icon::CHANNEL_LIST, Icon::Size::L);
+    icons::set(footer_track_, icons::CHANNEL_LIST, icons::Size::L);
     style::apply(footer_track_).textColor(color::TEXT_LIGHT);
     footer_->setCell(0, footer_track_);
 
     footer_state_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_state_, Icon::DEVICE_ON, Icon::Size::L);
+    icons::set(footer_state_, icons::DEVICE_ON, icons::Size::L);
     style::apply(footer_state_).textColor(color::DEVICE_STATE_ENABLED);
     footer_->setCell(1, footer_state_);
 }
@@ -289,7 +290,7 @@ void DeviceSelector::renderFooter(const DeviceSelectorProps &props) {
                           : true;
 
     if (footer_state_) {
-        Icon::set(footer_state_, is_enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF, Icon::Size::L);
+        icons::set(footer_state_, is_enabled ? icons::DEVICE_ON : icons::DEVICE_OFF, icons::Size::L);
         style::apply(footer_state_).textColor(is_enabled ? color::DEVICE_STATE_ENABLED
                                                          : color::DEVICE_STATE_DISABLED);
     }
@@ -363,7 +364,7 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
     if (index < 0 || index >= static_cast<int>(names.size())) return;
 
     const std::string &name = names[index];
-    bool isBack = (index == 0) && (name == Icon::UI_ARROW_LEFT);
+    bool isBack = (index == 0) && (name == icons::UI_ARROW_LEFT);
 
     // Label (toujours visible) - will be moved to correct position below
     if (widgets.label) {
@@ -388,7 +389,7 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
                                     : DeviceType::UNKNOWN;
         auto info = DeviceTypeHelper::get(deviceType);
         if (info.visible) {
-            Icon::set(widgets.typeIcon, info.icon);
+            icons::set(widgets.typeIcon, info.icon);
             style::apply(widgets.typeIcon).textColor(info.color);
             lv_obj_clear_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN);
             lv_obj_move_to_index(widgets.typeIcon, 0);
@@ -400,7 +401,7 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
         bool enabled = index < static_cast<int>(current_props_.deviceStates.size())
                            ? current_props_.deviceStates[index]
                            : true;
-        Icon::set(widgets.stateIcon, enabled ? Icon::DEVICE_ON : Icon::DEVICE_OFF);
+        icons::set(widgets.stateIcon, enabled ? icons::DEVICE_ON : icons::DEVICE_OFF);
         style::apply(widgets.stateIcon).textColor(enabled ? color::DEVICE_STATE_ENABLED
                                                            : color::DEVICE_STATE_DISABLED);
         lv_obj_clear_flag(widgets.stateIcon, LV_OBJ_FLAG_HIDDEN);
@@ -409,7 +410,7 @@ void DeviceSelector::populateSlotForDevice(DeviceSlotWidgets &widgets, int index
 
     // Folder icon (index 2) - always reserve space for alignment
     if (widgets.folderIcon) {
-        Icon::set(widgets.folderIcon, Icon::BROWSER_DIRECTORY);
+        icons::set(widgets.folderIcon, icons::BROWSER_DIRECTORY);
         style::apply(widgets.folderIcon).textColor(color::INACTIVE_LIGHTER);
         // Visible with opacity when has children, invisible (0 opacity) otherwise to reserve space
         lv_obj_set_style_text_opa(widgets.folderIcon, hasFolder ? opacity::SUBTLE : opacity::HIDDEN,
@@ -440,7 +441,7 @@ void DeviceSelector::populateSlotForChild(DeviceSlotWidgets &widgets, int index)
     if (index < 0 || index >= static_cast<int>(names.size())) return;
 
     const std::string &name = names[index];
-    bool isBack = (index == 0) && (name == Icon::UI_ARROW_LEFT);
+    bool isBack = (index == 0) && (name == icons::UI_ARROW_LEFT);
 
     // Label (toujours visible)
     if (widgets.label) {
@@ -459,13 +460,13 @@ void DeviceSelector::populateSlotForChild(DeviceSlotWidgets &widgets, int index)
         uint8_t type = current_props_.childrenTypes[index];
         const char *iconSymbol = nullptr;
         switch (type) {
-            case 0: iconSymbol = Icon::UI_SLIDER; break;
-            case 1: iconSymbol = Icon::BROWSER_LAYER; break;
-            case 2: iconSymbol = Icon::DEVICE_DRUM_PAD; break;
+            case 0: iconSymbol = icons::UI_SLIDER; break;
+            case 1: iconSymbol = icons::BROWSER_LAYER; break;
+            case 2: iconSymbol = icons::DEVICE_DRUM_PAD; break;
             default: break;  // Unknown type - no icon
         }
         if (iconSymbol) {
-            Icon::set(widgets.typeIcon, iconSymbol);
+            icons::set(widgets.typeIcon, iconSymbol);
             style::apply(widgets.typeIcon).textColor(color::INACTIVE_LIGHTER);
             lv_obj_clear_flag(widgets.typeIcon, LV_OBJ_FLAG_HIDDEN);
             lv_obj_move_to_index(widgets.typeIcon, 0);
@@ -540,7 +541,7 @@ lv_obj_t *DeviceSelector::createLabel(lv_obj_t *parent) {
 // ══════════════════════════════════════════════════════════════════
 
 bool DeviceSelector::isNonDeviceItem(const std::string &name) {
-    return name == Icon::UI_ARROW_LEFT || (!name.empty() && name[0] == '[');
+    return name == icons::UI_ARROW_LEFT || (!name.empty() && name[0] == '[');
 }
 
 bool DeviceSelector::hasChildren(const DeviceSelectorProps &props, size_t index) {

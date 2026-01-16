@@ -4,7 +4,7 @@
 #include <oc/ui/lvgl/theme/BaseTheme.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/icon.hpp"
+#include "ui/font/BitwigIcons.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 namespace bitwig::ui {
@@ -12,6 +12,7 @@ namespace bitwig::ui {
 using namespace oc::ui::lvgl;
 using namespace theme;
 namespace style = oc::ui::lvgl::style;
+namespace icons = bitwig::icons;
 
 // ══════════════════════════════════════════════════════════════════
 // Constants
@@ -155,13 +156,13 @@ void TrackSelector::createFooter() {
 
     // Mute icon (cell 1 = center)
     footer_mute_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_mute_, Icon::CHANNEL_MUTE, Icon::Size::L);
+    icons::set(footer_mute_, icons::CHANNEL_MUTE, icons::Size::L);
     style::apply(footer_mute_).textColor(color::TRACK_MUTE);
     footer_->setCell(1, footer_mute_);
 
     // Solo icon (cell 2 = right)
     footer_solo_ = lv_label_create(footer_->getElement());
-    Icon::set(footer_solo_, Icon::CHANNEL_SOLO, Icon::Size::L);
+    icons::set(footer_solo_, icons::CHANNEL_SOLO, icons::Size::L);
     style::apply(footer_solo_).textColor(color::TRACK_SOLO);
     footer_->setCell(2, footer_solo_);
 }
@@ -205,7 +206,7 @@ void TrackSelector::bindSlot(VirtualSlot& /*slot*/, int index, bool isSelected) 
                            : "";
 
     // Check if this is the back button
-    bool isBack = (index == 0) && (std::string(name) == Icon::UI_ARROW_LEFT);
+    bool isBack = (index == 0) && (std::string(name) == icons::UI_ARROW_LEFT);
 
     if (isBack) {
         // Show back button, hide TrackTitleItem
@@ -289,7 +290,7 @@ void TrackSelector::applyHighlightStyle(int slotIndex, bool isSelected) {
                            : "";
 
     // Check if this is the back button
-    bool isBack = (logicalIndex == 0) && (std::string(name) == Icon::UI_ARROW_LEFT);
+    bool isBack = (logicalIndex == 0) && (std::string(name) == icons::UI_ARROW_LEFT);
 
     if (isBack) {
         // Update back button highlight

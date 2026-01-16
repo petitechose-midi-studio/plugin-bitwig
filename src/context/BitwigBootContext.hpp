@@ -7,12 +7,13 @@
 
 #include <memory>
 
-#include <Arduino.h>
 #include <lvgl.h>
+#include <oc/time/Time.hpp>
 
 #include <oc/context/IContext.hpp>
 #include <oc/context/Requirements.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
+#include <oc/ui/lvgl/Screen.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
 #include "ui/font/CoreFonts.hpp"
@@ -28,16 +29,16 @@ public:
         // Load essential fonts for splash
         oc::ui::lvgl::font::loadEssential(CORE_FONT_ENTRIES, CORE_FONT_COUNT);
 
-        splash_ = std::make_unique<ui::SplashView>(lv_screen_active());
+        splash_ = std::make_unique<ui::SplashView>(oc::ui::lvgl::Screen::root());
         splash_->onActivate();
         splash_->setText("Connecting to Bitwig...");
 
-        start_ms_ = millis();
+        start_ms_ = oc::time::millis();
         return true;
     }
 
     void update() override {
-        uint32_t elapsed = millis() - start_ms_;
+        uint32_t elapsed = oc::time::millis() - start_ms_;
 
         // Start fade before end
         if (!fading_ && elapsed >= FADE_START_MS) {
