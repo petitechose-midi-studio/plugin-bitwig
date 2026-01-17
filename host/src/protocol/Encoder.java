@@ -6,7 +6,7 @@ package protocol;
  * AUTO-GENERATED - DO NOT EDIT
  */
 
-// Serial8 Encoder - 8-bit binary
+// Binary Encoder - 8-bit binary
 
 
 public final class Encoder {

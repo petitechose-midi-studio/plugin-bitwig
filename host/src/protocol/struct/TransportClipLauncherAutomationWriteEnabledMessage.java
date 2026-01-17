@@ -13,7 +13,7 @@ import protocol.Decoder;
  * Description: TRANSPORT_CLIP_LAUNCHER_AUTOMATION_WRITE_ENABLED message
  *
  * This class is immutable and uses Encoder for encode/decode operations.
- * All encoding is 8-bit binary (Serial8).
+ * All encoding is 8-bit binary (Binary).
  */
 public final class TransportClipLauncherAutomationWriteEnabledMessage {
 
