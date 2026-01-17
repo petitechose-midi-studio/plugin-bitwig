@@ -16,14 +16,6 @@ set(APP_MAIN_NATIVE "${CMAKE_CURRENT_LIST_DIR}/main-native.cpp")
 set(APP_MAIN_WASM "${CMAKE_CURRENT_LIST_DIR}/main-wasm.cpp")
 
 # -----------------------------------------------------------------------------
-# Features
-# -----------------------------------------------------------------------------
-set(APP_HAS_CORE_STATE OFF)     # No CoreState, BitwigContext has its own state
-set(APP_USE_MIDI ON)            # MIDI transport
-set(APP_USE_UDP ON)             # UDP transport for oc-bridge
-set(APP_USE_WEBSOCKET OFF)      # WebSocket for WASM (future)
-
-# -----------------------------------------------------------------------------
 # Additional include directories (relative to this file)
 # -----------------------------------------------------------------------------
 set(APP_EXTRA_INCLUDES "")
