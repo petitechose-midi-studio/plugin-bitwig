@@ -135,7 +135,7 @@ plugin-bitwig/
 │   ├── message/            # Message definitions
 │   ├── field/              # Field definitions
 │   ├── plugin_paths.py     # Output configuration
-│   └── serial8_protocol_config.py  # Serial8 config
+│   └── binary_protocol_config.py   # Binary config
 │
 └── script/                 # Build & generation scripts
     ├── extension/          # Java build scripts
