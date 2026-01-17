@@ -2,7 +2,7 @@
 
 /**
  * @file BitwigProtocol.hpp
- * @brief Bitwig protocol wrapper for open-control framework (Serial8)
+ * @brief Bitwig protocol wrapper for open-control framework (Binary)
  *
  * Uses IFrameTransport for frame-based communication.
  * The transport layer handles framing (e.g., COBS for serial) internally.
@@ -38,7 +38,7 @@
 namespace bitwig {
 
 /**
- * @brief Bitwig Serial8 protocol handler using open-control framework
+ * @brief Bitwig Binary protocol handler using open-control framework
  *
  * Inherits from ProtocolCallbacks for message callbacks.
  * Uses IFrameTransport for frame-based communication.
