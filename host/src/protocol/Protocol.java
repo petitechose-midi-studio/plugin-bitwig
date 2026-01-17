@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Protocol - Bitwig Serial8 Protocol Implementation
+ * Protocol - Bitwig Binary Protocol Implementation
  *
  * MANUAL - DO NOT REGENERATE
  *
