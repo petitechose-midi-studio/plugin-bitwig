@@ -6,7 +6,7 @@
  * AUTO-GENERATED - DO NOT EDIT
  */
 
-// Serial8 Encoder - 8-bit binary
+// Binary Encoder - 8-bit binary
 
 #include <cstdint>
 #include <cstring>

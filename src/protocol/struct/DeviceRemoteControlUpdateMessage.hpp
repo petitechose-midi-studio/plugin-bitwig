@@ -7,7 +7,7 @@
  * Description: DEVICE_REMOTE_CONTROL_UPDATE message
  *
  * This struct uses encode/decode functions from Protocol namespace.
- * All encoding is 8-bit binary (Serial8). Performance is identical to inline
+ * All encoding is 8-bit binary (Binary). Performance is identical to inline
  * code due to static inline + compiler optimization.
  */
 

@@ -1,10 +1,10 @@
 package protocol;
 
 /**
- * ProtocolConstants - Protocol Configuration Constants (Serial8)
+ * ProtocolConstants - Protocol Configuration Constants (Binary)
  *
  * AUTO-GENERATED - DO NOT EDIT
- * Generated from: Serial8Config
+ * Generated from: BinaryConfig
  *
  * This class contains all protocol constants including message structure
  * offsets and encoding limits for 8-bit binary protocol.

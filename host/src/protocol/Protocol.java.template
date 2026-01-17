@@ -29,7 +29,7 @@ public class Protocol extends ProtocolCallbacks {
             byte[] frame = new byte[ProtocolConstants.MAX_MESSAGE_SIZE];
             int offset = 0;
 
-            // Serial8 frame: [MessageID][payload...]
+            // Binary frame: [MessageID][payload...]
             frame[offset++] = (byte) messageId.getValue();
             System.arraycopy(payload, 0, frame, offset, payload.length);
             offset += payload.length;
