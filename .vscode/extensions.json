@@ -4,10 +4,5 @@
     "recommendations": [
         "github.github-vscode-theme",
         "ms-python.python",
-        "platformio.platformio-ide",
-        "spmeesseman.vscode-taskexplorer"
-    ],
-    "unwantedRecommendations": [
-        "ms-vscode.cpptools-extension-pack"
     ]
 }
