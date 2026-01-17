@@ -4,7 +4,7 @@
  * @file BitwigProtocol.hpp
  * @brief Bitwig protocol wrapper for open-control framework (Serial8)
  *
- * Uses IMessageTransport for frame-based communication.
+ * Uses IFrameTransport for frame-based communication.
  * The transport layer handles framing (e.g., COBS for serial) internally.
  *
  * ## Usage
@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include <oc/hal/IMessageTransport.hpp>
+#include <oc/hal/IFrameTransport.hpp>
 #include <oc/log/Log.hpp>
 
 #include "DecoderRegistry.hpp"
@@ -41,18 +41,18 @@ namespace bitwig {
  * @brief Bitwig Serial8 protocol handler using open-control framework
  *
  * Inherits from ProtocolCallbacks for message callbacks.
- * Uses IMessageTransport for frame-based communication.
+ * Uses IFrameTransport for frame-based communication.
  */
 class BitwigProtocol : public Protocol::ProtocolCallbacks {
 public:
     /**
-     * @brief Construct protocol with IMessageTransport
+     * @brief Construct protocol with IFrameTransport
      *
      * Registers receive callback with transport for automatic dispatch.
      *
-     * @param transport Reference to IMessageTransport (must outlive Protocol)
+     * @param transport Reference to IFrameTransport (must outlive Protocol)
      */
-    explicit BitwigProtocol(oc::hal::IMessageTransport& transport)
+    explicit BitwigProtocol(oc::hal::IFrameTransport& transport)
         : transport_(transport) {
         transport_.setOnReceive([this](const uint8_t* data, size_t len) {
             dispatch(data, len);
@@ -73,7 +73,7 @@ public:
 #include "ProtocolMethods.ipp"
 
 private:
-    oc::hal::IMessageTransport& transport_;
+    oc::hal::IFrameTransport& transport_;
 
     /**
      * @brief Send a protocol message (internal use only)
