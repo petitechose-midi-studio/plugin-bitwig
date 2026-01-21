@@ -25,7 +25,7 @@ class BitwigBootContext : public oc::context::ContextBase {
 public:
     static constexpr oc::context::Requirements REQUIRES{};
 
-    oc::Result<void> init() override {
+    oc::type::Result<void> init() override {
         // Load essential fonts for splash
         oc::ui::lvgl::font::loadEssential(CORE_FONT_ENTRIES, CORE_FONT_COUNT);
 
@@ -34,7 +34,7 @@ public:
         splash_->setText("Connecting to Bitwig...");
 
         start_ms_ = oc::time::millis();
-        return oc::Result<void>::ok();
+        return oc::type::Result<void>::ok();
     }
 
     void update() override {

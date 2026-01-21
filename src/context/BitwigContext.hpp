@@ -114,7 +114,7 @@ public:
     // IContext Lifecycle
     // =========================================================================
 
-    oc::Result<void> init() override;
+    oc::type::Result<void> init() override;
     void update() override;
     void cleanup() override;
     const char* getName() const override { return "Bitwig"; }
