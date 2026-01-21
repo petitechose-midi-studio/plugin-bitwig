@@ -41,10 +41,10 @@ static std::optional<oc::app::OpenControlApp> app;
 // Initialization Helpers
 // =============================================================================
 
-static void checkOrHalt(const oc::core::Result<void>& result, const char* component) {
+static void checkOrHalt(const oc::Result<void>& result, const char* component) {
     if (!result) {
         OC_LOG_ERROR("{} init failed: {}", component,
-                     oc::core::errorCodeToString(result.error().code));
+                     oc::errorCodeToString(result.error().code));
         while (true) {}
     }
 }

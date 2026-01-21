@@ -69,7 +69,7 @@ void DevicePageInputHandler::openSelector() {
     }
 
     // Set encoder to relative mode for navigation
-    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::interface::EncoderMode::RELATIVE);
 }
 
 void DevicePageInputHandler::navigate(float delta) {

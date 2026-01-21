@@ -10,7 +10,7 @@
 #include <lvgl.h>
 #include <oc/time/Time.hpp>
 
-#include <oc/context/IContext.hpp>
+#include <oc/context/ContextBase.hpp>
 #include <oc/context/Requirements.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
 #include <oc/ui/lvgl/Screen.hpp>
@@ -21,11 +21,11 @@
 
 namespace bitwig {
 
-class BitwigBootContext : public oc::context::IContext {
+class BitwigBootContext : public oc::context::ContextBase {
 public:
     static constexpr oc::context::Requirements REQUIRES{};
 
-    bool initialize() override {
+    oc::Result<void> init() override {
         // Load essential fonts for splash
         oc::ui::lvgl::font::loadEssential(CORE_FONT_ENTRIES, CORE_FONT_COUNT);
 
@@ -34,7 +34,7 @@ public:
         splash_->setText("Connecting to Bitwig...");
 
         start_ms_ = oc::time::millis();
-        return true;
+        return oc::Result<void>::ok();
     }
 
     void update() override {

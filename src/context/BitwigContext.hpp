@@ -48,7 +48,7 @@
 
 #include <lvgl.h>
 
-#include <oc/context/IContext.hpp>
+#include <oc/context/ContextBase.hpp>
 #include <oc/context/Requirements.hpp>
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IView.hpp>
@@ -89,7 +89,7 @@ namespace bitwig {
  * Implements IContext lifecycle with DAW connection detection.
  * Owns BitwigState, BitwigProtocol, and coordinates handlers/views.
  */
-class BitwigContext : public oc::context::IContext {
+class BitwigContext : public oc::context::ContextBase {
 public:
     static constexpr oc::context::Requirements REQUIRES{
         .button = true,
@@ -114,7 +114,7 @@ public:
     // IContext Lifecycle
     // =========================================================================
 
-    bool initialize() override;
+    oc::Result<void> init() override;
     void update() override;
     void cleanup() override;
     const char* getName() const override { return "Bitwig"; }

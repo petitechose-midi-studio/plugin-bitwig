@@ -18,7 +18,7 @@ TransportInputHandler::TransportInputHandler(state::BitwigState& state,
 
 void TransportInputHandler::setupBindings() {
     // Global bindings (no scope) - lowest priority
-    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::interface::EncoderMode::RELATIVE);
 
     input_.buttons.button(ButtonID::BOTTOM_LEFT)
         .release()

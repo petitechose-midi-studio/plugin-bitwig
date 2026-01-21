@@ -99,7 +99,7 @@ void DeviceSelectorInputHandler::requestDeviceList() {
         state_.overlays.show(OverlayType::DEVICE_SELECTOR, false);
     }
 
-    input_.encoders.setMode(EncoderID::NAV, oc::hal::EncoderMode::RELATIVE);
+    input_.encoders.setMode(EncoderID::NAV, oc::interface::EncoderMode::RELATIVE);
 
     if (!requested_) {
         // Reset cache for fresh load

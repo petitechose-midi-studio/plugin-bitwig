@@ -29,7 +29,7 @@ BitwigContext::~BitwigContext() = default;
 // IContext Lifecycle
 // =============================================================================
 
-bool BitwigContext::initialize() {
+oc::Result<void> BitwigContext::init() {
     OC_LOG_INFO("BitwigContext initializing...");
 
     // Load fonts: core text fonts + plugin icon fonts
@@ -45,7 +45,7 @@ bool BitwigContext::initialize() {
     createInputHandlers();
 
     OC_LOG_INFO("BitwigContext initialized");
-    return true;
+    return oc::Result<void>::ok();
 }
 
 void BitwigContext::update() {
@@ -148,36 +148,36 @@ void BitwigContext::createOverlayManager() {
     lv_obj_t* viewSelectorOverlay = view_selector_ ? view_selector_->getElement() : nullptr;
 
     // Register cleanup info for each overlay
-    // Note: static_cast needed to convert Config::ButtonID enum to oc::hal::ButtonID
+    // Note: static_cast needed to convert Config::ButtonID enum to oc::ButtonID
     if (pageSelectorOverlay) {
         overlay_controller_->registerCleanup(
             OverlayType::PAGE_SELECTOR,
-            reinterpret_cast<oc::core::ScopeID>(pageSelectorOverlay),
-            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_BOTTOM)
+            reinterpret_cast<oc::ScopeID>(pageSelectorOverlay),
+            static_cast<oc::ButtonID>(ButtonID::LEFT_BOTTOM)
         );
     }
 
     if (deviceSelectorOverlay) {
         overlay_controller_->registerCleanup(
             OverlayType::DEVICE_SELECTOR,
-            reinterpret_cast<oc::core::ScopeID>(deviceSelectorOverlay),
-            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_CENTER)
+            reinterpret_cast<oc::ScopeID>(deviceSelectorOverlay),
+            static_cast<oc::ButtonID>(ButtonID::LEFT_CENTER)
         );
     }
 
     if (trackSelectorOverlay) {
         overlay_controller_->registerCleanup(
             OverlayType::TRACK_SELECTOR,
-            reinterpret_cast<oc::core::ScopeID>(trackSelectorOverlay),
-            static_cast<oc::hal::ButtonID>(ButtonID::BOTTOM_LEFT)
+            reinterpret_cast<oc::ScopeID>(trackSelectorOverlay),
+            static_cast<oc::ButtonID>(ButtonID::BOTTOM_LEFT)
         );
     }
 
     if (viewSelectorOverlay) {
         overlay_controller_->registerCleanup(
             OverlayType::VIEW_SELECTOR,
-            reinterpret_cast<oc::core::ScopeID>(viewSelectorOverlay),
-            static_cast<oc::hal::ButtonID>(ButtonID::LEFT_TOP)
+            reinterpret_cast<oc::ScopeID>(viewSelectorOverlay),
+            static_cast<oc::ButtonID>(ButtonID::LEFT_TOP)
         );
     }
 

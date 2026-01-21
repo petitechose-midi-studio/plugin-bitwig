@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include <oc/hal/IFrameTransport.hpp>
+#include <oc/interface/ITransport.hpp>
 #include <oc/log/Log.hpp>
 
 #include "DecoderRegistry.hpp"
@@ -52,7 +52,7 @@ public:
      *
      * @param transport Reference to IFrameTransport (must outlive Protocol)
      */
-    explicit BitwigProtocol(oc::hal::IFrameTransport& transport)
+    explicit BitwigProtocol(oc::interface::ITransport& transport)
         : transport_(transport) {
         transport_.setOnReceive([this](const uint8_t* data, size_t len) {
             dispatch(data, len);
@@ -73,7 +73,7 @@ public:
 #include "ProtocolMethods.ipp"
 
 private:
-    oc::hal::IFrameTransport& transport_;
+    oc::interface::ITransport& transport_;
 
     /**
      * @brief Send a protocol message (internal use only)
