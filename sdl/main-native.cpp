@@ -27,17 +27,32 @@ int main(int argc, char** argv) {
     }
 
     // 2. Build application with MIDI + remote transport
+    // MIDI port strategy:
+    //   - Linux: Connect to VirMIDI kernel ports (snd-virmidi module)
+    //   - macOS: Create virtual ports (CoreMIDI supports this natively)
+    //   - Windows: Connect to loopMIDI ports (user creates once)
     oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
             oc::hal::midi::LibreMidiConfig{
-                .appName = "MIDI Studio Bitwig",
-                .inputPortPattern = "IN [bitwig-desktop]",
-                .outputPortPattern = "OUT [bitwig-desktop]"
+                .appName = "MIDI Studio Native",
+#if defined(__linux__)
+                .inputPortName = "VirMIDI",    // Connect to VirMIDI kernel ports
+                .outputPortName = "VirMIDI",
+                .useVirtualPorts = false
+#elif defined(__APPLE__)
+                .inputPortName = "MIDI Studio [native] IN",
+                .outputPortName = "MIDI Studio [native] OUT",
+                .useVirtualPorts = true        // macOS: CoreMIDI virtual ports
+#else
+                .inputPortName = "loopMIDI",   // Windows: loopMIDI virtual ports
+                .outputPortName = "loopMIDI",
+                .useVirtualPorts = false
+#endif
             }))
         .remote(std::make_unique<oc::hal::net::UdpTransport>(
             oc::hal::net::UdpConfig{
                 .host = "127.0.0.1",
-                .port = 9001
+                .port = 8001  // Controller: bitwig native (host: 9001)
             }))
         .controllers(env.inputMapper())
         .inputConfig(Config::Input::CONFIG);

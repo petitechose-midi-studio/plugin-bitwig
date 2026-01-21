@@ -1,6 +1,7 @@
 package midistudio;
 
 import com.bitwig.extension.controller.api.*;
+import com.bitwig.extension.controller.api.SettableRangedValue;
 import com.bitwig.extension.controller.ControllerExtension;
 import config.BitwigConfig;
 import protocol.Protocol;
@@ -32,6 +33,12 @@ public class MidiStudioExtension extends ControllerExtension {
    public void init() {
       final ControllerHost host = getHost();
 
+      // Bridge port setting (allows multiple instances with different ports)
+      // Convention: 9000=hardware, 9001=native sim, 9002=wasm sim
+      final SettableRangedValue bridgePortSetting = host.getPreferences()
+         .getNumberSetting("Bridge Port", "Connection", 9000, 9002, 1, "", 9000);
+      final int bridgePort = (int) bridgePortSetting.getRaw();
+
       Transport transport = host.createTransport();
 
       CursorTrack cursorTrack = host.createCursorTrack(0, 0);
@@ -43,7 +50,7 @@ public class MidiStudioExtension extends ControllerExtension {
       TrackBank trackBank = host.createTrackBank(BitwigConfig.MAX_BANK_SIZE, 8, 0, false);  // 8 sends for MixView
       TrackBank effectTrackBank = host.createEffectTrackBank(8, 0); // For send destination names
 
-      protocol = new Protocol(host);  // Connects to oc-bridge on localhost:9000
+      protocol = new Protocol(host, "127.0.0.1", bridgePort);
 
       new TransportController(transport, protocol);
       DeviceController deviceController = new DeviceController(host, cursorDevice, remoteControls, protocol, deviceBank,
@@ -79,7 +86,7 @@ public class MidiStudioExtension extends ControllerExtension {
             protocol, transportHost, deviceHost, trackHost, lastClickedHost);
       hostStatusController.sendFullState();
 
-      host.showPopupNotification("MIDI Studio : Connected");
+      host.showPopupNotification("MIDI Studio : Connected (port " + bridgePort + ")");
    }
 
    @Override

@@ -40,14 +40,18 @@ int main(int argc, char** argv) {
 
     // Build application with MIDI + WebSocket (for oc-bridge communication)
     // Connects to bridge's controller WebSocket server on port 8001
+    // WebMIDI: searches for existing ports matching pattern (no virtual port creation)
     static oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
             oc::hal::midi::LibreMidiConfig{
-                .appName = "MIDI Studio Bitwig WASM"
+                .appName = "MIDI Studio WASM",
+                .inputPortName = "MIDI Studio [wasm] IN",
+                .outputPortName = "MIDI Studio [wasm] OUT",
+                .useVirtualPorts = false  // WebMIDI connects to existing ports
             }))
         .remote(std::make_unique<oc::hal::net::WebSocketTransport>(
             oc::hal::net::WebSocketConfig{
-                .url = "ws://localhost:8001"
+                .url = "ws://localhost:8101"  // Controller: bitwig wasm (host: 9002)
             }))
         .controllers(env.inputMapper())
         .inputConfig(Config::Input::CONFIG);

@@ -61,17 +61,18 @@ public class MidiStudioExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public void listAutoDetectionMidiPortNames(final AutoDetectionMidiPortNamesList list,
          final PlatformType platformType) {
-      // Dev firmware: "MIDI Studio [bitwig:dev]", Release: "MIDI Studio"
-      if (platformType == PlatformType.WINDOWS) {
-         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
-         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
-      } else if (platformType == PlatformType.MAC) {
-         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
-         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
-      } else if (platformType == PlatformType.LINUX) {
-         list.add(new String[] { "MIDI Studio [bitwig:dev]" }, new String[] { "MIDI Studio [bitwig:dev]" });
-         list.add(new String[] { "MIDI Studio" }, new String[] { "MIDI Studio" });
-      }
+      // Port naming convention: "MIDI Studio [type] <IN/OUT>"
+      // Types: [hw] = Teensy hardware, [native] = desktop dev, [wasm] = browser dev
+      // Alphabetical order: [hw] < [native] < [wasm]
+
+      // Hardware (Teensy USB MIDI) - single bidirectional port
+      list.add(new String[] { "MIDI Studio [hw]" }, new String[] { "MIDI Studio [hw]" });
+
+      // Native desktop (virtual ports via libremidi)
+      list.add(new String[] { "MIDI Studio [native] IN" }, new String[] { "MIDI Studio [native] OUT" });
+
+      // WASM browser (virtual ports, must be created externally)
+      list.add(new String[] { "MIDI Studio [wasm] IN" }, new String[] { "MIDI Studio [wasm] OUT" });
    }
 
    @Override
