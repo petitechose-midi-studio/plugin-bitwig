@@ -8,27 +8,16 @@
 
 #include "SdlEnvironment.hpp"
 
+#include "entry/MidiDefaults.hpp"
+#include "entry/SdlRunLoop.hpp"
+#include "entry/WasmArgs.hpp"
+
 #include <oc/hal/sdl/Sdl.hpp>
 #include <oc/hal/midi/LibreMidiTransport.hpp>
 #include <oc/hal/net/WebSocketTransport.hpp>
 
 #include <config/App.hpp>
 #include "app/AppLogic.hpp"
-
-#include <emscripten.h>
-
-// Global state for emscripten main loop callback
-static sdl::SdlEnvironment* g_env = nullptr;
-static oc::app::OpenControlApp* g_app = nullptr;
-
-static void tick(void*) {
-    if (!g_env->processEvents()) {
-        emscripten_cancel_main_loop();
-        return;
-    }
-    g_app->update();
-    g_env->refresh();
-}
 
 int main(int argc, char** argv) {
     // Static storage for WASM (persists across main loop iterations)
@@ -38,17 +27,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    const auto midi = ms::wasm::parse_midi_args(argc, argv);
+
     // Build application with MIDI + WebSocket (for oc-bridge communication)
     // Connects to bridge's controller WebSocket server on port 8001
     // WebMIDI: searches for existing ports matching pattern (no virtual port creation)
     static oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
-            oc::hal::midi::LibreMidiConfig{
-                .appName = "MIDI Studio WASM",
-                .inputPortName = "MIDI Studio [wasm] IN",
-                .outputPortName = "MIDI Studio [wasm] OUT",
-                .useVirtualPorts = false  // WebMIDI connects to existing ports
-            }))
+            ms::midi::make_wasm_config("MIDI Studio WASM", midi.in, midi.out)))
         .remote(std::make_unique<oc::hal::net::WebSocketTransport>(
             oc::hal::net::WebSocketConfig{
                 .url = "ws://localhost:8101"  // Controller: bitwig wasm (host: 9002)
@@ -61,11 +47,5 @@ int main(int argc, char** argv) {
     app.registerContext<bitwig::BitwigContext>(bitwig::ContextID::BITWIG, "Bitwig");
     app.begin();
 
-    // Set globals for callback
-    g_env = &env;
-    g_app = &app;
-
-    // Start emscripten main loop (-1 = use requestAnimationFrame)
-    emscripten_set_main_loop_arg(tick, nullptr, -1, true);
-    return 0;
+    return ms::entry::run_wasm(env, app);
 }

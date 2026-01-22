@@ -1,7 +1,6 @@
 package midistudio;
 
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extension.controller.api.SettableRangedValue;
 import com.bitwig.extension.controller.ControllerExtension;
 import config.BitwigConfig;
 import protocol.Protocol;
@@ -13,8 +12,8 @@ import handler.host.*;
  * MIDI Studio Extension - Entry Point
  *
  * Initializes bidirectional communication with clean separation:
- * - handler/controller: Controller → Bitwig (protocol callbacks)
- * - handler/host: Bitwig → Controller (Bitwig observers)
+ * - handler/controller: Controller -> Bitwig (protocol callbacks)
+ * - handler/host: Bitwig -> Controller (Bitwig observers)
  *
  * Design: Fire-and-forget pattern
  * - Handlers register callbacks and stay alive via API references
@@ -22,6 +21,13 @@ import handler.host.*;
  */
 public class MidiStudioExtension extends ControllerExtension {
    private Protocol protocol;
+
+   // Bridge mode setting (enum dropdown)
+   private static final String[] BRIDGE_MODES = {
+       "Hardware (9000)",
+       "Native Sim (9001)",
+       "WASM Sim (9002)"
+   };
 
    protected MidiStudioExtension(
          final MidiStudioExtensionDefinition definition,
@@ -33,11 +39,19 @@ public class MidiStudioExtension extends ControllerExtension {
    public void init() {
       final ControllerHost host = getHost();
 
-      // Bridge port setting (allows multiple instances with different ports)
-      // Convention: 9000=hardware, 9001=native sim, 9002=wasm sim
-      final SettableRangedValue bridgePortSetting = host.getPreferences()
-         .getNumberSetting("Bridge Port", "Connection", 9000, 9002, 1, "", 9000);
-      final int bridgePort = (int) bridgePortSetting.getRaw();
+      // Bridge mode setting (dropdown: Hardware/Native/WASM)
+      // Enum settings work correctly with .get() during init (unlike number settings with .getRaw())
+      final SettableEnumValue bridgeModeSetting = host.getPreferences()
+         .getEnumSetting("Bridge Mode", "Connection", BRIDGE_MODES, "Hardware (9000)");
+      bridgeModeSetting.markInterested();
+
+      // Parse port from enum setting
+      final int bridgePort = switch(bridgeModeSetting.get()) {
+          case "Hardware (9000)" -> 9000;
+          case "Native Sim (9001)" -> 9001;
+          case "WASM Sim (9002)" -> 9002;
+          default -> 9000;
+      };
 
       Transport transport = host.createTransport();
 
