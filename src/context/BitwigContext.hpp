@@ -53,9 +53,10 @@
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/IView.hpp>
 
+#include <oc/context/OverlayManager.hpp>
+
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
-#include <state/OverlayManager.hpp>
 
 // Include all handlers (required for unique_ptr with make_unique in templates)
 #include "handler/host/DeviceHostHandler.hpp"
@@ -116,7 +117,6 @@ public:
 
     oc::type::Result<void> init() override;
     void update() override;
-    void cleanup() override;
     const char* getName() const override { return "Bitwig"; }
 
     // =========================================================================
@@ -141,8 +141,11 @@ public:
     BitwigProtocol& protocol() { return *protocol_; }
     const BitwigProtocol& protocol() const { return *protocol_; }
 
-    core::state::OverlayManager<bitwig::ui::OverlayType>& overlays() { return *overlay_controller_; }
-    const core::state::OverlayManager<bitwig::ui::OverlayType>& overlays() const { return *overlay_controller_; }
+    oc::context::OverlayManager<bitwig::ui::OverlayType>& overlays() { return *overlay_controller_; }
+    const oc::context::OverlayManager<bitwig::ui::OverlayType>& overlays() const { return *overlay_controller_; }
+
+protected:
+    void onCleanup() override;
 
 private:
     void createProtocol();
@@ -157,7 +160,7 @@ private:
 
     state::BitwigState state_;
     std::unique_ptr<BitwigProtocol> protocol_;
-    std::unique_ptr<core::state::OverlayManager<bitwig::ui::OverlayType>> overlay_controller_;
+    std::unique_ptr<oc::context::OverlayManager<bitwig::ui::OverlayType>> overlay_controller_;
 
     // Host Handlers (protocol → state)
     std::unique_ptr<handler::PluginHostHandler> host_plugin_;

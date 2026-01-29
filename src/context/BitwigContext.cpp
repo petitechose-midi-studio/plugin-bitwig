@@ -53,8 +53,15 @@ void BitwigContext::update() {
     // Only need to check host timeout here if implemented
 }
 
-void BitwigContext::cleanup() {
+void BitwigContext::onCleanup() {
     OC_LOG_INFO("BitwigContext cleanup");
+
+    // Ensure overlay stack is reset while UI objects are still alive.
+    if (overlay_controller_) {
+        overlay_controller_->hideAll();
+    } else {
+        state_.overlays.hideAll();
+    }
 
     // Destroy in reverse order of creation
 
@@ -131,7 +138,14 @@ void BitwigContext::createHostHandlers() {
     host_page_ = std::make_unique<handler::PageHostHandler>(state_, *protocol_, encoders());
     host_remote_control_ = std::make_unique<handler::RemoteControlHostHandler>(state_, *protocol_, encoders());
     host_last_clicked_ = std::make_unique<handler::LastClickedHostHandler>(state_, *protocol_, encoders());
-    host_midi_ = std::make_unique<handler::MidiHostHandler>(state_, midi());
+
+    host_midi_ = std::make_unique<handler::MidiHostHandler>(state_);
+    onMidiNoteOn([this](uint8_t ch, uint8_t note, uint8_t vel) {
+        if (host_midi_) host_midi_->onNoteOn(ch, note, vel);
+    });
+    onMidiNoteOff([this](uint8_t ch, uint8_t note, uint8_t vel) {
+        if (host_midi_) host_midi_->onNoteOff(ch, note, vel);
+    });
 }
 
 void BitwigContext::createOverlayManager() {
@@ -139,7 +153,7 @@ void BitwigContext::createOverlayManager() {
     using ButtonID = Config::ButtonID;
 
     // Create manager wrapping the state's ExclusiveVisibilityStack
-    overlay_controller_ = std::make_unique<core::state::OverlayManager<bitwig::ui::OverlayType>>(state_.overlays, buttons());
+    overlay_controller_ = std::make_unique<oc::context::OverlayManager<bitwig::ui::OverlayType>>(state_.overlays, buttons());
 
     // Get scope IDs from overlay elements
     lv_obj_t* deviceSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getDeviceSelectorElement() : nullptr;
@@ -180,9 +194,6 @@ void BitwigContext::createOverlayManager() {
             static_cast<oc::type::ButtonID>(ButtonID::LEFT_TOP)
         );
     }
-
-    // Connect authority resolver to InputBinding for automatic scope filtering
-    buttons().setAuthorityResolver(&overlay_controller_->authority());
 
     OC_LOG_INFO("OverlayManager created with {} overlays registered", 4);
 }

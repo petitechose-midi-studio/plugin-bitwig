@@ -52,11 +52,12 @@ public:
         }
     }
 
-    void cleanup() override {
+    const char* getName() const override { return "BitwigBoot"; }
+
+protected:
+    void onCleanup() override {
         splash_.reset();
     }
-
-    const char* getName() const override { return "BitwigBoot"; }
 
 private:
     static constexpr uint32_t DURATION_MS = 1500;
