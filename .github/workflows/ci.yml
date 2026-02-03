@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware_release:
+    name: firmware (release)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin-bitwig
+        uses: actions/checkout@v4
+        with:
+          path: src/midi-studio/plugin-bitwig
+
+      - name: Checkout core (for ms-core + oc-sdk.ini)
+        uses: actions/checkout@v4
+        with:
+          repository: petitechose-midi-studio/core
+          ref: main
+          path: src/midi-studio/core
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install PlatformIO
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install platformio
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+          key: ${{ runner.os }}-platformio-${{ hashFiles('src/midi-studio/plugin-bitwig/platformio.ini', 'src/midi-studio/core/oc-sdk.ini') }}
+
+      - name: Build
+        shell: bash
+        working-directory: src/midi-studio/plugin-bitwig
+        run: |
+          set -euo pipefail
+          python -m platformio run -e release
+
+  bwextension:
+    name: bwextension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin-bitwig
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build
+        shell: bash
+        working-directory: host
+        run: |
+          set -euo pipefail
+          mvn package -Pmanual -Dmaven.compiler.release=21
