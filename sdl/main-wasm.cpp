@@ -10,6 +10,7 @@
 
 #include "entry/MidiDefaults.hpp"
 #include "entry/SdlRunLoop.hpp"
+#include "entry/BridgeArgs.hpp"
 #include "entry/WasmArgs.hpp"
 
 #include <oc/hal/sdl/Sdl.hpp>
@@ -28,16 +29,17 @@ int main(int argc, char** argv) {
     }
 
     const auto midi = ms::wasm::parse_midi_args(argc, argv);
+    const auto ws_url = ms::bridge::ws_url(argc, argv, "ws://localhost:8101");
 
     // Build application with MIDI + WebSocket (for oc-bridge communication)
-    // Connects to bridge's controller WebSocket server on port 8001
+    // Connects to bridge's controller WebSocket server (default: 8101, override via --bridge-ws-url)
     // WebMIDI: searches for existing ports matching pattern (no virtual port creation)
     static oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
             ms::midi::make_wasm_config("MIDI Studio WASM", midi.in, midi.out)))
         .remote(std::make_unique<oc::hal::net::WebSocketTransport>(
             oc::hal::net::WebSocketConfig{
-                .url = "ws://localhost:8101"  // Controller: bitwig wasm (host: 9002)
+                .url = ws_url  // Controller: bitwig wasm (configurable via --bridge-ws-url)
             }))
         .controllers(env.inputMapper())
         .inputConfig(Config::Input::CONFIG);

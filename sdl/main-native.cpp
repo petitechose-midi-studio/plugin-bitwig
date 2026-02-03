@@ -14,6 +14,7 @@
 
 #include "entry/MidiDefaults.hpp"
 #include "entry/SdlRunLoop.hpp"
+#include "entry/BridgeArgs.hpp"
 
 #include <oc/hal/sdl/Sdl.hpp>
 #include <oc/hal/midi/LibreMidiTransport.hpp>
@@ -29,13 +30,15 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    const int bridge_udp_port = ms::bridge::udp_port(argc, argv, 8001);
+
     oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
             ms::midi::make_native_config("MIDI Studio Native")))
         .remote(std::make_unique<oc::hal::net::UdpTransport>(
             oc::hal::net::UdpConfig{
                 .host = "127.0.0.1",
-                .port = 8001  // Controller: bitwig native (host: 9001)
+                .port = static_cast<uint16_t>(bridge_udp_port)  // --bridge-udp-port
             }))
         .controllers(env.inputMapper())
         .inputConfig(Config::Input::CONFIG);
