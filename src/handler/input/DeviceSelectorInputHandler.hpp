@@ -18,7 +18,7 @@
 
 #include <api/InputAPI.hpp>
 #include <oc/state/Signal.hpp>
-#include <ui/OverlayBindingContext.hpp>
+#include <ms/ui/OverlayBindingContext.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -36,7 +36,7 @@ namespace bitwig::handler {
  */
 class DeviceSelectorInputHandler {
 public:
-    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+    using OverlayCtx = ms::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
 
     DeviceSelectorInputHandler(state::BitwigState& state,
                                OverlayCtx overlayCtx,

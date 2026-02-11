@@ -16,7 +16,7 @@
 #include <oc/ui/lvgl/Screen.hpp>
 
 #include "ui/font/BitwigFonts.hpp"
-#include "ui/font/CoreFonts.hpp"
+#include <ms/ui/font/CoreFonts.hpp>
 #include "ui/splash/SplashView.hpp"
 
 namespace bitwig {

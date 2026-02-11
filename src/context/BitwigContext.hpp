@@ -79,8 +79,8 @@
 #include "ui/mix/MixView.hpp"
 #include "ui/remotecontrols/RemoteControlsView.hpp"
 #include "ui/transportbar/TransportBar.hpp"
-#include "ui/view/ViewSelector.hpp"
-#include <ui/ViewContainer.hpp>
+#include <ms/ui/ViewContainer.hpp>
+#include <ms/ui/widget/StringListSelector.hpp>
 
 namespace bitwig {
 
@@ -183,7 +183,7 @@ private:
     std::unique_ptr<handler::ViewStateInputHandler> input_view_state_;
 
     // UI Container
-    std::unique_ptr<core::ui::ViewContainer> view_container_;
+    std::unique_ptr<ms::ui::ViewContainer> view_container_;
 
     // Views (managed by ViewManager)
     std::unique_ptr<ui::RemoteControlsView> remote_controls_view_;
@@ -194,7 +194,7 @@ private:
     std::unique_ptr<ui::TransportBar> transport_bar_;
 
     // Global overlays
-    std::unique_ptr<ui::ViewSelector> view_selector_;
+    std::unique_ptr<ms::ui::StringListSelector> view_selector_;
     std::vector<oc::state::Subscription> view_selector_subs_;
 };
 
