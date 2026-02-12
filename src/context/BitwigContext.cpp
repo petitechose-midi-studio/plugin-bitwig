@@ -2,10 +2,10 @@
 
 #include <api/InputAPI.hpp>
 #include <oc/log/Log.hpp>
-#include <ui/OverlayBindingContext.hpp>
+#include <ms/ui/OverlayBindingContext.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
 #include <oc/ui/lvgl/Screen.hpp>
-#include <ui/font/CoreFonts.hpp>
+#include <ms/ui/font/CoreFonts.hpp>
 
 #include <config/App.hpp>
 #include "protocol/MessageStructure.hpp"
@@ -199,7 +199,7 @@ void BitwigContext::createOverlayManager() {
 }
 
 void BitwigContext::createInputHandlers() {
-    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+    using OverlayCtx = ms::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
 
     // Scope hierarchy: overlay > view > global
     lv_obj_t* mainZone = view_container_->getMainZone();
@@ -249,7 +249,7 @@ void BitwigContext::createInputHandlers() {
 
 void BitwigContext::createViews() {
     // ViewType is in global scope from protocol/ViewType.hpp
-    view_container_ = std::make_unique<core::ui::ViewContainer>(oc::ui::lvgl::Screen::root());
+    view_container_ = std::make_unique<ms::ui::ViewContainer>(oc::ui::lvgl::Screen::root());
     lv_obj_t* mainZone = view_container_->getMainZone();
 
     // Create all views (they start hidden)
@@ -269,15 +269,16 @@ void BitwigContext::createViews() {
     transport_bar_ = std::make_unique<ui::TransportBar>(view_container_->getBottomZone(), state_.transport);
 
     // Global overlay: ViewSelector (parent = mainZone so it covers views but not TransportBar)
-    view_selector_ = std::make_unique<ui::ViewSelector>(mainZone);
+    view_selector_ = std::make_unique<ms::ui::StringListSelector>(mainZone);
+    view_selector_->setTitle("Select View");
 
     // Setup bindings for ViewSelector rendering
     auto renderViewSelector = [this]() {
         static const std::vector<std::string> VIEW_NAMES = {"Remote Controls", "Mix", "Clip"};
         view_selector_->render({
-            VIEW_NAMES,
-            state_.viewSelector.selectedIndex.get(),
-            state_.viewSelector.visible.get()
+            .items = &VIEW_NAMES,
+            .selectedIndex = state_.viewSelector.selectedIndex.get(),
+            .visible = state_.viewSelector.visible.get()
         });
     };
 

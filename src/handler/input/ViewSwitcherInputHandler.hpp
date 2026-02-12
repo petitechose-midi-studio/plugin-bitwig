@@ -17,7 +17,7 @@
 
 #include <api/InputAPI.hpp>
 #include <oc/state/Signal.hpp>
-#include <ui/OverlayBindingContext.hpp>
+#include <ms/ui/OverlayBindingContext.hpp>
 
 #include "state/BitwigState.hpp"
 
@@ -32,7 +32,7 @@ namespace bitwig::handler {
  */
 class ViewSwitcherInputHandler {
 public:
-    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+    using OverlayCtx = ms::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
 
     ViewSwitcherInputHandler(state::BitwigState& state,
                              OverlayCtx overlayCtx,
