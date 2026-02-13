@@ -30,6 +30,13 @@ jobs:
           ref: main
           path: src/midi-studio/core
 
+      - name: Checkout ui (for ms-ui)
+        uses: actions/checkout@v4
+        with:
+          repository: petitechose-midi-studio/ui
+          ref: main
+          path: src/midi-studio/ui
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:

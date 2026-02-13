@@ -16,7 +16,7 @@
 #include <lvgl.h>
 
 #include <api/InputAPI.hpp>
-#include <ui/OverlayBindingContext.hpp>
+#include <ms/ui/OverlayBindingContext.hpp>
 
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
@@ -32,7 +32,7 @@ namespace bitwig::handler {
  */
 class TrackInputHandler {
 public:
-    using OverlayCtx = core::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
+    using OverlayCtx = ms::ui::OverlayBindingContext<bitwig::ui::OverlayType>;
 
     TrackInputHandler(state::BitwigState& state,
                       OverlayCtx overlayCtx,
