@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
-#include <ui/font/CoreFonts.hpp>
+#include <ms/ui/font/CoreFonts.hpp>
 
 #include "ui/theme/BitwigTheme.hpp"
 
