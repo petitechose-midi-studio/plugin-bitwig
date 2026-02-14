@@ -21,10 +21,8 @@ set(APP_MAIN_WASM "${CMAKE_CURRENT_LIST_DIR}/main-wasm.cpp")
 set(APP_EXTRA_INCLUDES "")
 
 # -----------------------------------------------------------------------------
-# Core sources needed by this plugin
+# Additional sources
 # -----------------------------------------------------------------------------
-set(CORE_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/../../core/src")
-set(APP_EXTRA_SOURCES
-    "${CORE_SRC_DIR}/ui/font/CoreFonts.cpp"
-    "${CORE_SRC_DIR}/ui/ViewContainer.cpp"
-)
+# The shared UI implementation (ms-ui) is already compiled by the common SDL
+# build target (see midi-studio/core/sdl/CMakeLists.txt -> SRC_MS_UI).
+set(APP_EXTRA_SOURCES "")
