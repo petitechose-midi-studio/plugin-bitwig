@@ -5,6 +5,7 @@
 #include <ms/ui/OverlayBindingContext.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
 #include <oc/ui/lvgl/Screen.hpp>
+#include <oc/ui/lvgl/Scope.hpp>
 #include <ms/ui/font/CoreFonts.hpp>
 
 #include <config/App.hpp>
@@ -154,6 +155,11 @@ void BitwigContext::createOverlayManager() {
 
     // Create manager wrapping the state's ExclusiveVisibilityStack
     overlay_controller_ = std::make_unique<oc::context::OverlayManager<bitwig::ui::OverlayType>>(state_.overlays, buttons());
+    overlay_controller_->setActiveViewProvider([this]() -> oc::type::ScopeID {
+        auto* view = state_.views.currentViewPtr();
+        if (!view) return 0;
+        return oc::ui::lvgl::scopeID(view->getElement());
+    });
 
     // Get scope IDs from overlay elements
     lv_obj_t* deviceSelectorOverlay = remote_controls_view_ ? remote_controls_view_->getDeviceSelectorElement() : nullptr;
