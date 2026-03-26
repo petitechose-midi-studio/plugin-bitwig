@@ -22,11 +22,16 @@ import handler.host.*;
 public class MidiStudioExtension extends ControllerExtension {
    private Protocol protocol;
 
-   // Bridge mode setting (enum dropdown)
-   private static final String[] BRIDGE_MODES = {
-       "Hardware (9000)",
-       "Native Sim (9001)",
-       "WASM Sim (9002)"
+   // Explicit bridge port selection keeps multiple extension instances independent.
+   private static final String[] BRIDGE_PORT_OPTIONS = {
+       "9000",
+       "9001",
+       "9002",
+       "9003",
+       "9004",
+       "9005",
+       "9006",
+       "9007"
    };
 
    protected MidiStudioExtension(
@@ -39,19 +44,11 @@ public class MidiStudioExtension extends ControllerExtension {
    public void init() {
       final ControllerHost host = getHost();
 
-      // Bridge mode setting (dropdown: Hardware/Native/WASM)
-      // Enum settings work correctly with .get() during init (unlike number settings with .getRaw())
-      final SettableEnumValue bridgeModeSetting = host.getPreferences()
-         .getEnumSetting("Bridge Mode", "Connection", BRIDGE_MODES, "Hardware (9000)");
-      bridgeModeSetting.markInterested();
-
-      // Parse port from enum setting
-      final int bridgePort = switch(bridgeModeSetting.get()) {
-          case "Hardware (9000)" -> 9000;
-          case "Native Sim (9001)" -> 9001;
-          case "WASM Sim (9002)" -> 9002;
-          default -> 9000;
-      };
+      // Enum settings are stable during init, unlike ranged values that can lag on first read.
+      final SettableEnumValue bridgePortSetting = host.getPreferences()
+         .getEnumSetting("Bridge Port", "Connection", BRIDGE_PORT_OPTIONS, "9000");
+      bridgePortSetting.markInterested();
+      final int bridgePort = Integer.parseInt(bridgePortSetting.get());
 
       Transport transport = host.createTransport();
 

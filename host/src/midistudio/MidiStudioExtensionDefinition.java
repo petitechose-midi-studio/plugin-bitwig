@@ -61,12 +61,13 @@ public class MidiStudioExtensionDefinition extends ControllerExtensionDefinition
    @Override
    public void listAutoDetectionMidiPortNames(final AutoDetectionMidiPortNamesList list,
          final PlatformType platformType) {
-      // Port naming convention: "MIDI Studio [type] <IN/OUT>"
-      // Types: [hw] = Teensy hardware, [native] = desktop dev, [wasm] = browser dev
-      // Alphabetical order: [hw] < [native] < [wasm]
-
-      // Hardware (Teensy USB MIDI) - single bidirectional port
-      list.add(new String[] { "MIDI Studio [hw]" }, new String[] { "MIDI Studio [hw]" });
+      // Keep hardware MIDI ports manual.
+      //
+      // Multiple hardware controllers expose the same USB MIDI display name
+      // ("MIDI Studio [hw]"), so name-based auto-detection is ambiguous.
+      // The extension still requests one MIDI input and one MIDI output so
+      // future note/CC features remain available, but the user must assign the
+      // hardware ports explicitly for multi-controller setups.
 
       // Native desktop (virtual ports via libremidi)
       list.add(new String[] { "MIDI Studio [native] IN" }, new String[] { "MIDI Studio [native] OUT" });

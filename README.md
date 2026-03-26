@@ -184,6 +184,10 @@ oc-bridge
 oc-bridge --headless
 ```
 
+For multi-controller development, prefer launching `oc-bridge` through `ms-manager`.
+`ms-manager` persists one bridge binding per controller USB serial, which stays reliable
+even when Windows renumbers the serial `COM` port.
+
 ### 5. Activate in Bitwig
 
 1. Settings → Controllers → Add controller
@@ -191,7 +195,22 @@ oc-bridge --headless
 
    ![Extension Selection](asset/extension_select.png)
 
-3. Extension shows "MIDI Studio : Connected"
+3. In the controller preferences, set `Bridge Port` to the UDP port of the target bridge instance
+4. If you need hardware MIDI notes or CC, assign the hardware MIDI input/output ports manually
+5. Extension shows "MIDI Studio : Connected"
+
+### MIDI and Multi-Instance Notes
+
+- The Bitwig extension intentionally keeps one MIDI input and one MIDI output.
+- These MIDI ports are not the main sync transport. Main controller communication still goes through `oc-bridge` over UDP.
+- They stay exposed so future hardware features can send and receive notes/CC in parallel with bridge communication.
+- Hardware MIDI auto-detection is intentionally disabled for `MIDI Studio [hw]` because identical controllers expose the same display name, which makes name-based matching ambiguous.
+- Native and WASM virtual ports still use auto-detection because their port names remain stable enough for development.
+- For multiple hardware controllers, the reliable setup is:
+  - bind each `oc-bridge` instance to one controller USB serial in `ms-manager`
+  - give each bridge instance a dedicated UDP port
+  - choose that UDP port in the Bitwig extension `Bridge Port` preference
+  - assign hardware MIDI ports manually in Bitwig when note/CC routing is needed
 
 ## Protocol
 
@@ -354,6 +373,14 @@ Check Java version: `java -version` (should be 21)
 3. Check Bitwig extension is active (logs show "Connected")
 4. Regenerate protocol: `./script/protocol/generate_protocol.sh`
 5. Rebuild both: `mvn package && pio run -t upload`
+
+### Multiple hardware controllers connected
+
+1. Check each controller has a distinct USB serial in `ms-manager`
+2. Check each bridge instance is bound to the expected controller serial
+3. Check each bridge instance uses a different UDP port
+4. Check each Bitwig controller instance selects the matching `Bridge Port`
+5. If MIDI notes/CC are involved, assign the hardware MIDI ports manually instead of relying on auto-detection
 
 ### Maven "Guice/Unsafe" warnings
 
