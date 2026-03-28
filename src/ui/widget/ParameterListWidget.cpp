@@ -35,8 +35,8 @@ void ParameterListWidget::createUI(lv_coord_t width, lv_coord_t height) {
     // Value label inside enum widget's inner area (flex column: line + label)
     value_label_ = std::make_unique<oc::ui::lvgl::Label>(enum_widget_->inner());
     value_label_->alignment(LV_TEXT_ALIGN_CENTER)
-                .color(color::TEXT_PRIMARY)
-                .font(bitwig_fonts.param_label)
+                .color(color::KNOB_VALUE_INDICATOR)
+                .font(bitwig_fonts.param_value_label)
                 .ownsLvglObjects(false);
     // Flex handles vertical stacking and centering
 

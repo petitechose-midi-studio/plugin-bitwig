@@ -38,7 +38,7 @@ void BaseParameterWidget::createNameLabel() {
     // Use framework Label widget with auto-scroll for overflow text
     name_label_ = std::make_unique<oc::ui::lvgl::Label>(container_);
     name_label_->alignment(LV_TEXT_ALIGN_CENTER)
-               .color(color::TEXT_PRIMARY)
+               .color(color::INACTIVE_LIGHTER)
                .font(bitwig_fonts.param_label)
                .ownsLvglObjects(false);
 

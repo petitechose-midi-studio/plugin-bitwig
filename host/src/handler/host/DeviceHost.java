@@ -58,12 +58,14 @@ public class DeviceHost {
     private final String[] pendingDisplayValues = new String[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] previousIsModulated = new boolean[BitwigConfig.MAX_PARAMETERS];
     private final boolean[] hasAutomationState = new boolean[BitwigConfig.MAX_PARAMETERS];
+    private final boolean[] modulationVisible = new boolean[BitwigConfig.MAX_PARAMETERS];
     private int valuesDirtyMask = 0;  // Bit mask: which parameter values changed
     private int valuesEchoMask = 0;   // Bit mask: which parameters are echoes
     private boolean batchDirty = false; // True if any value or modulated value changed
 
     // Pre-allocated String array for display values (avoid null in message)
     private final String[] batchDisplayValues = new String[BitwigConfig.MAX_PARAMETERS];
+    private final float[] batchModulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
 
     public DeviceHost(
         ControllerHost host,
@@ -145,13 +147,14 @@ public class DeviceHost {
         int hasAutomationMask = 0;
         for (int i = 0; i < BitwigConfig.MAX_PARAMETERS; i++) {
             batchDisplayValues[i] = pendingDisplayValues[i] != null ? pendingDisplayValues[i] : "";
+            batchModulatedValues[i] = modulationVisible[i] ? modulatedValues[i] : pendingValues[i];
             if (hasAutomationState[i]) {
                 hasAutomationMask |= (1 << i);
             }
         }
 
         // Send single combined message - zero allocation (arrays passed directly)
-        protocol.deviceRemoteControlsBatch(0, valuesDirtyMask, valuesEchoMask, hasAutomationMask, pendingValues, modulatedValues, batchDisplayValues);
+        protocol.deviceRemoteControlsBatch(0, valuesDirtyMask, valuesEchoMask, hasAutomationMask, pendingValues, batchModulatedValues, batchDisplayValues);
 
         // Reset masks
         valuesDirtyMask = 0;
@@ -290,7 +293,9 @@ public class DeviceHost {
             param.modulatedValue().addValueObserver(modulatedValue -> {
                 if (deviceChangePending) return;  // Skip - DevicePageChangeMessage will contain modulated values
                 modulatedValues[paramIndex] = (float) modulatedValue;
-                batchDirty = true;  // Mark for next batch tick
+                if (modulationVisible[paramIndex]) {
+                    batchDirty = true;  // Only repaint modulation while it is explicitly revealed
+                }
             });
 
             // Origin observer - sends lightweight origin-only message
@@ -354,6 +359,22 @@ public class DeviceHost {
 
     public void setDeviceController(DeviceController deviceController) {
         this.deviceController = deviceController;
+    }
+
+    public void setParameterModulationVisible(int paramIndex, boolean visible) {
+        if (paramIndex < 0 || paramIndex >= BitwigConfig.MAX_PARAMETERS) {
+            return;
+        }
+        if (modulationVisible[paramIndex] == visible) {
+            return;
+        }
+
+        modulationVisible[paramIndex] = visible;
+
+        if (visible) {
+            modulatedValues[paramIndex] = (float) remoteControls.getParameter(paramIndex).modulatedValue().get();
+        }
+        batchDirty = true;
     }
 
     /**

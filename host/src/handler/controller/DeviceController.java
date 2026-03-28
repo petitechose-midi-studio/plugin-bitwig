@@ -147,6 +147,9 @@ public class DeviceController {
 
             touchState[paramIndex] = isTouched;
             RemoteControl param = remoteControls.getParameter(paramIndex);
+            if (deviceHost != null) {
+                deviceHost.setParameterModulationVisible(paramIndex, isTouched);
+            }
 
             if (isTouched) {
                 transport.isClipLauncherAutomationWriteEnabled().set(true);

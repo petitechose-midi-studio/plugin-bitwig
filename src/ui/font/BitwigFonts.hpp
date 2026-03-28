@@ -21,8 +21,7 @@ struct BitwigFonts {
     lv_font_t* device_label = nullptr;  // Semibold (list_item_label)
     lv_font_t* page_label = nullptr;    // Regular
     lv_font_t* param_label = nullptr;   // Regular
-
-    const lv_font_t* lvgl_symbols = nullptr;
+    lv_font_t* param_value_label = nullptr;  // Smaller, bolder value text
 };
 
 extern BitwigFonts bitwig_fonts;

@@ -26,6 +26,6 @@ void linkBitwigFontAliases() {
     bitwig_fonts.track_label = fonts.list_item_label;
     bitwig_fonts.device_label = fonts.list_item_label;
     bitwig_fonts.page_label = fonts.inter_14_regular;
-    bitwig_fonts.param_label = fonts.inter_14_regular;
-    bitwig_fonts.lvgl_symbols = &lv_font_montserrat_12;
+    bitwig_fonts.param_label = fonts.inter_13_medium;
+    bitwig_fonts.param_value_label = fonts.inter_12_medium;
 }

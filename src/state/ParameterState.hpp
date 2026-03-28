@@ -37,6 +37,7 @@ struct ParameterSlot {
     Signal<float> modulationOffset{0.0f}; // Offset from value (modulatedValue = value + offset)
     Signal<bool> isModulated{false};      // True when modulation is active (automation, LFO, etc.)
     Signal<bool> hasAutomation{false};    // True when parameter has automation data
+    Signal<bool> showModulation{false};   // True while the parameter button is held
     SignalLabel name;
     SignalTiny displayValue;
 
@@ -57,6 +58,7 @@ struct ParameterSlot {
         modulationOffset.set(0.0f);
         isModulated.set(false);
         hasAutomation.set(false);
+        showModulation.set(false);
         name.set("");
         displayValue.set("");
         type.set(ParameterType::KNOB);

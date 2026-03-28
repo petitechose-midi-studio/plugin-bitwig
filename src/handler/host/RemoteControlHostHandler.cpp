@@ -107,6 +107,13 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
                 if (msg.dirtyMask & (1 << i)) {
                     bool isEcho = msg.echoMask & (1 << i);
 
+                    // Always update the formatted display value from host when available.
+                    // For KNOB echoes we keep the optimistic numeric value, but we still need
+                    // the authoritative Bitwig-formatted string for the centered text.
+                    if (!msg.displayValues[i].empty()) {
+                        slot.displayValue.set(msg.displayValues[i].c_str());
+                    }
+
                     if (isEcho) {
                         // Echo: skip value update for KNOB (optimistic already applied)
                         if (slot.type.get() == ParameterType::KNOB) continue;
@@ -117,7 +124,7 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
                     // Update value
                     slot.value.set(value);
 
-                    // For LIST/BUTTON parameters: update currentValueIndex and displayValue
+                    // For LIST/BUTTON parameters: update currentValueIndex
                     auto paramType = slot.type.get();
                     if (paramType == ParameterType::LIST || paramType == ParameterType::BUTTON) {
                         int16_t count = slot.discreteCount.get();
@@ -126,10 +133,6 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
                             int index = static_cast<int>(std::round(value * (count - 1)));
                             index = std::clamp(index, 0, count - 1);
                             slot.currentValueIndex.set(static_cast<uint8_t>(index));
-                        }
-                        // Update displayValue from batch (sent by host with correct value from Bitwig)
-                        if (!msg.displayValues[i].empty()) {
-                            slot.displayValue.set(msg.displayValues[i].c_str());
                         }
                     }
 

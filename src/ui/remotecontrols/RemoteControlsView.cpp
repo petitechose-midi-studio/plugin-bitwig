@@ -142,6 +142,7 @@ void RemoteControlsView::setupBindings() {
         paramGroup.watch(slot.origin);
         paramGroup.watch(slot.modulationOffset);
         paramGroup.watch(slot.isModulated);
+        paramGroup.watch(slot.showModulation);
         paramGroup.watch(slot.hasAutomation);
     }
 
@@ -283,9 +284,12 @@ void RemoteControlsView::updateParameter(uint8_t index) {
     if (type == ParameterType::KNOB) {
         auto* knob = static_cast<ParameterKnobWidget*>(widgets_[index].get());
         knob->setOrigin(slot.origin.get());
-        knob->setIsModulated(slot.isModulated.get());  // Controls ribbon visibility
-        // Ribbon = value + offset (follows optimistic updates)
-        knob->setModulatedValue(slot.value.get() + slot.modulationOffset.get());
+        const bool showModulation = slot.showModulation.get();
+        knob->setIsModulated(slot.isModulated.get() && showModulation);
+        if (showModulation) {
+            // Ribbon = value + offset (follows optimistic updates)
+            knob->setModulatedValue(slot.value.get() + slot.modulationOffset.get());
+        }
     }
 
     // Update discrete metadata for button/list widgets

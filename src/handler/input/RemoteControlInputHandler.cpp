@@ -71,6 +71,7 @@ void RemoteControlInputHandler::handleValueChange(uint8_t index, float value) {
 void RemoteControlInputHandler::sendTouch(uint8_t index, bool touched) {
     if (index >= PARAMETER_COUNT) return;
 
+    state_.parameters.slots[index].showModulation.set(touched);
     protocol_.deviceRemoteControlTouch(index, touched);
 }
 

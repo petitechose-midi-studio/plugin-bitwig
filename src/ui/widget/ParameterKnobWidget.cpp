@@ -1,5 +1,6 @@
 #include "ParameterKnobWidget.hpp"
 
+#include "ui/font/BitwigFonts.hpp"
 #include "ui/theme/BitwigTheme.hpp"
 
 using namespace bitwig::theme;
@@ -22,11 +23,13 @@ void ParameterKnobWidget::createUI(lv_coord_t width, lv_coord_t height, bool cen
     // Knob widget - stretch horizontally, CONTENT row sizes to knob height
     knob_ = std::make_unique<oc::ui::lvgl::KnobWidget>(container_);
     knob_->sizeMode(oc::ui::lvgl::SizeMode::SquareFromWidth)  // Explicit: height = width
+        .renderProfile(oc::ui::lvgl::KnobRenderProfile::ArcOnly)
         .centered(centered)
         .bgColor(color::KNOB_BACKGROUND)
         .trackColor(color::KNOB_VALUE_RIBBON)
         .valueColor(color::KNOB_VALUE_INDICATOR)
-        .ribbonThickness(0.3)
+        .centerTextFont(bitwig_fonts.param_value_label)
+        .ribbonThickness(1.0)
         .flashColor(color::DATA_ACTIVE);
     lv_obj_set_grid_cell(knob_->getElement(),
         LV_GRID_ALIGN_STRETCH, 0, 1,  // Horizontal: stretch to get width
@@ -45,8 +48,10 @@ void ParameterKnobWidget::setValue(float value) {
 }
 
 void ParameterKnobWidget::setValueWithDisplay(float value, const char* displayValue) {
-    (void)displayValue;
     setValue(value);
+    if (knob_) {
+        knob_->setCenterText(displayValue);
+    }
 }
 
 void ParameterKnobWidget::setOrigin(float origin) {
