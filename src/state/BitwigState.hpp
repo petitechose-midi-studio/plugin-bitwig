@@ -45,7 +45,7 @@
 #include "SelectorState.hpp"
 #include "TransportState.hpp"
 #include "protocol/ViewType.hpp"
-#include <state/ViewManager.hpp>
+#include "ViewManager.hpp"
 
 namespace bitwig::state {
 
@@ -97,7 +97,7 @@ struct BitwigState {
     // =========================================================================
     // View Manager (handles view switching)
     // =========================================================================
-    core::state::ViewManager<ViewType, ViewType::REMOTE_CONTROLS> views;
+    ViewManager<ViewType, ViewType::REMOTE_CONTROLS> views;
 
     // =========================================================================
     // Lifecycle
