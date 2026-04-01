@@ -12,7 +12,6 @@
 #include <array>
 #include <string>
 
-#include <oc/state/Signal.hpp>
 #include <oc/state/SignalString.hpp>
 #include <oc/state/SignalVector.hpp>
 
@@ -40,12 +39,12 @@ using oc::state::SignalVector;
  */
 struct PageSelectorState {
     SignalVector<std::string, MAX_PAGES> names;  // Accumulated cache
-    Signal<int> selectedIndex{0};
-    Signal<bool> visible{false};
+    Signal<int, 4> selectedIndex{0};
+    Signal<bool, 6> visible{false};
 
     // Windowed loading state
-    Signal<uint8_t> totalCount{0};   // Total pages (absolute, from host)
-    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
+    Signal<uint8_t, 4> totalCount{0};   // Total pages (absolute, from host)
+    Signal<uint8_t, 4> loadedUpTo{0};   // Highest loaded index (for prefetch)
 
     void reset() {
         names.clear();
@@ -83,17 +82,17 @@ struct DeviceSelectorState {
     SignalVector<std::string, MAX_CHILDREN> childrenNames;
     SignalVector<uint8_t, MAX_CHILDREN> childrenTypes;
 
-    Signal<int> currentIndex{0};
-    Signal<int> activeDeviceIndex{0};
-    Signal<bool> isNested{false};
-    Signal<bool> showingChildren{false};
-    Signal<bool> showFooter{false};
-    Signal<bool> visible{false};
+    Signal<int, 4> currentIndex{0};
+    Signal<int, 4> activeDeviceIndex{0};
+    Signal<bool, 4> isNested{false};
+    Signal<bool, 4> showingChildren{false};
+    Signal<bool, 4> showFooter{false};
+    Signal<bool, 6> visible{false};
 
     // Windowed loading state
-    Signal<uint8_t> totalCount{0};   // Total devices (absolute, from host)
-    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
-    Signal<bool> loading{false};     // True while waiting for host response
+    Signal<uint8_t, 4> totalCount{0};   // Total devices (absolute, from host)
+    Signal<uint8_t, 4> loadedUpTo{0};   // Highest loaded index (for prefetch)
+    Signal<bool, 4> loading{false};     // True while waiting for host response
 
     void reset() {
         names.clear();
@@ -138,14 +137,14 @@ struct TrackSelectorState {
     std::array<Signal<bool>, MAX_TRACKS> muteStates{};
     std::array<Signal<bool>, MAX_TRACKS> soloStates{};
 
-    Signal<int> currentIndex{0};
-    Signal<int> activeTrackIndex{0};
-    Signal<bool> isNested{false};
-    Signal<bool> visible{false};
+    Signal<int, 4> currentIndex{0};
+    Signal<int, 4> activeTrackIndex{0};
+    Signal<bool, 4> isNested{false};
+    Signal<bool, 6> visible{false};
 
     // Windowed loading state
-    Signal<uint8_t> totalCount{0};   // Total tracks (absolute, from host)
-    Signal<uint8_t> loadedUpTo{0};   // Highest loaded index (for prefetch)
+    Signal<uint8_t, 4> totalCount{0};   // Total tracks (absolute, from host)
+    Signal<uint8_t, 4> loadedUpTo{0};   // Highest loaded index (for prefetch)
 
     void reset() {
         names.clear();
@@ -186,8 +185,8 @@ struct CurrentTrackState {
  * @brief State for view selector overlay
  */
 struct ViewSelectorState {
-    Signal<int> selectedIndex{0};
-    Signal<bool> visible{false};
+    Signal<int, 4> selectedIndex{0};
+    Signal<bool, 6> visible{false};
 
     void reset() {
         selectedIndex.set(0);

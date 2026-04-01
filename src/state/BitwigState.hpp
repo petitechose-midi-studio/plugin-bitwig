@@ -104,6 +104,31 @@ struct BitwigState {
     // =========================================================================
 
     BitwigState() {
+        pageSelector.selectedIndex.setDebugLabel("bitwig.pageSelector.selectedIndex");
+        pageSelector.visible.setDebugLabel("bitwig.pageSelector.visible");
+        pageSelector.totalCount.setDebugLabel("bitwig.pageSelector.totalCount");
+        pageSelector.loadedUpTo.setDebugLabel("bitwig.pageSelector.loadedUpTo");
+
+        deviceSelector.currentIndex.setDebugLabel("bitwig.deviceSelector.currentIndex");
+        deviceSelector.activeDeviceIndex.setDebugLabel("bitwig.deviceSelector.activeDeviceIndex");
+        deviceSelector.isNested.setDebugLabel("bitwig.deviceSelector.isNested");
+        deviceSelector.showingChildren.setDebugLabel("bitwig.deviceSelector.showingChildren");
+        deviceSelector.showFooter.setDebugLabel("bitwig.deviceSelector.showFooter");
+        deviceSelector.visible.setDebugLabel("bitwig.deviceSelector.visible");
+        deviceSelector.totalCount.setDebugLabel("bitwig.deviceSelector.totalCount");
+        deviceSelector.loadedUpTo.setDebugLabel("bitwig.deviceSelector.loadedUpTo");
+        deviceSelector.loading.setDebugLabel("bitwig.deviceSelector.loading");
+
+        trackSelector.currentIndex.setDebugLabel("bitwig.trackSelector.currentIndex");
+        trackSelector.activeTrackIndex.setDebugLabel("bitwig.trackSelector.activeTrackIndex");
+        trackSelector.isNested.setDebugLabel("bitwig.trackSelector.isNested");
+        trackSelector.visible.setDebugLabel("bitwig.trackSelector.visible");
+        trackSelector.totalCount.setDebugLabel("bitwig.trackSelector.totalCount");
+        trackSelector.loadedUpTo.setDebugLabel("bitwig.trackSelector.loadedUpTo");
+
+        viewSelector.selectedIndex.setDebugLabel("bitwig.viewSelector.selectedIndex");
+        viewSelector.visible.setDebugLabel("bitwig.viewSelector.visible");
+
         // Register overlays for centralized management
         overlays.registerItem(ui::OverlayType::PAGE_SELECTOR, pageSelector.visible);
         overlays.registerItem(ui::OverlayType::DEVICE_SELECTOR, deviceSelector.visible);
