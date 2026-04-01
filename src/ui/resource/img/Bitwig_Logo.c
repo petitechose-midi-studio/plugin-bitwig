@@ -11,6 +11,10 @@
 
 #ifdef ARDUINO
 #include <avr/pgmspace.h>  // For PROGMEM definition
+#else
+#ifndef PROGMEM
+#define PROGMEM
+#endif
 #endif
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
