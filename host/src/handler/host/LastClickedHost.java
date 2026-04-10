@@ -1,6 +1,7 @@
 package handler.host;
 
 import com.bitwig.extension.controller.api.*;
+import config.BitwigConfig;
 import protocol.Protocol;
 import protocol.ParameterType;
 import handler.controller.LastClickedController;
@@ -20,6 +21,9 @@ public class LastClickedHost {
     private LastClickedController lastClickedController;
 
     private String lastParamName = "";
+    private float lastSentValueState = 0.0f;
+    private String lastSentDisplayValue = "";
+    private boolean hasLastSentValueState = false;
 
     public LastClickedHost(ControllerHost host, Protocol protocol) {
         this.protocol = protocol;
@@ -66,10 +70,14 @@ public class LastClickedHost {
         // Only send for host-initiated changes (not echoes from controller)
         lastClicked.parameter().displayedValue().addValueObserver(displayValue -> {
             if (!lastClicked.parameter().exists().get()) return;
-            if (lastClickedController != null && lastClickedController.consumeEcho()) return;
+            float value = (float) lastClicked.parameter().value().get();
+            if (lastClickedController != null && lastClickedController.consumeEcho(value)) return;
+            if (!shouldSendValueState(value, displayValue)) return;
 
-            double value = lastClicked.parameter().value().get();
-            protocol.lastClickedValueState((float) value, displayValue);
+            protocol.lastClickedValueState(value, displayValue);
+            lastSentValueState = value;
+            lastSentDisplayValue = displayValue;
+            hasLastSentValueState = true;
         });
     }
 
@@ -124,6 +132,8 @@ public class LastClickedHost {
             (short) discreteCount,
             currentValueIndex
         );
+
+        hasLastSentValueState = false;
     }
 
     /**
@@ -140,5 +150,14 @@ public class LastClickedHost {
             (short) 0,
             0
         );
+        hasLastSentValueState = false;
+        lastSentDisplayValue = "";
+    }
+
+    private boolean shouldSendValueState(float value, String displayValue) {
+        if (!hasLastSentValueState) return true;
+
+        return Math.abs(value - lastSentValueState) >= BitwigConfig.LAST_CLICKED_ECHO_EPSILON
+            || !displayValue.equals(lastSentDisplayValue);
     }
 }

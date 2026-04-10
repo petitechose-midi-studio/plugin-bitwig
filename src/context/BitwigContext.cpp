@@ -50,8 +50,9 @@ oc::type::Result<void> BitwigContext::init() {
 }
 
 void BitwigContext::update() {
-    // Handlers and views are self-updating via Signal subscriptions
-    // Only need to check host timeout here if implemented
+    if (input_last_clicked_) {
+        input_last_clicked_->flushPending();
+    }
 }
 
 void BitwigContext::onCleanup() {

@@ -103,6 +103,9 @@ public final class BitwigConfig {
      */
     public static final int ECHO_TIMEOUT_MS = STANDARD_DELAY_MS;
 
+    /** Value proximity threshold used for last-clicked echo suppression/deduplication. */
+    public static final float LAST_CLICKED_ECHO_EPSILON = 0.0025f;
+
     /**
      * Timeout for mute/solo toggle confirmation.
      * If observer doesn't fire within this window, pending state expires.

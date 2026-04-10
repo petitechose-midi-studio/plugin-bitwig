@@ -1,6 +1,9 @@
 #include "LastClickedHostHandler.hpp"
 
+#include <cmath>
+
 #include <config/App.hpp>
+#include "config/LastClickedConfig.hpp"
 #include "handler/InputUtils.hpp"
 
 namespace bitwig::handler {
@@ -46,11 +49,14 @@ void LastClickedHostHandler::handleLastClickedUpdate(const LastClickedUpdateMess
 
 void LastClickedHostHandler::handleLastClickedValueState(const LastClickedValueStateMessage& msg) {
     auto& lc = state_.lastClicked;
+    const float previousValue = lc.value.get();
 
     lc.value.set(msg.parameterValue);
     lc.displayValue.set(msg.displayValue);
 
-    encoders_.setPosition(EncoderID::OPT, msg.parameterValue);
+    if (std::abs(previousValue - msg.parameterValue) >= config::LastClickedConfig::POSITION_RESYNC_EPSILON) {
+        encoders_.setPosition(EncoderID::OPT, msg.parameterValue);
+    }
 }
 
 }  // namespace bitwig::handler
