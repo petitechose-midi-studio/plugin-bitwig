@@ -14,72 +14,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  firmware_release:
-    name: firmware (release)
+  bitwig_release:
+    name: bitwig (workspace release + extension)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - name: Checkout plugin-bitwig
+      - name: Checkout ms-dev-env
         uses: actions/checkout@v4
         with:
-          path: src/midi-studio/plugin-bitwig
-
-      - name: Checkout core (for ms-core + oc-sdk.ini)
-        uses: actions/checkout@v4
-        with:
-          repository: petitechose-midi-studio/core
+          repository: petitechose-midi-studio/ms-dev-env
           ref: main
-          path: src/midi-studio/core
-
-      - name: Checkout ui (for ms-ui)
-        uses: actions/checkout@v4
-        with:
-          repository: petitechose-midi-studio/ui
-          ref: main
-          path: src/midi-studio/ui
+          path: workspace
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      - name: Install PlatformIO
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          python -m pip install platformio
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
         with:
-          path: |
-            ~/.platformio
-          key: ${{ runner.os }}-platformio-${{ hashFiles('src/midi-studio/plugin-bitwig/platformio.ini', 'src/midi-studio/core/oc-sdk.ini') }}
+          enable-cache: true
 
-      - name: Build
+      - name: Sync Python deps
         shell: bash
-        working-directory: src/midi-studio/plugin-bitwig
+        working-directory: workspace
         run: |
           set -euo pipefail
-          python -m platformio run -e release
+          uv sync --frozen --extra dev
 
-  bwextension:
-    name: bwextension
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout plugin-bitwig
+      - name: Sync workspace repos
+        shell: bash
+        working-directory: workspace
+        run: |
+          set -euo pipefail
+          uv run ms sync --repos
+
+      - name: Checkout plugin-bitwig under test
         uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
+          path: workspace/midi-studio/plugin-bitwig
 
-      - name: Build
+      - name: Sync workspace tools
         shell: bash
-        working-directory: host
+        working-directory: workspace
         run: |
           set -euo pipefail
-          mvn package -Pmanual -Dmaven.compiler.release=21
+          uv run ms sync --tools
+
+      - name: Verify release BOM
+        shell: bash
+        working-directory: workspace
+        run: |
+          set -euo pipefail
+          uv run ms release verify-bom
+
+      - name: Build bitwig extension
+        shell: bash
+        working-directory: workspace
+        run: |
+          set -euo pipefail
+          uv run ms build bitwig --target extension --extensions-dir _bitwig_extensions
