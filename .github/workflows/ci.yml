@@ -20,14 +20,14 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout ms-dev-env
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: petitechose-midi-studio/ms-dev-env
           ref: main
           path: workspace
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -51,7 +51,7 @@ jobs:
           uv run ms sync --repos
 
       - name: Checkout plugin-bitwig under test
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: workspace/midi-studio/plugin-bitwig
 
