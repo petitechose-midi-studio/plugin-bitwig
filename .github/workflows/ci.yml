@@ -26,22 +26,10 @@ jobs:
           ref: main
           path: workspace
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      - name: Setup ms runtime
+        uses: ./workspace/.github/actions/setup-ms-runtime
         with:
-          python-version: "3.13"
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Sync Python deps
-        shell: bash
-        working-directory: workspace
-        run: |
-          set -euo pipefail
-          uv sync --frozen --extra dev
+          working-directory: workspace
 
       - name: Sync workspace repos
         shell: bash
