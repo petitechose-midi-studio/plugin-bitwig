@@ -1,0 +1,282 @@
+name: Candidate Firmware
+
+run-name: Candidate firmware ${{ inputs.source_sha }} / core ${{ inputs.core_sha }} / ${{ inputs.request_id || 'manual' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: "Plugin-bitwig source commit SHA to package"
+        required: true
+        type: string
+      core_sha:
+        description: "Core commit SHA used as firmware library input"
+        required: true
+        type: string
+      request_id:
+        description: "Optional dispatch correlation id"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: candidate-firmware-${{ inputs.core_sha }}-${{ inputs.source_sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  PLATFORMIO_VERSION: "6.1.18"
+  GIT_CONFIG_COUNT: 2
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  GIT_CONFIG_KEY_1: advice.detachedHead
+  GIT_CONFIG_VALUE_1: "false"
+
+jobs:
+  build:
+    name: candidate firmware (release)
+    runs-on: ubuntu-latest
+    outputs:
+      ui_sha: ${{ steps.ui.outputs.ui_sha }}
+      candidate_tag: ${{ steps.vars.outputs.candidate_tag }}
+    steps:
+      - name: Checkout plugin-bitwig source SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          path: midi-studio/plugin-bitwig
+
+      - name: Validate plugin-bitwig source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git -C midi-studio/plugin-bitwig rev-parse HEAD)"
+          if [ "$sha" != "${{ inputs.source_sha }}" ]; then
+            echo "Checked out plugin-bitwig SHA does not match input" >&2
+            echo "input=${{ inputs.source_sha }}" >&2
+            echo "head=$sha" >&2
+            exit 1
+          fi
+
+      - name: Checkout core SHA
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/core
+          ref: ${{ inputs.core_sha }}
+          fetch-depth: 0
+          path: midi-studio/core
+
+      - name: Validate core SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git -C midi-studio/core rev-parse HEAD)"
+          if [ "$sha" != "${{ inputs.core_sha }}" ]; then
+            echo "Checked out core SHA does not match input" >&2
+            echo "input=${{ inputs.core_sha }}" >&2
+            echo "head=$sha" >&2
+            exit 1
+          fi
+
+      - name: Resolve ui SHA from core release pin
+        id: ui
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import re
+          from pathlib import Path
+
+          text = Path("midi-studio/core/platformio.ini").read_text(encoding="utf-8")
+          match = re.search(
+              r"(?m)^\s*ms-ui=https://github\.com/petitechose-midi-studio/ui\.git#([0-9a-f]{40})\s*$",
+              text,
+          )
+          if match is None:
+              raise SystemExit("missing pinned ms-ui dependency in core/platformio.ini")
+          print(f"ui_sha={match.group(1)}")
+          PY
+
+      - name: Resolve candidate tag
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "candidate_tag=rc-plugin-bitwig-firmware-${{ inputs.core_sha }}-${{ inputs.source_sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout ui
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/ui
+          ref: ${{ steps.ui.outputs.ui_sha }}
+          path: midi-studio/ui
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install PlatformIO
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "platformio==${PLATFORMIO_VERSION}"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+          key: ${{ runner.os }}-platformio-${{ hashFiles('midi-studio/plugin-bitwig/platformio.ini', 'midi-studio/core/platformio.ini', 'midi-studio/core/oc-sdk.ini') }}
+
+      - name: Build bitwig firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m platformio run -e release
+        working-directory: midi-studio/plugin-bitwig
+
+      - name: Collect candidate firmware
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "midi-studio/plugin-bitwig/.pio/build/release/firmware.hex" "dist/midi-studio-bitwig-firmware.hex"
+          ls -la dist
+
+      - name: Upload candidate firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: midi-studio-bitwig-firmware
+          path: dist/midi-studio-bitwig-firmware.hex
+
+  metadata:
+    name: candidate metadata
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout plugin-bitwig source SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          path: midi-studio/plugin-bitwig
+
+      - name: Checkout core SHA
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/core
+          ref: ${{ inputs.core_sha }}
+          fetch-depth: 0
+          path: midi-studio/core
+
+      - name: Checkout ms-dev-env
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/ms-dev-env
+          ref: main
+          path: workspace
+
+      - name: Setup ms runtime
+        uses: ./workspace/.github/actions/setup-ms-runtime
+        with:
+          working-directory: workspace
+
+      - name: Download candidate firmware
+        uses: actions/download-artifact@v8
+        with:
+          name: midi-studio-bitwig-firmware
+          path: artifacts
+
+      - name: Generate candidate metadata inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > artifacts/candidate-artifacts.json <<'EOF'
+          [
+            {
+              "id": "firmware-bitwig",
+              "filename": "midi-studio-bitwig-firmware.hex",
+              "kind": "firmware"
+            }
+          ]
+          EOF
+          cat > artifacts/input-repos.json <<'EOF'
+          [
+            {
+              "id": "plugin-bitwig",
+              "repo": "petitechose-midi-studio/plugin-bitwig",
+              "sha": "${{ inputs.source_sha }}"
+            },
+            {
+              "id": "core",
+              "repo": "petitechose-midi-studio/core",
+              "sha": "${{ inputs.core_sha }}"
+            },
+            {
+              "id": "ui",
+              "repo": "petitechose-midi-studio/ui",
+              "sha": "${{ needs.build.outputs.ui_sha }}"
+            }
+          ]
+          EOF
+          cat > artifacts/toolchain.json <<'EOF'
+          {
+            "python": "3.13",
+            "platformio": "6.1.18"
+          }
+          EOF
+
+      - name: Write candidate manifest, checksums, and signature
+        shell: bash
+        working-directory: workspace
+        env:
+          MS_CANDIDATE_ED25519_SK: ${{ secrets.MS_CANDIDATE_ED25519_SK }}
+        run: |
+          set -euo pipefail
+          uv run ms release candidate write \
+            --artifacts-dir ../artifacts \
+            --artifacts-json ../artifacts/candidate-artifacts.json \
+            --input-repos-json ../artifacts/input-repos.json \
+            --producer-repo petitechose-midi-studio/plugin-bitwig \
+            --producer-kind plugin-bitwig-firmware \
+            --workflow-file .github/workflows/candidate-firmware.yml \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --manifest-path ../artifacts/candidate.json \
+            --checksums-path ../artifacts/checksums.txt \
+            --sig-path ../artifacts/candidate.json.sig \
+            --recipe-base-dir ../midi-studio \
+            --recipe-path plugin-bitwig/.github/workflows/candidate-firmware.yml \
+            --recipe-path plugin-bitwig/platformio.ini \
+            --recipe-path core/platformio.ini \
+            --recipe-path core/oc-sdk.ini \
+            --toolchain-json ../artifacts/toolchain.json
+
+      - name: Publish signed candidate release
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ needs.build.outputs.candidate_tag }}"
+          if gh release view "$tag" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload \
+              "$tag" \
+              artifacts/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+          else
+            gh release create \
+              "$tag" \
+              artifacts/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "candidate $tag" \
+              --notes "Candidate firmware artifacts for plugin-bitwig=${{ inputs.source_sha }} core=${{ inputs.core_sha }}" \
+              --draft \
+              --prerelease
+          fi

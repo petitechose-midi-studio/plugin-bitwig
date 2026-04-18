@@ -1,0 +1,196 @@
+name: Candidate Extension
+
+run-name: Candidate extension ${{ inputs.source_sha }} / ${{ inputs.request_id || 'manual' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: "Source commit SHA to package"
+        required: true
+        type: string
+      request_id:
+        description: "Optional dispatch correlation id"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: candidate-extension-${{ inputs.source_sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GIT_CONFIG_COUNT: 2
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+  GIT_CONFIG_KEY_1: advice.detachedHead
+  GIT_CONFIG_VALUE_1: "false"
+
+jobs:
+  build:
+    name: candidate extension
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_tag: ${{ steps.vars.outputs.candidate_tag }}
+    steps:
+      - name: Checkout source SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+
+      - name: Validate source SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          if [ "$sha" != "${{ inputs.source_sha }}" ]; then
+            echo "Checked out SHA does not match input" >&2
+            echo "input=${{ inputs.source_sha }}" >&2
+            echo "head=$sha" >&2
+            exit 1
+          fi
+
+      - name: Resolve candidate tag
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "candidate_tag=rc-plugin-bitwig-extension-${{ inputs.source_sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build Bitwig extension
+        shell: bash
+        run: |
+          set -euo pipefail
+          mvn package -Pmanual -Dmaven.compiler.release=21
+        working-directory: host
+
+      - name: Collect candidate extension
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "host/target/midi_studio.bwextension" "dist/midi_studio.bwextension"
+          ls -la dist
+
+      - name: Upload candidate extension
+        uses: actions/upload-artifact@v7
+        with:
+          name: midi-studio-bitwig-extension
+          path: dist/midi_studio.bwextension
+
+  metadata:
+    name: candidate metadata
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout source SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+
+      - name: Checkout ms-dev-env
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/ms-dev-env
+          ref: main
+          path: workspace
+
+      - name: Setup ms runtime
+        uses: ./workspace/.github/actions/setup-ms-runtime
+        with:
+          working-directory: workspace
+
+      - name: Download candidate extension
+        uses: actions/download-artifact@v8
+        with:
+          name: midi-studio-bitwig-extension
+          path: artifacts
+
+      - name: Generate candidate metadata inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > artifacts/candidate-artifacts.json <<'EOF'
+          [
+            {
+              "id": "bitwig-extension",
+              "filename": "midi_studio.bwextension",
+              "kind": "bitwig-extension"
+            }
+          ]
+          EOF
+          cat > artifacts/input-repos.json <<'EOF'
+          [
+            {
+              "id": "plugin-bitwig",
+              "repo": "petitechose-midi-studio/plugin-bitwig",
+              "sha": "${{ inputs.source_sha }}"
+            }
+          ]
+          EOF
+          cat > artifacts/toolchain.json <<'EOF'
+          {
+            "java": "21",
+            "maven": "default"
+          }
+          EOF
+
+      - name: Write candidate manifest, checksums, and signature
+        shell: bash
+        working-directory: workspace
+        env:
+          MS_CANDIDATE_ED25519_SK: ${{ secrets.MS_CANDIDATE_ED25519_SK }}
+        run: |
+          set -euo pipefail
+          uv run ms release candidate write \
+            --artifacts-dir ../artifacts \
+            --artifacts-json ../artifacts/candidate-artifacts.json \
+            --input-repos-json ../artifacts/input-repos.json \
+            --producer-repo petitechose-midi-studio/plugin-bitwig \
+            --producer-kind plugin-bitwig-extension \
+            --workflow-file .github/workflows/candidate-extension.yml \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --manifest-path ../artifacts/candidate.json \
+            --checksums-path ../artifacts/checksums.txt \
+            --sig-path ../artifacts/candidate.json.sig \
+            --recipe-base-dir .. \
+            --recipe-path .github/workflows/candidate-extension.yml \
+            --recipe-path host/pom.xml \
+            --toolchain-json ../artifacts/toolchain.json
+
+      - name: Publish signed candidate release
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ needs.build.outputs.candidate_tag }}"
+          if gh release view "$tag" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload \
+              "$tag" \
+              artifacts/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+          else
+            gh release create \
+              "$tag" \
+              artifacts/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "candidate $tag" \
+              --notes "Candidate extension artifacts for ${{ inputs.source_sha }}" \
+              --draft \
+              --prerelease
+          fi
