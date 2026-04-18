@@ -277,6 +277,10 @@ jobs:
               --repo "${GITHUB_REPOSITORY}" \
               --title "candidate $tag" \
               --notes "Candidate firmware artifacts for plugin-bitwig=${{ inputs.source_sha }} core=${{ inputs.core_sha }}" \
-              --draft \
               --prerelease
           fi
+          gh release edit \
+            "$tag" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --draft=false \
+            --prerelease
