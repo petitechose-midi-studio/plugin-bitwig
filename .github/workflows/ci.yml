@@ -19,12 +19,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - name: Checkout plugin-bitwig under test
+        uses: actions/checkout@v6
+        with:
+          path: plugin-bitwig-under-test
+
+      - name: Resolve tracked tooling SHA
+        id: tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          tooling_sha="$(python -c 'import json; from pathlib import Path; print(json.loads(Path("plugin-bitwig-under-test/.github/release-tooling.json").read_text(encoding="utf-8"))["sha"])')"
+          if ! [[ "$tooling_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid tooling SHA: $tooling_sha" >&2
+            exit 1
+          fi
+          echo "tooling_sha=$tooling_sha" >> "$GITHUB_OUTPUT"
+
       - name: Checkout ms-dev-env
         uses: actions/checkout@v6
         with:
           repository: petitechose-midi-studio/ms-dev-env
-          ref: main
+          ref: ${{ steps.tooling.outputs.tooling_sha }}
           path: workspace
+
+      - name: Validate tooling checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git -C workspace rev-parse HEAD)"
+          if [ "$sha" != "${{ steps.tooling.outputs.tooling_sha }}" ]; then
+            echo "Checked out tooling SHA does not match tracked tooling SHA" >&2
+            echo "tracked=${{ steps.tooling.outputs.tooling_sha }}" >&2
+            echo "head=$sha" >&2
+            exit 1
+          fi
 
       - name: Setup ms runtime
         uses: ./workspace/.github/actions/setup-ms-runtime
@@ -38,10 +67,12 @@ jobs:
           set -euo pipefail
           uv run ms sync --repos
 
-      - name: Checkout plugin-bitwig under test
-        uses: actions/checkout@v6
-        with:
-          path: workspace/midi-studio/plugin-bitwig
+      - name: Inject plugin-bitwig under test
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf workspace/midi-studio/plugin-bitwig
+          mv plugin-bitwig-under-test workspace/midi-studio/plugin-bitwig
 
       - name: Sync workspace tools
         shell: bash
