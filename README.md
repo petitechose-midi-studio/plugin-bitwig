@@ -2,6 +2,17 @@
 
 Bitwig Studio extension with Teensy 4.1 hardware controller for advanced DAW control.
 
+## Release Policy
+
+- `plugin-bitwig` is a producer repo for two signed candidate artifact families:
+  - the Bitwig extension
+  - the Bitwig firmware
+- The Bitwig firmware candidate is a composite build owned and published by this repo.
+- The canonical release-grade outputs are those exact signed candidates.
+- End-user system publication remains centered on `petitechose-midi-studio/distribution`, which
+  consumes the exact signed candidates it needs.
+- This repo does not require an independent end-user final release surface.
+
 ## Overview
 
 MIDI Studio connects Bitwig with custom hardware:
