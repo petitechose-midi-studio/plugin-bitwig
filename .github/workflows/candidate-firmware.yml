@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   PLATFORMIO_VERSION: "6.1.18"
@@ -39,10 +39,41 @@ env:
   GIT_CONFIG_VALUE_1: "false"
 
 jobs:
+  validate_inputs:
+    name: validate candidate inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate SHAs are reachable from main
+        shell: bash
+        run: |
+          set -euo pipefail
+          validate_sha() {
+            local repo="$1"
+            local sha="$2"
+            if ! [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "invalid SHA for $repo: $sha" >&2
+              exit 1
+            fi
+            local repo_dir
+            repo_dir="$(mktemp -d)"
+            git -C "$repo_dir" init -q
+            git -C "$repo_dir" remote add origin "https://github.com/${repo}.git"
+            git -C "$repo_dir" fetch --no-tags --filter=blob:none origin "+refs/heads/main:refs/remotes/origin/main"
+            if ! git -C "$repo_dir" merge-base --is-ancestor "$sha" refs/remotes/origin/main; then
+              echo "$repo SHA is not reachable from main: $sha" >&2
+              exit 1
+            fi
+          }
+          validate_sha petitechose-midi-studio/plugin-bitwig "${{ inputs.source_sha }}"
+          validate_sha petitechose-midi-studio/core "${{ inputs.core_sha }}"
+          validate_sha petitechose-midi-studio/ms-dev-env "${{ inputs.tooling_sha }}"
+
   dispatch_marker:
     name: register dispatch
     if: ${{ inputs.request_id != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Write dispatch marker
         shell: bash
@@ -62,7 +93,9 @@ jobs:
 
   build:
     name: candidate firmware (release)
+    needs: validate_inputs
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       ui_sha: ${{ steps.vars.outputs.ui_sha }}
       candidate_tag: ${{ steps.vars.outputs.candidate_tag }}
@@ -73,6 +106,7 @@ jobs:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 0
           path: midi-studio/plugin-bitwig
+          persist-credentials: false
 
       - name: Validate plugin-bitwig source SHA
         shell: bash
@@ -93,6 +127,7 @@ jobs:
           ref: ${{ inputs.core_sha }}
           fetch-depth: 0
           path: midi-studio/core
+          persist-credentials: false
 
       - name: Validate core SHA
         shell: bash
@@ -112,6 +147,7 @@ jobs:
           repository: petitechose-midi-studio/ms-dev-env
           ref: ${{ inputs.tooling_sha }}
           path: workspace
+          persist-credentials: false
 
       - name: Setup ms runtime
         uses: ./workspace/.github/actions/setup-ms-runtime
@@ -138,6 +174,7 @@ jobs:
           repository: petitechose-midi-studio/ui
           ref: ${{ steps.vars.outputs.ui_sha }}
           path: midi-studio/ui
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -183,6 +220,9 @@ jobs:
     name: candidate metadata
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -192,6 +232,7 @@ jobs:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 0
           path: midi-studio/plugin-bitwig
+          persist-credentials: false
 
       - name: Checkout core SHA
         uses: actions/checkout@v6
@@ -200,6 +241,7 @@ jobs:
           ref: ${{ inputs.core_sha }}
           fetch-depth: 0
           path: midi-studio/core
+          persist-credentials: false
 
       - name: Checkout ms-dev-env
         uses: actions/checkout@v6
@@ -207,6 +249,7 @@ jobs:
           repository: petitechose-midi-studio/ms-dev-env
           ref: ${{ inputs.tooling_sha }}
           path: workspace
+          persist-credentials: false
 
       - name: Setup ms runtime
         uses: ./workspace/.github/actions/setup-ms-runtime
@@ -295,20 +338,16 @@ jobs:
           set -euo pipefail
           tag="${{ needs.build.outputs.candidate_tag }}"
           if gh release view "$tag" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
-            gh release upload \
-              "$tag" \
-              artifacts/* \
-              --repo "${GITHUB_REPOSITORY}" \
-              --clobber
-          else
-            gh release create \
-              "$tag" \
-              artifacts/* \
-              --repo "${GITHUB_REPOSITORY}" \
-              --title "candidate $tag" \
-              --notes "Candidate firmware artifacts for plugin-bitwig=${{ inputs.source_sha }} core=${{ inputs.core_sha }}" \
-              --prerelease
+            echo "candidate release already exists: $tag" >&2
+            exit 1
           fi
+          gh release create \
+            "$tag" \
+            artifacts/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "candidate $tag" \
+            --notes "Candidate firmware artifacts for plugin-bitwig=${{ inputs.source_sha }} core=${{ inputs.core_sha }}" \
+            --prerelease
           gh release edit \
             "$tag" \
             --repo "${GITHUB_REPOSITORY}" \
