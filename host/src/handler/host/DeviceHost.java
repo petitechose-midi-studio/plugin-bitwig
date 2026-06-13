@@ -464,17 +464,8 @@ public class DeviceHost {
             final boolean isNested = cursorDevice.isNested().get();
             final String parentName = isNested ? cursorDevice.deviceChain().name().get() : "";
 
-            // Clamp startIndex if out of range
-            int startIndex = requestedStartIndex;
-            if (startIndex >= totalDeviceCount) {
-                startIndex = Math.max(0, totalDeviceCount - BitwigConfig.LIST_WINDOW_SIZE);
-            }
-            if (startIndex < 0) {
-                startIndex = 0;
-            }
-
-            // Build windowed device list
-            final DeviceListWindowMessage.Devices[] windowDevices = buildDevicesListWindow(startIndex);
+            final int startIndex = clampDeviceListStartIndex(requestedStartIndex, totalDeviceCount);
+            final DeviceListWindowMessage.Devices[] windowDevices = buildDevicesListWindow(startIndex, totalDeviceCount);
 
             protocol.deviceListWindow(
                 totalDeviceCount,
@@ -490,9 +481,17 @@ public class DeviceHost {
         }, BitwigConfig.DEVICE_ENTER_CHILD_MS);
     }
 
-    private DeviceListWindowMessage.Devices[] buildDevicesListWindow(int startIndex) {
+    private int clampDeviceListStartIndex(int requestedStartIndex, int totalDeviceCount) {
+        int startIndex = requestedStartIndex;
+        if (startIndex >= totalDeviceCount) {
+            startIndex = Math.max(0, totalDeviceCount - BitwigConfig.LIST_WINDOW_SIZE);
+        }
+        return Math.max(0, startIndex);
+    }
+
+    private DeviceListWindowMessage.Devices[] buildDevicesListWindow(int startIndex, int totalDeviceCount) {
         List<DeviceListWindowMessage.Devices> list = new ArrayList<>();
-        int bankSize = deviceBank.getSizeOfBank();
+        int bankSize = Math.min(deviceBank.getSizeOfBank(), totalDeviceCount);
         int endIndex = Math.min(startIndex + BitwigConfig.LIST_WINDOW_SIZE, bankSize);
 
         for (int i = startIndex; i < endIndex; i++) {

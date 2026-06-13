@@ -192,12 +192,12 @@ void TrackSelector::renderFooter(const TrackSelectorProps &props) {
 // VirtualList Callbacks
 // ══════════════════════════════════════════════════════════════════
 
-void TrackSelector::bindSlot(VirtualSlot& /*slot*/, int index, bool isSelected) {
+void TrackSelector::bindSlot(VirtualSlot& slot, int index, bool isSelected) {
     int slotIndex = index - list_->getWindowStart();
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
     // Ensure widgets exist for this slot
-    ensureSlotWidgets(slotIndex);
+    ensureSlotWidgets(slot, slotIndex);
 
     // Get data for this index
     const auto &props = current_props_;
@@ -259,13 +259,11 @@ void TrackSelector::updateSlotHighlight(VirtualSlot &slot, bool isSelected) {
     applyHighlightStyle(slotIndex, isSelected);
 }
 
-void TrackSelector::ensureSlotWidgets(int slotIndex) {
+void TrackSelector::ensureSlotWidgets(VirtualSlot& slot, int slotIndex) {
     if (slotIndex < 0 || slotIndex >= VISIBLE_SLOTS) return;
 
-    const auto &slots = list_->getSlots();
-    if (slotIndex >= static_cast<int>(slots.size())) return;
-
-    lv_obj_t *container = slots[slotIndex].container;
+    lv_obj_t *container = slot.container;
+    if (!container) return;
 
     // Create BackButton if not exists (hidden by default)
     if (!back_buttons_[slotIndex]) {

@@ -8,6 +8,8 @@ import protocol.struct.HostDeactivatedMessage;
 import handler.controller.*;
 import handler.host.*;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * MIDI Studio Extension - Entry Point
  *
@@ -24,6 +26,7 @@ public class MidiStudioExtension extends ControllerExtension {
 
    // Explicit bridge port selection keeps multiple extension instances independent.
    private static final String[] BRIDGE_PORT_OPTIONS = {
+       // Hardware controllers
        "9000",
        "9001",
        "9002",
@@ -31,7 +34,25 @@ public class MidiStudioExtension extends ControllerExtension {
        "9004",
        "9005",
        "9006",
-       "9007"
+       "9007",
+       // Native desktop simulators
+       "9100",
+       "9101",
+       "9102",
+       "9103",
+       "9104",
+       "9105",
+       "9106",
+       "9107",
+       // WASM/browser simulators
+       "9200",
+       "9201",
+       "9202",
+       "9203",
+       "9204",
+       "9205",
+       "9206",
+       "9207"
    };
 
    protected MidiStudioExtension(
@@ -49,6 +70,7 @@ public class MidiStudioExtension extends ControllerExtension {
          .getEnumSetting("Bridge Port", "Connection", BRIDGE_PORT_OPTIONS, "9000");
       bridgePortSetting.markInterested();
       final int bridgePort = Integer.parseInt(bridgePortSetting.get());
+      final AtomicInteger activeBridgePort = new AtomicInteger(bridgePort);
 
       Transport transport = host.createTransport();
 
@@ -96,6 +118,23 @@ public class MidiStudioExtension extends ControllerExtension {
       HostStatusController hostStatusController = new HostStatusController(
             protocol, transportHost, deviceHost, trackHost, lastClickedHost);
       hostStatusController.sendFullState();
+
+      bridgePortSetting.addValueObserver(selectedPort -> {
+         final int nextBridgePort = Integer.parseInt(selectedPort);
+         if (nextBridgePort == activeBridgePort.get()) {
+            return;
+         }
+
+         try {
+            protocol.reconnect("127.0.0.1", nextBridgePort);
+            activeBridgePort.set(nextBridgePort);
+            hostStatusController.sendFullState();
+            host.showPopupNotification("MIDI Studio : Connected (port " + nextBridgePort + ")");
+         } catch (RuntimeException e) {
+            host.errorln("[MIDI Studio] Bridge reconnect failed: " + e.getMessage());
+            host.showPopupNotification("MIDI Studio : Bridge reconnect failed");
+         }
+      });
 
       host.showPopupNotification("MIDI Studio : Connected (port " + bridgePort + ")");
    }

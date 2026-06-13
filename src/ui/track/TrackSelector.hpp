@@ -81,7 +81,7 @@ private:
     // VirtualList callbacks
     void bindSlot(VirtualSlot &slot, int index, bool isSelected);
     void updateSlotHighlight(VirtualSlot &slot, bool isSelected);
-    void ensureSlotWidgets(int slotIndex);
+    void ensureSlotWidgets(VirtualSlot& slot, int slotIndex);
 
     // Highlight
     void applyHighlightStyle(int slotIndex, bool isSelected);

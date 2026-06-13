@@ -43,7 +43,7 @@ public class Protocol extends ProtocolCallbacks {
     // ========================================================================
 
     private final ControllerHost host;
-    private final ProtocolTransport transport;
+    private volatile ProtocolTransport transport;
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     // Reflection cache for performance
@@ -71,8 +71,10 @@ public class Protocol extends ProtocolCallbacks {
      */
     public void close() {
         isActive.set(false);
-        if (transport != null) {
-            transport.close();
+        ProtocolTransport current = transport;
+        transport = null;
+        if (current != null) {
+            current.close();
         }
     }
 
@@ -97,17 +99,31 @@ public class Protocol extends ProtocolCallbacks {
         }
         this.host = host;
 
-        // Determine transport type from environment
-        ProtocolTransport.Type transportType = getTransportTypeFromEnv();
+        this.transport = createTransport(bridgeHost, bridgePort);
+    }
 
-        // Create transport
+    /**
+     * Reconnect to another bridge endpoint while keeping all registered callbacks.
+     */
+    public synchronized void reconnect(String bridgeHost, int bridgePort) {
+        if (!isActive.get()) return;
+
+        ProtocolTransport replacement = createTransport(bridgeHost, bridgePort);
+        ProtocolTransport previous = transport;
+        transport = replacement;
+        if (previous != null) {
+            previous.close();
+        }
+    }
+
+    private ProtocolTransport createTransport(String bridgeHost, int bridgePort) {
+        ProtocolTransport.Type transportType = getTransportTypeFromEnv();
         ProtocolTransport.ReceiveCallback callback = this::dispatch;
 
         if (transportType == ProtocolTransport.Type.TCP) {
-            this.transport = new TcpTransport(host, bridgeHost, bridgePort, callback);
-        } else {
-            this.transport = new UdpTransport(host, bridgeHost, bridgePort, callback);
+            return new TcpTransport(host, bridgeHost, bridgePort, callback);
         }
+        return new UdpTransport(host, bridgeHost, bridgePort, callback);
     }
 
     /**
@@ -143,7 +159,8 @@ public class Protocol extends ProtocolCallbacks {
      * Send a final message (bypasses isActive check, used during exit)
      */
     public <T> void sendFinal(T message) {
-        if (transport == null || !transport.isConnected()) return;
+        ProtocolTransport current = transport;
+        if (current == null || !current.isConnected()) return;
         try {
             sendInternal(message);
         } catch (Exception e) {
@@ -181,8 +198,11 @@ public class Protocol extends ProtocolCallbacks {
             throw new RuntimeException("Failed to encode message: " + e.getMessage(), e);
         }
 
+        ProtocolTransport current = transport;
+        if (current == null || !current.isConnected()) return;
+
         // Send via transport (pass buffer slice without allocation)
-        transport.send(sendBuffer, 0, frameLength);
+        current.send(sendBuffer, 0, frameLength);
     }
 
     // ========================================================================
@@ -222,14 +242,16 @@ public class Protocol extends ProtocolCallbacks {
      * Check if connected
      */
     public boolean isConnected() {
-        return transport != null && transport.isConnected() && isActive.get();
+        ProtocolTransport current = transport;
+        return current != null && current.isConnected() && isActive.get();
     }
 
     /**
      * Get current transport type
      */
     public ProtocolTransport.Type getTransportType() {
-        return transport != null ? transport.getType() : null;
+        ProtocolTransport current = transport;
+        return current != null ? current.getType() : null;
     }
 
 }  // class Protocol
