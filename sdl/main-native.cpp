@@ -23,6 +23,10 @@
 #include <config/App.hpp>
 #include "app/AppLogic.hpp"
 
+namespace {
+constexpr int DEFAULT_NATIVE_BRIDGE_UDP_PORT = 8001;
+}
+
 int main(int argc, char** argv) {
     // 1. Initialize SDL environment
     sdl::SdlEnvironment env;
@@ -30,7 +34,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const int bridge_udp_port = ms::bridge::udp_port(argc, argv, 8001);
+    const int bridge_udp_port = ms::bridge::udp_port(argc, argv, DEFAULT_NATIVE_BRIDGE_UDP_PORT);
 
     oc::app::OpenControlApp app = oc::hal::sdl::AppBuilder()
         .midi(std::make_unique<oc::hal::midi::LibreMidiTransport>(
