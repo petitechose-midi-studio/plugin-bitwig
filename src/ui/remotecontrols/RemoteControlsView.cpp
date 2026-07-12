@@ -1,5 +1,10 @@
 #include "RemoteControlsView.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <vector>
+
 #include <oc/log/Log.hpp>
 #include <oc/state/Bind.hpp>
 #include <oc/state/Signal.hpp>
@@ -16,6 +21,23 @@ using namespace bitwig::theme;
 namespace style = oc::ui::lvgl::style;
 
 namespace bitwig::ui {
+namespace {
+
+template <typename T, std::size_t N, std::size_t MaxSubscribers>
+std::vector<T> snapshotSignalValues(
+    const std::array<oc::state::Signal<T, MaxSubscribers>, N>& signals,
+    std::size_t count
+) {
+    const std::size_t snapshotSize = std::min(count, N);
+    std::vector<T> values;
+    values.reserve(snapshotSize);
+    for (std::size_t i = 0; i < snapshotSize; ++i) {
+        values.push_back(signals[i].get());
+    }
+    return values;
+}
+
+}  // namespace
 
 // =============================================================================
 // Construction / Destruction
@@ -341,13 +363,12 @@ void RemoteControlsView::updateDeviceSelector() {
         return;
     }
 
-    // Device states: convert array of Signals to vector using helper
     size_t count = state_.deviceSelector.names.size();
 
     device_selector_->render({
         .names = state_.deviceSelector.names,
         .deviceTypes = state_.deviceSelector.deviceTypes,
-        .deviceStates = oc::state::toVector(state_.deviceSelector.deviceStates, count),
+        .deviceStates = snapshotSignalValues(state_.deviceSelector.deviceStates, count),
         .hasSlots = state_.deviceSelector.hasSlots,
         .hasLayers = state_.deviceSelector.hasLayers,
         .hasDrums = state_.deviceSelector.hasDrums,
@@ -375,13 +396,12 @@ void RemoteControlsView::updateTrackSelector() {
         return;
     }
 
-    // Mute/Solo states: convert array of Signals to vector using helper
     size_t count = state_.trackSelector.names.size();
 
     track_selector_->render({
         .names = state_.trackSelector.names,
-        .muteStates = oc::state::toVector(state_.trackSelector.muteStates, count),
-        .soloStates = oc::state::toVector(state_.trackSelector.soloStates, count),
+        .muteStates = snapshotSignalValues(state_.trackSelector.muteStates, count),
+        .soloStates = snapshotSignalValues(state_.trackSelector.soloStates, count),
         .trackTypes = state_.trackSelector.trackTypes,
         .trackColors = state_.trackSelector.trackColors,
         .selectedIndex = state_.trackSelector.currentIndex.get(),
