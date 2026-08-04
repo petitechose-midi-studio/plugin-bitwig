@@ -3,20 +3,20 @@
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 #include "handler/InputUtils.hpp"
 
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using ButtonID = Config::ButtonID;
-using EncoderID = Config::EncoderID;
+using ButtonID = ms::device_support::v1::ButtonID;
+using EncoderID = ms::device_support::v1::EncoderID;
 using OverlayType = ui::OverlayType;
 // ViewType is in global scope from protocol/ViewType.hpp
 
 ViewSwitcherInputHandler::ViewSwitcherInputHandler(state::BitwigState& state,
                                                    OverlayCtx overlayCtx,
-                                                   core::api::InputAPI input)
+                                                   InputAPI input)
     : state_(state)
     , overlay_ctx_(overlayCtx)
     , input_(input) {

@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 #include "config/LastClickedConfig.hpp"
 #include "handler/InputUtils.hpp"
 
@@ -10,7 +10,7 @@ namespace bitwig::handler {
 
 using namespace Protocol;
 using namespace bitwig::state;
-using EncoderID = Config::EncoderID;
+using EncoderID = ms::device_support::v1::EncoderID;
 
 LastClickedHostHandler::LastClickedHostHandler(state::BitwigState& state,
                                                BitwigProtocol& protocol,

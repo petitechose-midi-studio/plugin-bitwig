@@ -19,8 +19,7 @@
 
 #include <lvgl.h>
 
-#include <api/InputAPI.hpp>
-
+#include "handler/InputAPI.hpp"
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
@@ -45,7 +44,7 @@ public:
      */
     TransportInputHandler(state::BitwigState& state,
                           BitwigProtocol& protocol,
-                          core::api::InputAPI& input);
+                          InputAPI& input);
 
     ~TransportInputHandler() = default;
 
@@ -63,7 +62,7 @@ private:
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
-    core::api::InputAPI input_;
+    InputAPI input_;
 };
 
 }  // namespace bitwig::handler

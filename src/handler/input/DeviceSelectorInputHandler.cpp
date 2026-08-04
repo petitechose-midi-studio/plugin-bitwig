@@ -4,7 +4,7 @@
 #include <oc/log/Log.hpp>
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 #include "handler/InputUtils.hpp"
 #include "handler/NestedIndexUtils.hpp"
 #include "state/Constants.hpp"
@@ -12,14 +12,14 @@
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using ButtonID = Config::ButtonID;
-using EncoderID = Config::EncoderID;
+using ButtonID = ms::device_support::v1::ButtonID;
+using EncoderID = ms::device_support::v1::EncoderID;
 using OverlayType = ui::OverlayType;
 
 DeviceSelectorInputHandler::DeviceSelectorInputHandler(state::BitwigState& state,
                                                        OverlayCtx overlayCtx,
                                                        BitwigProtocol& protocol,
-                                                       core::api::InputAPI input)
+                                                       InputAPI input)
     : state_(state)
     , overlay_ctx_(overlayCtx)
     , protocol_(protocol)

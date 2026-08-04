@@ -12,7 +12,7 @@ using namespace bitwig::state;
 
 RemoteControlInputHandler::RemoteControlInputHandler(state::BitwigState& state,
                                                      BitwigProtocol& protocol,
-                                                     core::api::InputAPI input,
+                                                     InputAPI input,
                                                      lv_obj_t* scopeElement)
     : state_(state)
     , protocol_(protocol)
@@ -43,7 +43,7 @@ void RemoteControlInputHandler::setupBindings() {
     }
 
     // NAV button double tap -> restore automation for all parameters
-    input_.buttons.button(Config::ButtonID::NAV)
+    input_.buttons.button(ms::device_support::v1::ButtonID::NAV)
         .doubleTap()
         .scope(scope(scope_element_))
         .then([this]() { handleGlobalRestore(); });

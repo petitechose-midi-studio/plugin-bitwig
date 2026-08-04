@@ -17,9 +17,9 @@
 
 #include <lvgl.h>
 
-#include <api/InputAPI.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 
-#include <config/App.hpp>
+#include "handler/InputAPI.hpp"
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
@@ -32,7 +32,7 @@ class RemoteControlInputHandler {
 public:
     RemoteControlInputHandler(state::BitwigState& state,
                               BitwigProtocol& protocol,
-                              core::api::InputAPI input,
+                              InputAPI input,
                               lv_obj_t* scopeElement);
 
     ~RemoteControlInputHandler() = default;
@@ -49,7 +49,7 @@ private:
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
-    core::api::InputAPI input_;
+    InputAPI input_;
     lv_obj_t* scope_element_;
 };
 

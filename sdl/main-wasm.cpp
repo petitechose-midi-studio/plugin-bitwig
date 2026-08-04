@@ -17,7 +17,7 @@
 #include <oc/hal/midi/LibreMidiTransport.hpp>
 #include <oc/hal/net/WebSocketTransport.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputConfig.hpp>
 #include "app/AppLogic.hpp"
 
 int main(int argc, char** argv) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
                 .url = ws_url  // Controller: bitwig wasm (configurable via --bridge-ws-url)
             }))
         .controllers(env.inputMapper())
-        .inputConfig(Config::Input::CONFIG);
+        .inputConfig(ms::device_support::v1::input::CONFIG);
 
     // Register main context only (skip splash for WASM)
     // Note: Contexts use Screen::root() which is configured to HwSimulator's screenArea

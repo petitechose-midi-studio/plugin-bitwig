@@ -15,7 +15,7 @@ using namespace oc::ui::lvgl;
 TrackInputHandler::TrackInputHandler(state::BitwigState& state,
                                      OverlayCtx overlayCtx,
                                      BitwigProtocol& protocol,
-                                     core::api::InputAPI input)
+                                     InputAPI input)
     : state_(state)
     , overlay_ctx_(overlayCtx)
     , protocol_(protocol)

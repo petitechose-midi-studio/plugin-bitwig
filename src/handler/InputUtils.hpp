@@ -14,7 +14,7 @@
 #include <oc/api/EncoderAPI.hpp>
 #include <oc/util/Index.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 #include "protocol/ParameterType.hpp"
 #include "state/Constants.hpp"
 
@@ -24,8 +24,8 @@ namespace bitwig::handler {
 // Encoder Mapping
 // =============================================================================
 
-using EncoderID = Config::EncoderID;
-using ButtonID = Config::ButtonID;
+using EncoderID = ms::device_support::v1::EncoderID;
+using ButtonID = ms::device_support::v1::ButtonID;
 
 /**
  * @brief Macro encoder IDs in slot order (0-7)

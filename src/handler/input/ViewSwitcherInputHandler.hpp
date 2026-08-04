@@ -15,10 +15,10 @@
 
 #include <lvgl.h>
 
-#include <api/InputAPI.hpp>
 #include <oc/state/Signal.hpp>
 #include <ms/ui/OverlayBindingContext.hpp>
 
+#include "handler/InputAPI.hpp"
 #include "state/BitwigState.hpp"
 
 namespace bitwig::handler {
@@ -36,7 +36,7 @@ public:
 
     ViewSwitcherInputHandler(state::BitwigState& state,
                              OverlayCtx overlayCtx,
-                             core::api::InputAPI input);
+                             InputAPI input);
 
     ~ViewSwitcherInputHandler() = default;
 
@@ -55,7 +55,7 @@ private:
 
     state::BitwigState& state_;
     OverlayCtx overlay_ctx_;
-    core::api::InputAPI input_;
+    InputAPI input_;
 
     // Static view names
     static constexpr const char* VIEW_NAMES[] = {"Remote Controls", "Mix", "Clip"};

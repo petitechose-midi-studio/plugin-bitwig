@@ -16,10 +16,10 @@
 
 #include <lvgl.h>
 
-#include <api/InputAPI.hpp>
 #include <oc/state/Signal.hpp>
 #include <ms/ui/OverlayBindingContext.hpp>
 
+#include "handler/InputAPI.hpp"
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
@@ -41,7 +41,7 @@ public:
     DeviceSelectorInputHandler(state::BitwigState& state,
                                OverlayCtx overlayCtx,
                                BitwigProtocol& protocol,
-                               core::api::InputAPI input);
+                               InputAPI input);
 
     ~DeviceSelectorInputHandler() = default;
 
@@ -69,7 +69,7 @@ private:
     state::BitwigState& state_;
     OverlayCtx overlay_ctx_;
     BitwigProtocol& protocol_;
-    core::api::InputAPI input_;
+    InputAPI input_;
 
     // Minimal local state - everything else comes from BitwigState Signals
     uint8_t current_device_index_ = 0;  // Device being navigated (for children mode)
