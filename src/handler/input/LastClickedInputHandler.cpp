@@ -5,12 +5,12 @@
 
 #include <oc/ui/lvgl/Scope.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 
 namespace bitwig::handler {
 
 using namespace oc::ui::lvgl;
-using EncoderID = Config::EncoderID;
+using EncoderID = ms::device_support::v1::EncoderID;
 
 LastClickedInputHandler::LastClickedInputHandler(state::BitwigState& state,
                                                  BitwigProtocol& protocol,

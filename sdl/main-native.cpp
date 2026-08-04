@@ -20,7 +20,7 @@
 #include <oc/hal/midi/LibreMidiTransport.hpp>
 #include <oc/hal/net/UdpTransport.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputConfig.hpp>
 #include "app/AppLogic.hpp"
 
 namespace {
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
                 .port = static_cast<uint16_t>(bridge_udp_port)  // --bridge-udp-port
             }))
         .controllers(env.inputMapper())
-        .inputConfig(Config::Input::CONFIG);
+        .inputConfig(ms::device_support::v1::input::CONFIG);
 
     // 3. Register main context only (skip splash for desktop)
     // Note: Contexts use Screen::root() which is configured to HwSimulator's screenArea

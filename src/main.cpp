@@ -9,12 +9,16 @@
 #include <optional>
 
 #include <Arduino.h>
+#include <ms/device_support/v1/Buffers.hpp>
+#include <ms/device_support/v1/Display.hpp>
+#include <ms/device_support/v1/Hardware.hpp>
+#include <ms/device_support/v1/InputConfig.hpp>
+#include <ms/device_support/v1/Timing.hpp>
 #include <oc/hal/teensy/Teensy.hpp>
 
-#include <config/App.hpp>
-#include <config/platform-teensy/Buffer.hpp>
-#include <config/platform-teensy/Hardware.hpp>
 #include "app/AppLogic.hpp"
+
+namespace device = ms::device_support::v1;
 
 // =============================================================================
 // Debug: Memory monitoring for crash diagnosis
@@ -51,19 +55,23 @@ static void checkOrHalt(const oc::type::Result<void>& result, const char* compon
 
 static void initDisplay() {
     display = oc::hal::teensy::Ili9341(
-        Hardware::Display::CONFIG,
-        {.framebuffer = Buffer::framebuffer, .diff1 = Buffer::diff1, .diff2 = Buffer::diff2});
+        device::display::CONFIG,
+        {.framebuffer = device::buffers::framebuffer,
+         .diff1 = device::buffers::diff1,
+         .diff2 = device::buffers::diff2});
     checkOrHalt(display->init(), "Display");
 }
 
 static void initLVGL() {
-    lvgl = oc::ui::lvgl::Bridge(*display, Buffer::lvgl, oc::hal::teensy::defaultTimeProvider,
-                                 Hardware::LVGL::CONFIG);
+    lvgl = oc::ui::lvgl::Bridge(*display, device::buffers::lvgl,
+                                 oc::hal::teensy::defaultTimeProvider,
+                                 device::display::LVGL_CONFIG);
     checkOrHalt(lvgl->init(), "LVGL");
 }
 
 static void initMux() {
-    mux = oc::hal::teensy::CD74HC4067(Hardware::Mux::CONFIG, oc::hal::teensy::gpio());
+    mux = oc::hal::teensy::CD74HC4067(device::mux::CONFIG,
+                                      oc::hal::teensy::gpio());
     checkOrHalt(mux->init(), "MUX");
 }
 
@@ -71,9 +79,9 @@ static void initApp() {
     app = oc::hal::teensy::AppBuilder()
               .midi()
               .frames()
-              .encoders(Hardware::Encoder::ENCODERS)
-              .buttons(Hardware::Button::BUTTONS, *mux, Config::Timing::DEBOUNCE_MS)
-              .inputConfig(Config::Input::CONFIG);
+              .encoders(device::encoder::ENCODERS)
+              .buttons(device::button::BUTTONS, *mux, device::timing::DEBOUNCE_MS)
+              .inputConfig(device::input::CONFIG);
 
     bitwig::app::registerContexts(*app);
     app->begin();
@@ -87,7 +95,8 @@ void setup() {
     // NOTE: Logging enabled temporarily for debug - may interfere with protocol
     oc::hal::teensy::initLogging();
 
-    OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)", Config::Timing::APP_HZ);
+    OC_LOG_INFO("MIDI Studio Bitwig Plugin ({}Hz)",
+                device::timing::INPUT_APP_ADMISSION_HZ);
 
     initDisplay();
     initLVGL();
@@ -96,8 +105,10 @@ void setup() {
 }
 
 // Timing constants for main loop
-constexpr uint32_t APP_PERIOD_US = 1'000'000 / Config::Timing::APP_HZ;
-constexpr uint32_t LVGL_PERIOD_US = 1'000'000 / Config::Timing::LVGL_HZ;
+constexpr uint32_t APP_PERIOD_US =
+    1'000'000 / device::timing::INPUT_APP_ADMISSION_HZ;
+constexpr uint32_t LVGL_PERIOD_US =
+    1'000'000 / device::timing::LVGL_SERVICE_HZ;
 
 void loop() {
     static uint32_t lastMicros = 0;

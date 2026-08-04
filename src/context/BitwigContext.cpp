@@ -1,6 +1,6 @@
 #include "BitwigContext.hpp"
 
-#include <api/InputAPI.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 #include <oc/log/Log.hpp>
 #include <ms/ui/OverlayBindingContext.hpp>
 #include <oc/ui/lvgl/FontLoader.hpp>
@@ -8,7 +8,7 @@
 #include <oc/ui/lvgl/Scope.hpp>
 #include <ms/ui/font/CoreFonts.hpp>
 
-#include <config/App.hpp>
+#include "handler/InputAPI.hpp"
 #include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
 
@@ -152,7 +152,7 @@ void BitwigContext::createHostHandlers() {
 
 void BitwigContext::createOverlayManager() {
     using ui::OverlayType;
-    using ButtonID = Config::ButtonID;
+    using ButtonID = ms::device_support::v1::ButtonID;
 
     // Create manager wrapping the state's ExclusiveVisibilityStack
     overlay_controller_ = std::make_unique<oc::context::OverlayManager<bitwig::ui::OverlayType>>(state_.overlays, buttons());
@@ -169,7 +169,7 @@ void BitwigContext::createOverlayManager() {
     lv_obj_t* viewSelectorOverlay = view_selector_ ? view_selector_->getElement() : nullptr;
 
     // Register cleanup info for each overlay
-    // Note: static_cast needed to convert Config::ButtonID enum to oc::type::ButtonID
+    // Note: static_cast converts the device ButtonID enum to oc::type::ButtonID.
     if (pageSelectorOverlay) {
         overlay_controller_->registerCleanup(
             OverlayType::PAGE_SELECTOR,
@@ -217,7 +217,7 @@ void BitwigContext::createInputHandlers() {
     lv_obj_t* viewSelectorOverlay = view_selector_ ? view_selector_->getElement() : nullptr;
 
     // Create InputAPI facade for handlers that use both encoders and buttons
-    core::api::InputAPI input{encoders(), buttons()};
+    handler::InputAPI input{encoders(), buttons()};
 
     // Global scope (lowest priority)
     input_transport_ = std::make_unique<handler::TransportInputHandler>(

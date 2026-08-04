@@ -1,15 +1,15 @@
 #include "TransportInputHandler.hpp"
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/InputIds.hpp>
 
 namespace bitwig::handler {
 
-using ButtonID = Config::ButtonID;
-using EncoderID = Config::EncoderID;
+using ButtonID = ms::device_support::v1::ButtonID;
+using EncoderID = ms::device_support::v1::EncoderID;
 
 TransportInputHandler::TransportInputHandler(state::BitwigState& state,
                                              BitwigProtocol& protocol,
-                                             core::api::InputAPI& input)
+                                             InputAPI& input)
     : state_(state)
     , protocol_(protocol)
     , input_(input) {

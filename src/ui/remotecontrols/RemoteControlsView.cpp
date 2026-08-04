@@ -10,7 +10,7 @@
 #include <oc/state/Signal.hpp>
 #include <oc/ui/lvgl/style/StyleBuilder.hpp>
 
-#include <config/App.hpp>
+#include <ms/device_support/v1/Timing.hpp>
 #include "ui/theme/BitwigTheme.hpp"
 #include "ui/widget/BaseParameterWidget.hpp"
 #include "ui/widget/ParameterButtonWidget.hpp"
@@ -61,7 +61,8 @@ RemoteControlsView::RemoteControlsView(lv_obj_t* zone, bitwig::state::BitwigStat
     }
 
     // Create timer for debounced parameter updates (synced with LVGL display refresh)
-    constexpr uint32_t refrPeriodMs = 1000 / Config::Timing::LVGL_HZ;
+    constexpr uint32_t refrPeriodMs =
+        1000 / ms::device_support::v1::timing::LVGL_SERVICE_HZ;
     update_timer_ = lv_timer_create(onUpdateTimer, refrPeriodMs, this);
 
     setupBindings();
