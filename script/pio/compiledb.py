@@ -2,26 +2,17 @@
 """
 Generate compile_commands.json for clangd IDE integration.
 
-This script imports the shared utility from core library.
-Supports both symlink (development) and libdeps (release) configurations.
+This script imports the shared utility from the Core workspace checkout.
 """
 import os
 import sys
-import glob
 
 Import("env")
 
-# Find core's script directory (symlink or libdeps)
+# Core is a required sibling checkout for both dev and release profiles.
 project_dir = env.subst("$PROJECT_DIR")
-candidates = [
-    os.path.join(project_dir, "../core/script/pio"),  # Symlink: ../core
-    *glob.glob(os.path.join(
-        project_dir, ".pio/libdeps/*/petitechose-midi-studio-core/script/pio"
-    )),
-]
-
-core_script_dir = next((p for p in candidates if os.path.exists(p)), None)
-if not core_script_dir:
+core_script_dir = os.path.join(project_dir, "../core/script/pio")
+if not os.path.exists(core_script_dir):
     print("[ERROR] Could not find core script directory")
     Exit(1)
 
