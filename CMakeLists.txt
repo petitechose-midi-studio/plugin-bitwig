@@ -8,6 +8,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/MidiStudioBitwigSources.cmake")
+
+add_library(midi_studio_plugin_bitwig_sources INTERFACE)
+target_sources(midi_studio_plugin_bitwig_sources
+    INTERFACE ${MS_PLUGIN_BITWIG_SOURCES})
+target_include_directories(midi_studio_plugin_bitwig_sources
+    INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
 add_library(midi_studio_plugin_bitwig_test_headers INTERFACE)
 target_include_directories(midi_studio_plugin_bitwig_test_headers
     INTERFACE
