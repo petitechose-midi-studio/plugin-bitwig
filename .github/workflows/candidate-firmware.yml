@@ -98,6 +98,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       ui_sha: ${{ steps.vars.outputs.ui_sha }}
+      device_support_sha: ${{ steps.device_support.outputs.sha }}
       candidate_tag: ${{ steps.vars.outputs.candidate_tag }}
     steps:
       - name: Checkout plugin-bitwig source SHA
@@ -116,6 +117,49 @@ jobs:
           if [ "$sha" != "${{ inputs.source_sha }}" ]; then
             echo "Checked out plugin-bitwig SHA does not match input" >&2
             echo "input=${{ inputs.source_sha }}" >&2
+            echo "head=$sha" >&2
+            exit 1
+          fi
+
+      - name: Resolve device support SHA
+        id: device_support
+        shell: bash
+        run: |
+          set -euo pipefail
+          device_support_sha="$(python - <<'PY'
+          from pathlib import Path
+          import re
+
+          text = Path("midi-studio/plugin-bitwig/platformio.ini").read_text(encoding="utf-8")
+          match = re.search(
+              r"(?m)^\s*https://github\.com/"
+              r"petitechose-midi-studio/device-support\.git#"
+              r"([0-9a-f]{40})\s*$",
+              text,
+          )
+          if match is None:
+              raise SystemExit("release device-support dependency is not commit-pinned")
+          print(match.group(1))
+          PY
+          )"
+          echo "sha=$device_support_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout device support SHA
+        uses: actions/checkout@v6
+        with:
+          repository: petitechose-midi-studio/device-support
+          ref: ${{ steps.device_support.outputs.sha }}
+          path: midi-studio/device-support
+          persist-credentials: false
+
+      - name: Validate device support SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git -C midi-studio/device-support rev-parse HEAD)"
+          if [ "$sha" != "${{ steps.device_support.outputs.sha }}" ]; then
+            echo "Checked out device-support SHA does not match release dependency" >&2
+            echo "dependency=${{ steps.device_support.outputs.sha }}" >&2
             echo "head=$sha" >&2
             exit 1
           fi
@@ -291,6 +335,11 @@ jobs:
               "id": "ui",
               "repo": "petitechose-midi-studio/ui",
               "sha": "${{ needs.build.outputs.ui_sha }}"
+            },
+            {
+              "id": "device-support",
+              "repo": "petitechose-midi-studio/device-support",
+              "sha": "${{ needs.build.outputs.device_support_sha }}"
             },
             {
               "id": "ms-dev-env",
