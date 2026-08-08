@@ -8,13 +8,12 @@
  * to avoid code duplication.
  */
 
-#include <array>
 #include <cstdint>
 
 #include <oc/api/EncoderAPI.hpp>
 #include <oc/util/Index.hpp>
 
-#include <ms/device_support/v1/InputIds.hpp>
+#include <ms/device_support/v1/ControlLayout.hpp>
 #include "protocol/ParameterType.hpp"
 #include "state/Constants.hpp"
 
@@ -27,21 +26,11 @@ namespace bitwig::handler {
 using EncoderID = ms::device_support::v1::EncoderID;
 using ButtonID = ms::device_support::v1::ButtonID;
 
-/**
- * @brief Macro encoder IDs in slot order (0-7)
- */
-inline constexpr std::array<EncoderID, bitwig::state::PARAMETER_COUNT> MACRO_ENCODERS = {
-    EncoderID::MACRO_1, EncoderID::MACRO_2, EncoderID::MACRO_3, EncoderID::MACRO_4,
-    EncoderID::MACRO_5, EncoderID::MACRO_6, EncoderID::MACRO_7, EncoderID::MACRO_8
-};
+using ms::device_support::v1::control::MACRO_BUTTONS;
+using ms::device_support::v1::control::MACRO_ENCODERS;
 
-/**
- * @brief Macro button IDs in slot order (0-7)
- */
-inline constexpr std::array<ButtonID, bitwig::state::PARAMETER_COUNT> MACRO_BUTTONS = {
-    ButtonID::MACRO_1, ButtonID::MACRO_2, ButtonID::MACRO_3, ButtonID::MACRO_4,
-    ButtonID::MACRO_5, ButtonID::MACRO_6, ButtonID::MACRO_7, ButtonID::MACRO_8
-};
+static_assert(MACRO_ENCODERS.size() == bitwig::state::PARAMETER_COUNT);
+static_assert(MACRO_BUTTONS.size() == bitwig::state::PARAMETER_COUNT);
 
 /**
  * @brief Get encoder ID for a parameter index
@@ -49,7 +38,7 @@ inline constexpr std::array<ButtonID, bitwig::state::PARAMETER_COUNT> MACRO_BUTT
  * @return Encoder ID or EncoderID{0} if invalid
  */
 inline EncoderID getEncoderIdForParameter(uint8_t paramIndex) {
-    return (paramIndex < bitwig::state::PARAMETER_COUNT)
+    return (paramIndex < MACRO_ENCODERS.size())
         ? MACRO_ENCODERS[paramIndex]
         : EncoderID{0};
 }
