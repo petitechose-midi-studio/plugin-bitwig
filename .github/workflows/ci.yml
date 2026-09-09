@@ -88,8 +88,12 @@ jobs:
           set -euo pipefail
           uv run ms release verify-bom
 
+      - name: Test bitwig native helpers
+        shell: bash
+        working-directory: workspace
+        run: uv run ms test plugin-bitwig
+
       - name: Build bitwig firmware (release)
-        if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
         shell: bash
         working-directory: workspace
         run: |
@@ -97,7 +101,6 @@ jobs:
           uv run ms build bitwig --target teensy --env release
 
       - name: Build bitwig extension
-        if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
         shell: bash
         working-directory: workspace
         run: |
