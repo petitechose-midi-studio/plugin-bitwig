@@ -36,7 +36,6 @@ set(MS_PLUGIN_BITWIG_SOURCE_PATHS
     src/ui/widget/BaseParameterWidget.cpp
     src/ui/widget/BaseSelector.cpp
     src/ui/widget/HintBar.cpp
-    src/ui/widget/ListOverlay.cpp
     src/ui/widget/ParameterButtonWidget.cpp
     src/ui/widget/ParameterKnobWidget.cpp
     src/ui/widget/ParameterListWidget.cpp
