@@ -10,11 +10,7 @@
 #include "protocol/TrackType.hpp"
 // IWYU pragma: end_exports
 
-#include "ui/font/BitwigIcons.hpp"
-
 namespace bitwig::state {
-
-namespace icons = bitwig::icons;
 
 // =============================================================================
 // Capacity Constants
@@ -32,12 +28,6 @@ constexpr uint8_t MAX_CHILD_TYPES = 4;
 
 constexpr uint8_t LIST_WINDOW_SIZE = 16;     // Items per window request (devices, tracks, pages)
 constexpr uint8_t PREFETCH_THRESHOLD = 8;    // Prefetch when cursor >= loadedUpTo - threshold
-
-// =============================================================================
-// UI Text Constants
-// =============================================================================
-
-constexpr const char* BACK_TO_PARENT_TEXT = icons::UI_ARROW_LEFT;
 
 // =============================================================================
 // Child Type Helpers

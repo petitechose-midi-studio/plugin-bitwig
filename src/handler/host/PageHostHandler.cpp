@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "handler/InputUtils.hpp"
+#include <oc/log/Log.hpp>
 #include "state/Constants.hpp"
 
 namespace bitwig::handler {
@@ -10,31 +10,14 @@ namespace bitwig::handler {
 using namespace Protocol;
 using namespace bitwig::state;
 
-PageHostHandler::PageHostHandler(state::BitwigState& state,
-                                 BitwigProtocol& protocol,
-                                 oc::api::EncoderAPI& encoders)
-    : state_(state), protocol_(protocol), encoders_(encoders) {
+PageHostHandler::PageHostHandler(state::DeviceInfoState& device,
+                                 state::ParameterState& parameters,
+                                 state::PageSelectorState& pageSelector,
+                                 Protocol::ProtocolCallbacks& protocol,
+                                 ParameterEncoderPort& encoders)
+    : device_(device), parameters_(parameters), pageSelector_(pageSelector),
+      protocol_(protocol), encoders_(encoders) {
     setupProtocolCallbacks();
-}
-
-template <typename RemoteControlArray>
-void PageHostHandler::updateRemoteControlEncoderModes(const RemoteControlArray& remoteControls) {
-    for (uint8_t i = 0; i < PARAMETER_COUNT && i < remoteControls.size(); i++) {
-        uint8_t paramIndex = remoteControls[i].remoteControlIndex;
-        if (paramIndex >= PARAMETER_COUNT) continue;
-
-        // Update parameter type in state
-        state_.parameters.slots[paramIndex].type.set(remoteControls[i].parameterType);
-
-        // Configure encoder mode
-        auto encoderId = getEncoderIdForParameter(paramIndex);
-        if (encoderId != EncoderID{0}) {
-            configureEncoderForParameter(encoders_, encoderId,
-                                         remoteControls[i].parameterType,
-                                         remoteControls[i].discreteValueCount,
-                                         remoteControls[i].parameterValue);
-        }
-    }
 }
 
 void PageHostHandler::setupProtocolCallbacks() {
@@ -43,7 +26,7 @@ void PageHostHandler::setupProtocolCallbacks() {
         OC_LOG_DEBUG("[Page] Window c={}", msg.devicePageCount);
 
         // Update total count
-        state_.pageSelector.totalCount.set(msg.devicePageCount);
+        pageSelector_.totalCount.set(msg.devicePageCount);
 
         // Accumulate names at absolute indices
         uint8_t startIdx = msg.pageStartIndex;
@@ -51,7 +34,7 @@ void PageHostHandler::setupProtocolCallbacks() {
             if (msg.pageNames[i].empty()) break;  // End of valid data
             auto absoluteIdx = static_cast<uint8_t>(startIdx + i);
             if (absoluteIdx < MAX_PAGES) {
-                state_.pageSelector.names.setAt(absoluteIdx, msg.pageNames[i]);
+                pageSelector_.names.setAt(absoluteIdx, msg.pageNames[i]);
             }
         }
 
@@ -60,27 +43,25 @@ void PageHostHandler::setupProtocolCallbacks() {
         if (newLoadedUpTo > msg.devicePageCount) {
             newLoadedUpTo = msg.devicePageCount;  // Cap at total
         }
-        if (newLoadedUpTo > state_.pageSelector.loadedUpTo.get()) {
-            state_.pageSelector.loadedUpTo.set(newLoadedUpTo);
+        if (newLoadedUpTo > pageSelector_.loadedUpTo.get()) {
+            pageSelector_.loadedUpTo.set(newLoadedUpTo);
         }
 
         // Update selected index ONLY on first window (not on prefetch)
         // This prevents cursor jumps when user is navigating
         if (startIdx == 0) {
-            state_.pageSelector.selectedIndex.set(msg.devicePageIndex);
+            pageSelector_.selectedIndex.set(msg.devicePageIndex);
         }
     };
 
     protocol_.onDevicePageChange = [this](const DevicePageChangeMessage& msg) {
-        updateRemoteControlEncoderModes(msg.remoteControls);
-
-        state_.device.pageName.set(msg.pageInfo.devicePageName.c_str());
+        device_.pageName.set(msg.pageInfo.devicePageName.c_str());
 
         // Local buffer for discrete values (stack allocated, safe in single-threaded context)
         std::array<std::string, state::MAX_DISCRETE_VALUES> tempDiscreteValues;
 
         for (uint8_t i = 0; i < PARAMETER_COUNT && i < msg.remoteControls.size(); i++) {
-            auto& slot = state_.parameters.slots[i];
+            auto& slot = parameters_.slots[i];
             const auto& rc = msg.remoteControls[i];
 
             // IMPORTANT: Set metadata BEFORE type!
@@ -117,6 +98,11 @@ void PageHostHandler::setupProtocolCallbacks() {
 
             // Automation state
             slot.hasAutomation.set(rc.hasAutomation);
+
+            if (rc.remoteControlIndex < PARAMETER_COUNT) {
+                encoders_.configure(rc.remoteControlIndex, rc.parameterType,
+                                    rc.discreteValueCount, rc.parameterValue);
+            }
         }
     };
 }

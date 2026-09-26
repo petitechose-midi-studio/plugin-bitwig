@@ -12,6 +12,7 @@
 #include "handler/host/EncoderApiParameterPort.hpp"
 #include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
+#include "ui/font/BitwigIcons.hpp"
 
 namespace bitwig {
 
@@ -137,10 +138,13 @@ void BitwigContext::createHostHandlers() {
     // Order matters: plugin handler requests host status first
     host_plugin_ = std::make_unique<handler::PluginHostHandler>(state_, *protocol_);
     host_transport_ = std::make_unique<handler::TransportHostHandler>(state_, *protocol_);
-    host_device_ = std::make_unique<handler::DeviceHostHandler>(state_, *protocol_);
-    host_track_ = std::make_unique<handler::TrackHostHandler>(state_, *protocol_);
-    host_page_ = std::make_unique<handler::PageHostHandler>(state_, *protocol_, encoders());
+    host_device_ = std::make_unique<handler::DeviceHostHandler>(
+        state_.device, state_.parameters, state_.pageSelector, state_.deviceSelector,
+        *protocol_, icons::UI_ARROW_LEFT);
+    host_track_ = std::make_unique<handler::TrackHostHandler>(state_, *protocol_, icons::UI_ARROW_LEFT);
     encoder_api_port_ = std::make_unique<handler::EncoderApiParameterPort>(encoders());
+    host_page_ = std::make_unique<handler::PageHostHandler>(
+        state_.device, state_.parameters, state_.pageSelector, *protocol_, *encoder_api_port_);
     host_remote_control_ = std::make_unique<handler::RemoteControlHostHandler>(
         state_.parameters, *protocol_, *encoder_api_port_);
     host_last_clicked_ = std::make_unique<handler::LastClickedHostHandler>(state_, *protocol_, encoders());

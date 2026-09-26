@@ -14,8 +14,12 @@
  * @see RemoteControlHostHandler for remote control parameter updates
  */
 
+#include <string>
+
 #include "protocol/BitwigProtocol.hpp"
-#include "state/BitwigState.hpp"
+#include "state/DeviceInfoState.hpp"
+#include "state/ParameterState.hpp"
+#include "state/SelectorState.hpp"
 
 namespace bitwig::handler {
 
@@ -26,7 +30,10 @@ namespace bitwig::handler {
  */
 class DeviceHostHandler {
 public:
-    DeviceHostHandler(state::BitwigState& state, BitwigProtocol& protocol);
+    DeviceHostHandler(state::DeviceInfoState& device, state::ParameterState& parameters,
+                      state::PageSelectorState& pageSelector,
+                      state::DeviceSelectorState& deviceSelector, BitwigProtocol& protocol,
+                      const char* backToParentLabel);
     ~DeviceHostHandler() = default;
 
     // Non-copyable
@@ -36,8 +43,12 @@ public:
 private:
     void setupProtocolCallbacks();
 
-    state::BitwigState& state_;
+    state::DeviceInfoState& device_;
+    state::ParameterState& parameters_;
+    state::PageSelectorState& pageSelector_;
+    state::DeviceSelectorState& deviceSelector_;
     BitwigProtocol& protocol_;
+    const std::string backToParentLabel_;
 };
 
 }  // namespace bitwig::handler
