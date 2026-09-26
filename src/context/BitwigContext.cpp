@@ -9,6 +9,7 @@
 #include <ms/ui/font/CoreFonts.hpp>
 
 #include "handler/InputAPI.hpp"
+#include "handler/host/EncoderApiParameterPort.hpp"
 #include "protocol/MessageStructure.hpp"
 #include "ui/font/BitwigFonts.hpp"
 
@@ -23,7 +24,8 @@ void BitwigContext::loadResources() {
     // Fonts are now loaded in initialize() via FontLoader API
 }
 
-// Destructor must be in .cpp where handler types are complete
+// Constructor and destructor must be in .cpp where handler types are complete
+BitwigContext::BitwigContext() = default;
 BitwigContext::~BitwigContext() = default;
 
 // =============================================================================
@@ -138,7 +140,9 @@ void BitwigContext::createHostHandlers() {
     host_device_ = std::make_unique<handler::DeviceHostHandler>(state_, *protocol_);
     host_track_ = std::make_unique<handler::TrackHostHandler>(state_, *protocol_);
     host_page_ = std::make_unique<handler::PageHostHandler>(state_, *protocol_, encoders());
-    host_remote_control_ = std::make_unique<handler::RemoteControlHostHandler>(state_, *protocol_, encoders());
+    encoder_api_port_ = std::make_unique<handler::EncoderApiParameterPort>(encoders());
+    host_remote_control_ = std::make_unique<handler::RemoteControlHostHandler>(
+        state_.parameters, *protocol_, *encoder_api_port_);
     host_last_clicked_ = std::make_unique<handler::LastClickedHostHandler>(state_, *protocol_, encoders());
 
     host_midi_ = std::make_unique<handler::MidiHostHandler>(state_);

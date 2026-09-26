@@ -2,7 +2,7 @@
 
 /**
  * @file RemoteControlHostHandler.hpp
- * @brief Handles remote control parameter messages from Bitwig -> updates BitwigState
+ * @brief Handles remote control parameter messages from Bitwig -> updates ParameterState
  *
  * HostHandler pattern: Protocol callbacks -> State updates
  * Handles individual parameter updates:
@@ -16,24 +16,24 @@
  * @see DeviceHostHandler for device info/list
  */
 
-#include <oc/api/EncoderAPI.hpp>
-
-#include "protocol/BitwigProtocol.hpp"
-#include "state/BitwigState.hpp"
+#include "ParameterEncoderPort.hpp"
+#include "protocol/ProtocolCallbacks.hpp"
+#include "state/ParameterState.hpp"
 
 namespace bitwig::handler {
 
 /**
  * @brief Remote control parameter protocol handler (Host -> State)
  *
- * Receives individual parameter updates and applies them to BitwigState.
- * Also configures encoder modes and positions when parameters change.
+ * Receives individual parameter updates and applies them to the parameter
+ * slots. Encoder side effects go through ParameterEncoderPort, so the update
+ * rules stay testable without the OpenControl input graph.
  */
 class RemoteControlHostHandler {
 public:
-    RemoteControlHostHandler(state::BitwigState& state,
-                             BitwigProtocol& protocol,
-                             oc::api::EncoderAPI& encoders);
+    RemoteControlHostHandler(state::ParameterState& parameters,
+                             Protocol::ProtocolCallbacks& protocol,
+                             ParameterEncoderPort& encoders);
     ~RemoteControlHostHandler() = default;
 
     // Non-copyable
@@ -43,9 +43,9 @@ public:
 private:
     void setupProtocolCallbacks();
 
-    state::BitwigState& state_;
-    BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
+    state::ParameterState& parameters_;
+    Protocol::ProtocolCallbacks& protocol_;
+    ParameterEncoderPort& encoders_;
 };
 
 }  // namespace bitwig::handler

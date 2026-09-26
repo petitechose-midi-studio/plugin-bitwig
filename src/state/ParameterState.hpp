@@ -15,7 +15,8 @@
 #include <oc/state/SignalString.hpp>
 #include <oc/state/SignalVector.hpp>
 
-#include "Constants.hpp"
+#include "ParameterCapacity.hpp"
+#include "protocol/ParameterType.hpp"
 
 namespace bitwig::state {
 
