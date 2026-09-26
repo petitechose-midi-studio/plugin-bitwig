@@ -16,8 +16,9 @@
  * @see ListOverlay for the underlying UI component
  */
 
+#include <ms/ui/widget/ListOverlay.hpp>
+
 #include "ISelector.hpp"
-#include "ListOverlay.hpp"
 
 namespace bitwig::ui {
 
@@ -47,11 +48,11 @@ public:
     lv_obj_t* getElement() const override;
 
 protected:
-    ListOverlay& overlay() { return overlay_; }
-    const ListOverlay& overlay() const { return overlay_; }
+    ms::ui::ListOverlay& overlay() { return overlay_; }
+    const ms::ui::ListOverlay& overlay() const { return overlay_; }
 
     lv_obj_t* parent_ = nullptr;
-    ListOverlay overlay_;
+    ms::ui::ListOverlay overlay_;
 };
 
 }  // namespace bitwig::ui
