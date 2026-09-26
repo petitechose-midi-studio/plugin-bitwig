@@ -13,10 +13,11 @@
  * @see RemoteControlHostHandler for individual parameter updates
  */
 
-#include <oc/api/EncoderAPI.hpp>
-
-#include "protocol/BitwigProtocol.hpp"
-#include "state/BitwigState.hpp"
+#include "ParameterEncoderPort.hpp"
+#include "protocol/ProtocolCallbacks.hpp"
+#include "state/DeviceInfoState.hpp"
+#include "state/ParameterState.hpp"
+#include "state/SelectorState.hpp"
 
 namespace bitwig::handler {
 
@@ -28,9 +29,11 @@ namespace bitwig::handler {
  */
 class PageHostHandler {
 public:
-    PageHostHandler(state::BitwigState& state,
-                    BitwigProtocol& protocol,
-                    oc::api::EncoderAPI& encoders);
+    PageHostHandler(state::DeviceInfoState& device,
+                    state::ParameterState& parameters,
+                    state::PageSelectorState& pageSelector,
+                    Protocol::ProtocolCallbacks& protocol,
+                    ParameterEncoderPort& encoders);
     ~PageHostHandler() = default;
 
     // Non-copyable
@@ -40,13 +43,11 @@ public:
 private:
     void setupProtocolCallbacks();
 
-    // Encoder configuration based on parameter types (called on page change)
-    template <typename RemoteControlArray>
-    void updateRemoteControlEncoderModes(const RemoteControlArray& remoteControls);
-
-    state::BitwigState& state_;
-    BitwigProtocol& protocol_;
-    oc::api::EncoderAPI& encoders_;
+    state::DeviceInfoState& device_;
+    state::ParameterState& parameters_;
+    state::PageSelectorState& pageSelector_;
+    Protocol::ProtocolCallbacks& protocol_;
+    ParameterEncoderPort& encoders_;
 };
 
 }  // namespace bitwig::handler

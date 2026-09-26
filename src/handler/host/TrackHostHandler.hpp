@@ -11,6 +11,8 @@
  * - Mute/Solo state updates
  */
 
+#include <string>
+
 #include "protocol/BitwigProtocol.hpp"
 #include "state/BitwigState.hpp"
 
@@ -23,7 +25,8 @@ namespace bitwig::handler {
  */
 class TrackHostHandler {
 public:
-    TrackHostHandler(state::BitwigState& state, BitwigProtocol& protocol);
+    TrackHostHandler(state::BitwigState& state, BitwigProtocol& protocol,
+                     const char* backToParentLabel);
     ~TrackHostHandler() = default;
 
     // Non-copyable
@@ -35,6 +38,7 @@ private:
 
     state::BitwigState& state_;
     BitwigProtocol& protocol_;
+    const std::string backToParentLabel_;
 };
 
 }  // namespace bitwig::handler

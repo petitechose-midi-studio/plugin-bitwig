@@ -54,6 +54,7 @@ paramètres ; ils ne constituent pas une suite métier de l'extension Java.
 | Changement | Propriétaire à lire | Preuve |
 | --- | --- | --- |
 | Réception paramètres, masques dirty/echo, batch | `src/handler/host/RemoteControlHostHandler.*`, `src/state/ParameterState.hpp` | `test/test_RemoteControlParameterUpdates` |
+| Changement device/page puis batch | `src/handler/host/DeviceHostHandler.*`, `PageHostHandler.*` | même suite, messages réellement encodés/décodés, invalidation du cache, loading, remplacement des métadonnées et encodeurs |
 | Mapping paramètre → encodeur physique | `src/handler/host/EncoderApiParameterPort.hpp`, câblé dans `src/context/BitwigContext.cpp` | tests du port + build firmware/SDL |
 | Rendu de la liste du sélecteur de vues | `src/ui/view/ViewSelector.*` → `src/ui/widget/BaseSelector.*` → `ms::ui::ListOverlay` dans le dépôt UI | CTest UI et captures du sélecteur avec polices produit |
 | Sélecteurs pages/devices/tracks | leurs composants dédiés dans `src/ui` | qualification ciblée de leurs listes virtualisées |
@@ -62,8 +63,11 @@ Le composant `ListOverlay` partagé est l'unique implémentation de cette liste.
 Conserver les comportements et thèmes propres à Bitwig dans ses adaptateurs.
 Le README du dépôt UI décrit sa suite headless, exécutée aussi par sa CI.
 
-Limites actuelles : le scénario changement de page/device suivi d'un batch et
-l'infrastructure de tests Java restent à compléter. Le test de batch caractérise
+Les handlers page/device reçoivent les états qu'ils utilisent ; le port encodeur
+est partagé avec les mises à jour individuelles. Le libellé de retour parent est
+fourni par le contexte : les constantes d'état ne dépendent plus des polices/LVGL.
+
+Limites actuelles : l'infrastructure de tests Java reste à compléter. Le test de batch caractérise
 le calcul de modulation à partir de la valeur pré-batch ; changer cette règle
 demande une décision de comportement explicite.
 

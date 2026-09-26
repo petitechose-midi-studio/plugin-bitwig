@@ -9,6 +9,8 @@
 #include "../../src/state/ParameterState.hpp"
 #include "../../src/protocol/ProtocolCallbacks.hpp"
 #include "../../src/handler/host/RemoteControlHostHandler.cpp"
+#include "../../src/handler/host/PageHostHandler.cpp"
+#include "../../src/handler/host/DeviceHostHandler.cpp"
 
 namespace {
 
@@ -405,6 +407,135 @@ void test_value_state_moves_expected_encoder_only() {
     std::cout << "[PASS] test_value_state_moves_expected_encoder_only\n";
 }
 
+class RecordingTransport final : public oc::interface::ITransport {
+public:
+    oc::type::Result<void> init() override { return oc::type::Result<void>::ok(); }
+    void update() override {}
+    void send(const uint8_t* data, size_t size) override {
+        sent.emplace_back(data, data + size);
+    }
+    void setOnReceive(ReceiveCallback callback) override { receive = std::move(callback); }
+
+    template <typename Message>
+    void deliver(const Message& message) {
+        std::array<uint8_t, Message::MAX_PAYLOAD_SIZE + 1> frame{};
+        frame[0] = static_cast<uint8_t>(Message::MESSAGE_ID);
+        const auto size = message.encode(frame.data() + 1, Message::MAX_PAYLOAD_SIZE);
+        require(size > 0, "test message must encode");
+        receive(frame.data(), size + 1);
+    }
+
+    ReceiveCallback receive;
+    std::vector<std::vector<uint8_t>> sent;
+};
+
+void test_device_page_then_batch() {
+    struct {
+        bitwig::state::DeviceInfoState device;
+        ParameterState parameters;
+        bitwig::state::PageSelectorState pageSelector;
+        bitwig::state::DeviceSelectorState deviceSelector;
+    } state;
+    RecordingTransport transport;
+    bitwig::BitwigProtocol protocol{transport};
+    RecordingParameterEncoderPort encoders;
+    bitwig::handler::DeviceHostHandler device{
+        state.device, state.parameters, state.pageSelector, state.deviceSelector, protocol, "Back"};
+    bitwig::handler::PageHostHandler page{
+        state.device, state.parameters, state.pageSelector, protocol, encoders};
+    bitwig::handler::RemoteControlHostHandler parameters{state.parameters, protocol, encoders};
+
+    state.pageSelector.names.setAt(0, "Old page");
+    state.pageSelector.totalCount.set(7);
+    state.pageSelector.loadedUpTo.set(7);
+    for (auto& slot : state.parameters.slots) {
+        slot.loading.set(false);
+        slot.value.set(0.9f);
+        slot.name.set("Old parameter");
+    }
+
+    Protocol::DeviceChangeHeaderMessage header{};
+    header.deviceName = "New device";
+    header.isEnabled = true;
+    header.pageInfo = {0, 2, "New page"};
+    transport.deliver(header);
+    require(std::string(state.device.name.get()) == "New device", "device header must be applied");
+    require(state.pageSelector.names.size() == 0 && state.pageSelector.totalCount.get() == 0 &&
+                state.pageSelector.loadedUpTo.get() == 0,
+            "device change must invalidate the old page cache");
+    for (const auto& slot : state.parameters.slots) {
+        require(slot.loading.get(), "device change must mark every slot loading");
+    }
+    require(transport.sent.size() == 1, "device change must request one page window");
+    require(transport.sent[0][0] == static_cast<uint8_t>(
+                Protocol::MessageID::REQUEST_DEVICE_PAGE_NAMES_WINDOW), "must request page names");
+
+    Protocol::DevicePageChangeMessage change{};
+    change.pageInfo = {1, 2, "Filters"};
+    for (uint8_t i = 0; i < bitwig::state::PARAMETER_COUNT; ++i) {
+        auto& control = change.remoteControls[i];
+        control.remoteControlIndex = i;
+        control.parameterName = "New " + std::to_string(i);
+        control.parameterValue = 0.25f;
+        control.modulatedValue = 0.25f;
+        control.parameterExists = i != 7;
+        control.parameterType = i == 2 ? ParameterType::LIST : ParameterType::KNOB;
+        control.discreteValueCount = i == 2 ? 3 : -1;
+        control.discreteValueNames = i == 2 ? std::vector<std::string>{"Low", "Band", "High"}
+                                         : std::vector<std::string>{};
+    }
+    transport.deliver(change);
+    require(std::string(state.device.pageName.get()) == "Filters", "page name must be replaced");
+    for (uint8_t i = 0; i < bitwig::state::PARAMETER_COUNT; ++i) {
+        const auto& slot = state.parameters.slots[i];
+        require(!slot.loading.get() && slot.metadataSet.get(), "page must finish loading every slot");
+        require(std::string(slot.name.get()) == change.remoteControls[i].parameterName,
+                "page must replace stale names");
+        require(slot.visible.get() == (i != 7), "page must hide absent parameters");
+        requireNear(slot.value.get(), 0.25f, "page must replace stale values");
+    }
+    require(encoders.configureCalls.size() == 8, "page must configure its eight encoders once");
+    for (uint8_t i = 0; i < bitwig::state::PARAMETER_COUNT; ++i) {
+        const auto& call = encoders.configureCalls[i];
+        require(call.index == i && call.type == change.remoteControls[i].parameterType,
+                "encoder mode must match the page slot");
+        requireNear(call.value, 0.25f, "page must initialize encoder position");
+    }
+    require(state.parameters.slots[2].discreteValues.size() == 3, "page must replace list choices");
+
+    auto batch = makeBatch();
+    batch.dirtyMask = (1 << 2) | (1 << 4);
+    batch.echoMask = (1 << 4);
+    batch.values[2] = 1.0f;
+    batch.values[4] = 0.8f;
+    batch.displayValues[2] = "High";
+    batch.displayValues[4] = "Host echo";
+    transport.deliver(batch);
+    requireNear(state.parameters.slots[2].value.get(), 1.0f, "batch must update the new list");
+    require(state.parameters.slots[2].currentValueIndex.get() == 2,
+            "batch must use the new page discrete count");
+    requireNear(state.parameters.slots[4].value.get(), 0.25f, "echo must preserve the new knob value");
+    require(std::string(state.parameters.slots[4].displayValue.get()) == "Host echo",
+            "echo must update display text");
+    requireNear(state.parameters.slots[0].value.get(), 0.25f, "clean slot must retain its page value");
+    require(encoders.positionCalls.size() == 1 && encoders.positionCalls[0].index == 2,
+            "only the dirty non-echo encoder must move");
+    requireNear(encoders.positionCalls[0].value, 1.0f, "encoder must receive new list position");
+
+    // A second page on the same device must replace the previous list metadata.
+    change.remoteControls[2].discreteValueCount = 5;
+    change.remoteControls[2].discreteValueNames = {"A", "B", "C", "D", "E"};
+    transport.deliver(change);
+    batch.values[2] = 0.5f;
+    batch.displayValues[2] = "C";
+    transport.deliver(batch);
+    require(state.parameters.slots[2].currentValueIndex.get() == 2 &&
+                state.parameters.slots[2].discreteValues.size() == 5,
+            "later batches must use the replacement page metadata");
+    require(encoders.configureCalls.size() == 16, "each page must configure each encoder once");
+    std::cout << "[PASS] test_device_page_then_batch\n";
+}
+
 }  // namespace
 
 int main() {
@@ -414,6 +545,7 @@ int main() {
         test_partial_batch_respects_masks();
         test_list_echo_applies_value_without_moving_encoder();
         test_value_state_moves_expected_encoder_only();
+        test_device_page_then_batch();
     } catch (const std::exception& error) {
         std::cerr << "[FAIL] " << error.what() << "\n";
         return 1;

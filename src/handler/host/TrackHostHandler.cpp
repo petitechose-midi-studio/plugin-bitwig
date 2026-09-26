@@ -7,10 +7,9 @@ namespace bitwig::handler {
 
 using namespace Protocol;
 using namespace bitwig::state;
-constexpr auto BACK_TO_PARENT = BACK_TO_PARENT_TEXT;
-
-TrackHostHandler::TrackHostHandler(state::BitwigState& state, BitwigProtocol& protocol)
-    : state_(state), protocol_(protocol) {
+TrackHostHandler::TrackHostHandler(state::BitwigState& state, BitwigProtocol& protocol,
+                                   const char* backToParentLabel)
+    : state_(state), protocol_(protocol), backToParentLabel_(backToParentLabel) {
     setupProtocolCallbacks();
 }
 
@@ -62,7 +61,7 @@ void TrackHostHandler::setupProtocolCallbacks() {
 
         // Add back button if nested and this is first window
         if (msg.isNested && startIdx == 0) {
-            state_.trackSelector.names.setAt(0, BACK_TO_PARENT);
+            state_.trackSelector.names.setAt(0, backToParentLabel_);
             state_.trackSelector.trackTypes.setAt(0, TrackType::AUDIO);
             state_.trackSelector.trackColors.setAt(0, 0xFFFFFF);
             state_.trackSelector.muteStates[0].set(false);

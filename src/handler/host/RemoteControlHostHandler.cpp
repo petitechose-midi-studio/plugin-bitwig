@@ -143,8 +143,6 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
             parameters_.slots[msg.remoteControlIndex].isModulated.set(msg.isModulated);
         };
 
-    // Note: hasAutomation and automationActive are now updated via batch message
-    // (hasAutomationMask and touchedMask fields) for perfect synchronization
 }
 
 }  // namespace bitwig::handler
