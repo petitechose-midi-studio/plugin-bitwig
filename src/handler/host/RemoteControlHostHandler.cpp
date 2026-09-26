@@ -3,17 +3,15 @@
 #include <algorithm>
 #include <cmath>
 
-#include "handler/InputUtils.hpp"
-
 namespace bitwig::handler {
 
 using namespace Protocol;
 using namespace bitwig::state;
 
-RemoteControlHostHandler::RemoteControlHostHandler(state::BitwigState& state,
-                                                   BitwigProtocol& protocol,
-                                                   oc::api::EncoderAPI& encoders)
-    : state_(state), protocol_(protocol), encoders_(encoders) {
+RemoteControlHostHandler::RemoteControlHostHandler(state::ParameterState& parameters,
+                                                   Protocol::ProtocolCallbacks& protocol,
+                                                   ParameterEncoderPort& encoders)
+    : parameters_(parameters), protocol_(protocol), encoders_(encoders) {
     setupProtocolCallbacks();
 }
 
@@ -21,7 +19,7 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
     protocol_.onDeviceRemoteControlUpdate = [this](const DeviceRemoteControlUpdateMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
 
-        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
+        auto& slot = parameters_.slots[msg.remoteControlIndex];
 
         slot.type.set(msg.parameterType);
         slot.discreteCount.set(msg.discreteValueCount);
@@ -35,19 +33,16 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
         slot.hasAutomation.set(msg.hasAutomation);
 
         // Configure encoder
-        auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
-        if (encoderId != EncoderID{0}) {
-            configureEncoderForParameter(encoders_, encoderId,
-                                         msg.parameterType,
-                                         msg.discreteValueCount,
-                                         msg.parameterValue);
-        }
+        encoders_.configure(msg.remoteControlIndex,
+                            msg.parameterType,
+                            msg.discreteValueCount,
+                            msg.parameterValue);
     };
 
     protocol_.onDeviceRemoteControlDiscreteValues = [this](const DeviceRemoteControlDiscreteValuesMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
 
-        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
+        auto& slot = parameters_.slots[msg.remoteControlIndex];
 
         // Local buffer for discrete values (stack allocated, safe in single-threaded context)
         std::array<std::string, state::MAX_DISCRETE_VALUES> tempValues;
@@ -65,27 +60,24 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
     protocol_.onRemoteControlValueState = [this](const RemoteControlValueStateMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) { return; }
 
-        auto& slot = state_.parameters.slots[msg.remoteControlIndex];
-        auto encoderId = getEncoderIdForParameter(msg.remoteControlIndex);
+        auto& slot = parameters_.slots[msg.remoteControlIndex];
 
         // Update value and display
         slot.value.set(msg.parameterValue);
         slot.displayValue.set(msg.displayValue.c_str());
 
         // Update encoder position
-        if (encoderId != EncoderID{0}) {
-            encoders_.setPosition(encoderId, msg.parameterValue);
-        }
+        encoders_.setPosition(msg.remoteControlIndex, msg.parameterValue);
     };
 
     protocol_.onDeviceRemoteControlNameChange = [this](const DeviceRemoteControlNameChangeMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
-        state_.parameters.slots[msg.remoteControlIndex].name.set(msg.parameterName.c_str());
+        parameters_.slots[msg.remoteControlIndex].name.set(msg.parameterName.c_str());
     };
 
     protocol_.onDeviceRemoteControlOriginChange = [this](const DeviceRemoteControlOriginChangeMessage& msg) {
         if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
-        state_.parameters.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
+        parameters_.slots[msg.remoteControlIndex].origin.set(msg.parameterOrigin);
     };
 
     // Combined batch: values + modulated values in single synchronized update
@@ -93,7 +85,7 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
         [this](const DeviceRemoteControlsBatchMessage& msg) {
 
             for (size_t i = 0; i < PARAMETER_COUNT; ++i) {
-                auto& slot = state_.parameters.slots[i];
+                auto& slot = parameters_.slots[i];
 
                 // Update automation state from host (source of truth)
                 bool hasAutomation = (msg.hasAutomationMask >> i) & 1;
@@ -138,10 +130,7 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
 
                     // Update encoder position for non-echo
                     if (!isEcho) {
-                        auto encoderId = getEncoderIdForParameter(i);
-                        if (encoderId != EncoderID{0}) {
-                            encoders_.setPosition(encoderId, value);
-                        }
+                        encoders_.setPosition(static_cast<uint8_t>(i), value);
                     }
                 }
             }
@@ -151,7 +140,7 @@ void RemoteControlHostHandler::setupProtocolCallbacks() {
     protocol_.onDeviceRemoteControlIsModulatedChange =
         [this](const DeviceRemoteControlIsModulatedChangeMessage& msg) {
             if (msg.remoteControlIndex >= PARAMETER_COUNT) return;
-            state_.parameters.slots[msg.remoteControlIndex].isModulated.set(msg.isModulated);
+            parameters_.slots[msg.remoteControlIndex].isModulated.set(msg.isModulated);
         };
 
     // Note: hasAutomation and automationActive are now updated via batch message

@@ -31,7 +31,21 @@ option(
     "Build and register MIDI Studio Bitwig plugin unit tests"
     ${MS_PLUGIN_BITWIG_BUILD_TESTS_DEFAULT})
 
+set(MS_PLUGIN_BITWIG_OPEN_CONTROL_ROOT
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../open-control"
+    CACHE PATH "Path to the local open-control workspace")
+
 if(MS_PLUGIN_BITWIG_BUILD_TESTS AND BUILD_TESTING)
+    # Tests that exercise reactive state compile the framework primitives that
+    # Signal.hpp needs. The workspace keeps open-control beside midi-studio.
+    set(MS_PLUGIN_BITWIG_FRAMEWORK_TESTS
+        test_RemoteControlParameterUpdates)
+    set(MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR
+        "${MS_PLUGIN_BITWIG_OPEN_CONTROL_ROOT}/framework")
+    set(MS_PLUGIN_BITWIG_TEST_FRAMEWORK_SOURCES
+        "${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR}/src/oc/state/Signal.cpp"
+        "${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR}/src/oc/state/NotificationQueue.cpp")
+
     file(GLOB MS_PLUGIN_BITWIG_TESTS CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/test/test_*/test_main.cpp")
 
@@ -48,6 +62,17 @@ if(MS_PLUGIN_BITWIG_BUILD_TESTS AND BUILD_TESTING)
             PRIVATE
                 "${CMAKE_CURRENT_SOURCE_DIR}/test"
                 "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+        if(test_name IN_LIST MS_PLUGIN_BITWIG_FRAMEWORK_TESTS)
+            if(NOT EXISTS "${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR}/src/oc/state/Signal.cpp")
+                message(FATAL_ERROR
+                    "OpenControl framework not found at "
+                    "${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR}")
+            endif()
+            target_sources("${test_name}" PRIVATE ${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_SOURCES})
+            target_include_directories("${test_name}"
+                PRIVATE "${MS_PLUGIN_BITWIG_TEST_FRAMEWORK_DIR}/src")
+        endif()
 
         add_test(NAME "${test_name}" COMMAND "${test_name}")
         set_tests_properties("${test_name}" PROPERTIES LABELS plugin-bitwig)

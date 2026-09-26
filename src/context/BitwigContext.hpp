@@ -84,6 +84,10 @@
 
 namespace bitwig {
 
+namespace handler {
+class EncoderApiParameterPort;
+}
+
 /**
  * @brief Context for Bitwig DAW control
  *
@@ -102,7 +106,7 @@ public:
     // Static resource loading (called by ContextManager during registration)
     static void loadResources();
 
-    BitwigContext() = default;
+    BitwigContext();
     ~BitwigContext() override;
 
     // Non-copyable, non-movable
@@ -167,6 +171,7 @@ private:
     std::unique_ptr<handler::TransportHostHandler> host_transport_;
     std::unique_ptr<handler::DeviceHostHandler> host_device_;
     std::unique_ptr<handler::TrackHostHandler> host_track_;
+    std::unique_ptr<handler::EncoderApiParameterPort> encoder_api_port_;
     std::unique_ptr<handler::PageHostHandler> host_page_;
     std::unique_ptr<handler::RemoteControlHostHandler> host_remote_control_;
     std::unique_ptr<handler::LastClickedHostHandler> host_last_clicked_;
