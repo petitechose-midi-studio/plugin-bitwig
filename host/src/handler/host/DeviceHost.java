@@ -51,7 +51,7 @@ public class DeviceHost {
     private boolean controllerSelectorActive = false;
 
     // Combined batch for values + modulated values (single synchronized update)
-    private static final int BATCH_INTERVAL_MS = 1  ; // ~66Hz batch rate (15ms = imperceptible for UI)
+    private static final int BATCH_INTERVAL_MS = 1;
     private final float[] modulatedValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] parameterValues = new float[BitwigConfig.MAX_PARAMETERS];
     private final float[] pendingValues = new float[BitwigConfig.MAX_PARAMETERS];
@@ -710,6 +710,9 @@ public class DeviceHost {
             remoteControlsList.toArray(new DevicePageChangeMessage.RemoteControls[0])
         );
 
+        // The full page snapshot supersedes pending changes from the old page.
+        valuesDirtyMask = 0;
+        valuesEchoMask = 0;
         // Ensure batch is sent with updated hasAutomationMask
         batchDirty = true;
 
@@ -737,6 +740,7 @@ public class DeviceHost {
             parameterValues[i] = data.value;
             modulatedValues[i] = data.modulatedValue;
             pendingValues[i] = data.value;
+            pendingDisplayValues[i] = data.displayedValue;
             hasAutomationState[i] = data.hasAutomation;
             previousIsModulated[i] = data.isModulated;
 
