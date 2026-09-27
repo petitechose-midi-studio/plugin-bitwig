@@ -100,9 +100,16 @@ jobs:
           set -euo pipefail
           uv run ms build bitwig --target teensy --env release
 
-      - name: Build bitwig extension
+      - name: Test Java business contracts and build bitwig extension
         shell: bash
         working-directory: workspace
         run: |
           set -euo pipefail
           uv run ms build bitwig --target extension --extensions-dir _bitwig_extensions
+
+      - name: Upload Java test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bitwig-java-test-results
+          path: workspace/midi-studio/plugin-bitwig/host/target/surefire-reports/

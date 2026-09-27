@@ -49,12 +49,24 @@ MIDI Studio connects Bitwig with custom hardware:
 Depuis le workspace `ms-dev-env`, lancer `ms test plugin-bitwig`. Pour une
 branche isolée : `ms --workspace <workspace-root> test plugin-bitwig`.
 Les deux exécutables CTest couvrent les indices imbriqués et la réception des
-paramètres ; ils ne constituent pas une suite métier de l'extension Java.
+paramètres. Pour la suite métier Java, lancer depuis ce dépôt :
+
+```sh
+mvn -f host/pom.xml test
+```
+
+`host/test/handler/host/DeviceHostBatchTest.java` exerce le vrai `DeviceHost`
+avec des observateurs Bitwig capturés et un ordonnanceur piloté sans attente :
+regroupement des valeurs, masques dirty/echo/automation, révélation de modulation,
+suspension/reprise et remplacement de page. Maven `package` exécute aussi cette
+suite ; la CI de l'extension conserve les rapports Surefire. Les dépendances de
+test sont exclues de l'extension produite.
 
 | Changement | Propriétaire à lire | Preuve |
 | --- | --- | --- |
 | Réception paramètres, masques dirty/echo, batch | `src/handler/host/RemoteControlHostHandler.*`, `src/state/ParameterState.hpp` | `test/test_RemoteControlParameterUpdates` |
 | Changement device/page puis batch | `src/handler/host/DeviceHostHandler.*`, `PageHostHandler.*` | même suite, messages réellement encodés/décodés, invalidation du cache, loading, remplacement des métadonnées et encodeurs |
+| Batching Java et changement de page | `host/src/handler/host/DeviceHost.java` | `host/test/handler/host/DeviceHostBatchTest.java`, Maven/Surefire |
 | Mapping paramètre → encodeur physique | `src/handler/host/EncoderApiParameterPort.hpp`, câblé dans `src/context/BitwigContext.cpp` | tests du port + build firmware/SDL |
 | Rendu de la liste du sélecteur de vues | `src/ui/view/ViewSelector.*` → `src/ui/widget/BaseSelector.*` → `ms::ui::ListOverlay` dans le dépôt UI | CTest UI et captures du sélecteur avec polices produit |
 | Sélecteurs pages/devices/tracks | leurs composants dédiés dans `src/ui` | qualification ciblée de leurs listes virtualisées |
@@ -67,7 +79,7 @@ Les handlers page/device reçoivent les états qu'ils utilisent ; le port encode
 est partagé avec les mises à jour individuelles. Le libellé de retour parent est
 fourni par le contexte : les constantes d'état ne dépendent plus des polices/LVGL.
 
-Limites actuelles : l'infrastructure de tests Java reste à compléter. Le test de batch caractérise
+Limites actuelles : communication avec Bitwig Studio et matériel à qualifier. Le test de batch firmware caractérise
 le calcul de modulation à partir de la valeur pré-batch ; changer cette règle
 demande une décision de comportement explicite.
 
